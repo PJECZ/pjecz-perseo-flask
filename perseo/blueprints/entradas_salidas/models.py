@@ -6,8 +6,8 @@ from collections import OrderedDict
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from perseo.extensions import database
 from lib.universal_mixin import UniversalMixin
+from perseo.extensions import database
 
 
 class EntradaSalida(database.Model, UniversalMixin):

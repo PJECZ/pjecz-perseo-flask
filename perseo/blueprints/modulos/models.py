@@ -4,8 +4,8 @@ Modulos
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
-from perseo.extensions import database
 from lib.universal_mixin import UniversalMixin
+from perseo.extensions import database
 
 
 class Modulo(database.Model, UniversalMixin):

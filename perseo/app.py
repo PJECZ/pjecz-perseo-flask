@@ -4,18 +4,16 @@ Flask App
 from flask import Flask
 
 from config.settings import Settings
-
 from perseo.blueprints.autoridades.views import autoridades
-from perseo.blueprints.distritos.views import distritos
 from perseo.blueprints.bitacoras.views import bitacoras
+from perseo.blueprints.distritos.views import distritos
 from perseo.blueprints.entradas_salidas.views import entradas_salidas
 from perseo.blueprints.modulos.views import modulos
 from perseo.blueprints.permisos.views import permisos
 from perseo.blueprints.roles.views import roles
 from perseo.blueprints.sistemas.views import sistemas
 from perseo.blueprints.usuarios_roles.views import usuarios_roles
-
-from perseo.extensions import csrf, database
+from perseo.extensions import csrf, database, login_manager
 
 
 def create_app():
@@ -48,4 +46,4 @@ def extensions(app):
     """Inicializar extensiones"""
     csrf.init_app(app)
     database.init_app(app)
-    # login_manager.init_app(app)
+    login_manager.init_app(app)

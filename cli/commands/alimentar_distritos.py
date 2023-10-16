@@ -1,12 +1,12 @@
 """
 Alimentar distritos
 """
-from pathlib import Path
 import csv
+from pathlib import Path
+
 import click
 
 from lib.safe_string import safe_clave, safe_string
-
 from perseo.blueprints.distritos.models import Distrito
 
 DISTRITOS_CSV = "seed/distritos.csv"

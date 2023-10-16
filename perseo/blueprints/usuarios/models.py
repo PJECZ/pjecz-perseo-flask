@@ -5,10 +5,9 @@ from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
-from perseo.extensions import database, pwd_context
-
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios_roles.models import UsuarioRol
+from perseo.extensions import database, pwd_context
 
 
 class Usuario(database.Model, UniversalMixin):

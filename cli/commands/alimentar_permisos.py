@@ -1,12 +1,12 @@
 """
 Alimentar permisos
 """
-from pathlib import Path
 import csv
+from pathlib import Path
+
 import click
 
 from lib.safe_string import safe_string
-
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.roles.models import Rol

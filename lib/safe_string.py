@@ -2,6 +2,7 @@
 Lib - Safe string
 """
 import re
+
 from unidecode import unidecode
 
 

@@ -2,8 +2,8 @@
 CLI
 """
 import os
-import click
 
+import click
 
 CMD_FOLDER = os.path.join(os.path.dirname(__file__), "commands")
 CMD_PREFIX = "cmd_"

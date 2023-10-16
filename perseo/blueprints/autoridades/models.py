@@ -1,11 +1,11 @@
 """
 Autoridad
 """
-from sqlalchemy import Boolean, Column, Integer, ForeignKey, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from perseo.extensions import database
 from lib.universal_mixin import UniversalMixin
+from perseo.extensions import database
 
 
 class Autoridad(database.Model, UniversalMixin):

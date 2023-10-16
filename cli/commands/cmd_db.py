@@ -2,8 +2,8 @@
 CLI db
 """
 import os
-import click
 
+import click
 from dotenv import load_dotenv
 
 from cli.commands.alimentar_autoridades import alimentar_autoridades
@@ -13,19 +13,17 @@ from cli.commands.alimentar_permisos import alimentar_permisos
 from cli.commands.alimentar_roles import alimentar_roles
 from cli.commands.alimentar_usuarios import alimentar_usuarios
 from cli.commands.alimentar_usuarios_roles import alimentar_usuarios_roles
-
 from perseo.app import create_app
-from perseo.extensions import database
-
 from perseo.blueprints.autoridades.models import Autoridad
-from perseo.blueprints.distritos.models import Distrito
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.distritos.models import Distrito
 from perseo.blueprints.entradas_salidas.models import EntradaSalida
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.roles.models import Rol
 from perseo.blueprints.usuarios.models import Usuario
 from perseo.blueprints.usuarios_roles.models import UsuarioRol
+from perseo.extensions import database
 
 app = create_app()
 app.app_context().push()

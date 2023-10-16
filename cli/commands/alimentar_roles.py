@@ -1,12 +1,12 @@
 """
 Alimentar roles
 """
-from pathlib import Path
 import csv
+from pathlib import Path
+
 import click
 
 from lib.safe_string import safe_string
-
 from perseo.blueprints.roles.models import Rol
 
 ROLES_CSV = "seed/roles_permisos.csv"

@@ -4,8 +4,8 @@ Usuarios-Roles
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from perseo.extensions import database
 from lib.universal_mixin import UniversalMixin
+from perseo.extensions import database
 
 
 class UsuarioRol(database.Model, UniversalMixin):

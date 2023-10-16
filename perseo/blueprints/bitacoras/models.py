@@ -1,11 +1,11 @@
 """
 Bitácora
 """
-from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from perseo.extensions import database
 from lib.universal_mixin import UniversalMixin
+from perseo.extensions import database
 
 
 class Bitacora(database.Model, UniversalMixin):

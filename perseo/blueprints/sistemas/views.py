@@ -1,7 +1,7 @@
 """
 Sistemas
 """
-from flask import send_from_directory, Blueprint
+from flask import Blueprint, send_from_directory
 
 sistemas = Blueprint("sistemas", __name__, template_folder="templates")
 
