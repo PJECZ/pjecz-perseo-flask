@@ -11,7 +11,7 @@ packages = [{include = "perseo"}]
 python = "^3.11"
 click = "^8.1.7"
 cryptography = "^41.0.4"
-flask = "^3.0.0"
+flask = "^2.3.3"
 flask-login = "^0.6.2"
 flask-sqlalchemy = "^3.1.1"
 flask-socketio = "^5.3.6"
@@ -31,7 +31,7 @@ pydantic-settings = "^2.0.3"
 python-dotenv = "^1.0.0"
 pytz = "^2023.3.post1"
 unidecode = "^1.3.7"
-werkzeug = "^3.0.0"
+werkzeug = "^2.3.7"
 wtforms = "^3.1.0"
 
 
