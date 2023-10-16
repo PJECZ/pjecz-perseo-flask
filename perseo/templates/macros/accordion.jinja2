@@ -1,0 +1,45 @@
+{# El header se usa en caso de que se quiera poner una ventana flotante #}
+{%- macro header(label) -%}
+    <div class="offcanvas-header offcanvas-bg ">
+        <h5 class="offcanvas-title" id="sidebar-label">{{ label }}</h5>
+        <button class="btn-close" type="button" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+{%- endmacro -%}
+
+{# Con este div mandas a llamar a cada item #}
+{%- macro div(accordion_id, estatus="A") -%}
+    <div class="accordion {% if estatus == 'B' %}bg-secondary{% endif %} mb-3" id="{{accordion_id}}">
+        {{ caller() }}
+    </div>
+{%- endmacro -%}
+
+{# Crea cada item para el accordion #}
+{%- macro item(id, titulo, accordion_id, expanded=False, estatus="A") -%}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading_{{id}}">
+            <button class="accordion-button {% if not expanded %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{id}}" aria-expanded="{% if expanded %}true{% else %}false{% endif %}" aria-controls="collapse_{{id}}">
+                {{ titulo|safe }}
+            </button>
+        </h2>
+        <div id="collapse_{{id}}" class="accordion-collapse collapse {% if expanded %}show{% endif %}" aria-labelledby="heading_{{id}}" data-bs-parent="#{{accordion_id}}">
+            <div class="accordion-body {% if estatus == 'B' %}bg-secondary{% endif %}">
+                {{ caller() }}
+            </div>
+        </div>
+    </div>
+{%- endmacro -%}
+
+{%- macro help_items(id, titulo, descripcion, show="") -%}
+    <div class="accordion-item">
+        <h2 class="accordion-header accordion-color" id="heading_{{id}}">
+        <button class="accordion-button {% if not expanded %}collapsed{% endif %} fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{id}}" aria-controls="collapse_{{id}}">
+            {{ titulo|safe }}
+        </button>
+        </h2>
+        <div id="collapse_{{id}}" class="accordion-collapse collapse {{show}}" aria-labelledby="heading_{{id}}" data-bs-parent="#accordionP">
+        <div class="accordion-body help-body">
+            {{ descripcion|safe }}
+        </div>
+        </div>
+    </div>
+{%- endmacro -%}

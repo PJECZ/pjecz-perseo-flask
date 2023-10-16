@@ -1,0 +1,34 @@
+{% extends 'layouts/base.jinja2' %}
+{% import 'macros/flash.jinja2' as flash with context %}
+
+{% block template_head %}
+    <!-- Bootstrap 5 Dashboard -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bs5-dashboard.css') }}">
+    <!-- CSRF token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block main %}
+    <!-- Header -->
+    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+        <a id="headLogo" class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="/">
+            Movimiento Libre SGC
+        </a>
+        <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <input class="form-control form-control-dark w-100" type="text" placeholder="Buscar" aria-label="Buscar">
+    </header>
+    <!-- Container with navigation and main -->
+    <div class="container-fluid h-100">
+        <div class="row h-100">
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            </nav>
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                {% block topbar_actions %}{% endblock %}
+                {{ flash.render() }}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+{% endblock %}
