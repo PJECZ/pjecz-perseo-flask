@@ -33,6 +33,18 @@
         {{ detail.label_value('Puesto', usuario.puesto) }}
         {{ detail.label_value('Creado', moment(usuario.creado).format('llll')) }}
     {% endcall %}
+    {% if current_user.can_view('USUARIOS ROLES') %}
+        {% call detail.card('Roles') %}
+            <table id="usuarios_roles_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rol</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
@@ -41,4 +53,36 @@
         {% if usuario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + usuario.nombre + '?') }}{% endif %}
     {% endif %}
     {{ detail.moment_js(moment) }}
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('USUARIOS ROLES') %}
+        <script>
+            configDataTable['ajax']['url'] = '/usuarios_roles/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'usuario_id': {{ usuario.id}} };
+            configDataTable['columns'] = [
+                { data: "detalle" },
+                { data: "rol" }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // rol
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.url == '') {
+                            return data.nombre;
+                        } else {
+                            return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                        }
+                    }
+                }
+            ];
+            $('#usuarios_roles_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
 {% endblock %}

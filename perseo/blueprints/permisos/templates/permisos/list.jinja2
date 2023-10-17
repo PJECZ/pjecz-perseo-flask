@@ -43,7 +43,10 @@
         configDataTable['ajax']['url'] = '/permisos/datatable_json';
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
-            { data: 'detalle' }
+            { data: "detalle" },
+            { data: "rol" },
+            { data: "modulo" },
+            { data: "nivel" }
         ];
         configDataTable['columnDefs'] = [
             {
@@ -51,6 +54,28 @@
                 data: null,
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                }
+            },
+            {
+                targets: 1, // rol
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url == '') {
+                        return data.nombre;
+                    } else {
+                        return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    }
+                }
+            },
+            {
+                targets: 2, // modulo
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url == '') {
+                        return data.nombre;
+                    } else {
+                        return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    }
                 }
             }
         ];
