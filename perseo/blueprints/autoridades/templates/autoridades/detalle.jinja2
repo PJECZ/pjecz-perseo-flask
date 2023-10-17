@@ -1,0 +1,39 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Autoridad {{ autoridad.descripcion_corta }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Autoridad ' + autoridad.descripcion_corta) %}
+        {{ topbar.button_previous('Autoridades', url_for('autoridades.list_active')) }}
+        {% if current_user.can_admin('AUTORIDADES') %}
+            {% if autoridad.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('autoridades.delete', autoridad_id=autoridad.id)) }}{% endif %}
+            {% if autoridad.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('autoridades.recover', autoridad_id=autoridad.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=autoridad.estatus) %}
+        {{ detail.label_value('Clave', autoridad.clave) }}
+        {% if current_user.can_view("DISTRITOS") %}
+            {{ detail.label_value('Distrito', autoridad.distrito.nombre, url_for('distritos.detail', distrito_id=autoridad.distrito_id)) }}
+        {% else %}
+            {{ detail.label_value('Distrito', autoridad.distrito.nombre) }}
+        {% endif %}
+        {{ detail.label_value('Descripción', autoridad.descripcion) }}
+        {{ detail.label_value('Descripción corta', autoridad.descripcion_corta) }}
+        {{ detail.label_value_boolean('Es Extinto', autoridad.es_extinto) }}
+        {{ detail.label_value('Creado', moment(autoridad.creado).format('llll')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_edit('AUTORIDADES') %}
+        {% if autoridad.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + autoridad.clave + '?') }}{% endif %}
+        {% if autoridad.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + autoridad.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

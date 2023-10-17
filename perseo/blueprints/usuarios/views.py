@@ -12,10 +12,13 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from pytz import timezone
 
+from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.firebase_auth import firebase_auth
 from lib.safe_next_url import safe_next_url
-from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP
+from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_message, safe_string
+from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.entradas_salidas.models import EntradaSalida
+from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import anonymous_required, permission_required
 from perseo.blueprints.usuarios.forms import AccesoForm
@@ -119,6 +122,56 @@ def profile():
     )
 
 
+@usuarios.route("/usuarios/datatable_json", methods=["GET", "POST"])
+def datatable_json():
+    """DataTable JSON para listado de Usuarios"""
+    # Tomar parámetros de Datatables
+    draw, start, rows_per_page = get_datatable_parameters()
+    # Consultar
+    consulta = Usuario.query
+    if "estatus" in request.form:
+        consulta = consulta.filter_by(estatus=request.form["estatus"])
+    else:
+        consulta = consulta.filter_by(estatus="A")
+    if "autoridad_id" in request.form:
+        consulta = consulta.filter_by(autoridad_id=request.form["autoridad_id"])
+    if "nombres" in request.form:
+        consulta = consulta.filter(Usuario.nombres.contains(safe_string(request.form["nombres"])))
+    if "apellido_paterno" in request.form:
+        consulta = consulta.filter(Usuario.apellido_paterno.contains(safe_string(request.form["apellido_paterno"])))
+    if "apellido_materno" in request.form:
+        consulta = consulta.filter(Usuario.apellido_materno.contains(safe_string(request.form["apellido_materno"])))
+    if "curp" in request.form:
+        consulta = consulta.filter(Usuario.curp.contains(safe_string(request.form["curp"])))
+    if "puesto" in request.form:
+        consulta = consulta.filter(Usuario.puesto.contains(safe_string(request.form["puesto"])))
+    if "email" in request.form:
+        consulta = consulta.filter(Usuario.email.contains(safe_email(request.form["email"], search_fragment=True)))
+    registros = consulta.order_by(Usuario.id).offset(start).limit(rows_per_page).all()
+    total = consulta.count()
+    # Elaborar datos para DataTable
+    data = []
+    for resultado in registros:
+        data.append(
+            {
+                "detalle": {
+                    "email": resultado.email,
+                    "url": url_for("usuarios.detail", usuario_id=resultado.id),
+                },
+                "nombre": resultado.nombre,
+                "puesto": resultado.puesto,
+                "autoridad": {
+                    "clave": resultado.autoridad.clave,
+                    "url": url_for("autoridades.detail", autoridad_id=resultado.autoridad_id)
+                    if current_user.can_view("AUTORIDADES")
+                    else "",
+                },
+            }
+        )
+    # Entregar JSON
+    return output_datatable_json(draw, total, data)
+
+
 @usuarios.route("/usuarios")
 @login_required
 @permission_required(MODULO, Permiso.VER)
@@ -143,3 +196,46 @@ def list_inactive():
         titulo="Usuarios inactivos",
         estatus="B",
     )
+
+
+@usuarios.route("/usuarios/<int:usuario_id>")
+def detail(usuario_id):
+    """Detalle de un Usuario"""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    return render_template("usuarios/detail.jinja2", usuario=usuario)
+
+
+@usuarios.route("/usuarios/eliminar/<int:usuario_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(usuario_id):
+    """Eliminar Usuario"""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    if usuario.estatus == "A":
+        usuario.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Usuario {usuario.email}"),
+            url=url_for("usuarios.detail", usuario_id=usuario.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("usuarios.detail", usuario_id=usuario.id))
+
+
+@usuarios.route("/usuarios/recuperar/<int:usuario_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(usuario_id):
+    """Recuperar Usuario"""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    if usuario.estatus == "B":
+        usuario.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Usuario {usuario.email}"),
+            url=url_for("usuarios.detail", usuario_id=usuario.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("usuarios.detail", usuario_id=usuario.id))

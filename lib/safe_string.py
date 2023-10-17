@@ -1,5 +1,5 @@
 """
-Lib - Safe string
+Safe String
 """
 import re
 
@@ -21,6 +21,14 @@ def safe_clave(input_str, max_len=16):
     if len(final) > max_len:
         return final[:max_len]
     return final
+
+
+def safe_message(input_str, max_len=250, default_output_str="Sin descripción"):
+    """Safe message"""
+    message = str(input_str)
+    if message == "":
+        return default_output_str
+    return (message[:max_len] + "...") if len(message) > max_len else message
 
 
 def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_uppercase=True):
