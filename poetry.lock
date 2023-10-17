@@ -456,6 +456,22 @@ Flask = ">=1.0.4"
 Werkzeug = ">=1.0.1"
 
 [[package]]
+name = "flask-moment"
+version = "1.0.5"
+description = "Formatting of dates and times in Flask templates using moment.js."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "Flask-Moment-1.0.5.tar.gz", hash = "sha256:33307ecd4af8290b6df6a9828ff55ac0977d0567817f9bc0f69803d22ed2b55c"},
+    {file = "Flask_Moment-1.0.5-py3-none-any.whl", hash = "sha256:6e7b3eef89e2137bbbee975405f241a68a44edfa34bf052c92d84364992adca6"},
+]
+
+[package.dependencies]
+Flask = "*"
+packaging = ">=14.1"
+
+[[package]]
 name = "flask-socketio"
 version = "5.3.6"
 description = "Socket.IO integration for Flask applications"
@@ -1160,7 +1176,7 @@ setuptools = "*"
 name = "packaging"
 version = "23.2"
 description = "Core utilities for Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2073,4 +2089,4 @@ email = ["email-validator"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "2684e08a7a044fa460cb63f4e1fedd7446cae0b999d8f7ec4b2acf4fcdf7f1d1"
+content-hash = "b1d5e27d3ed54f3e72c11d5175b67b9da1a4fb0e02cb171068782840f82e45b6"

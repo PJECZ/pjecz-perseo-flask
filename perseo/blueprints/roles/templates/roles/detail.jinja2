@@ -21,9 +21,9 @@
             <table id="permisos_datatable" class="table display nowrap" style="width:100%">
                 <thead>
                     <tr>
-                        <th>Nombres</th>
-                        <th>Modulos</th>
-                        <th>Niveles</th>
+                        <th>Descripción</th>
+                        <th>Módulo</th>
+                        <th>Nivel</th>
                     </tr>
                 </thead>
             </table>
@@ -83,7 +83,6 @@
             $('#permisos_datatable').DataTable(configDataTable);
         </script>
     {% endif %}
-    {{ detail.config_datatable() }}
     {% if current_user.can_view('USUARIOS ROLES') %}
         <script>
             configDataTable['ajax']['url'] = '/usuarios_roles/datatable_json';
@@ -117,7 +116,7 @@
                     targets: [2, 3], // usuario_nombre, usuario_puesto
                     data: null,
                     render: function(data, type, row, meta) {
-                        return (data.length > 24 ? data.substr(0, 24) + '…' : data);
+                        return (data.length > 32 ? data.substr(0, 32) + '…' : data);
                     }
                 }
             ];

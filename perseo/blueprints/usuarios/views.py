@@ -15,7 +15,7 @@ from pytz import timezone
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.firebase_auth import firebase_auth
 from lib.safe_next_url import safe_next_url
-from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_message, safe_string
+from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_email, safe_message, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.entradas_salidas.models import EntradaSalida
 from perseo.blueprints.modulos.models import Modulo
@@ -91,7 +91,7 @@ def login():
                         flash("No está activa esa cuenta", "warning")
                 else:
                     flash("Usuario o contraseña incorrectos.", "warning")
-    return render_template("usuarios/login.jinja2", form=form, firebase_auth=firebase_auth, title="Plataforma Web")
+    return render_template("usuarios/login.jinja2", form=form, firebase_auth=firebase_auth, title="Plataforma Perseo")
 
 
 @usuarios.route("/logout")
@@ -123,6 +123,8 @@ def profile():
 
 
 @usuarios.route("/usuarios/datatable_json", methods=["GET", "POST"])
+@login_required
+@permission_required(MODULO, Permiso.VER)
 def datatable_json():
     """DataTable JSON para listado de Usuarios"""
     # Tomar parámetros de Datatables
@@ -147,7 +149,7 @@ def datatable_json():
         consulta = consulta.filter(Usuario.puesto.contains(safe_string(request.form["puesto"])))
     if "email" in request.form:
         consulta = consulta.filter(Usuario.email.contains(safe_email(request.form["email"], search_fragment=True)))
-    registros = consulta.order_by(Usuario.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Usuario.email).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []

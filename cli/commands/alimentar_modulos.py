@@ -32,7 +32,7 @@ def alimentar_modulos():
                 continue
             Modulo(
                 nombre=safe_string(row["nombre"], save_enie=True),
-                nombre_corto=safe_string(row["nombre_corto"], save_enie=True),
+                nombre_corto=safe_string(row["nombre_corto"], save_enie=True, to_uppercase=False),
                 icono=row["icono"],
                 ruta=row["ruta"],
                 en_navegacion=row["en_navegacion"] == "1",

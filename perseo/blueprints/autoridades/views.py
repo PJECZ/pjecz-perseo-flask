@@ -43,7 +43,7 @@ def datatable_json():
         consulta = consulta.filter(Autoridad.clave.contains(safe_string(request.form["clave"])))
     if "descripcion" in request.form:
         consulta = consulta.filter(Autoridad.descripcion.contains(safe_string(request.form["descripcion"], to_uppercase=False)))
-    registros = consulta.order_by(Autoridad.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Autoridad.clave).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []

@@ -1,6 +1,7 @@
 """
 Usuarios, modelos
 """
+from flask_login import UserMixin
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -10,7 +11,7 @@ from perseo.blueprints.usuarios_roles.models import UsuarioRol
 from perseo.extensions import database, pwd_context
 
 
-class Usuario(database.Model, UniversalMixin):
+class Usuario(database.Model, UserMixin, UniversalMixin):
     """Usuario"""
 
     # Nombre de la tabla
@@ -28,6 +29,8 @@ class Usuario(database.Model, UniversalMixin):
     nombres = Column(String(256), nullable=False)
     apellido_primero = Column(String(256), nullable=False)
     apellido_segundo = Column(String(256))
+    curp = Column(String(18), default="", server_default="")
+    puesto = Column(String(256), default="", server_default="")
 
     # Columnas que no deben ser expuestas
     api_key = Column(String(128), nullable=False)
@@ -45,8 +48,8 @@ class Usuario(database.Model, UniversalMixin):
 
     @property
     def nombre(self):
-        """Junta nombres, apellido_paterno y apellido materno"""
-        return self.nombres + " " + self.apellido_paterno + " " + self.apellido_materno
+        """Junta nombres, apellido primero y apellido segundo"""
+        return self.nombres + " " + self.apellido_primero + " " + self.apellido_segundo
 
     @property
     def modulos_menu_principal(self):

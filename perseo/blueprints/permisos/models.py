@@ -49,6 +49,11 @@ class Permiso(database.Model, UniversalMixin):
         """Nombre del modulo"""
         return self.modulo.nombre
 
+    @property
+    def nivel_descrito(self):
+        """Nivel descrito"""
+        return self.NIVELES[self.nivel]
+
     def __repr__(self):
         """Representación"""
         return f"<Permiso {self.id}>"

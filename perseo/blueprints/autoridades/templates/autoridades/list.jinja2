@@ -47,14 +47,14 @@
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return dataTable_funcs.texto_con_url(data.clave, data.url);
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
                 }
             },
             {
                 targets: 2, // distrito
                 data: null,
                 render: function(data, type, row, meta) {
-                    return dataTable_funcs.texto_con_url(data.nombre_corto, data.url);
+                    return '<a href="' + data.url + '">' + data.nombre_corto + '</a>';
                 }
             },
         ];

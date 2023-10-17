@@ -12,8 +12,10 @@ from perseo.blueprints.modulos.views import modulos
 from perseo.blueprints.permisos.views import permisos
 from perseo.blueprints.roles.views import roles
 from perseo.blueprints.sistemas.views import sistemas
+from perseo.blueprints.usuarios.models import Usuario
+from perseo.blueprints.usuarios.views import usuarios
 from perseo.blueprints.usuarios_roles.views import usuarios_roles
-from perseo.extensions import csrf, database, login_manager
+from perseo.extensions import csrf, database, login_manager, moment
 
 
 def create_app():
@@ -33,10 +35,14 @@ def create_app():
     app.register_blueprint(permisos)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
+    app.register_blueprint(usuarios)
     app.register_blueprint(usuarios_roles)
 
     # Inicializar extensiones
     extensions(app)
+
+    # Inicializar autenticación
+    authentication(Usuario)
 
     # Entregar app
     return app
@@ -47,3 +53,13 @@ def extensions(app):
     csrf.init_app(app)
     database.init_app(app)
     login_manager.init_app(app)
+    moment.init_app(app)
+
+
+def authentication(user_model):
+    """Inicializar Flask-Login"""
+    login_manager.login_view = "usuarios.login"
+
+    @login_manager.user_loader
+    def load_user(uid):
+        return user_model.query.get(uid)

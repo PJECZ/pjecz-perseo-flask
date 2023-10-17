@@ -1,5 +1,6 @@
 {% extends 'layouts/base.jinja2' %}
 {% import 'macros/flash.jinja2' as flash with context %}
+{% import 'macros/navigation.jinja2' as navigation %}
 
 {% block template_head %}
     <!-- Bootstrap 5 Dashboard -->
@@ -12,7 +13,7 @@
     <!-- Header -->
     <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
         <a id="headLogo" class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="/">
-            Movimiento Libre SGC
+            Plataforma Perseo
         </a>
         <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -23,6 +24,12 @@
     <div class="container-fluid h-100">
         <div class="row h-100">
             <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                {% call navigation.menu(usuario_email=current_user.email) %}
+                    {{ navigation.menu_option('Inicio', '/', 'mdi:view-dashboard') }}
+                    {% for modulo in current_user.modulos_menu_principal %}
+                        {{ navigation.menu_option(modulo.nombre_corto, modulo.ruta, modulo.icono) }}
+                    {% endfor %}
+                {% endcall %}
             </nav>
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 {% block topbar_actions %}{% endblock %}

@@ -23,6 +23,20 @@ def safe_clave(input_str, max_len=16):
     return final
 
 
+def safe_email(input_str, search_fragment=False):
+    """Safe string"""
+    if not isinstance(input_str, str):
+        return ""
+    final = input_str.strip().lower()
+    if search_fragment:
+        if re.match(r"^[\w.-]*@*[\w.-]*\.*\w*$", final) is None:
+            return ""
+        return final
+    if re.match(EMAIL_REGEXP, final) is None:
+        return ""
+    return final
+
+
 def safe_message(input_str, max_len=250, default_output_str="Sin descripción"):
     """Safe message"""
     message = str(input_str)

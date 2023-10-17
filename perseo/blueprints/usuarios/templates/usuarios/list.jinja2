@@ -16,9 +16,6 @@
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('usuarios.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('usuarios.list_active')) }}{% endif %}
         {% endif %}
-        {% if current_user.can_insert('USUARIOS') %}
-            {{ topbar.button_new('Nuevo Usuario', url_for('usuarios.new')) }}
-        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -53,21 +50,21 @@
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return dataTable_funcs.texto_con_url(data.email, data.url);
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
                 }
             },
             {
                 targets: [1, 2], // nombre, puesto
                 data: null,
                 render: function(data, type, row, meta) {
-                    return dataTable_funcs.texto_cortado(data, 32);
+                    return (data.length > 48 ? data.substr(0, 48) + '…' : data);
                 }
             },
             {
                 targets: 3, // autoridad
                 data: null,
                 render: function(data, type, row, meta) {
-                    return dataTable_funcs.texto_con_url(data.clave, data.url);
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
                 }
             }
         ];
