@@ -5,6 +5,10 @@ import re
 
 from unidecode import unidecode
 
+CONTRASENA_REGEXP = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,48}$"
+EMAIL_REGEXP = r"^[\w.-]+@[\w.-]+\.\w+$"
+TOKEN_REGEXP = r"^[a-zA-Z0-9_.=+-]+$"
+
 
 def safe_clave(input_str, max_len=16):
     """Safe clave"""

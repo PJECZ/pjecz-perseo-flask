@@ -21,7 +21,7 @@ def create_app():
     # Definir app
     app = Flask(__name__, instance_relative_config=True)
 
-    # Cargar la configuración para producción en config/settings.py
+    # Cargar la configuración
     app.config.from_object(Settings())
 
     # Registrar blueprints
