@@ -35,8 +35,8 @@ class Usuario(database.Model, UniversalMixin):
     contrasena = Column(String(256), nullable=False)
 
     # Hijos
-    bitacoras = relationship("Bitacora", back_populates="usuario")
-    entradas_salidas = relationship("EntradaSalida", back_populates="usuario")
+    bitacoras = relationship("Bitacora", back_populates="usuario", lazy="noload")
+    entradas_salidas = relationship("EntradaSalida", back_populates="usuario", lazy="noload")
     usuarios_roles = relationship("UsuarioRol", back_populates="usuario")
 
     # Propiedades

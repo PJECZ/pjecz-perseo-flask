@@ -65,5 +65,14 @@ def inicializar():
     click.echo("Termina inicializar.")
 
 
+@click.command()
+@click.pass_context
+def reiniciar(ctx):
+    """Reiniciar ejecuta inicializar y alimentar"""
+    ctx.invoke(inicializar)
+    ctx.invoke(alimentar)
+
+
 cli.add_command(alimentar)
 cli.add_command(inicializar)
+cli.add_command(reiniciar)
