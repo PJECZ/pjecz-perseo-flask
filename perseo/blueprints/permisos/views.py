@@ -105,7 +105,7 @@ def new_with_rol(rol_id):
     rol = Rol.query.get_or_404(rol_id)
     form = PermisoNewWithRolForm()
     if form.validate_on_submit():
-        modulo = Modulo.query.get(form.modulo.data)
+        modulo = Modulo.query.get_or_404(form.modulo.data)
         nivel = form.nivel.data
         nombre = f"{rol.nombre} puede {Permiso.NIVELES[nivel]} en {modulo.nombre}"
         posible_permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
@@ -137,7 +137,7 @@ def new_with_modulo(modulo_id):
     modulo = Modulo.query.get_or_404(modulo_id)
     form = PermisoNewWithModuloForm()
     if form.validate_on_submit():
-        rol = Rol.query.get(form.rol.data)
+        rol = Rol.query.get_or_404(form.rol.data)
         nivel = form.nivel.data
         nombre = f"{rol.nombre} puede {Permiso.NIVELES[nivel]} en {modulo.nombre}"
         posible_permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()

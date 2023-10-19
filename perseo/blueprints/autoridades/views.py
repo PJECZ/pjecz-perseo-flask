@@ -11,6 +11,7 @@ from lib.safe_string import safe_clave, safe_message, safe_string
 from perseo.blueprints.autoridades.forms import AutoridadForm
 from perseo.blueprints.autoridades.models import Autoridad
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.distritos.models import Distrito
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import permission_required
@@ -110,8 +111,9 @@ def new():
         if Autoridad.query.filter_by(clave=clave).first():
             flash("La clave ya está en uso. Debe de ser única.", "warning")
         else:
+            distrito = Distrito.query.get_or_404(form.distrito.data)
             autoridad = Autoridad(
-                distrito_id=form.distrito.data,
+                distrito=distrito,
                 clave=clave,
                 descripcion=safe_string(form.descripcion.data, save_enie=True),
                 descripcion_corta=safe_string(form.descripcion_corta.data, save_enie=True),
@@ -147,7 +149,8 @@ def edit(autoridad_id):
                 flash("La clave ya está en uso. Debe de ser única.", "warning")
         # Si es valido actualizar
         if es_valido:
-            autoridad.distrito_id = form.distrito.data
+            distrito = Distrito.query.get_or_404(form.distrito.data)
+            autoridad.distrito = distrito
             autoridad.clave = clave
             autoridad.descripcion = safe_string(form.descripcion.data, save_enie=True)
             autoridad.descripcion_corta = safe_string(form.descripcion_corta.data, save_enie=True)
@@ -162,7 +165,7 @@ def edit(autoridad_id):
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
-    form.distrito.data = autoridad.distrito_id
+    form.distrito.data = autoridad.distrito_id  # Usa id porque es un SelectField
     form.clave.data = autoridad.clave
     form.descripcion.data = autoridad.descripcion
     form.descripcion_corta.data = autoridad.descripcion_corta

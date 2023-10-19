@@ -16,12 +16,13 @@ from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.firebase_auth import firebase_auth
 from lib.safe_next_url import safe_next_url
 from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_email, safe_message, safe_string
+from perseo.blueprints.autoridades.models import Autoridad
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.entradas_salidas.models import EntradaSalida
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import anonymous_required, permission_required
-from perseo.blueprints.usuarios.forms import AccesoForm
+from perseo.blueprints.usuarios.forms import AccesoForm, UsuarioForm
 from perseo.blueprints.usuarios.models import Usuario
 
 HTTP_REQUEST = google.auth.transport.requests.Request()
@@ -205,6 +206,85 @@ def detail(usuario_id):
     """Detalle de un Usuario"""
     usuario = Usuario.query.get_or_404(usuario_id)
     return render_template("usuarios/detail.jinja2", usuario=usuario)
+
+
+@usuarios.route("/usuarios/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Usuario"""
+    form = UsuarioForm()
+    if form.validate_on_submit():
+        # Validar que el email no se repita
+        email = safe_email(form.email.data)
+        if Usuario.query.filter_by(email=email).first():
+            flash("El e-mail ya está en uso. Debe de ser único.", "warning")
+        else:
+            autoridad = Autoridad.query.get_or_404(form.autoridad.data)
+            usuario = Usuario(
+                autoridad=autoridad,
+                email=email,
+                nombres=safe_string(form.nombres.data, save_enie=True),
+                apellido_primero=safe_string(form.apellido_primero.data, save_enie=True),
+                apellido_segundo=safe_string(form.apellido_segundo.data, save_enie=True),
+                curp=safe_string(form.curp.data),
+                puesto=safe_string(form.puesto.data),
+            )
+            usuario.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nuevo Usuario {usuario.descripcion}"),
+                url=url_for("usuarios.detail", usuario_id=usuario.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    return render_template("usuarios/new.jinja2", form=form)
+
+
+@usuarios.route("/usuarios/edicion/<int:usuario_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(usuario_id):
+    """Editar Usuario"""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    form = UsuarioForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia el e-mail verificar que no este en uso
+        email = safe_email(form.email.data)
+        if usuario.email != email:
+            usuario_existente = Usuario.query.filter_by(email=email).first()
+            if usuario_existente and usuario_existente.id != usuario.id:
+                es_valido = False
+                flash("La e-mail ya está en uso. Debe de ser único.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            autoridad = Autoridad.query.get_or_404(form.autoridad.data)
+            usuario.autoridad = autoridad
+            usuario.email = email
+            usuario.nombres = safe_string(form.nombres.data, save_enie=True)
+            usuario.apellido_primero = safe_string(form.apellido_primero.data, save_enie=True)
+            usuario.apellido_segundo = safe_string(form.apellido_segundo.data, save_enie=True)
+            usuario.curp = safe_string(form.curp.data)
+            usuario.puesto = safe_string(form.puesto.data)
+            usuario.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Usuario {usuario.descripcion}"),
+                url=url_for("usuarios.detail", usuario_id=usuario.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.autoridad.data = usuario.autoridad_id  # Usa id porque es un SelectField
+    form.email.data = usuario.email
+    form.nombres.data = usuario.nombres
+    form.apellido_primero.data = usuario.apellido_primero
+    form.apellido_segundo.data = usuario.apellido_segundo
+    form.curp.data = usuario.curp
+    form.puesto.data = usuario.puesto
+    return render_template("usuarios/edit.jinja2", form=form, usuario=usuario)
 
 
 @usuarios.route("/usuarios/eliminar/<int:usuario_id>")
