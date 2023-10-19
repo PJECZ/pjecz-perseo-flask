@@ -297,7 +297,12 @@ def delete(usuario_id):
     """Eliminar Usuario"""
     usuario = Usuario.query.get_or_404(usuario_id)
     if usuario.estatus == "A":
+        # Dar de baja al usuario
         usuario.delete()
+        # Dar de baja los roles del usuario
+        for usuario_rol in usuario.usuarios_roles:
+            usuario_rol.delete()
+        # Guardar en la bitacora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
@@ -315,7 +320,12 @@ def recover(usuario_id):
     """Recuperar Usuario"""
     usuario = Usuario.query.get_or_404(usuario_id)
     if usuario.estatus == "B":
+        # Recuperar al usuario
         usuario.recover()
+        # Recuperar los roles del usuario
+        for usuario_rol in usuario.usuarios_roles:
+            usuario_rol.recover()
+        # Guardar en la bitacora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,

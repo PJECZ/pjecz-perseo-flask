@@ -126,7 +126,7 @@ def new_with_rol(rol_id):
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
             descripcion=safe_message(f"Nuevo Usuario-Rol {usuario_rol.descripcion}"),
-            url=url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol.id),
+            url=url_for("roles.detail", rol_id=rol.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
@@ -163,7 +163,7 @@ def new_with_usuario(usuario_id):
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
             descripcion=safe_message(f"Nuevo Usuario-Rol {usuario_rol.descripcion}"),
-            url=url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol.id),
+            url=url_for("usuarios.detail", usuario_id=usuario.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")

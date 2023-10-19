@@ -36,7 +36,7 @@ class PermisoNewWithModuloForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         """Inicializar y cargar opciones para rol"""
         super().__init__(*args, **kwargs)
-        self.rol.choices = [(d.id, d.nombre) for d in Rol.query.filter_by(estatus="A").order_by(Rol.nombre).all()]
+        self.rol.choices = [(r.id, r.nombre) for r in Rol.query.filter_by(estatus="A").order_by(Rol.nombre).all()]
 
 
 class PermisoNewWithRolForm(FlaskForm):
@@ -50,4 +50,4 @@ class PermisoNewWithRolForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         """Inicializar y cargar opciones para modulo"""
         super().__init__(*args, **kwargs)
-        self.modulo.choices = [(d.id, d.nombre) for d in Modulo.query.filter_by(estatus="A").order_by(Modulo.nombre).all()]
+        self.modulo.choices = [(m.id, m.nombre) for m in Modulo.query.filter_by(estatus="A").order_by(Modulo.nombre).all()]

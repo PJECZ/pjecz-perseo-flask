@@ -148,7 +148,15 @@ def delete(rol_id):
     """Eliminar Rol"""
     rol = Rol.query.get_or_404(rol_id)
     if rol.estatus == "A":
+        # Dar de baja el rol
         rol.delete()
+        # Dar de baja los permisos del rol
+        for permiso in rol.permisos:
+            permiso.delete()
+        # Dar de baja los usuarios del rol
+        for usuario_rol in rol.usuarios_roles:
+            usuario_rol.delete()
+        # Guardar en la bitacora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
@@ -166,7 +174,15 @@ def recover(rol_id):
     """Recuperar Rol"""
     rol = Rol.query.get_or_404(rol_id)
     if rol.estatus == "B":
+        # Dar de alta el rol
         rol.recover()
+        # Dar de alta los permisos del rol
+        for permiso in rol.permisos:
+            permiso.recover()
+        # Dar de alta los usuarios del rol
+        for usuario_rol in rol.usuarios_roles:
+            usuario_rol.recover()
+        # Guardar en la bitacora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,

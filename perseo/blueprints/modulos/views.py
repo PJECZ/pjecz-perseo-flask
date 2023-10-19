@@ -163,7 +163,12 @@ def delete(modulo_id):
     """Eliminar Modulo"""
     este_modulo = Modulo.query.get_or_404(modulo_id)
     if este_modulo.estatus == "A":
+        # Dar de baja el modulo
         este_modulo.delete()
+        # Dar de baja los permisos asociados
+        for permiso in este_modulo.permisos:
+            permiso.delete()
+        # Guardar en la bitacora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
@@ -181,7 +186,12 @@ def recover(modulo_id):
     """Recuperar Modulo"""
     este_modulo = Modulo.query.get_or_404(modulo_id)
     if este_modulo.estatus == "B":
+        # Dar de alta el modulo
         este_modulo.recover()
+        # Dar de alta los permisos asociados
+        for permiso in este_modulo.permisos:
+            permiso.recover()
+        # Guardar en la bitacora
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,

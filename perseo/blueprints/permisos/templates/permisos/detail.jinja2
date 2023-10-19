@@ -8,6 +8,9 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Permiso ' + permiso.nombre) %}
         {{ topbar.button_previous('Permisos', url_for('permisos.list_active')) }}
+        {% if current_user.can_edit('PERMISOS') %}
+            {{ topbar.button_edit('Editar', url_for('permisos.edit', permiso_id=permiso.id)) }}
+        {% endif %}
         {% if current_user.can_admin('PERMISOS') %}
             {% if permiso.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('permisos.delete', permiso_id=permiso.id)) }}{% endif %}
             {% if permiso.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('permisos.recover', permiso_id=permiso.id)) }}{% endif %}
