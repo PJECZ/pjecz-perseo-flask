@@ -10,7 +10,9 @@ from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_message
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
+from perseo.blueprints.permisos.forms import PermisoEditForm, PermisoNewWithModuloForm, PermisoNewWithRolForm
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.roles.models import Rol
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "PERMISOS"
@@ -94,6 +96,95 @@ def detail(permiso_id):
     """Detalle de un Permiso"""
     permiso = Permiso.query.get_or_404(permiso_id)
     return render_template("permisos/detail.jinja2", permiso=permiso)
+
+
+@permisos.route("/permisos/nuevo_con_rol/<int:rol_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_rol(rol_id):
+    """Nuevo Permiso con Rol"""
+    rol = Rol.query.get_or_404(rol_id)
+    form = PermisoNewWithRolForm()
+    if form.validate_on_submit():
+        modulo = Modulo.query.get(form.modulo.data)
+        nivel = form.nivel.data
+        nombre = f"{rol.nombre} puede {Permiso.NIVELES[nivel]} en {modulo.nombre}"
+        posible_permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
+        if posible_permiso_existente is not None:
+            flash(f"CONFLICTO: Ya existe {rol.nombre} en {modulo.nombre}.", "warning")
+            return redirect(url_for("permisos.detail", permiso_id=posible_permiso_existente.id))
+        permiso = Permiso(
+            modulo=modulo,
+            rol=rol,
+            nombre=nombre,
+            nivel=nivel,
+        )
+        permiso.save()
+        flash(safe_message(f"Nuevo permiso {nombre}"), "success")
+        return redirect(url_for("roles.detail", rol_id=rol.id))
+    form.rol.data = rol.nombre  # Solo lectura
+    return render_template(
+        "permisos/new_with_rol.jinja2",
+        form=form,
+        rol=rol,
+        titulo=f"Agregar permiso al rol {rol.nombre}",
+    )
+
+
+@permisos.route("/permisos/nuevo_con_modulo/<int:modulo_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_modulo(modulo_id):
+    """Nuevo Permiso con Modulo"""
+    modulo = Modulo.query.get_or_404(modulo_id)
+    form = PermisoNewWithModuloForm()
+    if form.validate_on_submit():
+        rol = Rol.query.get(form.rol.data)
+        nivel = form.nivel.data
+        nombre = f"{rol.nombre} puede {Permiso.NIVELES[nivel]} en {modulo.nombre}"
+        posible_permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
+        if posible_permiso_existente is not None:
+            flash(f"CONFLICTO: Ya existe {nombre}.", "warning")
+            return redirect(url_for("permisos.detail", permiso_id=posible_permiso_existente.id))
+        permiso = Permiso(
+            modulo=modulo,
+            rol=rol,
+            nombre=nombre,
+            nivel=nivel,
+        )
+        permiso.save()
+        flash(safe_message(f"Nuevo permiso {nombre}"), "success")
+        return redirect(url_for("modulos.detail", modulo_id=modulo.id))
+    form.modulo.data = modulo.nombre  # Solo lectura
+    return render_template(
+        "permisos/new_with_modulo.jinja2",
+        form=form,
+        modulo=modulo,
+        titulo=f"Agregar permiso al módulo {modulo.nombre}",
+    )
+
+
+@permisos.route("/permisos/edicion/<int:permiso_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(permiso_id):
+    """Editar Permiso"""
+    permiso = Permiso.query.get_or_404(permiso_id)
+    form = PermisoEditForm()
+    if form.validate_on_submit():
+        permiso.nivel = form.nivel.data
+        permiso.nombre = f"{permiso.rol.nombre} puede {Permiso.NIVELES[permiso.nivel]} en {permiso.modulo.nombre}"
+        permiso.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Permiso {permiso.nombre}"),
+            url=url_for("permisos.detail", permiso_id=permiso.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.modulo.data = permiso.modulo.nombre  # Solo lectura
+    form.rol.data = permiso.rol.nombre  # Solo lectura
+    form.nivel.data = permiso.nivel
+    return render_template("permisos/edit.jinja2", form=form, permiso=permiso)
 
 
 @permisos.route("/permisos/eliminar/<int:permiso_id>")

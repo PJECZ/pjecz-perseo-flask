@@ -111,7 +111,7 @@ def new():
             flash("La clave ya está en uso. Debe de ser única.", "warning")
         else:
             autoridad = Autoridad(
-                distrito=form.distrito.data,
+                distrito_id=form.distrito.data,
                 clave=clave,
                 descripcion=safe_string(form.descripcion.data, save_enie=True),
                 descripcion_corta=safe_string(form.descripcion_corta.data, save_enie=True),
@@ -147,7 +147,7 @@ def edit(autoridad_id):
                 flash("La clave ya está en uso. Debe de ser única.", "warning")
         # Si es valido actualizar
         if es_valido:
-            autoridad.distrito = form.distrito.data
+            autoridad.distrito_id = form.distrito.data
             autoridad.clave = clave
             autoridad.descripcion = safe_string(form.descripcion.data, save_enie=True)
             autoridad.descripcion_corta = safe_string(form.descripcion_corta.data, save_enie=True)
@@ -162,7 +162,7 @@ def edit(autoridad_id):
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
-    form.distrito.data = autoridad.distrito
+    form.distrito.data = autoridad.distrito_id
     form.clave.data = autoridad.clave
     form.descripcion.data = autoridad.descripcion
     form.descripcion_corta.data = autoridad.descripcion_corta

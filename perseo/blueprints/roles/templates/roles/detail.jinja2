@@ -30,6 +30,9 @@
                     </tr>
                 </thead>
             </table>
+            {% if current_user.can_insert('PERMISOS') %}
+            <a href="{{ url_for('permisos.new_with_rol', rol_id=rol.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
         {% endcall %}
     {% endif %}
     {% if current_user.can_view('USUARIOS ROLES') %}
