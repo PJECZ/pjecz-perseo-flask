@@ -46,6 +46,9 @@
                     </tr>
                 </thead>
             </table>
+            {% if current_user.can_insert('USUARIOS ROLES') %}
+            <a href="{{ url_for('usuarios_roles.new_with_usuario', usuario_id=usuario.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
         {% endcall %}
     {% endif %}
 {% endblock %}

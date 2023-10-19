@@ -11,6 +11,7 @@ packages = [{include = "perseo"}]
 python = "^3.11"
 click = "^8.1.7"
 cryptography = "^41.0.4"
+email-validator = "^2.0.0.post2"
 flask = "^2.3.3"
 flask-login = "^0.6.2"
 flask-moment = "^1.0.5"

@@ -108,14 +108,14 @@ def detail(usuario_rol_id):
 def new_with_rol(rol_id):
     """Nuevo Usuario-Rol con el rol como parametro"""
     rol = Rol.query.get_or_404(rol_id)
-    form = UsuarioRolNewWithUsuarioForm()
+    form = UsuarioRolNewWithRolForm()
     if form.validate_on_submit():
-        usuario = Usuario.query.get_or_404(form.usuario_id.data)
+        usuario = Usuario.query.get_or_404(form.usuario.data)
         descripcion = f"{usuario.email} en {rol.nombre}"
         usuario_rol_existente = UsuarioRol.query.filter(UsuarioRol.usuario == usuario).filter(UsuarioRol.rol == rol).first()
         if usuario_rol_existente is not None:
             flash(f"CONFLICTO: Ya existe {rol.nombre} en {usuario.email}.", "warning")
-            return redirect(url_for("permisos.detail", permiso_id=usuario_rol_existente.id))
+            return redirect(url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol_existente.id))
         usuario_rol = UsuarioRol(
             rol=rol,
             usuario=usuario,
@@ -131,10 +131,11 @@ def new_with_rol(rol_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
+    form.rol_nombre.data = rol.nombre  # Solo lectura
     return render_template(
         "usuarios_roles/new_with_rol.jinja2",
-        rol=rol,
         form=form,
+        rol=rol,
         titulo=f"Agregar usuario al rol {rol.nombre}",
     )
 
@@ -144,14 +145,14 @@ def new_with_rol(rol_id):
 def new_with_usuario(usuario_id):
     """Nuevo Usuario-Rol con el usuario como parametro"""
     usuario = Usuario.query.get_or_404(usuario_id)
-    form = UsuarioRolNewWithRolForm()
+    form = UsuarioRolNewWithUsuarioForm()
     if form.validate_on_submit():
-        rol = Rol.query.get_or_404(form.rol_id.data)
+        rol = Rol.query.get_or_404(form.rol.data)
         descripcion = f"{usuario.email} en {rol.nombre}"
         usuario_rol_existente = UsuarioRol.query.filter(UsuarioRol.usuario == usuario).filter(UsuarioRol.rol == rol).first()
         if usuario_rol_existente is not None:
             flash(f"CONFLICTO: Ya existe {rol.nombre} en {usuario.email}.", "warning")
-            return redirect(url_for("permisos.detail", permiso_id=usuario_rol_existente.id))
+            return redirect(url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol_existente.id))
         usuario_rol = UsuarioRol(
             rol=rol,
             usuario=usuario,
@@ -167,10 +168,13 @@ def new_with_usuario(usuario_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
+    form.usuario_email.data = usuario.email  # Solo lectura
+    form.usuario_nombre.data = usuario.nombre  # Solo lectura
+    form.usuario_puesto.data = usuario.puesto  # Solo lectura
     return render_template(
         "usuarios_roles/new_with_usuario.jinja2",
-        usuario=usuario,
         form=form,
+        usuario=usuario,
         titulo=f"Agregar rol al usuario {usuario.email}",
     )
 

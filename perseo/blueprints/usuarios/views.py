@@ -14,6 +14,7 @@ from pytz import timezone
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.firebase_auth import firebase_auth
+from lib.pwgen import generar_contrasena
 from lib.safe_next_url import safe_next_url
 from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_email, safe_message, safe_string
 from perseo.blueprints.autoridades.models import Autoridad
@@ -228,12 +229,15 @@ def new():
                 apellido_segundo=safe_string(form.apellido_segundo.data, save_enie=True),
                 curp=safe_string(form.curp.data),
                 puesto=safe_string(form.puesto.data),
+                api_key="",
+                api_key_expiracion=datetime(year=2000, month=1, day=1, hour=0, minute=0, second=0),
+                contrasena=generar_contrasena(),
             )
             usuario.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Nuevo Usuario {usuario.descripcion}"),
+                descripcion=safe_message(f"Nuevo Usuario {usuario.email}"),
                 url=url_for("usuarios.detail", usuario_id=usuario.id),
             )
             bitacora.save()
@@ -271,7 +275,7 @@ def edit(usuario_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Editado Usuario {usuario.descripcion}"),
+                descripcion=safe_message(f"Editado Usuario {usuario.email}"),
                 url=url_for("usuarios.detail", usuario_id=usuario.id),
             )
             bitacora.save()

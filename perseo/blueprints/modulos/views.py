@@ -109,7 +109,7 @@ def new():
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
                 descripcion=safe_message(f"Nuevo Modulo {modulo.nombre}"),
-                url=url_for("modulos.detail", este_modulo_id=modulo.id),
+                url=url_for("modulos.detail", modulo_id=modulo.id),
             )
             bitacora.save()
             flash(bitacora.descripcion, "success")

@@ -2,7 +2,7 @@
 Permisos, formularios
 """
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField
+from wtforms import RadioField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
 from perseo.blueprints.modulos.models import Modulo
@@ -21,7 +21,7 @@ class PermisoEditForm(FlaskForm):
 
     modulo = StringField("Módulo")  # Solo lectura
     rol = StringField("Rol")  # Solo lectura
-    nivel = SelectField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
+    nivel = RadioField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
     guardar = SubmitField("Guardar")
 
 
@@ -30,7 +30,7 @@ class PermisoNewWithModuloForm(FlaskForm):
 
     modulo = StringField("Módulo")  # Solo lectura
     rol = SelectField("Rol", coerce=int, validators=[DataRequired()])
-    nivel = SelectField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
+    nivel = RadioField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
     guardar = SubmitField("Guardar")
 
     def __init__(self, *args, **kwargs):
@@ -44,7 +44,7 @@ class PermisoNewWithRolForm(FlaskForm):
 
     modulo = SelectField("Modulo", coerce=int, validators=[DataRequired()])
     rol = StringField("Rol")  # Solo lectura
-    nivel = SelectField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
+    nivel = RadioField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
     guardar = SubmitField("Guardar")
 
     def __init__(self, *args, **kwargs):
