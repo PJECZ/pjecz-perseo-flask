@@ -11,7 +11,10 @@ from lib.safe_string import safe_message
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.roles.models import Rol
 from perseo.blueprints.usuarios.decorators import permission_required
+from perseo.blueprints.usuarios.models import Usuario
+from perseo.blueprints.usuarios_roles.forms import UsuarioRolNewWithRolForm, UsuarioRolNewWithUsuarioForm
 from perseo.blueprints.usuarios_roles.models import UsuarioRol
 
 MODULO = "USUARIOS ROLES"
@@ -98,6 +101,78 @@ def detail(usuario_rol_id):
     """Detalle de un Usuario-Rol"""
     usuario_rol = UsuarioRol.query.get_or_404(usuario_rol_id)
     return render_template("usuarios_roles/detail.jinja2", usuario_rol=usuario_rol)
+
+
+@usuarios_roles.route("/usuarios_roles/nuevo_con_rol/<int:rol_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_rol(rol_id):
+    """Nuevo Usuario-Rol con el rol como parametro"""
+    rol = Rol.query.get_or_404(rol_id)
+    form = UsuarioRolNewWithUsuarioForm()
+    if form.validate_on_submit():
+        usuario = Usuario.query.get_or_404(form.usuario_id.data)
+        descripcion = f"{usuario.email} en {rol.nombre}"
+        usuario_rol_existente = UsuarioRol.query.filter(UsuarioRol.usuario == usuario).filter(UsuarioRol.rol == rol).first()
+        if usuario_rol_existente is not None:
+            flash(f"CONFLICTO: Ya existe {rol.nombre} en {usuario.email}.", "warning")
+            return redirect(url_for("permisos.detail", permiso_id=usuario_rol_existente.id))
+        usuario_rol = UsuarioRol(
+            rol=rol,
+            usuario=usuario,
+            descripcion=descripcion,
+        )
+        usuario_rol.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Usuario-Rol {usuario_rol.descripcion}"),
+            url=url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template(
+        "usuarios_roles/new_with_rol.jinja2",
+        rol=rol,
+        form=form,
+        titulo=f"Agregar usuario al rol {rol.nombre}",
+    )
+
+
+@usuarios_roles.route("/usuarios_roles/nuevo_con_usuario/<int:usuario_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_usuario(usuario_id):
+    """Nuevo Usuario-Rol con el usuario como parametro"""
+    usuario = Usuario.query.get_or_404(usuario_id)
+    form = UsuarioRolNewWithRolForm()
+    if form.validate_on_submit():
+        rol = Rol.query.get_or_404(form.rol_id.data)
+        descripcion = f"{usuario.email} en {rol.nombre}"
+        usuario_rol_existente = UsuarioRol.query.filter(UsuarioRol.usuario == usuario).filter(UsuarioRol.rol == rol).first()
+        if usuario_rol_existente is not None:
+            flash(f"CONFLICTO: Ya existe {rol.nombre} en {usuario.email}.", "warning")
+            return redirect(url_for("permisos.detail", permiso_id=usuario_rol_existente.id))
+        usuario_rol = UsuarioRol(
+            rol=rol,
+            usuario=usuario,
+            descripcion=descripcion,
+        )
+        usuario_rol.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Usuario-Rol {usuario_rol.descripcion}"),
+            url=url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template(
+        "usuarios_roles/new_with_usuario.jinja2",
+        usuario=usuario,
+        form=form,
+        titulo=f"Agregar rol al usuario {usuario.email}",
+    )
 
 
 @usuarios_roles.route("/usuarios_roles/eliminar/<int:usuario_rol_id>")

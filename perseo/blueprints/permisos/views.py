@@ -108,10 +108,10 @@ def new_with_rol(rol_id):
         modulo = Modulo.query.get_or_404(form.modulo.data)
         nivel = form.nivel.data
         nombre = f"{rol.nombre} puede {Permiso.NIVELES[nivel]} en {modulo.nombre}"
-        posible_permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
-        if posible_permiso_existente is not None:
+        permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
+        if permiso_existente is not None:
             flash(f"CONFLICTO: Ya existe {rol.nombre} en {modulo.nombre}.", "warning")
-            return redirect(url_for("permisos.detail", permiso_id=posible_permiso_existente.id))
+            return redirect(url_for("permisos.detail", permiso_id=permiso_existente.id))
         permiso = Permiso(
             modulo=modulo,
             rol=rol,
@@ -140,10 +140,10 @@ def new_with_modulo(modulo_id):
         rol = Rol.query.get_or_404(form.rol.data)
         nivel = form.nivel.data
         nombre = f"{rol.nombre} puede {Permiso.NIVELES[nivel]} en {modulo.nombre}"
-        posible_permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
-        if posible_permiso_existente is not None:
+        permiso_existente = Permiso.query.filter(Permiso.modulo == modulo).filter(Permiso.rol == rol).first()
+        if permiso_existente is not None:
             flash(f"CONFLICTO: Ya existe {nombre}.", "warning")
-            return redirect(url_for("permisos.detail", permiso_id=posible_permiso_existente.id))
+            return redirect(url_for("permisos.detail", permiso_id=permiso_existente.id))
         permiso = Permiso(
             modulo=modulo,
             rol=rol,
