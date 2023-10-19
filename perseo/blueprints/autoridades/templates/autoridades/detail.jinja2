@@ -8,6 +8,9 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Autoridad ' + autoridad.descripcion_corta) %}
         {{ topbar.button_previous('Autoridades', url_for('autoridades.list_active')) }}
+        {% if current_user.can_edit('AUTORIDADES') %}
+            {{ topbar.button_edit('Editar', url_for('autoridades.edit', autoridad_id=autoridad.id)) }}
+        {% endif %}
         {% if current_user.can_admin('AUTORIDADES') %}
             {% if autoridad.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('autoridades.delete', autoridad_id=autoridad.id)) }}{% endif %}
             {% if autoridad.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('autoridades.recover', autoridad_id=autoridad.id)) }}{% endif %}
@@ -17,7 +20,7 @@
 
 {% block content %}
     {% call detail.card(estatus=autoridad.estatus) %}
-        {{ detail.label_value('Clave', autoridad.clave) }}
+        {{ detail.label_value_big('Clave', autoridad.clave) }}
         {% if current_user.can_view("DISTRITOS") %}
             {{ detail.label_value('Distrito', autoridad.distrito.nombre, url_for('distritos.detail', distrito_id=autoridad.distrito_id)) }}
         {% else %}

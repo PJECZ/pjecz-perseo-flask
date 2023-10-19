@@ -60,6 +60,10 @@
     {{ button(label, url, 'mdi:pencil') }}
 {%- endmacro -%}
 
+{%- macro button_cancel(label="Cancelar", url="javascript:history.back()") -%}
+    {{ button_danger(label, url, 'mdi:skip-backward') }}
+{%- endmacro -%}
+
 {%- macro button_previous(label, url) -%}
     {{ button(label, url, 'mdi:skip-backward') }}
 {%- endmacro -%}

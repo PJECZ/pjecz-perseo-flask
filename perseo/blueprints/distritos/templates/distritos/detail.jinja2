@@ -8,6 +8,9 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Distrito ' + distrito.nombre_corto) %}
         {{ topbar.button_previous('Distritos', url_for('distritos.list_active')) }}
+        {% if current_user.can_edit('DISTRITOS') %}
+            {{ topbar.button_edit('Editar', url_for('distritos.edit', distrito_id=distrito.id)) }}
+        {% endif %}
         {% if current_user.can_admin('DISTRITOS') %}
             {% if distrito.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('distritos.delete', distrito_id=distrito.id)) }}{% endif %}
             {% if distrito.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('distritos.recover', distrito_id=distrito.id)) }}{% endif %}

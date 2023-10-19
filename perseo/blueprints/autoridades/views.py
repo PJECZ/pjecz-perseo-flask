@@ -7,7 +7,8 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_clave, safe_message, safe_string
+from perseo.blueprints.autoridades.forms import AutoridadForm
 from perseo.blueprints.autoridades.models import Autoridad
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
@@ -96,6 +97,77 @@ def detail(autoridad_id):
     """Detalle de una Autoridad"""
     autoridad = Autoridad.query.get_or_404(autoridad_id)
     return render_template("autoridades/detail.jinja2", autoridad=autoridad)
+
+
+@autoridades.route("/autoridades/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Autoridad"""
+    form = AutoridadForm()
+    if form.validate_on_submit():
+        # Validar que la clave no se repita
+        clave = safe_clave(form.clave.data)
+        if Autoridad.query.filter_by(clave=clave).first():
+            flash("La clave ya está en uso. Debe de ser única.", "warning")
+        else:
+            autoridad = Autoridad(
+                distrito=form.distrito.data,
+                clave=clave,
+                descripcion=safe_string(form.descripcion.data, save_enie=True),
+                descripcion_corta=safe_string(form.descripcion_corta.data, save_enie=True),
+                es_extinto=form.es_extinto.data,
+            )
+            autoridad.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nueva Autoridad {autoridad.clave}"),
+                url=url_for("autoridades.detail", autoridad_id=autoridad.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    return render_template("autoridades/new.jinja2", form=form)
+
+
+@autoridades.route("/autoridades/edicion/<int:autoridad_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(autoridad_id):
+    """Editar Autoridad"""
+    autoridad = Autoridad.query.get_or_404(autoridad_id)
+    form = AutoridadForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data)
+        if autoridad.clave != clave:
+            oficina_existente = Autoridad.query.filter_by(clave=clave).first()
+            if oficina_existente and oficina_existente.id != autoridad_id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            autoridad.distrito = form.distrito.data
+            autoridad.clave = clave
+            autoridad.descripcion = safe_string(form.descripcion.data, save_enie=True)
+            autoridad.descripcion_corta = safe_string(form.descripcion_corta.data, save_enie=True)
+            autoridad.es_extinto = form.es_extinto.data
+            autoridad.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editada Autoridad {autoridad.clave}"),
+                url=url_for("autoridades.detail", autoridad_id=autoridad.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.distrito.data = autoridad.distrito
+    form.clave.data = autoridad.clave
+    form.descripcion.data = autoridad.descripcion
+    form.descripcion_corta.data = autoridad.descripcion_corta
+    form.es_extinto.data = autoridad.es_extinto
+    return render_template("autoridades/edit.jinja2", form=form, autoridad=autoridad)
 
 
 @autoridades.route("/autoridades/eliminar/<int:autoridad_id>")

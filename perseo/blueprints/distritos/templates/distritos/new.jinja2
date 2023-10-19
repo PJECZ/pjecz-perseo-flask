@@ -1,0 +1,24 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Distrito{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nuevo Distrito') %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('distritos.new', fid='distrito_form') %}
+            {% call f.form_group(form.clave) %}{% endcall %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.nombre_corto) %}{% endcall %}
+            {% call f.form_group(form.es_distrito) %}{% endcall %}
+            {% call f.form_group(form.es_jurisdiccional) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
