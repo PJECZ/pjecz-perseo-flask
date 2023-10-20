@@ -1,0 +1,76 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('MODULOS') %}
+            {{ topbar.button('Módulos', url_for('modulos.list_active'), 'mdi:toy-brick') }}
+        {% endif %}
+        {% if current_user.can_view('ROLES') %}
+            {{ topbar.button('Roles', url_for('roles.list_active'), 'mdi:gamepad') }}
+        {% endif %}
+        {% if current_user.can_admin('USUARIOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('usuarios.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('usuarios.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('USUARIOS') %}
+            {{ topbar.button_new('Nuevo Usuario', url_for('usuarios.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <table id="usuarios_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Correo electrónico</th>
+                    <th>Nombre completo</th>
+                    <th>Puesto</th>
+                    <th>Autoridad</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ list.config_datatable() }}
+    <script>
+        configDataTable['ajax']['url'] = '/usuarios/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: "detalle" },
+            { data: "nombre" },
+            { data: "puesto" },
+            { data: "autoridad" }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                }
+            },
+            {
+                targets: [1, 2], // nombre, puesto
+                data: null,
+                render: function(data, type, row, meta) {
+                    return (data.length > 48 ? data.substr(0, 48) + '…' : data);
+                }
+            },
+            {
+                targets: 3, // autoridad
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            }
+        ];
+        $('#usuarios_datatable').DataTable(configDataTable);
+    </script>
+{% endblock %}

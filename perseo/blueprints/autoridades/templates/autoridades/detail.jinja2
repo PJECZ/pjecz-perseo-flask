@@ -1,0 +1,84 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Autoridad {{ autoridad.descripcion_corta }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Autoridad ' + autoridad.descripcion_corta) %}
+        {{ topbar.button_previous('Autoridades', url_for('autoridades.list_active')) }}
+        {% if current_user.can_edit('AUTORIDADES') %}
+            {{ topbar.button_edit('Editar', url_for('autoridades.edit', autoridad_id=autoridad.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('AUTORIDADES') %}
+            {% if autoridad.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('autoridades.delete', autoridad_id=autoridad.id)) }}{% endif %}
+            {% if autoridad.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('autoridades.recover', autoridad_id=autoridad.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=autoridad.estatus) %}
+        {{ detail.label_value_big('Clave', autoridad.clave) }}
+        {% if current_user.can_view("DISTRITOS") %}
+            {{ detail.label_value('Distrito', autoridad.distrito.nombre, url_for('distritos.detail', distrito_id=autoridad.distrito_id)) }}
+        {% else %}
+            {{ detail.label_value('Distrito', autoridad.distrito.nombre) }}
+        {% endif %}
+        {{ detail.label_value('Descripción', autoridad.descripcion) }}
+        {{ detail.label_value('Descripción corta', autoridad.descripcion_corta) }}
+        {{ detail.label_value_boolean('Es Extinto', autoridad.es_extinto) }}
+        {{ detail.label_value('Creado', moment(autoridad.creado).format('llll')) }}
+    {% endcall %}
+    {% if current_user.can_view('USUARIOS') %}
+        {% call detail.card('Usuarios') %}
+            <table id="usuarios_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Correo electrónico</th>
+                        <th>Usuario</th>
+                        <th>Puesto</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_edit('AUTORIDADES') %}
+        {% if autoridad.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + autoridad.clave + '?') }}{% endif %}
+        {% if autoridad.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + autoridad.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('USUARIOS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/usuarios/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'autoridad_id': {{ autoridad.id}} };
+            configDataTable['columns'] = [
+                { data: "detalle" },
+                { data: "nombre" },
+                { data: "puesto" }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.email + '</a>';
+                    }
+                },
+                {
+                    targets: [1, 2], // nombre, puesto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return (data.length > 32 ? data.substr(0, 32) + '…' : data);
+                    }
+                }
+            ];
+            $('#usuarios_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+{% endblock %}

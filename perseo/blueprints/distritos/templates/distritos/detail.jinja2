@@ -1,0 +1,73 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Distrito {{ distrito.nombre_corto }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Distrito ' + distrito.nombre_corto) %}
+        {{ topbar.button_previous('Distritos', url_for('distritos.list_active')) }}
+        {% if current_user.can_edit('DISTRITOS') %}
+            {{ topbar.button_edit('Editar', url_for('distritos.edit', distrito_id=distrito.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('DISTRITOS') %}
+            {% if distrito.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('distritos.delete', distrito_id=distrito.id)) }}{% endif %}
+            {% if distrito.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('distritos.recover', distrito_id=distrito.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=distrito.estatus) %}
+        {{ detail.label_value_big('Clave', distrito.clave) }}
+        {{ detail.label_value('Nombre', distrito.nombre) }}
+        {{ detail.label_value('Nombre corto', distrito.nombre_corto) }}
+        {{ detail.label_value_boolean('Es Distrito (geográfico)', distrito.es_distrito) }}
+        {{ detail.label_value_boolean('Es Jurisdiccional', distrito.es_jurisdiccional) }}
+        {{ detail.label_value('Creado', moment(distrito.creado).format('llll')) }}
+    {% endcall %}
+    {% if current_user.can_view('AUTORIDADES') %}
+        {% call detail.card('Autoridades') %}
+            <table id="autoridades_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Clave</th>
+                        <th>Descripción corta</th>
+                        <th>Extinto</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('DISTRITOS') %}
+        {% if distrito.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + distrito.nombre + '?') }}{% endif %}
+        {% if distrito.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + distrito.nombre + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('AUTORIDADES') %}
+        <script>
+            configDataTable['ajax']['url'] = '/autoridades/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'distrito_id': {{ distrito.id}} };
+            configDataTable['columns'] = [
+                { data: "detalle" },
+                { data: "descripcion_corta" },
+                { data: "es_extinto" }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            $('#autoridades_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+{% endblock %}

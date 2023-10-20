@@ -1,0 +1,98 @@
+{
+  "Flask forms": {
+    "scope": "python",
+    "prefix": "fforms",
+    "body": [
+      "\"\"\"",
+      "${1:Modulos}, formularios",
+      "\"\"\"",
+      "from flask_wtf import FlaskForm",
+      "from wtforms import StringField, SubmitField",
+      "from wtforms.validators import DataRequired, Length, Optional",
+      "",
+      "",
+      "class ${2:Clase}Form(FlaskForm):",
+      "\t\"\"\" Formulario ${2:Clase} \"\"\"",
+      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
+      "\tguardar = SubmitField('Guardar')",
+      ""
+    ],
+    "description": "Contenido para formulario sencillo"
+  },
+  "Flask forms upload file": {
+    "scope": "python",
+    "prefix": "fforms_upload_file",
+    "body": [
+      "\"\"\"",
+      "${1:Modulos}, formularios",
+      "\"\"\"",
+      "",
+      "from flask_wtf import FlaskForm",
+      "from flask_wtf.file import FileField, FileRequired",
+      "from wtforms import StringField, SubmitField",
+      "from wtforms.validators import DataRequired, Length, Optional",
+      "",
+      "",
+      "class ${2:Clase}Form(FlaskForm):",
+      "\t\"\"\" Formulario ${2:Clase} \"\"\"",
+      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
+      "\tarchivo = FileField('Archivo PDF', validators=[FileRequired()])",
+      "\tguardar = SubmitField('Guardar')",
+      ""
+    ],
+    "description": "Contenido para subir un archivo"
+  },
+  "Flask forms class Form": {
+    "scope": "python",
+    "prefix": "fforms_class",
+    "body": [
+      "class ${1:Clase}Form(FlaskForm):",
+      "\t\"\"\" Formulario ${1:Clase} \"\"\"",
+      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
+      "\tguardar = SubmitField('Guardar')",
+      "",
+      ""
+    ],
+    "description": "Clase Form"
+  },
+  "Flask forms class Form SelectField": {
+    "scope": "python",
+    "prefix": "fforms_class_selectfield",
+    "body": [
+      "from perseo.blueprints.${1:rel_plural}.models import ${2:RelClase}",
+      "",
+      "class ${3:Clase}Form(FlaskForm):",
+      "\t\"\"\" Formulario ${4:Clases} \"\"\"",
+      "\t${5:rel_singular} = SelectField(\"${2:RelClase}\", coerce=int, validators=[DataRequired()])",
+      "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
+      "\tguardar = SubmitField('Guardar')",
+      "",
+      "\tdef __init__(self, *args, **kwargs):",
+      "\t\t\"\"\"Inicializar y cargar opciones para ${5:rel_singular}\"\"\"",
+      "\t\tsuper().__init__(*args, **kwargs)",
+      "\t\tself.${5:rel_singular}.choices = [",
+      "\t\t\t(d.id, d.clave + \" - \" + d.nombre_corto)",
+      "\t\t\tfor d in ${2:RelClase}.query.filter_by(estatus=\"A\").order_by(${2:RelClase}.clave).all()",
+      "\t\t]",
+      ""
+    ],
+    "description": "Formulario para buscar"
+  },
+  "Flask forms class SearchForm": {
+    "scope": "python",
+    "prefix": "fforms_class_search",
+    "body": [
+      "class ${1:Clase}SearchForm(FlaskForm):",
+      "\t\"\"\" Formulario para buscar ${2:Clases} \"\"\"",
+      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
+      "\tbuscar = SubmitField('Buscar')",
+      "",
+      ""
+    ],
+    "description": "Formulario para buscar"
+  }
+}

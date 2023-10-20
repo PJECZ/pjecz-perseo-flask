@@ -1,0 +1,93 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('MODULOS') %}
+            {{ topbar.button('Módulos', url_for('modulos.list_active'), 'mdi:toy-brick') }}
+        {% endif %}
+        {% if current_user.can_view('ROLES') %}
+            {{ topbar.button('Roles', url_for('roles.list_active'), 'mdi:gamepad') }}
+        {% endif %}
+        {% if current_user.can_view('USUARIOS') %}
+            {{ topbar.button('Usuarios', url_for('usuarios.list_active'), 'mdi:account-key') }}
+        {% endif %}
+        {% if current_user.can_admin('USUARIOS ROLES') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('usuarios_roles.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('usuarios_roles.list_active')) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <table id="usuarios_roles_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Nombre</th>
+                    <th>Puesto</th>
+                    <th>Rol</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ list.config_datatable() }}
+    <script>
+        configDataTable['ajax']['url'] = '/usuarios_roles/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: "detalle" },
+            { data: "usuario" },
+            { data: "usuario_nombre" },
+            { data: "usuario_puesto" },
+            { data: "rol" }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 1, // usuario
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url == '') {
+                        return data.email;
+                    } else {
+                        return '<a href="' + data.url + '">' + data.email + '</a>';
+                    }
+                }
+            },
+            {
+                targets: [2, 3], // usuario_nombre, usuario_puesto
+                data: null,
+                render: function(data, type, row, meta) {
+                    return (data.length > 32 ? data.substr(0, 32) + '…' : data);
+                }
+            },
+            {
+                targets: 4, // rol
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url == '') {
+                        return data.nombre;
+                    } else {
+                        return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    }
+                }
+            }
+        ];
+        $('#usuarios_roles_datatable').DataTable(configDataTable);
+    </script>
+{% endblock %}

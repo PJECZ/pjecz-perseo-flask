@@ -1,0 +1,90 @@
+{# Bootstrap 5 Dashboard #}
+
+{# Page #}
+{%- macro page(title) -%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h3">{{ title }}</h1>
+    </div>
+{%- endmacro -%}
+
+{# Page with buttons #}
+{%- macro page_buttons(title) -%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h3">{{ title }}</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                {{ caller () }}
+            </div>
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Button #}
+{%- macro button(label, url, icon) -%}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url }}"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_primary(label, url, icon) -%}
+                <a class="btn btn-sm btn-outline-primary" href="{{ url }}"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_danger(label, url, icon) -%}
+                <a class="btn btn-sm btn-outline-danger" href="{{ url }}"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_print(label, url) -%}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url }}" target="_blank"><span class="iconify" data-icon="mdi:printer"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_search(label, url) -%}
+    {{ button(label, url, 'mdi:magnify') }}
+{%- endmacro -%}
+
+{%- macro button_new(label, url) -%}
+    {{ button_primary(label, url, 'mdi:plus') }}
+{%- endmacro -%}
+
+{%- macro button_list_active(label, url) -%}
+    {{ button(label, url, 'mdi:eye') }}
+{%- endmacro -%}
+
+{%- macro button_list_inactive(label, url) -%}
+    {{ button(label, url, 'mdi:eye-off') }}
+{%- endmacro -%}
+
+{%- macro button_upload(label, url) -%}
+    {{ button_primary(label, url, 'mdi:upload') }}
+{%- endmacro -%}
+
+{%- macro button_edit(label, url) -%}
+    {{ button(label, url, 'mdi:pencil') }}
+{%- endmacro -%}
+
+{%- macro button_cancel(label="Cancelar", url="javascript:history.back()") -%}
+    {{ button_danger(label, url, 'mdi:skip-backward') }}
+{%- endmacro -%}
+
+{%- macro button_previous(label, url) -%}
+    {{ button(label, url, 'mdi:skip-backward') }}
+{%- endmacro -%}
+
+{%- macro button_districts(label, url) -%}
+    {{ button(label, url, 'mdi:map-marker') }}
+{%- endmacro -%}
+
+{# Button modal executes a javascript function #}
+{%- macro button_modal(label, onclick_js, icon) -%}
+    <a class="btn btn-sm btn-outline-secondary" href="javascript:void(0)" onclick="{{ onclick_js }}"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_delete(label, url, icon="mdi:delete") -%}
+    <a class="btn btn-sm btn-outline-danger" href="javascript:void(0)" onclick="showModalDelete('{{ url }}');"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_recover(label, url, icon="mdi:file-check") -%}
+    <a class="btn btn-sm btn-outline-primary" href="javascript:void(0)" onclick="showModalRecover('{{ url }}');"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_make(label, url, icon="mdi:database-plus") -%}
+    <a class="btn btn-sm btn-outline-success" href="javascript:void(0)" onclick="showModalMake('{{ url }}');"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}

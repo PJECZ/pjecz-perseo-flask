@@ -1,0 +1,19 @@
+{% extends 'layouts/base.jinja2' %}
+{% import 'macros/flash.jinja2' as flash with context %}
+
+{% block template_head %}
+    <!-- Bootstrap 5 Login -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bs5-login.css') }}">
+    <!-- CSRF token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block main %}
+    <div class="bg">
+        <main class="form-signin">
+            {% block welcome %}{% endblock %}
+            {{ flash.render() }}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Bitácoras{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Bitácoras') %}
+        {% if current_user.can_view('ENTRADAS SALIDAS') %}
+            {{ topbar.button('Entradas/Salidas', url_for('entradas_salidas.list_active'), 'mdi:calendar-clock') }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <table id="bitacoras_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tiempo</th>
+                    <th>Usuario</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ list.config_datatable() }}
+    <script>
+        configDataTable['ajax']['url'] = '/bitacoras/datatable_json';
+        configDataTable['ajax']['data'] = {}; // Sin filtros
+        configDataTable['columns'] = [
+            { data: "creado" },
+            { data: "usuario" },
+            { data: "vinculo" }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // creado
+                type: "date",
+                render: function (data, type, row) {
+                    return moment.utc(data).local().format("YYYY-MM-DD HH:mm:ss");
+                }
+            },
+            {
+                targets: 1, // usuario
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                }
+            },
+            {
+                targets: 2, // vinculo
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '" target="_blank">' + data.descripcion + ' <span class="iconify" data-icon="mdi:open-in-new"></span></a>';
+                }
+            }
+        ];
+        $('#bitacoras_datatable').DataTable(configDataTable);
+    </script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{
+  "Flask models": {
+    "scope": "python",
+    "prefix": "fmodels",
+    "body": [
+      "\"\"\"",
+      "${1:Modulos}, modelos",
+      "\"\"\"",
+      "from sqlalchemy import Boolean, Column, ForeignKey, Integer, String",
+      "",
+      "from lib.universal_mixin import UniversalMixin",
+      "",
+      "from perseo.extensions import database",
+      "",
+      "",
+      "class ${2:Clase}(database.Model, UniversalMixin):",
+      "\t\"\"\" ${2:Clase} \"\"\"",
+      "",
+      "\t# Nombre de la tabla",
+      "\t__tablename__ = '${3:tabla}'",
+      "",
+      "\t# Clave primaria",
+      "\tid = Column(Integer, primary_key=True)",
+      "",
+      "\t# Clave foránea",
+      "\t${4:clave_foranea}_id = Column(Integer, ForeignKey('${5:tabla_clave_foranea}.id'), index=True, nullable=False)",
+      "\t${4:clave_foranea} = relationship('${6:Clase_clave_foranea}', back_populates='${7:plural_esta_clase}')",
+      "",
+      "\t# Columnas",
+      "\tnombre = Column(String(256), unique=True, nullable=False)",
+      "\tdescripcion = Column(String(256), nullable=False)",
+      "",
+      "\t# Hijos",
+      "\t${8:plural_hijos} = relationship('${9:Clase_hijo}', back_populates='${10:singular_esta_clase}', lazy='noload')",
+      "",
+      "\tdef __repr__(self):",
+      "\t\t\"\"\" Representación \"\"\"",
+      "\t\treturn '<${2:Clase}>'",
+      ""
+    ],
+    "description": "Contenido inicial para modelos"
+  },
+  "Flask models foreign key": {
+    "scope": "python",
+    "prefix": "fmodels_clave_foranea",
+    "body": [
+      "# Clave foránea",
+      "${1:clave_foranea}_id = Column(Integer, ForeignKey('${2:tabla_clave_foranea}.id'), index=True, nullable=False)",
+      "${1:clave_foranea} = relationship('${3:Clase_clave_foranea}', back_populates='${4:plural_esta_clase}')",
+      ""
+    ],
+    "description": "Clave foránea"
+  },
+  "Flask models child": {
+    "scope": "python",
+    "prefix": "fmodels_hijo",
+    "body": [
+      "# Hijos",
+      "${1:plural_hijos} = relationship('${2:Clase_hijo}', back_populates='${3:singular_esta_clase}')",
+      ""
+    ],
+    "description": "Hijo"
+  }
+}

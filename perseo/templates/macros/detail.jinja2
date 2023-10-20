@@ -1,0 +1,175 @@
+{# Card #}
+{%- macro card(title='', estatus='') -%}
+    {% if estatus == 'B' %}<div class="card text-white bg-dark mb-3">{% else %}<div class="card mb-3">{% endif %}
+        {% if title %}<div class="card-header">
+            {{ title }}
+        </div>{% endif %}
+        <div class="card-body">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Card styled #}
+{%- macro card_styled(title='', classes='') -%}
+    <div class="card mb-3 {{classes}}">
+        {% if title %}<div class="card-header">
+            {{ title }}
+        </div>{% endif %}
+        <div class="card-body">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Detail normal #}
+{%- macro label_value(label, value, link='') -%}
+    {% if value != None and value != '' %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-9">
+                {% if link %}
+                <strong><a href="{{ link }}">{{ value }}</a></strong>
+                {% else %}
+                <strong>{{ value }}</strong>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Detail link to new tab #}
+{%- macro label_value_new_tab(label, value, link) -%}
+    {% if value != None and value != '' %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-9">
+                <strong><a href="{{ link }}" target="_blank">{{ value }} <span class='iconify' data-icon='mdi:open-in-new'></span></a></strong>
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Detail big value #}
+{%- macro label_value_big(label, value, link='', font_size=2) -%}
+    {% if value != None and value != '' %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                <span style="font-size:{{font_size}}em">{{ label }}</span>
+            </div>
+            <div class="col-md-9">
+                <span style="font-size:{{font_size}}em">{% if link %} <a href="{{ link }}">{{ value }}</a> {% else %} {{ value }} {% endif %}</span>
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Detail boolean #}
+{%- macro label_value_boolean(label, value) -%}
+    <div class="row">
+        <div class="col-md-3 text-end">
+            {{ label }}
+        </div>
+        <div class="col-md-9">
+            {% if value %}<strong>Sí</strong>{% else %}No{% endif %}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# JavaScript Datatable #}
+{%- macro datatable(table_id, order="asc") -%}
+    <!-- Datatable -->
+    <script>
+        $('#{{ table_id }}').DataTable({
+            {% if order == "asc" %}order: [[ 0, "asc" ]],{% endif %}
+            {% if order == "desc" %}order: [[ 0, "desc" ]],{% endif %}
+            language: {
+                lengthMenu: "Mostrar _MENU_",
+                search: "Filtrar:",
+                zeroRecords: "No se encontraron registros",
+                info: "Total de registros _TOTAL_ ",
+                infoEmpty: "No hay registros",
+                infoFiltered: "(_TOTAL_ filtrados de _MAX_ registros)",
+                oPaginate: {
+                    sFirst: "Primero",
+                    sLast: "Último",
+                    sNext: "Siguiente",
+                    sPrevious: "Anterior"
+                }
+            },
+            responsive: true
+        });
+    </script>
+{%- endmacro -%}
+
+{# JavaScript configDataTable #}
+{%- macro config_datatable() -%}
+    <script>
+        let configDataTable = {
+            processing: true,
+            serverSide: true,
+            ordering: false,
+            searching: false,
+            responsive: true,
+            scrollX: true,
+            ajax: {
+                url: null,
+                type: "POST",
+                headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                dataType: "json",
+                dataSrc: "data",
+                data: null
+            },
+            columns: null,
+            columnDefs: null,
+            language: {
+                lengthMenu: "Mostrar _MENU_",
+                search: "Filtrar:",
+                zeroRecords: "No se encontraron registros",
+                info: "Total de registros _TOTAL_ ",
+                infoEmpty: "No hay registros",
+                infoFiltered: "(_TOTAL_ filtrados de _MAX_ registros)",
+                oPaginate: {
+                    sFirst: "Primero",
+                    sLast: "Último",
+                    sNext: "Siguiente",
+                    sPrevious: "Anterior"
+                }
+            }
+        }
+    </script>
+{%- endmacro -%}
+
+{# Moment.js #}
+{%- macro moment_js(moment) -%}
+    <!-- Moment.js -->
+    {{ moment.include_moment() }}
+    {{ moment.lang('es-mx') }}
+{%- endmacro -%}
+
+{# Mosaic #}
+{%- macro mosaics(title='') -%}
+    <div class="container px-2">
+        {% if title !=''%}<h3 class="pb-2">{{ title }}</h3>{% endif %}
+        <div class="row g-4 py-2 row-cols-1 row-cols-lg-3">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Mosaic element #}
+{%- macro mosaics_card(label, url, icon) -%}
+            <div class="feature col">
+                <a href="{{ url }}" class="icon-link">
+                    <div class="feature-icon bg-primary bg-gradient">
+                        <span class="iconify" data-icon="{{ icon }}" style="font-size: 48px;"></span>
+                    </div>
+                </a>
+                <h3>{{ label }}</h3>
+                {{ caller () }}
+            </div>
+{%- endmacro -%}

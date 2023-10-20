@@ -1,0 +1,15 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/start.jinja2' as start %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Plataforma Perseo{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Plataforma Perseo') }}
+{% endblock %}
+
+{% block content %}
+    {% call start.card() %}
+        <h1 class="text-center">Plataforma Perseo</h1>
+    {% endcall %}
+{% endblock %}

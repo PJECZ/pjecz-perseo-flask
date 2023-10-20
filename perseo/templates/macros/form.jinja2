@@ -1,0 +1,253 @@
+{# card sirve para contener algo; es necesario para que las tablas sean usables en pantallas chicas #}}
+{%- macro card(title='', css_class='') -%}
+    <div class="card my-2 {{css_class}}">
+        {% if title %}<div class="card-header">{{ title }}</div>{% endif %}
+        <div class="card-body">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# botón submit #}
+{%- macro submit_button(f, css_class='btn btn-success text-white') -%}
+    {{ f(class=css_class) }}
+{%- endmacro -%}
+
+{# etiqueta con texto de ayuda #}
+{%- macro field_label(f) -%}
+    <label for="{{ f.id }}">
+    {%- if f.flags.required -%}
+        <strong>{{ f.label.text }}</strong>
+    {%- else %}
+        {{ f.label.text }}
+    {%- endif %}
+    </label>
+{%- endmacro -%}
+
+{# errores de validación si los hay #}
+{%- macro field_errors(f) -%}
+    {% if f.errors %}
+        <ul class="list-unstyled text-danger field-error">
+            {% for error in f.errors %}
+                <li>{{ error | e }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{%- endmacro -%}
+
+{# un campo del formulario #}
+{%- macro field(f, css_class='form-control') -%}
+    {% if f.type == 'DateField' %}
+        {{ f(class=css_class, type='date', **kwargs) }}
+    {% elif f.type == 'TimeField' %}
+        {{ f(class=css_class, type='time', **kwargs) }}
+    {% elif f.type == 'DateTimeField' %}
+        {{ f(class=css_class, type='datetime', **kwargs) }}
+    {% elif f.type == 'SubmitField' %}
+        {{ submit_button(f) }}
+    {% else %}
+        {{ f(class=css_class, **kwargs) }}
+    {% endif %}
+{%- endmacro -%}
+
+{# un campo de opción múltiple #}
+{%- macro checkbox_field(f) -%}
+    {{ f(type='checkbox', **kwargs) }} {{ f.label }}
+{%- endmacro -%}
+
+{# un campo de radio #}
+{%- macro radios_fields(f) -%}
+    {{ field_label(f) }}
+    {% for subfield in f %}
+        <div class="form-check">
+            {{ subfield }}
+            <label class="form-check-label mb-0" for="{{ subfield.id }}">{{ subfield.label }}</label>
+        </div>
+    {% endfor %}
+{%- endmacro -%}
+
+{# un grupo de un formulario, con errores si los hay #}
+{%- macro form_group(f, css_class='') -%}
+    {% if f.errors %}
+        {% set css_class = css_class + ' has-error ' + kwargs.pop('class', '') %}
+    {% endif %}
+    {% if f.type == 'HiddenField' %}
+        {{ field(f, **kwargs) }}
+        {{ caller () }}
+    {% elif f.type == 'FileField' %}
+        {{ field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+    {% elif f.type == 'BooleanField' %}
+        <div class="checkbox {{ css_class }}">
+        {{ checkbox_field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% elif f.type == 'RadioField' %}
+        <div class="form-group mb-2 {{ css_class }}">
+        {{ radios_fields(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% elif f.type == 'SubmitField' %}
+        <div class="form-group mb-2">
+        {{ field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% else %}
+        <div class="form-group mb-2">
+        {{ field_label(f) }}
+        {{ field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# un formulario, que contiene un token CSRF y campos ocultos #}
+{%- macro form_tag(endpoint, fid='', css_class='', method='post') -%}
+    <form action="{{ url_for(endpoint, **kwargs) }}" method="{{ method }}" id="{{ fid }}" class="{{ css_class }}" role="form">
+        {{ form.hidden_tag() }}
+        {{ caller () }}
+    </form>
+{%- endmacro -%}
+
+{# un formulario, que contiene un token CSRF y campos ocultos #}
+{%- macro form_tag_multipart(endpoint, fid='', css_class='', method='post') -%}
+    <form action="{{ url_for(endpoint, **kwargs) }}" method="{{ method }}" id="{{ fid }}" class="{{ css_class }}" role="form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ caller () }}
+    </form>
+{%- endmacro -%}
+
+{# javascript para combo distrito/autoridad #}
+{%- macro js_select_distrito_autoridad(distritos, autoridades, mi_distrito=-1, mi_autoridad=-1) -%}
+    <!-- Combo distrito/autoridad -->
+    <script>
+        let distritos = [];
+        let autoridades = [];
+        let mi_distrito = {{ mi_distrito }};
+        let mi_autoridad = {{ mi_autoridad }};
+        $(document).ready(function() {
+            // Función
+            function cambiarAutoridadesSelect(distrito_id) {
+                autoridades.forEach(function(item) {
+                    if (item.distrito_id == distrito_id) {
+                        $('#autoridad').append($('<option>', { value: item.id, text: item.descripcion }));
+                    }
+                });
+            }
+            // Cargar distritos
+            {% for distrito in distritos %}
+            distritos.push({ id: {{ distrito.id }}, nombre: "{{ distrito.nombre }}" });
+            {%- endfor %}
+            // Cargar autoridades
+            {% for autoridad in autoridades %}
+            autoridades.push({ distrito_id: {{ autoridad.distrito_id }}, id: {{ autoridad.id }}, descripcion: "{{ autoridad.descripcion }}" });
+            {%- endfor %}
+            // Opciones select de distritos
+            distritos.forEach(
+                item => $('#distrito').append($('<option>', { value: item.id, text: item.nombre }))
+            );
+            // Cuando es -1 debe no estar seleccionado
+            if (mi_distrito == -1) mi_distrito = distritos[0].id;
+            // De inicio, poner las opciones en el select de autoridades
+            cambiarAutoridadesSelect(mi_distrito);
+            // Al cambiar el select distrito, cambiar las opciones de autoridad
+            $('#distrito').change(function() {
+                $('#autoridad').empty();
+                cambiarAutoridadesSelect($('#distrito').val());
+            });
+            // Poner valores iniciales si se reciben
+            if (mi_distrito != -1) $('#distrito').val(mi_distrito).change()
+            if (mi_autoridad != -1) $('#autoridad').val(mi_autoridad).change()
+        });
+    </script>
+{%- endmacro -%}
+
+{# javascript para combo materia/tipo_juicio #}
+{%- macro js_select_materia_materia_tipo_juicio(materias, materias_tipos_juicios, mi_materia=-1, mi_materia_tipo_juicio=-1) -%}
+    <!-- Combo materia/tipo_juicio -->
+    <script>
+        let materias = [];
+        let materias_tipos_juicios = [];
+        let mi_materia = {{ mi_materia }};
+        let mi_materia_tipo_juicio = {{ mi_materia_tipo_juicio }};
+        $(document).ready(function() {
+            // Función
+            function cambiarTiposJuiciosSelect(materia_id) {
+                materias_tipos_juicios.forEach(function(item) {
+                    if (item.materia_id == materia_id) {
+                        $('#materia_tipo_juicio').append($('<option>', { value: item.id, text: item.descripcion }));
+                    }
+                });
+            }
+            // Cargar materias
+            {% for materia in materias %}
+            materias.push({ id: {{ materia.id }}, nombre: "{{ materia.nombre }}" });
+            {%- endfor %}
+            // Cargar materias_tipos_juicios
+            {% for tipo_juicio in materias_tipos_juicios %}
+            materias_tipos_juicios.push({ materia_id: {{ tipo_juicio.materia_id }}, id: {{ tipo_juicio.id }}, descripcion: "{{ tipo_juicio.descripcion }}" });
+            {%- endfor %}
+            // Opciones select de materias
+            materias.forEach(
+                item => $('#materia').append($('<option>', { value: item.id, text: item.nombre }))
+            );
+            // Cuando es -1 debe no estar seleccionado
+            if (mi_materia == -1) mi_materia = materias[0].id;
+            // De inicio, poner las opciones en el select de materias_tipos_juicios
+            cambiarTiposJuiciosSelect(mi_materia);
+            // Al cambiar el select materia, cambiar las opciones de tipo_juicio
+            $('#materia').change(function() {
+                $('#materia_tipo_juicio').empty();
+                cambiarTiposJuiciosSelect($('#materia').val());
+            });
+            // Poner valores iniciales si se reciben
+            if (mi_materia != -1) $('#materia').val(mi_materia).change()
+            if (mi_materia_tipo_juicio != -1) $('#materia_tipo_juicio').val(mi_materia_tipo_juicio).change()
+        });
+    </script>
+{%- endmacro -%}
+
+{# Drop Zone CSS #}}
+{%- macro drop_zone_css() -%}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dropzone.css') }}" type="text/css">
+{%- endmacro -%}
+
+{# Drop Zone wrapper #}}
+{%- macro drop_zone_wrapper() -%}
+    <div class="form-group">
+        <div class="dropzone-wrapper">
+            <div class="dropzone-desc">
+                <p id="name_file_upload">
+                    Adjunta el archivo ó arrastralo.
+                </p>
+            </div>
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Drop Zone javascript #}}
+{%- macro drop_zone_js() -%}
+    <script>
+        $(document).ready(function(){
+            $(".dropzone").change(function() {
+                readFile(this);
+            });
+            function readFile(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var htmlPreview = input.files[0].name;
+                        $("#name_file_upload").html(htmlPreview);
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+        });
+    </script>
+{%- endmacro -%}
