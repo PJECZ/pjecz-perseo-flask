@@ -185,7 +185,7 @@ def delete(distrito_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Distrito {distrito.nombre_corto}"),
+            descripcion=safe_message(f"Eliminado Distrito {distrito.clave}"),
             url=url_for("distritos.detail", distrito_id=distrito.id),
         )
         bitacora.save()
@@ -203,7 +203,7 @@ def recover(distrito_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Distrito {distrito.nombre_corto}"),
+            descripcion=safe_message(f"Recuperado Distrito {distrito.clave}"),
             url=url_for("distritos.detail", distrito_id=distrito.id),
         )
         bitacora.save()

@@ -183,7 +183,7 @@ def delete(autoridad_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Autoridad {autoridad.descripcion_corta}"),
+            descripcion=safe_message(f"Eliminado Autoridad {autoridad.clave}"),
             url=url_for("autoridades.detail", autoridad_id=autoridad.id),
         )
         bitacora.save()
@@ -201,7 +201,7 @@ def recover(autoridad_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Autoridad {autoridad.descripcion_corta}"),
+            descripcion=safe_message(f"Recuperado Autoridad {autoridad.clave}"),
             url=url_for("autoridades.detail", autoridad_id=autoridad.id),
         )
         bitacora.save()
