@@ -9,7 +9,9 @@ from perseo.blueprints.bitacoras.views import bitacoras
 from perseo.blueprints.distritos.views import distritos
 from perseo.blueprints.entradas_salidas.views import entradas_salidas
 from perseo.blueprints.modulos.views import modulos
+from perseo.blueprints.percepciones_deducciones.views import percepciones_deducciones
 from perseo.blueprints.permisos.views import permisos
+from perseo.blueprints.personas.views import personas
 from perseo.blueprints.roles.views import roles
 from perseo.blueprints.sistemas.views import sistemas
 from perseo.blueprints.usuarios.models import Usuario
@@ -32,7 +34,9 @@ def create_app():
     app.register_blueprint(bitacoras)
     app.register_blueprint(entradas_salidas)
     app.register_blueprint(modulos)
+    app.register_blueprint(percepciones_deducciones)
     app.register_blueprint(permisos)
+    app.register_blueprint(personas)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
     app.register_blueprint(usuarios)
