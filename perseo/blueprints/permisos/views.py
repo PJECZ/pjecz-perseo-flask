@@ -197,7 +197,7 @@ def delete(permiso_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Permiso {pemiso.descripcion}"),
+            descripcion=safe_message(f"Eliminado Permiso {pemiso.nombre}"),
             url=url_for("permisos.detail", pemiso_id=pemiso.id),
         )
         bitacora.save()
@@ -215,7 +215,7 @@ def recover(permiso_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Permiso {permiso.descripcion}"),
+            descripcion=safe_message(f"Recuperado Permiso {permiso.nombre}"),
             url=url_for("permisos.detail", permiso_id=permiso.id),
         )
         bitacora.save()
