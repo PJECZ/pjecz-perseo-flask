@@ -17,9 +17,15 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
     # Clave primaria
     id = Column(Integer, primary_key=True)
 
-    # Clave foránea
+    # Claves foráneas
+    centro_trabajo_id = Column(Integer, ForeignKey("centros_trabajos.id"), index=True, nullable=False)
+    centro_trabajo = relationship("CentroTrabajo", back_populates="percepciones_deducciones")
+    concepto_id = Column(Integer, ForeignKey("conceptos.id"), index=True, nullable=False)
+    concepto = relationship("Concepto", back_populates="percepciones_deducciones")
     persona_id = Column(Integer, ForeignKey("personas.id"), index=True, nullable=False)
     persona = relationship("Persona", back_populates="percepciones_deducciones")
+    plaza_id = Column(Integer, ForeignKey("plazas.id"), index=True, nullable=False)
+    plaza = relationship("Plaza", back_populates="percepciones_deducciones")
 
     # Columnas
     quincena = Column(String(6), nullable=False)

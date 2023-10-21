@@ -28,7 +28,7 @@
       "\t${4:clave_foranea} = relationship('${6:Clase_clave_foranea}', back_populates='${7:plural_esta_clase}')",
       "",
       "\t# Columnas",
-      "\tnombre = Column(String(256), unique=True, nullable=False)",
+      "\tclave = Column(String(16), unique=True, nullable=False)",
       "\tdescripcion = Column(String(256), nullable=False)",
       "",
       "\t# Hijos",
@@ -36,7 +36,7 @@
       "",
       "\tdef __repr__(self):",
       "\t\t\"\"\" Representación \"\"\"",
-      "\t\treturn '<${2:Clase}>'",
+      "\t\treturn f'<${2:Clase} {self.id}>'",
       ""
     ],
     "description": "Contenido inicial para modelos"
