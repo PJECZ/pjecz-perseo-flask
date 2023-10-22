@@ -1,0 +1,33 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Centro de Trabajo {{ centro_trabajo.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Centro de Trabajo ' + centro_trabajo.clave) %}
+        {{ topbar.button_previous('Centros de Trabajo', url_for('centros_trabajos.list_active')) }}
+        {% if current_user.can_admin('CENTROS TRABAJOS') %}
+            {{ topbar.button_edit('Editar', url_for('centros_trabajos.edit', centro_trabajo_id=centro_trabajo.id)) }}
+            {% if centro_trabajo.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('centros_trabajos.delete', centro_trabajo_id=centro_trabajo.id)) }}{% endif %}
+            {% if centro_trabajo.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('centros_trabajos.recover', centro_trabajo_id=centro_trabajo.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=centro_trabajo.estatus) %}
+        {{ detail.label_value('Clave', centro_trabajo.clave) }}
+        {{ detail.label_value('Descripción', centro_trabajo.columna_2) }}
+        {{ detail.label_value('Creado', moment(lista_de_acuerdo.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('CENTROS TRABAJOS') %}
+        {% if centro_trabajo.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + centro_trabajo.clave + '?') }}{% endif %}
+        {% if centro_trabajo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + centro_trabajo.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

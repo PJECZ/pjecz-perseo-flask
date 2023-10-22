@@ -76,3 +76,10 @@ def list_inactive():
         titulo="Centros de Trabajo inactivos",
         estatus="B",
     )
+
+
+@centros_trabajos.route("/centros_trabajos/<int:centro_trabajo_id>")
+def detail(centro_trabajo_id):
+    """Detalle de un Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    return render_template("centros_trabajos/detail.jinja2", centro_trabajo=centro_trabajo)

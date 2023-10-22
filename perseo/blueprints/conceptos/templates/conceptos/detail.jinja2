@@ -1,0 +1,33 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Concepto + {{ concepto.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Concepto ' + concepto.clave) %}
+        {{ topbar.button_previous('Conceptos', url_for('conceptos.list_active')) }}
+        {% if current_user.can_admin('CONCEPTOS') %}
+            {{ topbar.button_edit('Editar', url_for('conceptos.edit', concepto_id=concepto.id)) }}
+            {% if concepto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('conceptos.delete', concepto_id=concepto.id)) }}{% endif %}
+            {% if concepto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('conceptos.recover', concepto_id=concepto.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=concepto.estatus) %}
+        {{ detail.label_value('Clave', centro_trabajo.clave) }}
+        {{ detail.label_value('Descripción', centro_trabajo.columna_2) }}
+        {{ detail.label_value('Creado', moment(lista_de_acuerdo.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('CONCEPTOS') %}
+        {% if concepto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto.clave + '?') }}{% endif %}
+        {% if concepto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

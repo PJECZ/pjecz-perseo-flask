@@ -76,3 +76,10 @@ def list_inactive():
         titulo="Plazas inactivas",
         estatus="B",
     )
+
+
+@plazas.route("/plazas/<int:plaza_id>")
+def detail(plaza_id):
+    """Detalle de una Plaza"""
+    plaza = Plaza.query.get_or_404(plaza_id)
+    return render_template("plazas/detail.jinja2", plaza=plaza)

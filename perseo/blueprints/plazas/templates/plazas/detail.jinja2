@@ -1,0 +1,33 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Plaza + {{ plaza.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Plaza ' + plaza.clave) %}
+        {{ topbar.button_previous('Plazas', url_for('plazas.list_active')) }}
+        {% if current_user.can_admin('PLAZAS') %}
+            {{ topbar.button_edit('Editar', url_for('plazas.edit', plaza_id=plaza.id)) }}
+            {% if plaza.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('plazas.delete', plaza_id=plaza.id)) }}{% endif %}
+            {% if plaza.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('plazas.recover', plaza_id=plaza.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=plaza.estatus) %}
+        {{ detail.label_value('Clave', centro_trabajo.clave) }}
+        {{ detail.label_value('Descripción', centro_trabajo.columna_2) }}
+        {{ detail.label_value('Creado', moment(lista_de_acuerdo.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PLAZAS') %}
+        {% if plaza.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + plaza.clave + '?') }}{% endif %}
+        {% if plaza.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + plaza.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

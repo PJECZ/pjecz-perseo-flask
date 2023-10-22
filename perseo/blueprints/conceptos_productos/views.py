@@ -50,11 +50,15 @@ def datatable_json():
                 },
                 "concepto": {
                     "clave": resultado.concepto.clave,
-                    "url": url_for("conceptos.detail", concepto_id=resultado.concepto_id),
+                    "url": url_for("conceptos.detail", concepto_id=resultado.concepto_id)
+                    if current_user.can_view("CONCEPTOS")
+                    else "",
                 },
                 "producto": {
                     "clave": resultado.producto.clave,
-                    "url": url_for("productos.detail", producto_id=resultado.producto_id),
+                    "url": url_for("productos.detail", producto_id=resultado.producto_id)
+                    if current_user.can_view("PRODUCTOS")
+                    else "",
                 },
             }
         )
@@ -83,3 +87,10 @@ def list_inactive():
         titulo="Conceptos-Productos inactivos",
         estatus="B",
     )
+
+
+@conceptos_productos.route("/conceptos_productos/<int:concepto_producto_id>")
+def detail(concepto_producto_id):
+    """Detalle de un Concepto-Producto"""
+    concepto_producto = ConceptoProducto.query.get_or_404(concepto_producto_id)
+    return render_template("conceptos_productos/detail.jinja2", concepto_producto=concepto_producto)

@@ -76,3 +76,10 @@ def list_inactive():
         titulo="Conceptos inactivos",
         estatus="B",
     )
+
+
+@conceptos.route("/conceptos/<int:concepto_id>")
+def detail(concepto_id):
+    """Detalle de un Concepto"""
+    concepto = Concepto.query.get_or_404(concepto_id)
+    return render_template("conceptos/detail.jinja2", concepto=concepto)

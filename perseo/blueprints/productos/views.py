@@ -76,3 +76,10 @@ def list_inactive():
         titulo="Productos inactivos",
         estatus="B",
     )
+
+
+@productos.route("/productos/<int:producto_id>")
+def detail(producto_id):
+    """Detalle de un Producto"""
+    producto = Producto.query.get_or_404(producto_id)
+    return render_template("productos/detail.jinja2", producto=producto)
