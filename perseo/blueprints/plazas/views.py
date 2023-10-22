@@ -57,7 +57,7 @@ def datatable_json():
 
 @plazas.route("/plazas")
 def list_active():
-    """Listado de Plazas activos"""
+    """Listado de Plazas activas"""
     return render_template(
         "plazas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
@@ -69,10 +69,10 @@ def list_active():
 @plazas.route("/plazas/inactivos")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
-    """Listado de Plazas inactivos"""
+    """Listado de Plazas inactivas"""
     return render_template(
         "plazas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Plazas inactivos",
+        titulo="Plazas inactivas",
         estatus="B",
     )

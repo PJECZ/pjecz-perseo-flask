@@ -80,7 +80,7 @@ def list_active():
 
 
 @permisos.route("/permisos/inactivos")
-@permission_required(MODULO, Permiso.MODIFICAR)
+@permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
     """Listado de Permisos inactivos"""
     return render_template(

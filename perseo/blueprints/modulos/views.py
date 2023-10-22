@@ -68,7 +68,7 @@ def list_active():
 
 
 @modulos.route("/modulos/inactivos")
-@permission_required(MODULO, Permiso.MODIFICAR)
+@permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
     """Listado de Modulos inactivos"""
     return render_template(

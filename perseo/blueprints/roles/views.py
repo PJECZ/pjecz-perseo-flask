@@ -67,7 +67,7 @@ def list_active():
 
 
 @roles.route("/roles/inactivos")
-@permission_required(MODULO, Permiso.MODIFICAR)
+@permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
     """Listado de Roles inactivos"""
     return render_template(

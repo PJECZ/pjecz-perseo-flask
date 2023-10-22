@@ -191,7 +191,7 @@ def list_active():
 
 @usuarios.route("/usuarios/inactivos")
 @login_required
-@permission_required(MODULO, Permiso.MODIFICAR)
+@permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
     """Listado de Usuarios inactivos"""
     return render_template(
