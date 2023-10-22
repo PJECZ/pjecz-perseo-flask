@@ -56,7 +56,7 @@
     "prefix": "fviews_list_inactive",
     "body": [
       "@${1:blueprint}.route('/${1:blueprint}/inactivos')",
-      "@permission_required(MODULO, Permiso.MODIFICAR)",
+      "@permission_required(MODULO, Permiso.ADMINISTRAR)",
       "def list_inactive():",
       "\t\"\"\"Listado de ${2:Modulo} inactivos\"\"\"",
       "\treturn render_template(",
