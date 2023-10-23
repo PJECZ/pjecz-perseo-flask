@@ -6,7 +6,7 @@
 {% block title %}Percepcion Deduccion + {{ percepcion_deduccion.id }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Percepción Deducción ' + percepcion_deduccion.id) %}
+    {% call topbar.page_buttons('Percepción Deducción') %}
         {{ topbar.button_previous('Percepciones Deducciones', url_for('percepciones_deducciones.list_active')) }}
         {% if current_user.can_edit('PERCEPCIONES DEDUCCIONES') %}
             {{ topbar.button_edit('Editar', url_for('percepciones_deducciones.edit', percepcion_deduccion_id=percepcion_deduccion.id)) }}
@@ -20,10 +20,15 @@
 
 {% block content %}
     {% call detail.card(estatus=percepcion_deduccion.estatus) %}
-        {{ detail.label_value_big('Nombre o Descripción', percepcion_deduccion.id) }}
-        {{ detail.label_value('Columna 1', percepcion_deduccion.columna_1) }}
-        {{ detail.label_value('Columna 2', percepcion_deduccion.columna_2) }}
-        {{ detail.label_value('Fecha', moment(lista_de_acuerdo.fecha, local=True).format('DD MMM YYYY')) }}
+        {{ detail.label_value_big('ID', percepcion_deduccion.id) }}
+        {{ detail.label_value('Persona RFC', percepcion_deduccion.persona.rfc) }}
+        {{ detail.label_value('Persona nombre completo', percepcion_deduccion.persona.nombre_completo) }}
+        {{ detail.label_value('Centro de trabajo', percepcion_deduccion.centro_trabajo.clave) }}
+        {{ detail.label_value('Concepto', percepcion_deduccion.concepto.clave) }}
+        {{ detail.label_value('Plaza', percepcion_deduccion.plaza.clave) }}
+        {{ detail.label_value_big('Quincena', percepcion_deduccion.quincena) }}
+        {{ detail.label_value_big('Importe', percepcion_deduccion.importe) }}
+        {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
 

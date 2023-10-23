@@ -27,7 +27,7 @@
         {% else %}
             {{ detail.label_value('Producto', concepto_producto.producto.nombre) }}
         {% endif %}
-        {{ detail.label_value('Creado', moment(lista_de_acuerdo.creado, local=True).format('DD MMM YYYY')) }}
+        {{ detail.label_value('Creado', moment(concepto_producto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
 

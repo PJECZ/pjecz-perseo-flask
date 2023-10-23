@@ -18,9 +18,9 @@
 
 {% block content %}
     {% call detail.card(estatus=producto.estatus) %}
-        {{ detail.label_value('Clave', centro_trabajo.clave) }}
-        {{ detail.label_value('Descripción', centro_trabajo.columna_2) }}
-        {{ detail.label_value('Creado', moment(lista_de_acuerdo.creado, local=True).format('DD MMM YYYY')) }}
+        {{ detail.label_value('Clave', producto.clave) }}
+        {{ detail.label_value('Descripción', producto.columna_2) }}
+        {{ detail.label_value('Creado', moment(producto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
 

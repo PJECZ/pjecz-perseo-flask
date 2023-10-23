@@ -6,7 +6,10 @@ import re
 from unidecode import unidecode
 
 CONTRASENA_REGEXP = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,48}$"
+CURP_REGEXP = r"^[a-zA-Z]{4}\d{6}[a-zA-Z]{6}\d{2}$"
 EMAIL_REGEXP = r"^[\w.-]+@[\w.-]+\.\w+$"
+QUINCENA_REGEXP = r"^\d{6}$"
+RFC_REGEXP = r"^[a-zA-Z]{3,4}\d{6}[a-zA-Z0-9]{3}$"
 TOKEN_REGEXP = r"^[a-zA-Z0-9_.=+-]+$"
 
 
@@ -21,6 +24,19 @@ def safe_clave(input_str, max_len=16):
     if len(final) > max_len:
         return final[:max_len]
     return final
+
+
+def safe_curp(input_str):
+    """Safe CURP"""
+    if not isinstance(input_str, str):
+        return ""
+    # Quitar espacios y solo mayusculas
+    curp = unidecode(re.sub(r"\s+", "", input_str).upper())
+    # Validar por expresion regular
+    if re.match(CURP_REGEXP, curp) is None:
+        raise ValueError("CURP inválida")
+    # Entregar
+    return curp
 
 
 def safe_email(input_str, search_fragment=False):
@@ -43,6 +59,19 @@ def safe_message(input_str, max_len=250, default_output_str="Sin descripción"):
     if message == "":
         return default_output_str
     return (message[:max_len] + "...") if len(message) > max_len else message
+
+
+def safe_rfc(input_str):
+    """Safe RFC"""
+    if not isinstance(input_str, str):
+        return ""
+    # Quitar espacios y solo mayusculas
+    rfc = unidecode(re.sub(r"\s+", "", input_str).upper())
+    # Validar por expresion regular
+    if re.match(RFC_REGEXP, rfc) is None:
+        raise ValueError("RFC inválido")
+    # Entregar
+    return rfc
 
 
 def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_uppercase=True):

@@ -10,9 +10,9 @@
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('percepciones_deducciones.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('percepciones_deducciones.list_active')) }}{% endif %}
         {% endif %}
-        {% if current_user.can_insert('PERCEPCIONES DEDUCCIONES') %}
+        {# if current_user.can_insert('PERCEPCIONES DEDUCCIONES') %}
             {{ topbar.button_new('Nueva Percepción Deducción', url_for('percepciones_deducciones.new')) }}
-        {% endif %}
+        {% endif #}
     {% endcall %}
 {% endblock %}
 
@@ -21,6 +21,11 @@
         <table id="percepciones_deducciones_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
+                    <th>RFC</th>
+                    <th>Nombre completo</th>
+                    <th>Centro de trabajo</th>
+                    <th>Concepto</th>
+                    <th>Plaza</th>
                     <th>Quincena</th>
                     <th>Importe</th>
                 </tr>
@@ -35,8 +40,13 @@
         configDataTable['ajax']['url'] = '/percepciones_deducciones/datatable_json';
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
+            { data: 'persona_rfc' },
+            { data: 'persona_nombre_completo' },
+            { data: 'centro_trabajo_clave' },
+            { data: 'concepto_clave' },
+            { data: 'plaza_clave' },
             { data: 'quincena' },
-            { data: 'importe' },
+            { data: 'importe' }
         ];
         $('#percepciones_deducciones_datatable').DataTable(configDataTable);
     </script>

@@ -6,11 +6,11 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons(titulo) %}
-        {# if current_user.can_admin('PERSONAS') %}
+        {% if current_user.can_admin('PERSONAS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('personas.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('personas.list_active')) }}{% endif %}
         {% endif %}
-        {% if current_user.can_insert('PERSONAS') %}
+        {# if current_user.can_insert('PERSONAS') %}
             {{ topbar.button_new('Nuevo Persona', url_for('personas.new')) }}
         {% endif #}
     {% endcall %}
@@ -21,10 +21,10 @@
         <table id="personas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
+                    <th>RFC</th>
                     <th>Nombre</th>
                     <th>Apellido primero</th>
                     <th>Apellido segundo</th>
-                    <th>RFC</th>
                     <th>CURP</th>
                 </tr>
             </thead>
@@ -38,11 +38,20 @@
         configDataTable['ajax']['url'] = '/personas/datatable_json';
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
+            { data: 'detalle' },
             { data: 'nombres' },
             { data: 'apellido_primero' },
             { data: 'apellido_segundo' },
-            { data: 'rfc' },
             { data: 'curp' },
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.rfc + '</a>';
+                }
+            }
         ];
         $('#personas_datatable').DataTable(configDataTable);
     </script>
