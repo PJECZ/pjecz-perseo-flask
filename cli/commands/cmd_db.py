@@ -13,6 +13,11 @@ from cli.commands.alimentar_permisos import alimentar_permisos
 from cli.commands.alimentar_roles import alimentar_roles
 from cli.commands.alimentar_usuarios import alimentar_usuarios
 from cli.commands.alimentar_usuarios_roles import alimentar_usuarios_roles
+from cli.commands.respaldar_autoridades import respaldar_autoridades
+from cli.commands.respaldar_distritos import respaldar_distritos
+from cli.commands.respaldar_modulos import respaldar_modulos
+from cli.commands.respaldar_roles_permisos import respaldar_roles_permisos
+from cli.commands.respaldar_usuarios_roles import respaldar_usuarios_roles
 from perseo.app import create_app
 from perseo.blueprints.autoridades.models import Autoridad
 from perseo.blueprints.bitacoras.models import Bitacora
@@ -73,6 +78,19 @@ def reiniciar(ctx):
     ctx.invoke(alimentar)
 
 
+@click.command()
+@click.pass_context
+def respaldar(ctx):
+    """Respaldar crea archivos CSV en la carpeta seed"""
+    respaldar_autoridades()
+    respaldar_distritos()
+    respaldar_modulos()
+    respaldar_roles_permisos()
+    respaldar_usuarios_roles()
+    click.echo("Termina respaldar.")
+
+
 cli.add_command(alimentar)
 cli.add_command(inicializar)
 cli.add_command(reiniciar)
+cli.add_command(respaldar)

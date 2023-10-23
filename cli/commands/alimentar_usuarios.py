@@ -59,6 +59,8 @@ def alimentar_usuarios():
                 nombres=safe_string(row["nombres"], save_enie=True),
                 apellido_primero=safe_string(row["apellido_primero"], save_enie=True),
                 apellido_segundo=safe_string(row["apellido_segundo"], save_enie=True),
+                curp=safe_string(row["curp"]),
+                puesto=safe_string(row["puesto"], save_enie=True),
                 api_key="",
                 api_key_expiracion=datetime(year=2000, month=1, day=1),
                 contrasena=pwd_context.hash(generar_contrasena()),
