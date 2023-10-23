@@ -7,8 +7,9 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_clave, safe_message, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.conceptos.forms import ConceptoForm
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
@@ -83,3 +84,31 @@ def detail(concepto_id):
     """Detalle de un Concepto"""
     concepto = Concepto.query.get_or_404(concepto_id)
     return render_template("conceptos/detail.jinja2", concepto=concepto)
+
+
+@conceptos.route("/conceptos/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Concepto"""
+    form = ConceptoForm()
+    if form.validate_on_submit():
+        # Validar que la clave no se repita
+        clave = safe_clave(form.clave.data)
+        if Concepto.query.filter_by(clave=clave).first():
+            flash(safe_message(f"La clave {clave} ya está en uso. Debe de ser única."), "warning")
+        else:
+            concepto = Concepto(
+                clave=clave,
+                descripcion=safe_string(form.descripcion.data, save_enie=True),
+            )
+            concepto.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nuevo Concepto {concepto.clave}"),
+                url=url_for("conceptos.detail", concepto_id=concepto.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    return render_template("conceptos/new.jinja2", form=form)

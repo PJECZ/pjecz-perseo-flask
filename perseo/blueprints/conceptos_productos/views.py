@@ -7,11 +7,14 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_message
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.conceptos.models import Concepto
+from perseo.blueprints.conceptos_productos.forms import ConceptoProductoNewWithConceptoForm, ConceptoProductoNewWithProductoForm
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.productos.models import Producto
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "CONCEPTOS PRODUCTOS"
@@ -94,3 +97,71 @@ def detail(concepto_producto_id):
     """Detalle de un Concepto-Producto"""
     concepto_producto = ConceptoProducto.query.get_or_404(concepto_producto_id)
     return render_template("conceptos_productos/detail.jinja2", concepto_producto=concepto_producto)
+
+
+@conceptos_productos.route("/conceptos_productos/nuevo_con_concepto/<int:concepto_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_concepto(concepto_id):
+    """Nuevo Concepto-Producto con Concepto"""
+    concepto = Concepto.query.get_or_404(concepto_id)
+    form = ConceptoProductoNewWithConceptoForm()
+    if form.validate_on_submit():
+        producto = Producto.query.get_or_404(form.producto_id.data)
+        descripcion = f"{concepto.descripcion} en {producto.descripcion}"
+        concepto_producto_existente = ConceptoProducto.query.filter(
+            ConceptoProducto.concepto == concepto, ConceptoProducto.producto == producto
+        ).first()
+        if concepto_producto_existente is not None:
+            flash(safe_message(f"CONFLICTO: Ya existe {descripcion}."), "warning")
+            return redirect(url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto_existente.id))
+        concepto_producto = ConceptoProducto(
+            concepto=concepto,
+            producto=producto,
+        )
+        concepto_producto.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Concepto-Producto {descripcion}"),
+            url=url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.concepto_clave.data = concepto.clave  # Solo lectura
+    form.concepto_descripcion.data = concepto.descripcion  # Solo lectura
+    return render_template("conceptos_productos/new.jinja2", form=form)
+
+
+@conceptos_productos.route("/conceptos_productos/nuevo_con_producto/<int:producto_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_producto(producto_id):
+    """Nuevo Concepto-Producto con Producto"""
+    producto = Producto.query.get_or_404(producto_id)
+    form = ConceptoProductoNewWithProductoForm()
+    if form.validate_on_submit():
+        concepto = Concepto.query.get_or_404(form.concepto_id.data)
+        descripcion = f"{concepto.descripcion} en {producto.descripcion}"
+        concepto_producto_existente = ConceptoProducto.query.filter(
+            ConceptoProducto.concepto == concepto, ConceptoProducto.producto == producto
+        ).first()
+        if concepto_producto_existente is not None:
+            flash(safe_message(f"CONFLICTO: Ya existe {descripcion}."), "warning")
+            return redirect(url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto_existente.id))
+        concepto_producto = ConceptoProducto(
+            concepto=concepto,
+            producto=producto,
+        )
+        concepto_producto.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Concepto-Producto {descripcion}"),
+            url=url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.producto_clave.data = producto.clave  # Solo lectura
+    form.producto_descripcion.data = producto.descripcion  # Solo lectura
+    return render_template("conceptos_productos/new.jinja2", form=form)

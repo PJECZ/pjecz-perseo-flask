@@ -13,7 +13,7 @@
       "",
       "class ${2:Clase}Form(FlaskForm):",
       "\t\"\"\" Formulario ${2:Clase} \"\"\"",
-      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tclave = StringField('Clave', validators=[DataRequired(), Length(max=16)])",
       "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
       "\tguardar = SubmitField('Guardar')",
       ""
@@ -36,7 +36,7 @@
       "",
       "class ${2:Clase}Form(FlaskForm):",
       "\t\"\"\" Formulario ${2:Clase} \"\"\"",
-      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tclave = StringField('Clave', validators=[DataRequired(), Length(max=16)])",
       "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
       "\tarchivo = FileField('Archivo PDF', validators=[FileRequired()])",
       "\tguardar = SubmitField('Guardar')",
@@ -50,7 +50,7 @@
     "body": [
       "class ${1:Clase}Form(FlaskForm):",
       "\t\"\"\" Formulario ${1:Clase} \"\"\"",
-      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tclave = StringField('Clave', validators=[DataRequired(), Length(max=16)])",
       "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
       "\tguardar = SubmitField('Guardar')",
       "",
@@ -67,6 +67,7 @@
       "class ${3:Clase}Form(FlaskForm):",
       "\t\"\"\" Formulario ${4:Clases} \"\"\"",
       "\t${5:rel_singular} = SelectField(\"${2:RelClase}\", coerce=int, validators=[DataRequired()])",
+      "\tclave = StringField('Clave', validators=[DataRequired(), Length(max=16)])",
       "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
       "\tguardar = SubmitField('Guardar')",
       "",
@@ -87,7 +88,7 @@
     "body": [
       "class ${1:Clase}SearchForm(FlaskForm):",
       "\t\"\"\" Formulario para buscar ${2:Clases} \"\"\"",
-      "\tnombre = StringField('Nombre', validators=[DataRequired(), Length(max=256)])",
+      "\tclave = StringField('Clave', validators=[DataRequired(), Length(max=16)])",
       "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
       "\tbuscar = SubmitField('Buscar')",
       "",

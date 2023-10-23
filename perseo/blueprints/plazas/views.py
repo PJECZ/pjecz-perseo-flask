@@ -7,10 +7,11 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_clave, safe_message, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.plazas.forms import PlazaForm
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -83,3 +84,31 @@ def detail(plaza_id):
     """Detalle de una Plaza"""
     plaza = Plaza.query.get_or_404(plaza_id)
     return render_template("plazas/detail.jinja2", plaza=plaza)
+
+
+@plazas.route("/plazas/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nueva Plaza"""
+    form = PlazaForm()
+    if form.validate_on_submit():
+        # Validar que la clave no se repita
+        clave = safe_clave(form.clave.data)
+        if Plaza.query.filter_by(clave=clave).first():
+            form.clave.errors.append("Clave repetida")
+        else:
+            plaza = Plaza(
+                clave=clave,
+                descripcion=safe_string(form.descripcion.data, save_enie=True),
+            )
+            plaza.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nuevo Plaza {plaza.clave}"),
+                url=url_for("plazas.detail", plaza_id=plaza.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    return render_template("plazas/new.jinja2", form=form)
