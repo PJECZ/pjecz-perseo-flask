@@ -112,3 +112,36 @@ def new():
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
     return render_template("plazas/new.jinja2", form=form)
+
+
+@plazas.route("/plazas/edicion/<int:plaza_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(plaza_id):
+    """Editar Plaza"""
+    plaza = Plaza.query.get_or_404(plaza_id)
+    form = PlazaForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data)
+        if plaza.clave != clave:
+            plaza_existente = Plaza.query.filter_by(clave=clave).first()
+            if plaza_existente and plaza_existente.id != plaza.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            plaza.clave = clave
+            plaza.descripcion = safe_string(form.descripcion.data)
+            plaza.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Plaza {plaza.descripcion}"),
+                url=url_for("plazas.detail", plaza_id=plaza.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.descripcion.data = plaza.descripcion
+    return render_template("plazas/edit.jinja2", form=form, plaza=plaza)

@@ -112,3 +112,36 @@ def new():
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
     return render_template("productos/new.jinja2", form=form)
+
+
+@productos.route("/productos/edicion/<int:producto_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(producto_id):
+    """Editar Producto"""
+    producto = Producto.query.get_or_404(producto_id)
+    form = ProductoForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data)
+        if producto.clave != clave:
+            producto_existente = Producto.query.filter_by(clave=clave).first()
+            if producto_existente and producto_existente.id != producto.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            producto.clave = clave
+            producto.descripcion = safe_string(form.descripcion.data)
+            producto.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Producto {producto.descripcion}"),
+                url=url_for("productos.detail", producto_id=producto.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.descripcion.data = producto.descripcion
+    return render_template("productos/edit.jinja2", form=form, producto=producto)

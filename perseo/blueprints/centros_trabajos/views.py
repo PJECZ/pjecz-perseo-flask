@@ -112,3 +112,36 @@ def new():
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
     return render_template("centros_trabajos/new.jinja2", form=form)
+
+
+@centros_trabajos.route("/centros_trabajos/edicion/<int:centro_trabajo_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(centro_trabajo_id):
+    """Editar Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    form = CentroTrabajoForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data)
+        if centro_trabajo.clave != clave:
+            centro_trabajo_existente = CentroTrabajo.query.filter_by(clave=clave).first()
+            if centro_trabajo_existente and centro_trabajo_existente.id != centro_trabajo.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            centro_trabajo.clave = clave
+            centro_trabajo.descripcion = safe_string(form.descripcion.data)
+            centro_trabajo.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Centro de Trabajo {centro_trabajo.descripcion}"),
+                url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.descripcion.data = centro_trabajo.descripcion
+    return render_template("centros_trabajos/edit.jinja2", form=form, centro_trabajo=centro_trabajo)

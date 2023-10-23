@@ -112,3 +112,36 @@ def new():
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
     return render_template("conceptos/new.jinja2", form=form)
+
+
+@conceptos.route("/conceptos/edicion/<int:concepto_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(concepto_id):
+    """Editar Concepto"""
+    concepto = Concepto.query.get_or_404(concepto_id)
+    form = ConceptoForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data)
+        if concepto.clave != clave:
+            concepto_existente = Concepto.query.filter_by(clave=clave).first()
+            if concepto_existente and concepto_existente.id != concepto.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            concepto.clave = clave
+            concepto.descripcion = safe_string(form.descripcion.data)
+            concepto.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Concepto {concepto.descripcion}"),
+                url=url_for("conceptos.detail", concepto_id=concepto.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.descripcion.data = concepto.descripcion
+    return render_template("conceptos/edit.jinja2", form=form, concepto=concepto)
