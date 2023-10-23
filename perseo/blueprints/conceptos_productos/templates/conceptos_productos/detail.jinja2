@@ -9,7 +9,6 @@
     {% call topbar.page_buttons('Concepto-Producto ' + concepto_producto.descripcion) %}
         {{ topbar.button_previous('Conceptos-Productos', url_for('conceptos_productos.list_active')) }}
         {% if current_user.can_admin('CONCEPTOS PRODUCTOS') %}
-            {{ topbar.button_edit('Editar', url_for('conceptos_productos.edit', concepto_producto_id=concepto_producto.id)) }}
             {% if concepto_producto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('conceptos_productos.delete', concepto_producto_id=concepto_producto.id)) }}{% endif %}
             {% if concepto_producto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('conceptos_productos.recover', concepto_producto_id=concepto_producto.id)) }}{% endif %}
         {% endif %}
