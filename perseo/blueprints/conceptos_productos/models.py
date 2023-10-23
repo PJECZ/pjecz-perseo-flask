@@ -21,7 +21,7 @@ class ConceptoProducto(database.Model, UniversalMixin):
     concepto_id = Column(Integer, ForeignKey("conceptos.id"), index=True, nullable=False)
     concepto = relationship("Concepto", back_populates="conceptos_productos")
     producto_id = Column(Integer, ForeignKey("productos.id"), index=True, nullable=False)
-    producto = relationship("Productos", back_populates="conceptos_productos")
+    producto = relationship("Producto", back_populates="conceptos_productos")
 
     # Columnas
     descripcion = Column(String(256), nullable=False)
