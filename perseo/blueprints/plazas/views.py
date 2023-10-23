@@ -145,3 +145,39 @@ def edit(plaza_id):
             return redirect(bitacora.url)
     form.descripcion.data = plaza.descripcion
     return render_template("plazas/edit.jinja2", form=form, plaza=plaza)
+
+
+@plazas.route("/plazas/eliminar/<int:plaza_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(plaza_id):
+    """Eliminar Plaza"""
+    plaza = Plaza.query.get_or_404(plaza_id)
+    if plaza.estatus == "A":
+        plaza.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Plaza {plaza.clave}"),
+            url=url_for("plazas.detail", plaza_id=plaza.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("plazas.detail", plaza_id=plaza.id))
+
+
+@plazas.route("/plazas/recuperar/<int:plaza_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(plaza_id):
+    """Recuperar Plaza"""
+    plaza = Plaza.query.get_or_404(plaza_id)
+    if plaza.estatus == "B":
+        plaza.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Plaza {plaza.clave}"),
+            url=url_for("plazas.detail", plaza_id=plaza.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("plazas.detail", plaza_id=plaza.id))

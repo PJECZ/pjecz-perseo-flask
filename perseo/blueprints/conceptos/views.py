@@ -145,3 +145,39 @@ def edit(concepto_id):
             return redirect(bitacora.url)
     form.descripcion.data = concepto.descripcion
     return render_template("conceptos/edit.jinja2", form=form, concepto=concepto)
+
+
+@conceptos.route("/conceptos/eliminar/<int:concepto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(concepto_id):
+    """Eliminar Concepto"""
+    concepto = Concepto.query.get_or_404(concepto_id)
+    if concepto.estatus == "A":
+        concepto.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Concepto {concepto.clave}"),
+            url=url_for("conceptos.detail", concepto_id=concepto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("conceptos.detail", concepto_id=concepto.id))
+
+
+@conceptos.route("/conceptos/recuperar/<int:concepto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(concepto_id):
+    """Recuperar Concepto"""
+    concepto = Concepto.query.get_or_404(concepto_id)
+    if concepto.estatus == "B":
+        concepto.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Concepto {concepto.clave}"),
+            url=url_for("conceptos.detail", concepto_id=concepto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("conceptos.detail", concepto_id=concepto.id))

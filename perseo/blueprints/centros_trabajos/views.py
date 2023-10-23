@@ -145,3 +145,39 @@ def edit(centro_trabajo_id):
             return redirect(bitacora.url)
     form.descripcion.data = centro_trabajo.descripcion
     return render_template("centros_trabajos/edit.jinja2", form=form, centro_trabajo=centro_trabajo)
+
+
+@centros_trabajos.route("/centros_trabajos/eliminar/<int:centro_trabajo_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(centro_trabajo_id):
+    """Eliminar Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    if centro_trabajo.estatus == "A":
+        centro_trabajo.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Centro de Trabajo {centro_trabajo.clave}"),
+            url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id))
+
+
+@centros_trabajos.route("/centros_trabajos/recuperar/<int:centro_trabajo_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(centro_trabajo_id):
+    """Recuperar Centro de Trabajo"""
+    centro_trabajo = CentroTrabajo.query.get_or_404(centro_trabajo_id)
+    if centro_trabajo.estatus == "B":
+        centro_trabajo.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Centro de Trabajo {centro_trabajo.clave}"),
+            url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id))

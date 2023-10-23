@@ -145,3 +145,39 @@ def edit(producto_id):
             return redirect(bitacora.url)
     form.descripcion.data = producto.descripcion
     return render_template("productos/edit.jinja2", form=form, producto=producto)
+
+
+@productos.route("/productos/eliminar/<int:producto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(producto_id):
+    """Eliminar Producto"""
+    producto = Producto.query.get_or_404(producto_id)
+    if producto.estatus == "A":
+        producto.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Producto {producto.clave}"),
+            url=url_for("productos.detail", producto_id=producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("productos.detail", producto_id=producto.id))
+
+
+@productos.route("/productos/recuperar/<int:producto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(producto_id):
+    """Recuperar Producto"""
+    producto = Producto.query.get_or_404(producto_id)
+    if producto.estatus == "B":
+        producto.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Producto {producto.clave}"),
+            url=url_for("productos.detail", producto_id=producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("productos.detail", producto_id=producto.id))

@@ -165,3 +165,39 @@ def new_with_producto(producto_id):
     form.producto_clave.data = producto.clave  # Solo lectura
     form.producto_descripcion.data = producto.descripcion  # Solo lectura
     return render_template("conceptos_productos/new.jinja2", form=form)
+
+
+@conceptos_productos.route("/conceptos_productos/eliminar/<int:concepto_producto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(concepto_producto_id):
+    """Eliminar Concepto-Producto"""
+    concepto_producto = ConceptoProducto.query.get_or_404(concepto_producto_id)
+    if concepto_producto.estatus == "A":
+        concepto_producto.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Concepto-Producto {concepto_producto.descripcion}"),
+            url=url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto.id))
+
+
+@conceptos_productos.route("/conceptos_productos/recuperar/<int:concepto_producto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(concepto_producto_id):
+    """Recuperar Concepto-Producto"""
+    concepto_producto = ConceptoProducto.query.get_or_404(concepto_producto_id)
+    if concepto_producto.estatus == "B":
+        concepto_producto.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Concepto-Producto {concepto_producto.descripcion}"),
+            url=url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("conceptos_productos.detail", concepto_producto_id=concepto_producto.id))
