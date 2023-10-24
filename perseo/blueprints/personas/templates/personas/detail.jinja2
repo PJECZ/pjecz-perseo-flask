@@ -16,7 +16,7 @@
             {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
         {% endif %}
         {% if current_user.can_insert('PERCEPCIONES DEDUCCIONES') %}
-            {{ topbar.button_new('Nueva Percepción Deducción', url_for('percepciones_deducciones.new', persona_id=persona.id)) }}
+            {{ topbar.button_new('Nueva Percepción-Deducción', url_for('percepciones_deducciones.new_with_persona', persona_id=persona.id)) }}
         {% endif %}
     {% endcall %}
 {% endblock %}

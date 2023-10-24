@@ -10,9 +10,9 @@
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('personas.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('personas.list_active')) }}{% endif %}
         {% endif %}
-        {# if current_user.can_insert('PERSONAS') %}
+        {% if current_user.can_insert('PERSONAS') %}
             {{ topbar.button_new('Nuevo Persona', url_for('personas.new')) }}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

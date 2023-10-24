@@ -13,7 +13,7 @@
 {% block content %}
     {% call f.card() %}
         {% set form_kwargs = {'persona_id': persona.id} %}
-        {% call f.form_tag('percepciones_deducciones.new', fid='percepcion_deduccion_form', **form_kwargs) %}
+        {% call f.form_tag('percepciones_deducciones.new_with_persona', fid='percepcion_deduccion_form', **form_kwargs) %}
             {% call f.form_group(form.persona_rfc, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
             {% call f.form_group(form.centro_trabajo) %}{% endcall %}

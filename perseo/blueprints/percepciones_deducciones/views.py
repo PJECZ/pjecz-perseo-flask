@@ -39,13 +39,17 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    registros = consulta.order_by(PercepcionDeduccion.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(PercepcionDeduccion.id.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
     for resultado in registros:
         data.append(
             {
+                "detalle": {
+                    "id": resultado.id,
+                    "url": url_for("percepciones_deducciones.detail", percepcion_deduccion_id=resultado.id),
+                },
                 "persona_rfc": resultado.persona.rfc,
                 "persona_nombre_completo": resultado.persona.nombre_completo,
                 "centro_trabajo_clave": resultado.centro_trabajo.clave,
@@ -116,7 +120,12 @@ def new_with_persona(persona_id):
         return redirect(bitacora.url)
     form.persona_rfc.data = persona.rfc  # Solo lectura
     form.persona_nombre_completo.data = persona.nombre_completo  # Solo lectura
-    return render_template("percepciones_deducciones/new.jinja2", form=form)
+    return render_template(
+        "percepciones_deducciones/new_with_persona.jinja2",
+        titulo=f"Agregar Percepción-Deducción a {persona.rfc}",
+        form=form,
+        persona=persona,
+    )
 
 
 @percepciones_deducciones.route("/percepciones_deducciones/edicion/<int:percepcion_deduccion_id>", methods=["GET", "POST"])

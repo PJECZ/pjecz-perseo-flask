@@ -10,9 +10,6 @@
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('percepciones_deducciones.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('percepciones_deducciones.list_active')) }}{% endif %}
         {% endif %}
-        {# if current_user.can_insert('PERCEPCIONES DEDUCCIONES') %}
-            {{ topbar.button_new('Nueva Percepción Deducción', url_for('percepciones_deducciones.new')) }}
-        {% endif #}
     {% endcall %}
 {% endblock %}
 
@@ -21,6 +18,7 @@
         <table id="percepciones_deducciones_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>RFC</th>
                     <th>Nombre completo</th>
                     <th>Centro de trabajo</th>
@@ -40,6 +38,7 @@
         configDataTable['ajax']['url'] = '/percepciones_deducciones/datatable_json';
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
+            { data: 'detalle' },
             { data: 'persona_rfc' },
             { data: 'persona_nombre_completo' },
             { data: 'centro_trabajo_clave' },
@@ -47,6 +46,15 @@
             { data: 'plaza_clave' },
             { data: 'quincena' },
             { data: 'importe' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            }
         ];
         $('#percepciones_deducciones_datatable').DataTable(configDataTable);
     </script>
