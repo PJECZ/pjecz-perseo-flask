@@ -19,12 +19,57 @@
 {% block content %}
     {% call detail.card(estatus=concepto.estatus) %}
         {{ detail.label_value('Clave', concepto.clave) }}
-        {{ detail.label_value('Descripción', concepto.columna_2) }}
+        {{ detail.label_value('Descripción', concepto.descripcion) }}
         {{ detail.label_value('Creado', moment(concepto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    {% if current_user.can_view('PRODUCTOS') %}
+        {% call detail.card('Productos') %}
+            <table id="conceptos_productos" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Clave</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('CONCEPTOS PRODUCTOS') %}
+            <a href="{{ url_for('conceptos_productos.new_with_concepto', concepto_id=concepto.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('PRODUCTOS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/conceptos_productos/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'concepto_id': {{ concepto.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'producto' },
+                { data: 'producto_descripcion' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // producto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            $('#conceptos_productos').DataTable(configDataTable);
+        </script>
+    {% endif %}
     {% if current_user.can_admin('CONCEPTOS') %}
         {% if concepto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto.clave + '?') }}{% endif %}
         {% if concepto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto.clave + '?') }}{% endif %}

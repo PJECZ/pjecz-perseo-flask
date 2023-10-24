@@ -191,18 +191,18 @@ def edit(permiso_id):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def delete(permiso_id):
     """Eliminar Permiso"""
-    pemiso = Permiso.query.get_or_404(permiso_id)
-    if pemiso.estatus == "A":
-        pemiso.delete()
+    permiso = Permiso.query.get_or_404(permiso_id)
+    if permiso.estatus == "A":
+        permiso.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Permiso {pemiso.nombre}"),
-            url=url_for("permisos.detail", pemiso_id=pemiso.id),
+            descripcion=safe_message(f"Eliminado Permiso {permiso.nombre}"),
+            url=url_for("permisos.detail", permiso_id=permiso.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
-    return redirect(url_for("permisos.detail", permiso_id=pemiso.id))
+    return redirect(url_for("permisos.detail", permiso_id=permiso.id))
 
 
 @permisos.route("/permisos/recuperar/<int:permiso_id>")

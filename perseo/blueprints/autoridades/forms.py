@@ -3,8 +3,9 @@ Autoridades, formularios
 """
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms.validators import DataRequired, Length, Optional, Regexp
 
+from lib.safe_string import CLAVE_REGEXP
 from perseo.blueprints.distritos.models import Distrito
 
 
@@ -14,7 +15,7 @@ class AutoridadForm(FlaskForm):
     distrito = SelectField("Distrito", coerce=int, validators=[DataRequired()])
     descripcion = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
     descripcion_corta = StringField("Descripción corta (máximo 64 caracteres)", validators=[DataRequired(), Length(max=64)])
-    clave = StringField("Clave (única, máximo 16 caracteres)", validators=[DataRequired(), Length(max=16)])
+    clave = StringField("Clave (hasta 16 caracteres)", validators=[DataRequired(), Regexp(CLAVE_REGEXP)])
     es_extinto = BooleanField("Es Extinto", validators=[Optional()])
     guardar = SubmitField("Guardar")
 

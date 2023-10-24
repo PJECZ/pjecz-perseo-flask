@@ -143,6 +143,7 @@ def edit(plaza_id):
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
+    form.clave.data = plaza.clave
     form.descripcion.data = plaza.descripcion
     return render_template("plazas/edit.jinja2", form=form, plaza=plaza)
 

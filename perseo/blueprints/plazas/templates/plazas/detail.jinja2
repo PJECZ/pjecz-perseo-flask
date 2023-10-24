@@ -19,7 +19,7 @@
 {% block content %}
     {% call detail.card(estatus=plaza.estatus) %}
         {{ detail.label_value('Clave', plaza.clave) }}
-        {{ detail.label_value('Descripción', plaza.columna_2) }}
+        {{ detail.label_value('Descripción', plaza.descripcion) }}
         {{ detail.label_value('Creado', moment(plaza.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}

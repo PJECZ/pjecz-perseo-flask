@@ -21,7 +21,7 @@
 {% block content %}
     {% call detail.card(estatus=centro_trabajo.estatus) %}
         {{ detail.label_value('Clave', centro_trabajo.clave) }}
-        {{ detail.label_value('Descripción', centro_trabajo.columna_2) }}
+        {{ detail.label_value('Descripción', centro_trabajo.descripcion) }}
         {{ detail.label_value('Creado', moment(centro_trabajo.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}

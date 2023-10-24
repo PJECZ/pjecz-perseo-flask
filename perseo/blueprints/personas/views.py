@@ -188,6 +188,10 @@ def edit(persona_id):
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
     form.rfc.data = persona.rfc
+    form.nombres.data = persona.nombres
+    form.apellido_primero.data = persona.apellido_primero
+    form.apellido_segundo.data = persona.apellido_segundo
+    form.curp.data = persona.curp
     return render_template("personas/edit.jinja2", form=form, persona=persona)
 
 

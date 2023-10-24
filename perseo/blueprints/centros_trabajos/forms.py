@@ -9,6 +9,6 @@ from wtforms.validators import DataRequired, Length
 class CentroTrabajoForm(FlaskForm):
     """Formulario CentroTrabajo"""
 
-    clave = StringField("Clave", validators=[DataRequired(), Length(max=16)])
+    clave = StringField("Clave (hasta 10 carecteres)", validators=[DataRequired(), Length(max=10)])
     descripcion = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
     guardar = SubmitField("Guardar")

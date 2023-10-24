@@ -40,6 +40,10 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "concepto_id" in request.form:
+        consulta = consulta.filter_by(concepto_id=request.form["concepto_id"])
+    if "producto_id" in request.form:
+        consulta = consulta.filter_by(producto_id=request.form["producto_id"])
     registros = consulta.order_by(ConceptoProducto.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
@@ -57,12 +61,14 @@ def datatable_json():
                     if current_user.can_view("CONCEPTOS")
                     else "",
                 },
+                "concepto_descripcion": resultado.concepto.descripcion,
                 "producto": {
                     "clave": resultado.producto.clave,
                     "url": url_for("productos.detail", producto_id=resultado.producto_id)
                     if current_user.can_view("PRODUCTOS")
                     else "",
                 },
+                "producto_descripcion": resultado.producto.descripcion,
             }
         )
     # Entregar JSON
@@ -106,7 +112,7 @@ def new_with_concepto(concepto_id):
     concepto = Concepto.query.get_or_404(concepto_id)
     form = ConceptoProductoNewWithConceptoForm()
     if form.validate_on_submit():
-        producto = Producto.query.get_or_404(form.producto_id.data)
+        producto = Producto.query.get_or_404(form.producto.data)
         descripcion = f"{concepto.descripcion} en {producto.descripcion}"
         concepto_producto_existente = ConceptoProducto.query.filter(
             ConceptoProducto.concepto == concepto, ConceptoProducto.producto == producto
@@ -117,6 +123,7 @@ def new_with_concepto(concepto_id):
         concepto_producto = ConceptoProducto(
             concepto=concepto,
             producto=producto,
+            descripcion=descripcion,
         )
         concepto_producto.save()
         bitacora = Bitacora(
@@ -127,10 +134,15 @@ def new_with_concepto(concepto_id):
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        return redirect(url_for("conceptos.detail", concepto_id=concepto.id))
     form.concepto_clave.data = concepto.clave  # Solo lectura
     form.concepto_descripcion.data = concepto.descripcion  # Solo lectura
-    return render_template("conceptos_productos/new.jinja2", form=form)
+    return render_template(
+        "conceptos_productos/new_with_concepto.jinja2",
+        titulo=f"Agregar concepto {concepto.clave} a un producto",
+        form=form,
+        concepto=concepto,
+    )
 
 
 @conceptos_productos.route("/conceptos_productos/nuevo_con_producto/<int:producto_id>", methods=["GET", "POST"])
@@ -140,7 +152,7 @@ def new_with_producto(producto_id):
     producto = Producto.query.get_or_404(producto_id)
     form = ConceptoProductoNewWithProductoForm()
     if form.validate_on_submit():
-        concepto = Concepto.query.get_or_404(form.concepto_id.data)
+        concepto = Concepto.query.get_or_404(form.concepto.data)
         descripcion = f"{concepto.descripcion} en {producto.descripcion}"
         concepto_producto_existente = ConceptoProducto.query.filter(
             ConceptoProducto.concepto == concepto, ConceptoProducto.producto == producto
@@ -151,6 +163,7 @@ def new_with_producto(producto_id):
         concepto_producto = ConceptoProducto(
             concepto=concepto,
             producto=producto,
+            descripcion=descripcion,
         )
         concepto_producto.save()
         bitacora = Bitacora(
@@ -161,10 +174,15 @@ def new_with_producto(producto_id):
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        return redirect(url_for("productos.detail", producto_id=producto.id))
     form.producto_clave.data = producto.clave  # Solo lectura
     form.producto_descripcion.data = producto.descripcion  # Solo lectura
-    return render_template("conceptos_productos/new.jinja2", form=form)
+    return render_template(
+        "conceptos_productos/new_with_producto.jinja2",
+        titulo=f"Agregar producto {producto.clave} a un concepto",
+        form=form,
+        producto=producto,
+    )
 
 
 @conceptos_productos.route("/conceptos_productos/eliminar/<int:concepto_producto_id>")

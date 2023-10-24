@@ -18,15 +18,17 @@
 {% block content %}
     {% call detail.card(estatus=concepto_producto.estatus) %}
         {% if current_user.can_view("CONCEPTOS") %}
-            {{ detail.label_value('Concepto', concepto_producto.concepto.nombre, url_for('conceptos.detail', concepto_id=concepto_producto.concepto_id)) }}
+            {{ detail.label_value('Concepto clave', concepto_producto.concepto.clave, url_for('conceptos.detail', concepto_id=concepto_producto.concepto_id)) }}
         {% else %}
-            {{ detail.label_value('Concepto', concepto_producto.concepto.nombre) }}
+            {{ detail.label_value('Concepto clave', concepto_producto.concepto.clave) }}
         {% endif %}
+        {{ detail.label_value('Concepto descripción', concepto_producto.concepto.descripcion) }}
         {% if current_user.can_view("PRODUCTOS") %}
-            {{ detail.label_value('Producto', concepto_producto.producto.nombre, url_for('productos.detail', producto_id=concepto_producto.producto_id)) }}
+            {{ detail.label_value('Producto clave', concepto_producto.producto.clave, url_for('productos.detail', producto_id=concepto_producto.producto_id)) }}
         {% else %}
-            {{ detail.label_value('Producto', concepto_producto.producto.nombre) }}
+            {{ detail.label_value('Producto clave', concepto_producto.producto.clave) }}
         {% endif %}
+        {{ detail.label_value('Producto descripción', concepto_producto.producto.descripcion) }}
         {{ detail.label_value('Creado', moment(concepto_producto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
