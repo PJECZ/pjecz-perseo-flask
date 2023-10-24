@@ -1,0 +1,60 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Percepcion-Deduccion + {{ percepcion_deduccion.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Percepción-Deducción') %}
+        {{ topbar.button_previous('Percepciones-Deducciones', url_for('percepciones_deducciones.list_active')) }}
+        {% if current_user.can_edit('PERCEPCIONES DEDUCCIONES') %}
+            {{ topbar.button_edit('Editar', url_for('percepciones_deducciones.edit', percepcion_deduccion_id=percepcion_deduccion.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('PERCEPCIONES DEDUCCIONES') %}
+            {% if percepcion_deduccion.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('percepciones_deducciones.delete', percepcion_deduccion_id=percepcion_deduccion.id)) }}{% endif %}
+            {% if percepcion_deduccion.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('percepciones_deducciones.recover', percepcion_deduccion_id=percepcion_deduccion.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=percepcion_deduccion.estatus) %}
+        {{ detail.label_value_big('ID', percepcion_deduccion.id) }}
+        {% set persona_texto = percepcion_deduccion.persona.rfc + ' - ' + percepcion_deduccion.persona.nombre_completo %}
+        {% if current_user.can_view("PERSONAS") %}
+            {{ detail.label_value('RFC', persona_texto, url_for('personas.detail', persona_id=percepcion_deduccion.persona_id)) }}
+        {% else %}
+            {{ detail.label_value('RFC', persona_texto) }}
+        {% endif %}
+        {% set centro_trabajo_texto = percepcion_deduccion.centro_trabajo.clave + ' - ' + percepcion_deduccion.centro_trabajo.descripcion %}
+        {% if current_user.can_view("CENTROS TRABAJOS") %}
+            {{ detail.label_value('Centro de trabajo', centro_trabajo_texto, url_for('centros_trabajos.detail', centro_trabajo_id=percepcion_deduccion.centro_trabajo_id)) }}
+        {% else %}
+            {{ detail.label_value('Centro de trabajo', centro_trabajo_texto) }}
+        {% endif %}
+        {% set concepto_texto = percepcion_deduccion.concepto.clave + ' - ' + percepcion_deduccion.concepto.descripcion %}
+        {% if current_user.can_view("CONCEPTOS") %}
+            {{ detail.label_value('Concepto', concepto_texto, url_for('conceptos.detail', concepto_id=percepcion_deduccion.concepto_id)) }}
+        {% else %}
+            {{ detail.label_value('Concepto', concepto_texto) }}
+        {% endif %}
+        {% set plaza_texto = percepcion_deduccion.plaza.clave + ' - ' + percepcion_deduccion.plaza.descripcion %}
+        {% if current_user.can_view("PLAZAS") %}
+            {{ detail.label_value('Plaza', plaza_texto, url_for('plazas.detail', plaza_id=percepcion_deduccion.plaza_id)) }}
+        {% else %}
+            {{ detail.label_value('Plaza', plaza_texto) }}
+        {% endif %}
+        {{ detail.label_value_big('Quincena', percepcion_deduccion.quincena) }}
+        {{ detail.label_value_big('Importe', percepcion_deduccion.importe) }}
+        {{ detail.label_value('Creado', moment(percepcion_deduccion.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PERCEPCIONES DEDUCCIONES') %}
+        {% if percepcion_deduccion.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + percepcion_deduccion.id | string + '?') }}{% endif %}
+        {% if percepcion_deduccion.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + percepcion_deduccion.id | string + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

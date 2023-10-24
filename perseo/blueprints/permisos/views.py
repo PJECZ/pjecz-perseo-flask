@@ -42,7 +42,7 @@ def datatable_json():
         consulta = consulta.filter_by(modulo_id=request.form["modulo_id"])
     if "rol_id" in request.form:
         consulta = consulta.filter_by(rol_id=request.form["rol_id"])
-    registros = consulta.order_by(Permiso.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Permiso.nombre).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -80,7 +80,7 @@ def list_active():
 
 
 @permisos.route("/permisos/inactivos")
-@permission_required(MODULO, Permiso.MODIFICAR)
+@permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
     """Listado de Permisos inactivos"""
     return render_template(
@@ -191,18 +191,18 @@ def edit(permiso_id):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def delete(permiso_id):
     """Eliminar Permiso"""
-    pemiso = Permiso.query.get_or_404(permiso_id)
-    if pemiso.estatus == "A":
-        pemiso.delete()
+    permiso = Permiso.query.get_or_404(permiso_id)
+    if permiso.estatus == "A":
+        permiso.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Permiso {pemiso.nombre}"),
-            url=url_for("permisos.detail", pemiso_id=pemiso.id),
+            descripcion=safe_message(f"Eliminado Permiso {permiso.nombre}"),
+            url=url_for("permisos.detail", permiso_id=permiso.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
-    return redirect(url_for("permisos.detail", permiso_id=pemiso.id))
+    return redirect(url_for("permisos.detail", permiso_id=permiso.id))
 
 
 @permisos.route("/permisos/recuperar/<int:permiso_id>")

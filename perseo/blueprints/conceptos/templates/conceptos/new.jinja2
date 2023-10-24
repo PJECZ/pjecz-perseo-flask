@@ -1,0 +1,21 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Concepto{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nuevo Concepto') %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('conceptos.new', fid='concepto_form') %}
+            {% call f.form_group(form.clave) %}{% endcall %}
+            {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

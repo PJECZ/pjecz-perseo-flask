@@ -1,0 +1,23 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'concepto_id': concepto.id} %}
+        {% call f.form_tag('conceptos_productos.new_with_concepto', fid='concepto_producto_form', **form_kwargs) %}
+            {% call f.form_group(form.concepto_clave, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.concepto_descripcion, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.producto) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

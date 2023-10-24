@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pjecz-perseo-flask"
-version = "0.1.1"
+version = "0.2.0"
 description = "Perseo es un sistema web hecho con Flask."
 authors = ["Guillermo Valdes <guillermo@movimientolibre.com>"]
 license = "AGPL3"

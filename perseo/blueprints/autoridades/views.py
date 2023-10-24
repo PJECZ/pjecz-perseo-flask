@@ -82,7 +82,7 @@ def list_active():
 
 
 @autoridades.route("/autoridades/inactivos")
-@permission_required(MODULO, Permiso.MODIFICAR)
+@permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
     """Listado de Autoridades inactivas"""
     return render_template(

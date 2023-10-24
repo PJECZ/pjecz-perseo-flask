@@ -1,0 +1,41 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Persona + {{ persona.rfc }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Persona ' + persona.rfc) %}
+        {{ topbar.button_previous('Personas', url_for('personas.list_active')) }}
+        {% if current_user.can_edit('PERSONAS') %}
+            {{ topbar.button_edit('Editar', url_for('personas.edit', persona_id=persona.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('PERSONAS') %}
+            {% if persona.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas.delete', persona_id=persona.id)) }}{% endif %}
+            {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('PERCEPCIONES DEDUCCIONES') %}
+            {{ topbar.button_new('Nueva Percepción-Deducción', url_for('percepciones_deducciones.new_with_persona', persona_id=persona.id)) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=persona.estatus) %}
+        {{ detail.label_value_big('RFC', persona.rfc) }}
+        {{ detail.label_value('Nombres', persona.nombres) }}
+        {{ detail.label_value('Apellido primero', persona.apellido_primero) }}
+        {{ detail.label_value('Apellido segundo', persona.apellido_segundo) }}
+        {{ detail.label_value('CURP', persona.curp) }}
+        {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PERSONAS') %}
+        {% if persona.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + persona.rfc + '?') }}{% endif %}
+        {% if persona.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + persona.rfc + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

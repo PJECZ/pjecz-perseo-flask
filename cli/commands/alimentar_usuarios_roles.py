@@ -48,7 +48,7 @@ def alimentar_usuarios_roles():
                 UsuarioRol(
                     usuario=usuario,
                     rol=rol,
-                    descripcion=safe_string(f"{usuario.email} en {rol.nombre}", save_enie=True),
+                    descripcion=safe_string(f"{usuario.email} en {rol.nombre}", save_enie=True, to_uppercase=False),
                 ).save()
                 contador += 1
                 if contador % 100 == 0:

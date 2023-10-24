@@ -5,8 +5,13 @@ import re
 
 from unidecode import unidecode
 
+CLAVE_REGEXP = r"^[a-zA-Z0-9-]{1,16}$"
+CONCEPTO_REGEXP = r"^[PD][a-zA-Z0-9][a-zA-Z0-9]$"
 CONTRASENA_REGEXP = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,48}$"
+CURP_REGEXP = r"^[a-zA-Z]{4}\d{6}[a-zA-Z]{6}\d{2}$"
 EMAIL_REGEXP = r"^[\w.-]+@[\w.-]+\.\w+$"
+QUINCENA_REGEXP = r"^\d{6}$"
+RFC_REGEXP = r"^[a-zA-Z]{3,4}\d{6}[a-zA-Z0-9]{3}$"
 TOKEN_REGEXP = r"^[a-zA-Z0-9_.=+-]+$"
 
 
@@ -14,12 +19,23 @@ def safe_clave(input_str, max_len=16):
     """Safe clave"""
     if not isinstance(input_str, str):
         return ""
-    new_string = re.sub(r"[^a-zA-Z0-9()-]+", " ", unidecode(input_str))
-    removed_multiple_spaces = re.sub(r"\s+", " ", new_string)
-    spaces_to_dashes = re.sub(r"\s+", "-", removed_multiple_spaces)
-    final = spaces_to_dashes.strip().upper()
+    clean_string = re.sub(r"[^a-zA-Z0-9-]+", " ", unidecode(input_str))
+    without_multiple_spaces = re.sub(r"\s+", " ", clean_string)
+    final = without_multiple_spaces.strip().upper()
     if len(final) > max_len:
         return final[:max_len]
+    return final
+
+
+def safe_curp(input_str):
+    """Safe CURP"""
+    if not isinstance(input_str, str):
+        return ""
+    clean_string = re.sub(r"[^a-zA-Z0-9]+", " ", unidecode(input_str))
+    without_spaces = re.sub(r"\s+", "", clean_string)
+    final = without_spaces.strip().upper()
+    if re.match(CURP_REGEXP, final) is None:
+        raise ValueError("CURP inválida")
     return final
 
 
@@ -33,7 +49,7 @@ def safe_email(input_str, search_fragment=False):
             return ""
         return final
     if re.match(EMAIL_REGEXP, final) is None:
-        return ""
+        raise ValueError("E-mail inválido")
     return final
 
 
@@ -43,6 +59,18 @@ def safe_message(input_str, max_len=250, default_output_str="Sin descripción"):
     if message == "":
         return default_output_str
     return (message[:max_len] + "...") if len(message) > max_len else message
+
+
+def safe_rfc(input_str):
+    """Safe RFC"""
+    if not isinstance(input_str, str):
+        return ""
+    clean_string = re.sub(r"[^a-zA-Z0-9]+", " ", unidecode(input_str))
+    without_spaces = re.sub(r"\s+", "", clean_string)
+    final = without_spaces.strip().upper()
+    if re.match(RFC_REGEXP, final) is None:
+        raise ValueError("RFC inválido")
+    return final
 
 
 def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_uppercase=True):

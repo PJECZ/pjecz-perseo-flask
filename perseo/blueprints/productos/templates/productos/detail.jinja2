@@ -1,0 +1,78 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Producto + {{ producto.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Producto ' + producto.clave) %}
+        {{ topbar.button_previous('Productos', url_for('productos.list_active')) }}
+        {% if current_user.can_admin('PRODUCTOS') %}
+            {{ topbar.button_edit('Editar', url_for('productos.edit', producto_id=producto.id)) }}
+            {% if producto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('productos.delete', producto_id=producto.id)) }}{% endif %}
+            {% if producto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('productos.recover', producto_id=producto.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=producto.estatus) %}
+        {{ detail.label_value('Clave', producto.clave) }}
+        {{ detail.label_value('Descripción', producto.descripcion) }}
+        {{ detail.label_value('Creado', moment(producto.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+    {% if current_user.can_view('CONCEPTOS') %}
+        {% call detail.card('Conceptos') %}
+            <table id="conceptos_productos_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Clave</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('CONCEPTOS PRODUCTOS') %}
+            <a href="{{ url_for('conceptos_productos.new_with_producto', producto_id=producto.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('CONCEPTOS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/conceptos_productos/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'producto_id': {{ producto.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'concepto' },
+                { data: 'concepto_descripcion' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // concepto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            $('#conceptos_productos_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+    {% if current_user.can_admin('PRODUCTOS') %}
+        {% if producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + producto.clave + '?') }}{% endif %}
+        {% if producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + producto.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

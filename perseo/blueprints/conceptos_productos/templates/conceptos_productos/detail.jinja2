@@ -1,0 +1,42 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Concepto-Producto + {{ concepto_producto.descripcion }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Concepto-Producto ' + concepto_producto.descripcion) %}
+        {{ topbar.button_previous('Conceptos-Productos', url_for('conceptos_productos.list_active')) }}
+        {% if current_user.can_admin('CONCEPTOS PRODUCTOS') %}
+            {% if concepto_producto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('conceptos_productos.delete', concepto_producto_id=concepto_producto.id)) }}{% endif %}
+            {% if concepto_producto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('conceptos_productos.recover', concepto_producto_id=concepto_producto.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=concepto_producto.estatus) %}
+        {% if current_user.can_view("CONCEPTOS") %}
+            {{ detail.label_value('Concepto clave', concepto_producto.concepto.clave, url_for('conceptos.detail', concepto_id=concepto_producto.concepto_id)) }}
+        {% else %}
+            {{ detail.label_value('Concepto clave', concepto_producto.concepto.clave) }}
+        {% endif %}
+        {{ detail.label_value('Concepto descripción', concepto_producto.concepto.descripcion) }}
+        {% if current_user.can_view("PRODUCTOS") %}
+            {{ detail.label_value('Producto clave', concepto_producto.producto.clave, url_for('productos.detail', producto_id=concepto_producto.producto_id)) }}
+        {% else %}
+            {{ detail.label_value('Producto clave', concepto_producto.producto.clave) }}
+        {% endif %}
+        {{ detail.label_value('Producto descripción', concepto_producto.producto.descripcion) }}
+        {{ detail.label_value('Creado', moment(concepto_producto.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('CONCEPTOS PRODUCTOS') %}
+        {% if concepto_producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto_producto.descripcion + '?') }}{% endif %}
+        {% if concepto_producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto_producto.descripcion + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

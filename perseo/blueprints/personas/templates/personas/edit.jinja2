@@ -1,0 +1,25 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Persona{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Editar ' + persona.rfc) %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_id': persona.id} %}
+        {% call f.form_tag('personas.edit', fid='persona_form', **form_kwargs) %}
+            {% call f.form_group(form.rfc) %}{% endcall %}
+            {% call f.form_group(form.nombres) %}{% endcall %}
+            {% call f.form_group(form.apellido_primero) %}{% endcall %}
+            {% call f.form_group(form.apellido_segundo) %}{% endcall %}
+            {% call f.form_group(form.curp) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
