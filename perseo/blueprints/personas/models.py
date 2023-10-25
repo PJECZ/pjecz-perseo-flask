@@ -19,9 +19,9 @@ class Persona(database.Model, UniversalMixin):
 
     # Columnas
     rfc = Column(String(13), nullable=False, unique=True)
-    nombres = Column(String(256), nullable=False)
-    apellido_primero = Column(String(256), nullable=False)
-    apellido_segundo = Column(String(256), nullable=False, default="")
+    nombres = Column(String(256), nullable=False, index=True)
+    apellido_primero = Column(String(256), nullable=False, index=True)
+    apellido_segundo = Column(String(256), nullable=False, default="", index=True)
     curp = Column(String(18), nullable=False, default="")
 
     # Hijos
