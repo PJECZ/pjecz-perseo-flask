@@ -98,22 +98,22 @@ def new():
         es_valido = True
         # Validar el RFC
         try:
-            rfc = safe_rfc(form.rfc.data)
+            rfc = safe_rfc(form.rfc.data, is_optional=False)
         except ValueError:
             es_valido = False
             flash(safe_message("El RFC no es válido."), "warning")
         # Validar el CURP
         try:
-            curp = safe_curp(form.curp.data)
+            curp = safe_curp(form.curp.data, is_optional=True)
         except ValueError:
             es_valido = False
             flash(safe_message("El CURP no es válido."), "warning")
         # Validar que el RFC no se repita
-        if es_valido and Persona.query.filter_by(rfc=rfc).first():
+        if Persona.query.filter_by(rfc=rfc).first():
             es_valido = False
             flash(safe_message("El RFC ya está en uso. Debe de ser único."), "warning")
         # Validar que el CURP no se repita
-        if es_valido and Persona.query.filter_by(curp=curp).first():
+        if curp != "" and Persona.query.filter_by(curp=curp).first():
             es_valido = False
             flash(safe_message("El CURP ya está en uso. Debe de ser único."), "warning")
         # Si es válido, guardar
@@ -148,13 +148,13 @@ def edit(persona_id):
         es_valido = True
         # Validar el RFC
         try:
-            rfc = safe_rfc(form.rfc.data)
+            rfc = safe_rfc(form.rfc.data, is_optional=False)
         except ValueError:
             es_valido = False
             flash(safe_message("El RFC no es válido."), "warning")
         # Validar el CURP
         try:
-            curp = safe_curp(form.curp.data)
+            curp = safe_curp(form.curp.data, is_optional=True)
         except ValueError:
             es_valido = False
             flash(safe_message("El CURP no es válido."), "warning")
@@ -165,7 +165,7 @@ def edit(persona_id):
                 es_valido = False
                 flash("El RFC ya está en uso. Debe de ser único.", "warning")
         # Si cambia el CURP verificar que no este en uso
-        if persona.curp != curp:
+        if persona.curp != curp and curp != "":
             persona_existente = Persona.query.filter_by(curp=curp).first()
             if persona_existente and persona_existente.id != persona.id:
                 es_valido = False

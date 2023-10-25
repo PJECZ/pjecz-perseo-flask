@@ -15,5 +15,5 @@ class PersonaForm(FlaskForm):
     nombres = StringField("Nombres", validators=[DataRequired(), Length(max=256)])
     apellido_primero = StringField("Apellido primero", validators=[DataRequired(), Length(max=256)])
     apellido_segundo = StringField("Apellido segundo", validators=[Optional(), Length(max=256)])
-    curp = StringField("CURP", validators=[DataRequired(), Regexp(CURP_REGEXP)])
+    curp = StringField("CURP", validators=[Optional(), Regexp(CURP_REGEXP)])
     guardar = SubmitField("Guardar")
