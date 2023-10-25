@@ -21,8 +21,8 @@ class Persona(database.Model, UniversalMixin):
     rfc = Column(String(13), nullable=False, unique=True)
     nombres = Column(String(256), nullable=False)
     apellido_primero = Column(String(256), nullable=False)
-    apellido_segundo = Column(String(256))
-    curp = Column(String(18), nullable=False, unique=True)
+    apellido_segundo = Column(String(256), nullable=False, default="")
+    curp = Column(String(18), nullable=False, default="")
 
     # Hijos
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona")

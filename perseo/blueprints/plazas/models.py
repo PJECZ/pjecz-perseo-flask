@@ -18,7 +18,7 @@ class Plaza(database.Model, UniversalMixin):
     id = Column(Integer, primary_key=True)
 
     # Columnas
-    clave = Column(String(16), unique=True, nullable=False)
+    clave = Column(String(24), unique=True, nullable=False)
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
