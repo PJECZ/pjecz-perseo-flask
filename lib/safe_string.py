@@ -16,7 +16,7 @@ RFC_REGEXP = r"^[a-zA-Z]{3,4}\d{6}[a-zA-Z0-9]{3}$"
 TOKEN_REGEXP = r"^[a-zA-Z0-9_.=+-]+$"
 
 
-def safe_clave(input_str, max_len=16, separator="-"):
+def safe_clave(input_str, max_len=16, separator="-") -> str:
     """Safe clave"""
     if not isinstance(input_str, str):
         return ""
@@ -31,7 +31,7 @@ def safe_clave(input_str, max_len=16, separator="-"):
     return final
 
 
-def safe_curp(input_str, is_optional=False):
+def safe_curp(input_str, is_optional=False, search_fragment=False) -> str:
     """Safe CURP"""
     if not isinstance(input_str, str):
         return ""
@@ -41,12 +41,12 @@ def safe_curp(input_str, is_optional=False):
     clean_string = re.sub(r"[^a-zA-Z0-9]+", " ", unidecode(stripped))
     without_spaces = re.sub(r"\s+", "", clean_string)
     final = without_spaces.upper()
-    if re.match(CURP_REGEXP, final) is None:
+    if search_fragment is False and re.match(CURP_REGEXP, final) is None:
         raise ValueError("CURP inválida")
     return final
 
 
-def safe_email(input_str, search_fragment=False):
+def safe_email(input_str, search_fragment=False) -> str:
     """Safe string"""
     if not isinstance(input_str, str):
         return ""
@@ -60,7 +60,15 @@ def safe_email(input_str, search_fragment=False):
     return final
 
 
-def safe_message(input_str, max_len=250, default_output_str="Sin descripción"):
+def safe_quincena(input_str) -> str:
+    """Safe quincena"""
+    final = input_str.strip()
+    if re.match(QUINCENA_REGEXP, final) is None:
+        raise ValueError("Quincena invalida")
+    return final
+
+
+def safe_message(input_str, max_len=250, default_output_str="Sin descripción") -> str:
     """Safe message"""
     message = str(input_str)
     if message == "":
@@ -68,7 +76,7 @@ def safe_message(input_str, max_len=250, default_output_str="Sin descripción"):
     return (message[:max_len] + "...") if len(message) > max_len else message
 
 
-def safe_rfc(input_str, is_optional=False):
+def safe_rfc(input_str, is_optional=False, search_fragment=False) -> str:
     """Safe RFC"""
     if not isinstance(input_str, str):
         return ""
@@ -78,12 +86,12 @@ def safe_rfc(input_str, is_optional=False):
     clean_string = re.sub(r"[^a-zA-Z0-9]+", " ", unidecode(stripped))
     without_spaces = re.sub(r"\s+", "", clean_string)
     final = without_spaces.upper()
-    if re.match(RFC_REGEXP, final) is None:
+    if search_fragment is False and re.match(RFC_REGEXP, final) is None:
         raise ValueError("RFC inválido")
     return final
 
 
-def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_uppercase=True):
+def safe_string(input_str, max_len=250, do_unidecode=True, save_enie=False, to_uppercase=True) -> str:
     """Safe string"""
     if not isinstance(input_str, str):
         return ""

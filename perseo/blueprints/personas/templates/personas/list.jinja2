@@ -24,26 +24,26 @@
                 <form class="row g-1 mb-3" id="buscadorForm" onsubmit="filtrosPersonas.buscar(); return false;">
                     <div class="col-4">
                         <div class="form-floating">
-                            <input id="personaRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
-                            <label for="personaRFC">RFC</label>
+                            <input id="filtroRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                            <label for="filtroRFC">RFC</label>
                         </div>
                     </div>
                     <div class="col-2">
                         <div class="form-floating">
-                            <input id="personaNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
-                            <label for="personaNombres">Nombres</label>
+                            <input id="filtroNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
+                            <label for="filtroNombres">Nombres</label>
                         </div>
                     </div>
                     <div class="col-2">
                         <div class="form-floating">
-                            <input id="personaApellidoPrimero" type="text" class="form-control" aria-label="Apellido primero" style="text-transform: uppercase;">
-                            <label for="personaApellidoPrimero">Primer apellido</label>
+                            <input id="filtroApellidoPrimero" type="text" class="form-control" aria-label="Apellido primero" style="text-transform: uppercase;">
+                            <label for="filtroApellidoPrimero">Primer apellido</label>
                         </div>
                     </div>
                     <div class="col-2">
                         <div class="form-floating">
-                            <input id="personaApellidoSegundo" type="text" class="form-control" aria-label="Apellido segundo" style="text-transform: uppercase;">
-                            <label for="personaApellidoSegundo">Primer apellido</label>
+                            <input id="filtroApellidoSegundo" type="text" class="form-control" aria-label="Apellido segundo" style="text-transform: uppercase;">
+                            <label for="filtroApellidoSegundo">Segundo apellido</label>
                         </div>
                     </div>
                     <div class="col-2 text-end">
@@ -95,10 +95,10 @@
         ];
         // Filtros personas
         const filtrosPersonas = new FiltrosDataTable('#personas_datatable', configDataTable);
-        filtrosPersonas.agregarInput('personaRFC', 'rfc');
-        filtrosPersonas.agregarInput('personaNombres', 'nombres');
-        filtrosPersonas.agregarInput('personaApellidoPrimero', 'apellido_primero');
-        filtrosPersonas.agregarInput('personaApellidoSegundo', 'apellido_segundo');
+        filtrosPersonas.agregarInput('filtroRFC', 'rfc');
+        filtrosPersonas.agregarInput('filtroNombres', 'nombres');
+        filtrosPersonas.agregarInput('filtroApellidoPrimero', 'apellido_primero');
+        filtrosPersonas.agregarInput('filtroApellidoSegundo', 'apellido_segundo');
         filtrosPersonas.precargar();
     </script>
 {% endblock %}
