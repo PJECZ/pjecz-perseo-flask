@@ -7,7 +7,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message
+from lib.safe_string import safe_message, safe_quincena, safe_rfc
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.percepciones_deducciones.forms import PercepcionDeduccionNewWithPersonaForm
@@ -39,6 +39,14 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "quincena" in request.form:
+        try:
+            consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena"]))
+        except ValueError:
+            pass
+    if "persona_rfc" in request.form:
+        consulta = consulta.join(Persona)
+        consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
     registros = consulta.order_by(PercepcionDeduccion.id.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
