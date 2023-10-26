@@ -24,6 +24,19 @@ class FiltrosDataTable {
     this.inputs.push(input);
   }
 
+  // Agregar un valor constante
+  agregarConstante(dataName, value) {
+    let input = {
+      object: NaN,
+      data_name: "",
+      value: "",
+      case: NaN,
+    };
+    input.data_name = dataName;
+    input.value = value;
+    this.inputs.push(input);
+  }
+
   // Leer los valores de los inputs
   leerValoresInputs() {
     for (let i = 0; i < this.inputs.length; i++) {
@@ -49,6 +62,7 @@ class FiltrosDataTable {
   // Limpiar los valores de los inputs
   limpiar() {
     for (let i = 0; i < this.inputs.length; i++) {
+      if (i.object == NaN) continue;
       delete this.configDataTable["ajax"]["data"][this.inputs[i].data_name];
       // Si es tipo select elimina la option seleccionada
       if (
