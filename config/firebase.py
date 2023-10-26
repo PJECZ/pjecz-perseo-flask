@@ -1,23 +1,16 @@
 """
-Settings
+Firebase configuration
 
 Configure los siguientes secretos en google cloud secret manager:
 
-- host
-- redis_url
-- task_queue
-- salt
-- secret_key
-- sqlalchemy_database_uri
-
-Para desarrollo, debe crear un archivo .env con las variables de entorno:
-
-- HOST
-- REDIS_URL
-- TASK_QUEUE
-- SALT
-- SECRET_KEY
-- SQLALCHEMY_DATABASE_URI
+- firebase_apikey
+- firebase_appid
+- firebase_authdomain
+- firebase_databaseurl
+- firebase_measurementid
+- firebase_messagingsenderid
+- firebase_projectid
+- firebase_storagebucket
 """
 import os
 from functools import lru_cache
@@ -26,7 +19,7 @@ from google.cloud import secretmanager
 from pydantic_settings import BaseSettings
 
 PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
-SERVICE_PREFIX = os.getenv("SERVICE_PREFIX", "pjecz_perseo")
+PREFIX = os.getenv("PREFIX", "firebase_")
 
 
 def get_secret(secret_id: str) -> str:
@@ -40,7 +33,7 @@ def get_secret(secret_id: str) -> str:
     client = secretmanager.SecretManagerServiceClient()
 
     # Build the resource name of the secret version
-    secret = f"{SERVICE_PREFIX}_{secret_id}"
+    secret = f"{PREFIX}_{secret_id}"
     name = client.secret_version_path(PROJECT_ID, secret, "latest")
 
     # Access the secret version
@@ -50,15 +43,17 @@ def get_secret(secret_id: str) -> str:
     return response.payload.data.decode("UTF-8")
 
 
-class Settings(BaseSettings):
+class FirebaseSettings(BaseSettings):
     """Settings"""
 
-    HOST: str = get_secret("host")
-    REDIS_URL: str = get_secret("redis_url")
-    TASK_QUEUE: str = get_secret("task_queue")
-    SALT: str = get_secret("salt")
-    SECRET_KEY: str = get_secret("secret_key")
-    SQLALCHEMY_DATABASE_URI: str = get_secret("sqlalchemy_database_uri")
+    FIREBASE_APIKEY: str = get_secret("firebase_apikey")
+    FIREBASE_APPID: str = get_secret("firebase_appid")
+    FIREBASE_AUTHDOMAIN: str = get_secret("firebase_authdomain")
+    FIREBASE_DATABASEURL: str = get_secret("firebase_databaseurl")
+    FIREBASE_MEASUREMENTID: str = get_secret("firebase_measurementid")
+    FIREBASE_MESSAGINGSENDERID: str = get_secret("firebase_messagingsenderid")
+    FIREBASE_PROJECTID: str = get_secret("firebase_projectid")
+    FIREBASE_STORAGEBUCKET: str = get_secret("firebase_storagebucket")
 
     class Config:
         """Load configuration"""
@@ -70,6 +65,6 @@ class Settings(BaseSettings):
 
 
 @lru_cache()
-def get_settings() -> Settings:
+def get_firebase_settings() -> FirebaseSettings:
     """Get Settings"""
-    return Settings()
+    return FirebaseSettings()
