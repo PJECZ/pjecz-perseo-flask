@@ -96,7 +96,7 @@ def login():
     return render_template(
         "usuarios/login.jinja2",
         form=form,
-        firebase_auth=get_firebase_settings(),
+        firebase_settings=get_firebase_settings(),
         title="Plataforma Perseo",
     )
 

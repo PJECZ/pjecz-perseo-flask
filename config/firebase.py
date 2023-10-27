@@ -19,7 +19,7 @@ from google.cloud import secretmanager
 from pydantic_settings import BaseSettings
 
 PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
-PREFIX = os.getenv("PREFIX", "firebase_")
+PREFIX = os.getenv("PREFIX", "firebase")  # Es comun a todos los sistemas web
 
 
 def get_secret(secret_id: str) -> str:
@@ -33,27 +33,31 @@ def get_secret(secret_id: str) -> str:
     client = secretmanager.SecretManagerServiceClient()
 
     # Build the resource name of the secret version
-    secret = f"{PREFIX}_{secret_id}"
+    if PREFIX != "":
+        secret = f"{PREFIX}_{secret_id}"
+    else:
+        secret = secret_id
     name = client.secret_version_path(PROJECT_ID, secret, "latest")
 
-    # Access the secret version
-    response = client.access_secret_version(name=name)
-
-    # Return the decoded payload
-    return response.payload.data.decode("UTF-8")
+    # Access the secret version and return the decoded payload
+    try:
+        response = client.access_secret_version(name=name)
+        return response.payload.data.decode("UTF-8")
+    except Exception as error:
+        return ""  # If fail return empty string
 
 
 class FirebaseSettings(BaseSettings):
     """Settings"""
 
-    FIREBASE_APIKEY: str = get_secret("firebase_apikey")
-    FIREBASE_APPID: str = get_secret("firebase_appid")
-    FIREBASE_AUTHDOMAIN: str = get_secret("firebase_authdomain")
-    FIREBASE_DATABASEURL: str = get_secret("firebase_databaseurl")
-    FIREBASE_MEASUREMENTID: str = get_secret("firebase_measurementid")
-    FIREBASE_MESSAGINGSENDERID: str = get_secret("firebase_messagingsenderid")
-    FIREBASE_PROJECTID: str = get_secret("firebase_projectid")
-    FIREBASE_STORAGEBUCKET: str = get_secret("firebase_storagebucket")
+    APIKEY: str = get_secret("apikey")
+    APPID: str = get_secret("appid")
+    AUTHDOMAIN: str = get_secret("authdomain")
+    DATABASEURL: str = get_secret("databaseurl")
+    MEASUREMENTID: str = get_secret("measurementid")
+    MESSAGINGSENDERID: str = get_secret("messagingsenderid")
+    PROJECTID: str = get_secret("projectid")
+    STORAGEBUCKET: str = get_secret("storagebucket")
 
     class Config:
         """Load configuration"""

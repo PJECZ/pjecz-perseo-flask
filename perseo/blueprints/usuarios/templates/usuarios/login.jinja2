@@ -73,14 +73,14 @@
     <script>
         /* Firebase configuration */
         const firebaseConfig = {
-            apiKey: "{{ firebase_auth['apiKey'] }}",
-            authDomain: "{{ firebase_auth['authDomain'] }}",
-            databaseURL: "{{ firebase_auth['databaseURL'] }}",
-            projectId: "{{ firebase_auth['projectId'] }}",
-            storageBucket: "{{ firebase_auth['storageBucket'] }}",
-            messagingSenderId: "{{ firebase_auth['messagingSenderId'] }}",
-            appId: "{{ firebase_auth['appId'] }}",
-            measurementId: "{{ firebase_auth['measurementId'] }}"
+            apiKey: "{{ firebase_settings.APIKEY }}",
+            authDomain: "{{ firebase_settings.AUTHDOMAIN }}",
+            databaseURL: "{{ firebase_settings.DATABASEURL }}",
+            projectId: "{{ firebase_settings.PROJECTID }}",
+            storageBucket: "{{ firebase_settings.STORAGEBUCKET }}",
+            messagingSenderId: "{{ firebase_settings.MESSAGINGSENDERID }}",
+            appId: "{{ firebase_settings.APPID }}",
+            measurementId: "{{ firebase_settings.MEASUREMENTID }}"
         };
         /* Login with Google/Microsoft/GitHub or Username/Password */
         window.onload = function() {
