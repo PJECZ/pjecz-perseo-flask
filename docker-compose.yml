@@ -28,11 +28,12 @@ services:
     environment:
       DEPLOYMENT_ENVIRONMENT: develop
       HOST: http://localhost:5000
+      PYTHONPATH: /code
       REDIS_URL: redis://redis:6379
-      TASK_QUEUE: pjecz_perseo
       SALT: r5npOyY2519ph2zK
       SECRET_KEY: PvwV7heFDcfrsWFAGxBz2aOvJ1Mw6LgV
-      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://adminpjeczperseo:developPasswd@127.0.0.1:5432/pjecz_perseo
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://adminpjeczperseo:developPasswd@db:5432/pjecz_perseo
+      TASK_QUEUE: pjecz_perseo
 
 volumes:
   db-data:
