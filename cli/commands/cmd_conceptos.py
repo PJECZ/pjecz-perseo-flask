@@ -23,10 +23,10 @@ from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.productos.models import Producto
 
+CONCEPTOS_CSV = "seed/conceptos.csv"
+
 app = create_app()
 app.app_context().push()
-
-CONCEPTOS_CSV = "seed/conceptos.csv"
 
 
 @click.group()
@@ -62,7 +62,7 @@ def alimentar():
             contador += 1
             if contador % 100 == 0:
                 click.echo(f"  Van {contador}...")
-    click.echo(f"  {contador} conceptos alimentados.")
+    click.echo(f"Terminado con {contador} conceptos alimentados.")
 
 
 cli.add_command(alimentar)
