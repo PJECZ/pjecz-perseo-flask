@@ -23,7 +23,7 @@ class Banco(database.Model, UniversalMixin):
     consecutivo = Column(Integer, nullable=False)
 
     # Hijos
-    # cuentas = relationship("Cuenta", back_populates="banco")
+    cuentas = relationship("Cuenta", back_populates="banco")
 
     def __repr__(self):
         """Representación"""

@@ -27,6 +27,7 @@ class Persona(database.Model, UniversalMixin):
     num_empleado = Column(Integer, nullable=False, default=0)
 
     # Hijos
+    cuentas = relationship("Cuenta", back_populates="persona")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona")
 
     @property
