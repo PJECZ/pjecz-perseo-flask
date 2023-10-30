@@ -31,7 +31,13 @@
                             <label for="filtroQuincena">Quincena</label>
                         </div>
                     </div>
-                    <div class="col-6 text-end">
+                    <div class="col-3">
+                        <div class="form-floating">
+                            <input id="filtroConceptoClave" type="text" class="form-control" aria-label="Concepto" style="text-transform: uppercase;">
+                            <label for="filtroConceptoClave">Concepto</label>
+                        </div>
+                    </div>
+                    <div class="col-3 text-end">
                         <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPercepcionesDeducciones.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
                         <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPercepcionesDeducciones.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                     </div>
@@ -86,8 +92,9 @@
         ];
         // Filtros percepciones-deducciones
         const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDataTable);
-        filtrosPercepcionesDeducciones.agregarInput('filtroPersonaRFC', 'persona_rfc');
+        filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
         filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena');
+        filtrosPercepcionesDeducciones.agregarInput('filtroPersonaRFC', 'persona_rfc');
         filtrosPercepcionesDeducciones.precargar();
     </script>
 {% endblock %}

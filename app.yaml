@@ -1,0 +1,9 @@
+runtime: python311
+instance_class: F1
+service: perseo
+entrypoint: gunicorn -w 2 appserver:gunicorn_app
+env_variables:
+  PROJECT_ID: justicia-digital-gob-mx
+  SERVICE_PREFIX: pjecz_perseo
+vpc_access_connector:
+  name: projects/justicia-digital-gob-mx/locations/us-west2/connectors/cupido

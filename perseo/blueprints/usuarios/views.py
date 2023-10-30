@@ -12,8 +12,8 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from pytz import timezone
 
+from config.firebase import get_firebase_settings
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.firebase_auth import firebase_auth
 from lib.pwgen import generar_contrasena
 from lib.safe_next_url import safe_next_url
 from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_email, safe_message, safe_string
@@ -93,7 +93,12 @@ def login():
                         flash("No está activa esa cuenta", "warning")
                 else:
                     flash("Usuario o contraseña incorrectos.", "warning")
-    return render_template("usuarios/login.jinja2", form=form, firebase_auth=firebase_auth, title="Plataforma Perseo")
+    return render_template(
+        "usuarios/login.jinja2",
+        form=form,
+        firebase_settings=get_firebase_settings(),
+        title="Plataforma Perseo",
+    )
 
 
 @usuarios.route("/logout")

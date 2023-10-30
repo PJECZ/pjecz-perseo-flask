@@ -1,23 +1,16 @@
 """
-Settings
+Firebase configuration
 
 Configure los siguientes secretos en google cloud secret manager:
 
-- host
-- redis_url
-- task_queue
-- salt
-- secret_key
-- sqlalchemy_database_uri
-
-Para desarrollo, debe crear un archivo .env con las variables de entorno:
-
-- HOST
-- REDIS_URL
-- TASK_QUEUE
-- SALT
-- SECRET_KEY
-- SQLALCHEMY_DATABASE_URI
+- firebase_apikey
+- firebase_appid
+- firebase_authdomain
+- firebase_databaseurl
+- firebase_measurementid
+- firebase_messagingsenderid
+- firebase_projectid
+- firebase_storagebucket
 """
 import os
 from functools import lru_cache
@@ -26,7 +19,7 @@ from google.cloud import secretmanager
 from pydantic_settings import BaseSettings
 
 PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
-SERVICE_PREFIX = os.getenv("SERVICE_PREFIX", "pjecz_perseo")
+PREFIX = os.getenv("PREFIX", "firebase")  # Es comun a todos los sistemas web
 
 
 def get_secret(secret_id: str) -> str:
@@ -40,25 +33,31 @@ def get_secret(secret_id: str) -> str:
     client = secretmanager.SecretManagerServiceClient()
 
     # Build the resource name of the secret version
-    secret = f"{SERVICE_PREFIX}_{secret_id}"
+    if PREFIX != "":
+        secret = f"{PREFIX}_{secret_id}"
+    else:
+        secret = secret_id
     name = client.secret_version_path(PROJECT_ID, secret, "latest")
 
-    # Access the secret version
-    response = client.access_secret_version(name=name)
+    # Access the secret version and return the decoded payload
+    try:
+        response = client.access_secret_version(name=name)
+        return response.payload.data.decode("UTF-8")
+    except Exception as error:
+        return ""  # If fail return empty string
 
-    # Return the decoded payload
-    return response.payload.data.decode("UTF-8")
 
-
-class Settings(BaseSettings):
+class FirebaseSettings(BaseSettings):
     """Settings"""
 
-    HOST: str = get_secret("host")
-    REDIS_URL: str = get_secret("redis_url")
-    TASK_QUEUE: str = get_secret("task_queue")
-    SALT: str = get_secret("salt")
-    SECRET_KEY: str = get_secret("secret_key")
-    SQLALCHEMY_DATABASE_URI: str = get_secret("sqlalchemy_database_uri")
+    APIKEY: str = get_secret("apikey")
+    APPID: str = get_secret("appid")
+    AUTHDOMAIN: str = get_secret("authdomain")
+    DATABASEURL: str = get_secret("databaseurl")
+    MEASUREMENTID: str = get_secret("measurementid")
+    MESSAGINGSENDERID: str = get_secret("messagingsenderid")
+    PROJECTID: str = get_secret("projectid")
+    STORAGEBUCKET: str = get_secret("storagebucket")
 
     class Config:
         """Load configuration"""
@@ -70,6 +69,6 @@ class Settings(BaseSettings):
 
 
 @lru_cache()
-def get_settings() -> Settings:
+def get_firebase_settings() -> FirebaseSettings:
     """Get Settings"""
-    return Settings()
+    return FirebaseSettings()
