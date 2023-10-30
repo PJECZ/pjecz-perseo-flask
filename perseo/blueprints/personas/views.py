@@ -64,6 +64,8 @@ def datatable_json():
                 "apellido_primero": resultado.apellido_primero,
                 "apellido_segundo": resultado.apellido_segundo,
                 "curp": resultado.curp,
+                "num_empleado": resultado.num_empleado,
+                "modelo": resultado.modelo,
             }
         )
     # Entregar JSON

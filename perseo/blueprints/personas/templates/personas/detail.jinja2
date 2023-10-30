@@ -28,6 +28,8 @@
         {{ detail.label_value('Apellido primero', persona.apellido_primero) }}
         {{ detail.label_value('Apellido segundo', persona.apellido_segundo) }}
         {{ detail.label_value('CURP', persona.curp) }}
+        {{ detail.label_value('No. empleado', persona.num_empleado) }}
+        {{ detail.label_value('Modelo', persona.modelo) }}
         {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}

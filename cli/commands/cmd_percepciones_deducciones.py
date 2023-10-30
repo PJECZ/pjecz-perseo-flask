@@ -88,6 +88,10 @@ def alimentar(quincena: str):
         apellido_segundo = separado[1]
         nombres = " ".join(separado[2:])
 
+        # Tomar el modelo
+        modelo = int(hoja.cell_value(fila, 236))
+        num_empleado = int(hoja.cell_value(fila, 240))
+
         # Buscar percepciones y deducciones
         col_num = 26
         while True:
@@ -129,6 +133,8 @@ def alimentar(quincena: str):
                     nombres=nombres,
                     apellido_primero=apellido_primero,
                     apellido_segundo=apellido_segundo,
+                    modelo=modelo,
+                    num_empleado=num_empleado,
                 )
                 sesion.add(persona)
                 click.echo(f"  Persona {rfc} insertada")
