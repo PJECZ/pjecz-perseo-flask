@@ -5,6 +5,7 @@ from flask import Flask
 
 from config.settings import Settings
 from perseo.blueprints.autoridades.views import autoridades
+from perseo.blueprints.bancos.views import bancos
 from perseo.blueprints.bitacoras.views import bitacoras
 from perseo.blueprints.centros_trabajos.views import centros_trabajos
 from perseo.blueprints.conceptos.views import conceptos
@@ -35,6 +36,7 @@ def create_app():
 
     # Registrar blueprints
     app.register_blueprint(autoridades)
+    app.register_blueprint(bancos)
     app.register_blueprint(distritos)
     app.register_blueprint(bitacoras)
     app.register_blueprint(centros_trabajos)
