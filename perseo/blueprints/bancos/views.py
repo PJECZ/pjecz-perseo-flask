@@ -51,6 +51,7 @@ def datatable_json():
                     "url": url_for("bancos.detail", banco_id=resultado.id),
                 },
                 "clave": resultado.clave,
+                "consecutivo": resultado.consecutivo,
             }
         )
     # Entregar JSON
