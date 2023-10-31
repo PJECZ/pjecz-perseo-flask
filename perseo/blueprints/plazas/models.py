@@ -22,6 +22,7 @@ class Plaza(database.Model, UniversalMixin):
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
+    nominas = relationship("Nomina", back_populates="plaza")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="plaza")
 
     def __repr__(self):

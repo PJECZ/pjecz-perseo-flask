@@ -22,6 +22,7 @@ class CentroTrabajo(database.Model, UniversalMixin):
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
+    nominas = relationship("Nomina", back_populates="centro_trabajo")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="centro_trabajo")
 
     def __repr__(self):

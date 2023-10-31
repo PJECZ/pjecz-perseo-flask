@@ -16,3 +16,18 @@ Columnas a entregar
 - No de cheque (Clave del banco + secuencia) deben ser 9 digitos
 
 """
+import click
+
+
+@click.group()
+def cli():
+    """Nominas"""
+
+
+@click.command()
+@click.argument("quincena", type=str)
+def alimentar(quincena: str):
+    """Alimentar nominas"""
+
+
+cli.add_command(alimentar)

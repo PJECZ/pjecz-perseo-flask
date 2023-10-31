@@ -28,9 +28,9 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {# if current_user.can_admin('BANCOS') %}
+    {% if current_user.can_admin('BANCOS') %}
         {% if banco.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + banco.clave + '?') }}{% endif %}
         {% if banco.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + banco.clave + '?') }}{% endif %}
-    {% endif #}
+    {% endif %}
     {{ detail.moment_js(moment) }}
 {% endblock %}
