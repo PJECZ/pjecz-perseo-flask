@@ -52,6 +52,7 @@ def datatable_json():
                 },
                 "clave": resultado.clave,
                 "consecutivo": resultado.consecutivo,
+                "consecutivo_generado": resultado.consecutivo_generado,
             }
         )
     # Entregar JSON

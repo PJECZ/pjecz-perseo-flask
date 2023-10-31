@@ -46,6 +46,7 @@ def alimentar():
                 clave=clave,
                 nombre=nombre,
                 consecutivo=0,
+                consecutivo_generado=0,
             ).save()
             contador += 1
             if contador % 100 == 0:

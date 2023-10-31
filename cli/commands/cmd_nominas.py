@@ -189,6 +189,11 @@ def generar(quincena: str):
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
+    # Cargar todos los bancos y cambiar su consecutivo_generado al consecutivo
+    bancos = Banco.query.filter_by(estatus="A").all()
+    for banco in bancos:
+        banco.consecutivo_generado = banco.consecutivo
+
     # Consultar las nominas de la quincena
     nominas = Nomina.query.filter_by(quincena=quincena).filter_by(estatus="A").all()
 
@@ -247,10 +252,10 @@ def generar(quincena: str):
         su_banco = su_cuenta.banco
 
         # Incrementar la consecutivo del banco
-        su_banco.consecutivo += 1
+        su_banco.consecutivo_generado += 1
 
         # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
-        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo:07}"
+        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
 
         # Agregar la fila
         hoja.append(

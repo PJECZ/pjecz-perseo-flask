@@ -20,7 +20,8 @@ class Banco(database.Model, UniversalMixin):
     # Columnas
     clave = Column(String(2), unique=True, nullable=False)
     nombre = Column(String(256), nullable=False)
-    consecutivo = Column(Integer, nullable=False)
+    consecutivo = Column(Integer, nullable=False, default=0)
+    consecutivo_generado = Column(Integer, nullable=False, default=0)
 
     # Hijos
     cuentas = relationship("Cuenta", back_populates="banco")
