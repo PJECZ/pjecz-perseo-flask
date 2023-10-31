@@ -37,6 +37,7 @@ usuarios = Blueprint("usuarios", __name__, template_folder="templates")
 @anonymous_required()
 def login():
     """Acceso al Sistema"""
+    firebase_settings = get_firebase_settings()
     form = AccesoForm(siguiente=request.args.get("siguiente"))
     if form.validate_on_submit():
         # Tomar valores del formulario
@@ -45,7 +46,7 @@ def login():
         token = request.form.get("token")
         siguiente_url = request.form.get("siguiente")
         # Si esta definida la variable de entorno FIREBASE_APIKEY
-        if os.environ.get("FIREBASE_APIKEY", "") != "":
+        if firebase_settings.APIKEY != "":
             # Entonces debe ingresar con Google/Microsoft/GitHub
             if re.fullmatch(TOKEN_REGEXP, token) is not None:
                 # Acceso por Firebase Auth
@@ -96,7 +97,7 @@ def login():
     return render_template(
         "usuarios/login.jinja2",
         form=form,
-        firebase_settings=get_firebase_settings(),
+        firebase_settings=firebase_settings,
         title="Plataforma Perseo",
     )
 
