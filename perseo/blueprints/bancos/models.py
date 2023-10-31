@@ -18,7 +18,7 @@ class Banco(database.Model, UniversalMixin):
     id = Column(Integer, primary_key=True)
 
     # Columnas
-    clave = Column(String(16), unique=True, nullable=False)
+    clave = Column(String(2), unique=True, nullable=False)
     nombre = Column(String(256), nullable=False)
     consecutivo = Column(Integer, nullable=False)
 

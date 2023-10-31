@@ -72,19 +72,56 @@
             </table>
         {% endcall %}
     {% endif %}
+    {% if current_user.can_view('CUENTAS') %}
+        {% call detail.card('Cuentas') %}
+            <!-- Datatable cuentas -->
+            <table id="cuentas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Banco</th>
+                        <th>No. de cuenta</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
+    {% if current_user.can_view('CUENTAS') %}
+        <script>
+            const constructorDataTableCuentas = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDataTableCuentas = constructorDataTableCuentas.config();
+            configDataTableCuentas['ajax']['url'] = '/cuentas/datatable_json';
+            configDataTableCuentas['ajax']['data'] = { estatus: 'A', persona_id: {{ persona.id }} };
+            configDataTableCuentas['columns'] = [
+                { data: 'detalle' },
+                { data: 'banco_nombre' },
+                { data: 'num_cuenta' }
+            ];
+            configDataTableCuentas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                }
+            ];
+            $('#cuentas_datatable').DataTable(configDataTableCuentas);
+        </script>
+    {% endif %}
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
         <script>
             // Datatable percepciones-deducciones
-            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-            let configDataTable = constructorDataTable.config();
-            configDataTable['ajax']['url'] = '/percepciones_deducciones/datatable_json';
-            configDataTable['ajax']['data'] = { estatus: 'A', persona_id: {{ persona.id }} };
-            configDataTable['columns'] = [
+            const constructorDataTablePD = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDataTablePD = constructorDataTablePD.config();
+            configDataTablePD['ajax']['url'] = '/percepciones_deducciones/datatable_json';
+            configDataTablePD['ajax']['data'] = { estatus: 'A', persona_id: {{ persona.id }} };
+            configDataTablePD['columns'] = [
                 { data: 'detalle' },
                 { data: 'centro_trabajo_clave' },
                 { data: 'concepto_clave' },
@@ -92,7 +129,7 @@
                 { data: 'quincena' },
                 { data: 'importe' }
             ];
-            configDataTable['columnDefs'] = [
+            configDataTablePD['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -102,9 +139,9 @@
                 }
             ];
             // Filtros percepciones-deducciones
-            const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDataTable);
-            filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
-            filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena');
+            const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDataTablePD);
+            //filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
+            //filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena');
             //filtrosPercepcionesDeducciones.agregarConstante('estatus', 'A');
             //filtrosPercepcionesDeducciones.agregarConstante('persona_id', {{ persona.id }});
             filtrosPercepcionesDeducciones.precargar();

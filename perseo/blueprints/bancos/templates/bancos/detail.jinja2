@@ -8,13 +8,13 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Banco ' + banco.clave) %}
         {{ topbar.button_previous('Bancos', url_for('bancos.list_active')) }}
-        {% if current_user.can_edit('BANCOS') %}
+        {# if current_user.can_edit('BANCOS') %}
             {{ topbar.button_edit('Editar', url_for('bancos.edit', banco_id=banco.id)) }}
-        {% endif %}
-        {% if current_user.can_admin('BANCOS') %}
+        {% endif #}
+        {# if current_user.can_admin('BANCOS') %}
             {% if banco.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('bancos.delete', banco_id=banco.id)) }}{% endif %}
             {% if banco.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('bancos.recover', banco_id=banco.id)) }}{% endif %}
-        {% endif %}
+        {% endif #}
     {% endcall %}
 {% endblock %}
 
@@ -28,9 +28,9 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {% if current_user.can_admin('BANCOS') %}
+    {# if current_user.can_admin('BANCOS') %}
         {% if banco.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + banco.clave + '?') }}{% endif %}
         {% if banco.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + banco.clave + '?') }}{% endif %}
-    {% endif %}
+    {% endif #}
     {{ detail.moment_js(moment) }}
 {% endblock %}

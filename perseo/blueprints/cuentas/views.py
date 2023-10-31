@@ -37,6 +37,11 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    # Primero filtrar por columnas propias
+    if "banco_id" in request.form:
+        consulta = consulta.filter_by(banco_id=request.form["banco_id"])
+    if "persona_id" in request.form:
+        consulta = consulta.filter_by(persona_id=request.form["persona_id"])
     registros = consulta.order_by(Cuenta.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
@@ -45,9 +50,12 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "nombre": resultado.nombre,
+                    "id": resultado.id,
                     "url": url_for("cuentas.detail", cuenta_id=resultado.id),
                 },
+                "persona_rfc": resultado.persona.rfc,
+                "banco_nombre": resultado.banco.nombre,
+                "num_cuenta": resultado.num_cuenta,
             }
         )
     # Entregar JSON
@@ -60,7 +68,7 @@ def list_active():
     return render_template(
         "cuentas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="cuentas",
+        titulo="Cuentas",
         estatus="A",
     )
 
@@ -72,7 +80,7 @@ def list_inactive():
     return render_template(
         "cuentas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="cuentas inactivos",
+        titulo="Cuentas inactivos",
         estatus="B",
     )
 

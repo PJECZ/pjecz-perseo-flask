@@ -14,7 +14,7 @@ from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import permission_required
 
-MODULO = "BANCO"
+MODULO = "BANCOS"
 
 bancos = Blueprint("bancos", __name__, template_folder="templates")
 
@@ -61,7 +61,7 @@ def list_active():
     return render_template(
         "bancos/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="bancos",
+        titulo="Bancos",
         estatus="A",
     )
 
@@ -73,7 +73,7 @@ def list_inactive():
     return render_template(
         "bancos/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="bancos inactivos",
+        titulo="Bancos inactivos",
         estatus="B",
     )
 
