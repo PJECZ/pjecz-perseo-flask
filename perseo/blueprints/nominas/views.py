@@ -70,6 +70,7 @@ def datatable_json():
                 "percepcion": resultado.percepcion,
                 "deduccion": resultado.deduccion,
                 "importe": resultado.importe,
+                "tipo": resultado.tipo,
             }
         )
     # Entregar JSON

@@ -133,6 +133,35 @@ def alimentar(quincena: str):
             sesion.add(plaza)
             click.echo(f"  Plaza {plaza_clave} insertada")
 
+        # Bucle entre P-D para determinar el tipo entre SALARIO y DESPENSA
+        nomina_tipo = None
+        col_num = 26
+        while True:
+            # Tomar el tipo y el conc para armar la clave del concepto
+            tipo = safe_string(hoja.cell_value(fila, col_num))
+            conc = safe_string(hoja.cell_value(fila, col_num + 1))
+            concepto_clave = f"{tipo}{conc}"
+
+            # Si el tipo es un texto vacio, se rompe el ciclo
+            if tipo == "":
+                break
+
+            # Si el concepto_clave es PME, entonces es DESPENSA y se termina este ciclo
+            if concepto_clave == "PME":
+                nomina_tipo = Nomina.TIPOS["DESPENSA"]
+                break
+
+            # Incrementar col_num en SEIS
+            col_num += 6
+
+            # Romper el ciclo cuando se llega a la columna
+            if col_num > 236:
+                break
+
+        # Si no se encontro el tipo, entonces es SALARIO
+        if nomina_tipo is None:
+            nomina_tipo = Nomina.TIPOS["SALARIO"]
+
         # Alimentar nomina
         nomina = Nomina(
             centro_trabajo=centro_trabajo,
@@ -142,6 +171,7 @@ def alimentar(quincena: str):
             percepcion=percepcion,
             deduccion=deduccion,
             importe=impte,
+            tipo=nomina_tipo,
         )
         sesion.add(nomina)
 

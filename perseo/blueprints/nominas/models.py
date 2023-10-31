@@ -1,7 +1,7 @@
 """
 Nominas, modelos
 """
-from sqlalchemy import Column, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Column, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -10,6 +10,11 @@ from perseo.extensions import database
 
 class Nomina(database.Model, UniversalMixin):
     """Nomina"""
+
+    TIPOS = {
+        "SALARIO": "SALARIO",
+        "DESPENSA": "DESPENSA",
+    }
 
     # Nombre de la tabla
     __tablename__ = "nominas"
@@ -30,6 +35,7 @@ class Nomina(database.Model, UniversalMixin):
     percepcion = Column(Numeric(precision=24, scale=4), nullable=False)
     deduccion = Column(Numeric(precision=24, scale=4), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
+    tipo = Column(Enum(*TIPOS, name="tipo_nomina"), nullable=False)
 
     def __repr__(self):
         """Representación"""

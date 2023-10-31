@@ -43,6 +43,7 @@
         {{ detail.label_value('Percepción', nomina.percepcion) }}
         {{ detail.label_value('Deducción', nomina.deduccion) }}
         {{ detail.label_value('Importe', nomina.importe) }}
+        {{ detail.label_value('Tipo', nomina.tipo) }}
         {{ detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
