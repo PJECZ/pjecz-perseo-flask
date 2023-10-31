@@ -18,11 +18,36 @@
 
 {% block content %}
     {% call list.card() %}
+        <!-- Filtros cuentas -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosCuentas.buscar(); return false;">
+                    <div class="col-3">
+                        <div class="form-floating">
+                            <input id="filtroRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                            <label for="filtroRFC">RFC</label>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-floating">
+                            <input id="filtroBanco" type="text" class="form-control" aria-label="Banco" style="text-transform: uppercase;">
+                            <label for="filtroBanco">Banco</label>
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosCuentas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosCuentas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Datatable cuentas -->
         <table id="cuentas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Persona RFC</th>
+                    <th>RFC</th>
+                    <th>Nombre completo</th>
                     <th>Banco</th>
                     <th>No. de cuenta</th>
                 </tr>
@@ -32,13 +57,18 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ list.config_datatable() }}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
     <script>
+        // Datatable cuentas
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/cuentas/datatable_json';
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
             { data: 'persona_rfc' },
+            { data: 'persona_nombre_completo' },
             { data: 'banco_nombre' },
             { data: 'num_cuenta' }
         ];
@@ -51,6 +81,10 @@
                 }
             }
         ];
-        $('#cuentas_datatable').DataTable(configDataTable);
+        // Filtros cuentas
+        const filtrosCuentas = new FiltrosDataTable('#cuentas_datatable', configDataTable);
+        filtrosCuentas.agregarInput('filtroRFC', 'persona_rfc');
+        filtrosCuentas.agregarInput('filtroBanco', 'banco_nombre');
+        filtrosCuentas.precargar();
     </script>
 {% endblock %}

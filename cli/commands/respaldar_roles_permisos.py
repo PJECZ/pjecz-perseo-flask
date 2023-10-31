@@ -9,12 +9,14 @@ import click
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.roles.models import Rol
 
+ROLES_PERMISOS_CSV = "seed/roles_permisos.csv"
+
 
 def respaldar_roles_permisos():
     """Respaldar Roles-Permisos a un archivo CSV"""
     directorio = Path("seed")
     directorio.mkdir(exist_ok=True)
-    ruta = Path("seed/roles_permisos.csv")
+    ruta = Path(ROLES_PERMISOS_CSV)
     if ruta.exists():
         ruta.unlink()
     click.echo("Respaldando roles...")

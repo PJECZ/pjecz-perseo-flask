@@ -8,12 +8,14 @@ import click
 
 from perseo.blueprints.usuarios.models import Usuario
 
+USUARIOS_ROLES_CSV = "seed/usuarios_roles.csv"
+
 
 def respaldar_usuarios_roles():
     """Respaldar Usuarios-Roles a un archivo CSV"""
     directorio = Path("seed")
     directorio.mkdir(exist_ok=True)
-    ruta = Path("seed/usuarios_roles.csv")
+    ruta = Path(USUARIOS_ROLES_CSV)
     if ruta.exists():
         ruta.unlink()
     click.echo("Respaldando usuarios...")

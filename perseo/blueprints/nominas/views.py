@@ -34,11 +34,11 @@ def datatable_json():
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
     consulta = Nomina.query
+    # Primero filtrar por columnas propias
     if "estatus" in request.form:
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    # Primero filtrar por columnas propias de nominas
     if "quincena" in request.form:
         try:
             consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena"]))
@@ -59,7 +59,7 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "nombre": resultado.nombre,
+                    "id": resultado.id,
                     "url": url_for("nominas.detail", nomina_id=resultado.id),
                 },
                 "quincena": resultado.quincena,

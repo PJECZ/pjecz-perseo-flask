@@ -8,12 +8,14 @@ import click
 
 from perseo.blueprints.distritos.models import Distrito
 
+DISTRITOS_CSV = "seed/distritos.csv"
+
 
 def respaldar_distritos():
     """Respaldar Distritos a un archivo CSV"""
     directorio = Path("seed")
     directorio.mkdir(exist_ok=True)
-    ruta = Path("seed/distritos.csv")
+    ruta = Path(DISTRITOS_CSV)
     if ruta.exists():
         ruta.unlink()
     click.echo("Respaldando distritos...")
