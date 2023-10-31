@@ -1,0 +1,37 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Quincena producto + {{ quincena_producto.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Quincena producto ' + quincena_producto.id | string) %}
+        {{ topbar.button_previous('Quincenas productos', url_for('quincenas_productos.list_active')) }}
+        {# if current_user.can_edit('QUINCENAS PRODUCTOS') %}
+            {{ topbar.button_edit('Editar', url_for('quincenas_productos.edit', quincena_producto_id=quincena_producto.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('QUINCENAS PRODUCTOS') %}
+            {% if quincena_producto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto.id)) }}{% endif %}
+            {% if quincena_producto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('quincenas_productos.recover', quincena_producto_id=quincena_producto.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=quincena_producto.estatus) %}
+        {{ detail.label_value('Quincena', quincena_producto.quincena.quincena) }}
+        {{ detail.label_value('Archivo', quincena_producto.archivo) }}
+        {{ detail.label_value_boolean('Tiene errores', quincena_producto.tiene_errores) }}
+        {{ detail.label_value('Mensajes', quincena_producto.mensajes) }}
+        {{ detail.label_value('Creado', moment(quincena_producto.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('QUINCENAS PRODUCTOS') %}
+        {% if quincena_producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena_producto.id + '?') }}{% endif %}
+        {% if quincena_producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena_producto.id + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

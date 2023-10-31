@@ -24,6 +24,7 @@
                     <th>Clave</th>
                     <th>Nombre</th>
                     <th>Consecutivo</th>
+                    <th>Cons. Gen.</th>
                 </tr>
             </thead>
         </table>
@@ -38,7 +39,8 @@
         configDataTable['columns'] = [
             { data: 'detalle' },
             { data: 'clave' },
-            { data: 'consecutivo' }
+            { data: 'consecutivo' },
+            { data: 'consecutivo_generado' }
         ];
         configDataTable['columnDefs'] = [
             {

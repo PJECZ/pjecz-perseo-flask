@@ -1,5 +1,5 @@
 """
-Bancos, vistas
+Quincenas, vistas
 """
 import json
 
@@ -7,39 +7,44 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
-from perseo.blueprints.bancos.models import Banco
+from lib.safe_string import safe_message, safe_quincena, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
 
-MODULO = "BANCOS"
+MODULO = "QUINCENAS"
 
-bancos = Blueprint("bancos", __name__, template_folder="templates")
+quincenas = Blueprint("quincenas", __name__, template_folder="templates")
 
 
-@bancos.before_request
+@quincenas.before_request
 @login_required
 @permission_required(MODULO, Permiso.VER)
 def before_request():
     """Permiso por defecto"""
 
 
-@bancos.route("/bancos/datatable_json", methods=["GET", "POST"])
+@quincenas.route("/quincenas/datatable_json", methods=["GET", "POST"])
 def datatable_json():
-    """DataTable JSON para listado de bancos"""
+    """DataTable JSON para listado de Quincenas"""
     # Tomar parámetros de Datatables
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
-    consulta = Banco.query
-    # Filtrar por columnas propias
+    consulta = Quincena.query
+    # Primero filtrar por columnas propias
     if "estatus" in request.form:
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "quincena" in request.form:
+        try:
+            consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena"]))
+        except ValueError:
+            pass
     # Ordenar y paginar
-    registros = consulta.order_by(Banco.nombre).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Quincena.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -47,43 +52,41 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "nombre": resultado.nombre,
-                    "url": url_for("bancos.detail", banco_id=resultado.id),
+                    "quincena": resultado.quincena,
+                    "url": url_for("quincenas.detail", quincena_id=resultado.id),
                 },
-                "clave": resultado.clave,
-                "consecutivo": resultado.consecutivo,
-                "consecutivo_generado": resultado.consecutivo_generado,
+                "estado": resultado.estado,
             }
         )
     # Entregar JSON
     return output_datatable_json(draw, total, data)
 
 
-@bancos.route("/bancos")
+@quincenas.route("/quincenas")
 def list_active():
-    """Listado de bancos activos"""
+    """Listado de Quincenas activas"""
     return render_template(
-        "bancos/list.jinja2",
+        "quincenas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="Bancos",
+        titulo="Quincenas",
         estatus="A",
     )
 
 
-@bancos.route("/bancos/inactivos")
+@quincenas.route("/quincenas/inactivos")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
-    """Listado de bancos inactivos"""
+    """Listado de Quincenas inactivas"""
     return render_template(
-        "bancos/list.jinja2",
+        "quincenas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Bancos inactivos",
+        titulo="Quincenas inactivas",
         estatus="B",
     )
 
 
-@bancos.route("/bancos/<int:banco_id>")
-def detail(banco_id):
-    """Detalle de un banco"""
-    banco = Banco.query.get_or_404(banco_id)
-    return render_template("bancos/detail.jinja2", banco=banco)
+@quincenas.route("/quincenas/<int:quincena_id>")
+def detail(quincena_id):
+    """Detalle de una Quincena"""
+    quincena = Quincena.query.get_or_404(quincena_id)
+    return render_template("quincenas/detail.jinja2", quincena=quincena)

@@ -20,6 +20,8 @@ from perseo.blueprints.permisos.views import permisos
 from perseo.blueprints.personas.views import personas
 from perseo.blueprints.plazas.views import plazas
 from perseo.blueprints.productos.views import productos
+from perseo.blueprints.quincenas.views import quincenas
+from perseo.blueprints.quincenas_productos.views import quincenas_productos
 from perseo.blueprints.roles.views import roles
 from perseo.blueprints.sistemas.views import sistemas
 from perseo.blueprints.usuarios.models import Usuario
@@ -53,6 +55,8 @@ def create_app():
     app.register_blueprint(personas)
     app.register_blueprint(plazas)
     app.register_blueprint(productos)
+    app.register_blueprint(quincenas)
+    app.register_blueprint(quincenas_productos)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
     app.register_blueprint(usuarios)
