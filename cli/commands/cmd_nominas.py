@@ -1,31 +1,19 @@
 """
 CLI Nominas
-
-Columnas a entregar
-
-- Centro de trabajo
-- RFC
-- Nombre completo
-- Banco administrador, su clave
-- Nombre del banco
-- Numero de cuenta
-- Monto a depositar, columna (IMPTE)
-- Numero de empleado
-- Quincena
-- Modelo
-- No de cheque (Clave del banco + secuencia) deben ser 9 digitos
-
 """
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 
 import click
 import xlrd
 from dotenv import load_dotenv
+from openpyxl import Workbook
 
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
 from perseo.app import create_app
+from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
@@ -188,4 +176,122 @@ def alimentar(quincena: str):
     click.echo(f"Terminado con {contador} nominas alimentadas.")
 
 
+@click.command()
+@click.argument("quincena", type=str)
+def generar(quincena: str):
+    """Generar archivo XLSX con las nominas de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida")
+        return
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar las nominas de la quincena
+    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(estatus="A").all()
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "CENTRO DE TRABAJO",
+            "RFC",
+            "NOMBRE COMPLETO",
+            "BANCO ADMINISTRADOR",
+            "NOMBRE DEL BANCO",
+            "NUMERO DE CUENTA",
+            "MONTO A DEPOSITAR",
+            "NUMERO DE EMPLEADO",
+            "QUINCENA",
+            "MODELO",
+            "NO DE CHEQUE",
+        ]
+    )
+
+    # Bucle para crear cada fila del archivo XLSX
+    contador = 0
+    personas_sin_cuentas = []
+    for nomina in nominas:
+        # Tomar solo nominas de tipo SALARIO, para omitir las de tipo DESPENSA
+        if nomina.tipo != Nomina.TIPOS["SALARIO"]:
+            continue
+
+        # Tomar las cuentas de la persona
+        cuentas = nomina.persona.cuentas
+
+        # Si no tiene cuentas, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if len(cuentas) == 0:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
+        su_cuenta = None
+        for cuenta in cuentas:
+            if cuenta.banco.clave != "9":
+                su_cuenta = cuenta
+                break
+
+        # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if su_cuenta is None:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Tomar el banco de la cuenta de la persona
+        su_banco = su_cuenta.banco
+
+        # Incrementar la consecutivo del banco
+        su_banco.consecutivo += 1
+
+        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
+        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo:07}"
+
+        # Agregar la fila
+        hoja.append(
+            [
+                nomina.centro_trabajo.clave,
+                nomina.persona.rfc,
+                nomina.persona.nombre_completo,
+                su_banco.clave,
+                su_banco.nombre,
+                su_cuenta.num_cuenta,
+                nomina.importe,
+                nomina.persona.num_empleado,
+                nomina.quincena,
+                nomina.persona.modelo,
+                num_cheque,
+            ]
+        )
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(f"  Van {contador}...")
+
+    # Actualizar los consecutivos de cada banco
+    sesion.commit()
+
+    # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
+    nombre_archivo = f"nominas_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo)
+
+    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    if len(personas_sin_cuentas) > 0:
+        click.echo("AVISO: Hubo personas sin cuentas:")
+        for persona in personas_sin_cuentas:
+            click.echo(f"- {persona.rfc} {persona.nombre_completo}")
+
+    # Mensaje termino
+    click.echo(f"Terminado con {contador} nominas generadas en {nombre_archivo}")
+
+
 cli.add_command(alimentar)
+cli.add_command(generar)

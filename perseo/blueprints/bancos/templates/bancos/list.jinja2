@@ -23,6 +23,7 @@
                 <tr>
                     <th>Clave</th>
                     <th>Nombre</th>
+                    <th>Consecutivo</th>
                 </tr>
             </thead>
         </table>
@@ -36,7 +37,8 @@
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
-            { data: 'clave' }
+            { data: 'clave' },
+            { data: 'consecutivo' }
         ];
         configDataTable['columnDefs'] = [
             {
