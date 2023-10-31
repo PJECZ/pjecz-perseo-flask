@@ -14,13 +14,14 @@ import click
 import xlrd
 from dotenv import load_dotenv
 
-from lib.safe_string import safe_clave, safe_quincena, safe_string
+from lib.safe_string import QUINCENA_REGEXP
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
 from perseo.blueprints.cuentas.models import Cuenta
+from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
@@ -48,6 +49,11 @@ def alimentar(quincena: str):
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida")
+        return
+
     # Validar el directorio donde espera encontrar los archivos de explotacion
     if EXPLOTACION_BASE_DIR is None:
         click.echo("Variable de entorno EXPLOTACION_BASE_DIR no definida.")
@@ -61,7 +67,6 @@ def alimentar(quincena: str):
     if not ruta.is_file():
         click.echo(f"AVISO: {str(ruta)} no es un archivo.")
         return
-    click.echo("Alimentando percepciones-deducciones...")
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
@@ -69,10 +74,11 @@ def alimentar(quincena: str):
     # Obtener la primera hoja
     hoja = libro.sheet_by_index(0)
 
-    # Iniciar contador de percepciones-deducciones alimentadas
+    # Iniciar contador de cuentas alimentadas
     contador = 0
 
     # Bucle por cada fila
+    click.echo("Alimentando cuentas...")
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 0)
@@ -100,8 +106,6 @@ def alimentar(quincena: str):
 
         # Incrementar contador
         contador += 1
-
-        # Agregar al log una linea cada vez que el contador sea multiplo de 100
         if contador % 100 == 0:
             click.echo(f"  Van {contador}...")
 
