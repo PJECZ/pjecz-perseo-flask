@@ -28,6 +28,7 @@ class Persona(database.Model, UniversalMixin):
 
     # Hijos
     cuentas = relationship("Cuenta", back_populates="persona")
+    nominas = relationship("Nomina", back_populates="persona")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona")
 
     @property

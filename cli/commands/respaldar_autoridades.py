@@ -8,12 +8,14 @@ import click
 
 from perseo.blueprints.autoridades.models import Autoridad
 
+AUTORIDADES_CSV = "seed/autoridades.csv"
+
 
 def respaldar_autoridades():
     """Respaldar Autoridades a un archivo CSV"""
     directorio = Path("seed")
     directorio.mkdir(exist_ok=True)
-    ruta = Path("seed/autoridades.csv")
+    ruta = Path(AUTORIDADES_CSV)
     if ruta.exists():
         ruta.unlink()
     click.echo("Respaldando autoridades...")

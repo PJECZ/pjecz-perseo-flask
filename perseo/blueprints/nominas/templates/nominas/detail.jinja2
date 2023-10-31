@@ -1,0 +1,56 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nomina + {{ nomina.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nomina ' + nomina.id | string) %}
+        {{ topbar.button_previous('Nominas', url_for('nominas.list_active')) }}
+        {# if current_user.can_edit('NOMINAS') %}
+            {{ topbar.button_edit('Editar', url_for('nominas.edit', nomina_id=nomina.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('NOMINAS') %}
+            {% if nomina.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('nominas.delete', nomina_id=nomina.id)) }}{% endif %}
+            {% if nomina.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('nominas.recover', nomina_id=nomina.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=nomina.estatus) %}
+        {{ detail.label_value_big('Nombre o Descripción', nomina.id) }}
+        {% set persona_texto = nomina.persona.rfc + ' - ' + nomina.persona.nombre_completo %}
+        {% if current_user.can_view("PERSONAS") %}
+            {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=nomina.persona_id)) }}
+        {% else %}
+            {{ detail.label_value('Persona', persona_texto) }}
+        {% endif %}
+        {% set centro_trabajo_texto = percepcion_deduccion.centro_trabajo.clave + ' - ' + percepcion_deduccion.centro_trabajo.descripcion %}
+        {% if current_user.can_view("CENTROS TRABAJOS") %}
+            {{ detail.label_value('Centro de trabajo', centro_trabajo_texto, url_for('centros_trabajos.detail', centro_trabajo_id=percepcion_deduccion.centro_trabajo_id)) }}
+        {% else %}
+            {{ detail.label_value('Centro de trabajo', centro_trabajo_texto) }}
+        {% endif %}
+        {% set plaza_texto = percepcion_deduccion.plaza.clave + ' - ' + percepcion_deduccion.plaza.descripcion %}
+        {% if current_user.can_view("PLAZAS") %}
+            {{ detail.label_value('Plaza', plaza_texto, url_for('plazas.detail', plaza_id=percepcion_deduccion.plaza_id)) }}
+        {% else %}
+            {{ detail.label_value('Plaza', plaza_texto) }}
+        {% endif %}
+        {{ detail.label_value('Quincena', nomina.quincena) }}
+        {{ detail.label_value('Percepción', nomina.percepcion) }}
+        {{ detail.label_value('Deducción', nomina.deduccion) }}
+        {{ detail.label_value('Importe', nomina.importe) }}
+        {{ detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('NOMINAS') %}
+        {% if nomina.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + nomina.id + '?') }}{% endif %}
+        {% if nomina.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + nomina.id + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

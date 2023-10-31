@@ -34,6 +34,7 @@ def datatable_json():
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
     consulta = Persona.query
+    # Primero filtrar por columnas propias
     if "estatus" in request.form:
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
@@ -49,6 +50,7 @@ def datatable_json():
         consulta = consulta.filter(Persona.apellido_primero.contains(safe_string(request.form["apellido_primero"])))
     if "apellido_segundo" in request.form:
         consulta = consulta.filter(Persona.apellido_segundo.contains(safe_string(request.form["apellido_segundo"])))
+    # Ordenar y paginar
     registros = consulta.order_by(Persona.rfc).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable

@@ -8,12 +8,14 @@ import click
 
 from perseo.blueprints.modulos.models import Modulo
 
+MODULOS_CSV = "seed/modulos.csv"
+
 
 def respaldar_modulos():
     """Respaldar Modulos a un archivo CSV"""
     directorio = Path("seed")
     directorio.mkdir(exist_ok=True)
-    ruta = Path("seed/modulos.csv")
+    ruta = Path(MODULOS_CSV)
     if ruta.exists():
         ruta.unlink()
     click.echo("Respaldando módulos...")

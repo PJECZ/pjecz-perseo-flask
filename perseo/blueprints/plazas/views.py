@@ -34,10 +34,16 @@ def datatable_json():
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
     consulta = Plaza.query
+    # Primero filtrar por columnas propias
     if "estatus" in request.form:
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "clave" in request.form:
+        consulta = consulta.filter(Plaza.clave.contains(safe_clave(request.form["clave"], max_len=24)))
+    if "descripcion" in request.form:
+        consulta = consulta.filter(Plaza.descripcion.contains(safe_string(request.form["descripcion"])))
+    # Ordenar y paginar
     registros = consulta.order_by(Plaza.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
@@ -93,7 +99,7 @@ def new():
     form = PlazaForm()
     if form.validate_on_submit():
         # Validar que la clave no se repita
-        clave = safe_clave(form.clave.data)
+        clave = safe_clave(form.clave.data, max_len=24)
         if Plaza.query.filter_by(clave=clave).first():
             form.clave.errors.append("Clave repetida")
         else:
@@ -123,7 +129,7 @@ def edit(plaza_id):
     if form.validate_on_submit():
         es_valido = True
         # Si cambia la clave verificar que no este en uso
-        clave = safe_clave(form.clave.data)
+        clave = safe_clave(form.clave.data, max_len=24)
         if plaza.clave != clave:
             plaza_existente = Plaza.query.filter_by(clave=clave).first()
             if plaza_existente and plaza_existente.id != plaza.id:

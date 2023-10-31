@@ -3,26 +3,35 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Cuenta + {{ cuenta.num_cuenta }}{% endblock %}
+{% block title %}Cuenta {{ cuenta.banco.nombre }} {{ cuenta.num_cuenta }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Cuenta ' + cuenta.num_cuenta) %}
+    {% call topbar.page_buttons('Cuenta ' + cuenta.banco.nombre + ' ' + cuenta.num_cuenta) %}
         {{ topbar.button_previous('Cuentas', url_for('cuentas.list_active')) }}
-        {% if current_user.can_edit('CUENTAS') %}
+        {# if current_user.can_edit('CUENTAS') %}
             {{ topbar.button_edit('Editar', url_for('cuentas.edit', cuenta_id=cuenta.id)) }}
-        {% endif %}
-        {% if current_user.can_admin('CUENTAS') %}
+        {% endif #}
+        {# if current_user.can_admin('CUENTAS') %}
             {% if cuenta.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('cuentas.delete', cuenta_id=cuenta.id)) }}{% endif %}
             {% if cuenta.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('cuentas.recover', cuenta_id=cuenta.id)) }}{% endif %}
-        {% endif %}
+        {% endif #}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
     {% call detail.card(estatus=cuenta.estatus) %}
+        {% if current_user.can_view("BANCOS") %}
+            {{ detail.label_value('Banco', cuenta.banco.nombre, url_for('bancos.detail', banco_id=cuenta.banco_id)) }}
+        {% else %}
+            {{ detail.label_value('Banco', cuenta.banco.nombre) }}
+        {% endif %}
         {{ detail.label_value_big('No. cuenta', cuenta.num_cuenta) }}
-        {{ detail.label_value('Banco', cuenta.banco.nombre) }}
-        {{ detail.label_value('Persona', cuenta.persona.rfc) }}
+        {% set persona_texto = cuenta.persona.rfc + ' - ' + cuenta.persona.nombre_completo %}
+        {% if current_user.can_view("PERSONAS") %}
+            {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=cuenta.persona_id)) }}
+        {% else %}
+            {{ detail.label_value('Persona', persona_texto) }}
+        {% endif %}
         {{ detail.label_value('Creado', moment(cuenta.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}

@@ -14,6 +14,7 @@ from perseo.blueprints.cuentas.views import cuentas
 from perseo.blueprints.distritos.views import distritos
 from perseo.blueprints.entradas_salidas.views import entradas_salidas
 from perseo.blueprints.modulos.views import modulos
+from perseo.blueprints.nominas.views import nominas
 from perseo.blueprints.percepciones_deducciones.views import percepciones_deducciones
 from perseo.blueprints.permisos.views import permisos
 from perseo.blueprints.personas.views import personas
@@ -46,6 +47,7 @@ def create_app():
     app.register_blueprint(cuentas)
     app.register_blueprint(entradas_salidas)
     app.register_blueprint(modulos)
+    app.register_blueprint(nominas)
     app.register_blueprint(percepciones_deducciones)
     app.register_blueprint(permisos)
     app.register_blueprint(personas)
