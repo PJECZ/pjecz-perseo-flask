@@ -20,6 +20,7 @@ from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccio
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.productos.models import Producto
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
@@ -61,6 +62,13 @@ def alimentar(quincena: str):
     if not ruta.is_file():
         click.echo(f"AVISO: {str(ruta)} no es un archivo.")
         return
+
+    # Revisar si existe el registro en quincenas, de lo contrario insertarlo
+    quincena_obj = Quincena.query.filter_by(quincena=quincena).first()
+    if quincena_obj is None:
+        quincena_obj = Quincena(quincena=quincena, estado=Quincena.ESTADOS["ABIERTA"])
+        sesion.add(quincena_obj)
+        click.echo(f"  Quincena {quincena} insertada")
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
@@ -175,7 +183,7 @@ def alimentar(quincena: str):
     # Mensaje termino
     if len(conceptos_no_existentes) > 0:
         click.echo(f"  AVISO: Conceptos no existentes: {','.join(conceptos_no_existentes)}")
-    click.echo(f"Terminado con {contador} percepciones-deducciones alimentados.")
+    click.echo(f"Percepciones-Deducciones terminado: {contador} alimentados en la quincena {quincena}.")
 
 
 cli.add_command(alimentar)

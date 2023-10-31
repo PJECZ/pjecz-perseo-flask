@@ -114,7 +114,7 @@ def alimentar(quincena: str):
     sesion.close()
 
     # Mensaje termino
-    click.echo(f"Terminado con {contador} cuentas alimentados.")
+    click.echo(f"Cuentas terminado: {contador} cuentas alimentados en la quincena {quincena}.")
 
 
 cli.add_command(alimentar)
