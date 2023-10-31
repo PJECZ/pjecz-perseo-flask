@@ -1,0 +1,35 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Quincena + {{ quincena.quincena }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Quincena ' + quincena.quincena) %}
+        {{ topbar.button_previous('Quincenas', url_for('quincenas.list_active')) }}
+        {# if current_user.can_edit('QUINCENA') %}
+            {{ topbar.button_edit('Editar', url_for('quincenas.edit', quincena_id=quincena.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('QUINCENA') %}
+            {% if quincena.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('quincenas.delete', quincena_id=quincena.id)) }}{% endif %}
+            {% if quincena.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('quincenas.recover', quincena_id=quincena.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=quincena.estatus) %}
+        {{ detail.label_value_big('Quincena', quincena.quincena) }}
+        {{ detail.label_value_big('Estado', quincena.estado) }}
+        {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('QUINCENA') %}
+        {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.quincena + '?') }}{% endif %}
+        {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.quincena + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}
