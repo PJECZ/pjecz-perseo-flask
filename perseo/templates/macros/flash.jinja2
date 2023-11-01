@@ -5,7 +5,15 @@
             <div class="flash-messages">
             {% for category, msg in messages %}
                 <div class="alert alert-{{ category }}" role="alert">
-                {{ msg }}
+                    {{ msg }}
+                    {% if msg.endswith('recargar en 10 segundos...') %}
+                    <script>
+                        // Refresh the page after 10 seconds
+                        setTimeout(function(){
+                            location.reload();
+                        }, 10000); // 10000 milliseconds = 10 seconds
+                    </script>
+                    {% endif %}
                 </div>
             {% endfor %}
             </div>

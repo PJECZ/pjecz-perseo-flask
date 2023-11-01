@@ -7,9 +7,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_quincena, safe_string
-from perseo.blueprints.bitacoras.models import Bitacora
-from perseo.blueprints.modulos.models import Modulo
+from lib.safe_string import safe_quincena
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
@@ -90,3 +88,12 @@ def detail(quincena_id):
     """Detalle de una Quincena"""
     quincena = Quincena.query.get_or_404(quincena_id)
     return render_template("quincenas/detail.jinja2", quincena=quincena)
+
+
+@quincenas.route("/quincenas/cerrar")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def close():
+    """Lanzar tarea en el fondo para cerrar las quincenas pasadas, menos la ultima"""
+    current_user.launch_task(comando="quincenas.tasks.cerrar", mensaje="Lanzando cerrar quincenas...")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.list_active"))

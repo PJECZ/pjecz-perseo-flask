@@ -214,16 +214,17 @@ def generar(quincena: str):
     # Agregar la fila con las cabeceras de las columnas
     hoja.append(
         [
+            "QUINCENA",
             "CENTRO DE TRABAJO",
             "RFC",
             "NOMBRE COMPLETO",
-            "BANCO ADMINISTRADOR",
+            "NUMERO DE EMPLEADO",
+            "MODELO",
+            "PLAZA",
             "NOMBRE DEL BANCO",
+            "BANCO ADMINISTRADOR",
             "NUMERO DE CUENTA",
             "MONTO A DEPOSITAR",
-            "NUMERO DE EMPLEADO",
-            "QUINCENA",
-            "MODELO",
             "NO DE CHEQUE",
         ]
     )
@@ -268,16 +269,17 @@ def generar(quincena: str):
         # Agregar la fila
         hoja.append(
             [
+                nomina.quincena,
                 nomina.centro_trabajo.clave,
                 nomina.persona.rfc,
                 nomina.persona.nombre_completo,
-                su_banco.clave,
+                nomina.persona.num_empleado,
+                nomina.persona.modelo,
+                nomina.plaza.clave,
                 su_banco.nombre,
+                su_banco.clave,
                 su_cuenta.num_cuenta,
                 nomina.importe,
-                nomina.persona.num_empleado,
-                nomina.quincena,
-                nomina.persona.modelo,
                 num_cheque,
             ]
         )

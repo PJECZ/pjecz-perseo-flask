@@ -39,7 +39,7 @@ cd pjecz-perseo-flask
 Crear el entorno virtual
 
 ```bash
-python3.11 -m venv venv
+python3.11 -m venv .venv
 ```
 
 Ingresar al entorno virtual
@@ -179,11 +179,26 @@ then
 fi
 ```
 
+## Cargar las variables de entorno y el entorno virtual
+
+Antes de usar el CLI o de arrancar el servidor de **Flask** debe cargar las variables de entorno y el entorno virtual.
+
+```bash
+. .bashrc
+```
+
 ## Base de datos
 
 Previamente debe crear el directorio `seed` y colocar allí los archivos `.csv` para alimentar las tablas principales.
 
-Reiniciar (eliminar las tablas, crearlas y alimentarlas) con:
+Puede inicializar (eliminar las tablas y crearlas) y alimentar con el **CLI**:
+
+```bash
+cli db inicializar
+cli db alimentar
+```
+
+O puede reiniciar (eliminar las tablas, crearlas y alimentarlas) con:
 
 ```bash
 cli db reiniciar
@@ -219,18 +234,24 @@ Alimentar las cuentas de la quincena **202320**
 cli cuentas alimentar 202320
 ```
 
-## Arrancar
+## Tareas en el fondo
 
-Ingrese a la terminal y ejecute con **Bash** el archivo `.bashrc`
+Abrir una terminal _Bash_, cargar el `.bashrc` y ejecutar
 
 ```bash
-. .bashrc
+fondear
 ```
 
-Arrancar el servidor de **Flask**
+Así se ejecutarán las tareas en el fondo con **RQ Worker**.
+
+## Arrancar
+
+Abrir otra terminal _Bash_, cargar el `.bashrc` y ejecutar
 
 ```bash
 arrancar
 ```
+
+Así se arrancará el servidor de **Flask**.
 
 Abrir en su navegador de internet <http://localhost:5000>
