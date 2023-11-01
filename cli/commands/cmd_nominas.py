@@ -186,7 +186,7 @@ def alimentar(quincena: str):
 
 @click.command()
 @click.argument("quincena", type=str)
-def generar(quincena: str):
+def generar_nominas(quincena: str):
     """Generar archivo XLSX con las nominas de una quincena"""
 
     # Validar quincena
@@ -308,5 +308,123 @@ def generar(quincena: str):
     click.echo(f"Nominas terminado: {contador} nominas generadas en {nombre_archivo}")
 
 
+@click.command()
+@click.argument("quincena", type=str)
+def generar_monederos(quincena: str):
+    """Generar archivo XLSX con los monederos de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida")
+        return
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Cargar solo el banco con la clave 9 que es PREVIVALE
+    banco = Banco.query.filter_by(clave="9").first()
+    if banco is None:
+        click.echo("ERROR: No existe el banco con clave 9")
+        return
+
+    # Igualar el consecutivo_generado al consecutivo
+    banco.consecutivo_generado = banco.consecutivo
+
+    # Consultar las nominas de la quincena con estado DESPENSA
+    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "CT_CLASIF",
+            "RFC",
+            "TOT NET CHEQUE",
+            "NUM CHEQUE",
+            "NUM TARJETA",
+            "QUINCENA",
+            "MODELO",
+        ]
+    )
+
+    # Bucle para crear cada fila del archivo XLSX
+    contador = 0
+    personas_sin_cuentas = []
+    for nomina in nominas:
+        # Tomar las cuentas de la persona
+        cuentas = nomina.persona.cuentas
+
+        # Si no tiene cuentas, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if len(cuentas) == 0:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
+        su_cuenta = None
+        for cuenta in cuentas:
+            if cuenta.banco.clave == "9":
+                su_cuenta = cuenta
+                break
+
+        # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if su_cuenta is None:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Si num_cuenta es 16 ceros, entonces NO se incrementa el consecutivo del banco, pero si se agrega
+        if su_cuenta.num_cuenta != "0" * 16:
+            # Incrementar la consecutivo del banco
+            banco.consecutivo_generado += 1
+
+            # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
+            num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{banco.consecutivo_generado:07}"
+
+        else:
+            # El num_cheque es vacio porque no se la va a depositar
+            num_cheque = ""
+
+        # Agregar la fila
+        hoja.append(
+            [
+                "J",
+                nomina.persona.rfc,
+                nomina.importe,
+                num_cheque,
+                su_cuenta.num_cuenta,
+                nomina.quincena,
+                nomina.persona.modelo,
+            ]
+        )
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(f"  Van {contador}...")
+
+    # Actualizar los consecutivos de cada banco
+    sesion.commit()
+
+    # Determinar el nombre del archivo XLSX, juntando 'monederos' con la quincena y la fecha como YYYY-MM-DD HHMMSS
+    nombre_archivo = f"monederos_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo)
+
+    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    if len(personas_sin_cuentas) > 0:
+        click.echo("AVISO: Hubo personas sin cuentas:")
+        for persona in personas_sin_cuentas:
+            click.echo(f"- {persona.rfc} {persona.nombre_completo}")
+
+    # Mensaje termino
+    click.echo(f"Nominas terminado: {contador} monederos generadas en {nombre_archivo}")
+
+
 cli.add_command(alimentar)
-cli.add_command(generar)
+cli.add_command(generar_nominas)
+cli.add_command(generar_monederos)

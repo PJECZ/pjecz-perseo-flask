@@ -173,6 +173,10 @@ def alimentar_monederos(quincena: str):
         rfc = str(hoja.cell_value(fila, 1)).strip().upper()
         num_tarjeta = str(hoja.cell_value(fila, 4)).strip()
 
+        # Validar que el num_tarjeta sea de 16 digitos, de lo contrarrio, se pone en 16 ceros
+        if re.match(r"^\d{16}$", num_tarjeta) is None:
+            num_tarjeta = "0" * 16
+
         # Revisar si la persona existe
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
