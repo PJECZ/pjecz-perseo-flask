@@ -53,12 +53,13 @@ def get_secret(secret_id: str) -> str:
 class Settings(BaseSettings):
     """Settings"""
 
+    GOOGLE_CLOUD_STORAGE: str = get_secret("google_cloud_storage")
     HOST: str = get_secret("host")
     REDIS_URL: str = get_secret("redis_url")
-    TASK_QUEUE: str = get_secret("task_queue")
     SALT: str = get_secret("salt")
     SECRET_KEY: str = get_secret("secret_key")
     SQLALCHEMY_DATABASE_URI: str = get_secret("sqlalchemy_database_uri")
+    TASK_QUEUE: str = get_secret("task_queue")
 
     class Config:
         """Load configuration"""

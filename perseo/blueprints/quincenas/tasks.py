@@ -63,6 +63,8 @@ def cerrar() -> None:
             sesion.add(banco)
             bancos_actualizados.append(f"{banco.nombre} ({antes} -> {ahora})")
 
+    # TODO: Actualizar en cada registro de nominas el numero de cheque
+
     # Hacer commit de los cambios en la base de datos
     sesion.commit()
 
