@@ -23,7 +23,7 @@
         {{ detail.label_value_big('Nombre', banco.nombre) }}
         {{ detail.label_value('Clave', banco.clave) }}
         {{ detail.label_value('Consecutivo', banco.consecutivo) }}
-        {{ detail.label_value('Consecutivo generado', banco.consecutivo_generado) }}
+        {{ detail.label_value('Consecutivo temporal', banco.consecutivo_generado) }}
         {{ detail.label_value('Creado', moment(banco.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}

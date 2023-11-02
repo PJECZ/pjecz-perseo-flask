@@ -1,3 +1,0 @@
-"""
-Quincenas Productos, Tasks
-"""

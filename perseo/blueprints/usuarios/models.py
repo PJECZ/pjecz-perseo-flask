@@ -1,12 +1,14 @@
 """
 Usuarios, modelos
 """
+from flask import current_app
 from flask_login import UserMixin
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.tareas.models import Tarea
 from perseo.blueprints.usuarios_roles.models import UsuarioRol
 from perseo.extensions import database, pwd_context
 
@@ -40,6 +42,7 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     # Hijos
     bitacoras = relationship("Bitacora", back_populates="usuario", lazy="noload")
     entradas_salidas = relationship("EntradaSalida", back_populates="usuario", lazy="noload")
+    tareas = relationship("Tarea", back_populates="usuario")
     usuarios_roles = relationship("UsuarioRol", back_populates="usuario")
 
     # Propiedades
@@ -129,6 +132,17 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
         """Obtener roles"""
         usuarios_roles = UsuarioRol.query.filter_by(usuario_id=self.id).filter_by(estatus="A").all()
         return [usuario_rol.rol.nombre for usuario_rol in usuarios_roles]
+
+    def launch_task(self, comando, mensaje, *args, **kwargs):
+        """Lanzar tarea en el fondo"""
+        rq_job = current_app.task_queue.enqueue(f"perseo.blueprints.{comando}", *args, **kwargs)
+        tarea = Tarea(id=rq_job.get_id(), comando=comando, mensaje=mensaje, usuario=self)
+        tarea.save()
+        return tarea
+
+    def get_tasks_in_progress(self):
+        """Obtener tareas"""
+        return Tarea.query.filter_by(usuario=self, ha_terminado=False).all()
 
     def __repr__(self):
         """Representación"""

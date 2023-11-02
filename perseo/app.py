@@ -1,7 +1,9 @@
 """
 Flask App
 """
+import rq
 from flask import Flask
+from redis import Redis
 
 from config.settings import Settings
 from perseo.blueprints.autoridades.views import autoridades
@@ -24,6 +26,7 @@ from perseo.blueprints.quincenas.views import quincenas
 from perseo.blueprints.quincenas_productos.views import quincenas_productos
 from perseo.blueprints.roles.views import roles
 from perseo.blueprints.sistemas.views import sistemas
+from perseo.blueprints.tareas.views import tareas
 from perseo.blueprints.usuarios.models import Usuario
 from perseo.blueprints.usuarios.views import usuarios
 from perseo.blueprints.usuarios_roles.views import usuarios_roles
@@ -37,6 +40,10 @@ def create_app():
 
     # Cargar la configuración
     app.config.from_object(Settings())
+
+    # Redis
+    app.redis = Redis.from_url(app.config["REDIS_URL"])
+    app.task_queue = rq.Queue(app.config["TASK_QUEUE"], connection=app.redis, default_timeout=1920)
 
     # Registrar blueprints
     app.register_blueprint(autoridades)
@@ -59,6 +66,7 @@ def create_app():
     app.register_blueprint(quincenas_productos)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
+    app.register_blueprint(tareas)
     app.register_blueprint(usuarios)
     app.register_blueprint(usuarios_roles)
 

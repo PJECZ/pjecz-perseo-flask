@@ -51,7 +51,7 @@ def alimentar():
             contador += 1
             if contador % 100 == 0:
                 click.echo(f"  Van {contador}...")
-    click.echo(f"Terminado con {contador} bancos alimentados.")
+    click.echo(f"Bancos terminado: {contador} bancos alimentados.")
 
 
 cli.add_command(alimentar)
