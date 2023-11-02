@@ -5,7 +5,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: adminpjeczperseo
-      POSTGRES_PASSWORD: developPasswd
+      POSTGRES_PASSWORD: EstaEsLaContrasenaDeLaBD
       POSTGRES_DB: pjecz_perseo
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -30,9 +30,9 @@ services:
       HOST: http://localhost:5000
       PYTHONPATH: /code
       REDIS_URL: redis://redis:6379
-      SALT: r5npOyY2519ph2zK
-      SECRET_KEY: PvwV7heFDcfrsWFAGxBz2aOvJ1Mw6LgV
-      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://adminpjeczperseo:developPasswd@db:5432/pjecz_perseo
+      SALT: EstaEsUnaSemillaParaLosIds
+      SECRET_KEY: EstaEsUnaSemillaParaFlask
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://adminpjeczperseo:EstaEsLaContrasenaDeLaBD@db:5432/pjecz_perseo
       TASK_QUEUE: pjecz_perseo
 
 volumes:
