@@ -9,7 +9,7 @@ from openpyxl import Workbook
 
 from config.settings import get_settings
 from lib.safe_string import QUINCENA_REGEXP
-from lib.storage import GoogleCloudStorage, NotAllowedExtesionError, NotConfiguredError, UnknownExtensionError
+from lib.storage import GoogleCloudStorage
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
@@ -219,6 +219,9 @@ def generar_nominas(quincena: str) -> None:
         month_in_word=False,
         bucket_name=settings.GOOGLE_CLOUD_STORAGE,
     )
+
+    # Abrir el archivo XLSX
+    # with open(nombre_archivo, "rb") as archivo:
 
     # Subir a Google Cloud Storage
     # es_exitoso = True

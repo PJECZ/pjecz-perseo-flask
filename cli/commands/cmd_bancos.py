@@ -40,11 +40,13 @@ def alimentar():
             try:
                 clave = row["clave"]
                 nombre = safe_string(row["nombre"])
+                clave_dispersion_pensionados = row["clave_dispersion_pensionados"]
             except ValueError as error:
                 click.echo(f"  {error}")
                 continue
             Banco(
                 clave=clave,
+                clave_dispersion_pensionados=clave_dispersion_pensionados,
                 nombre=nombre,
                 consecutivo=0,
                 consecutivo_generado=0,
