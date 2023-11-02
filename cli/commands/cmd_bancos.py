@@ -9,6 +9,7 @@ import click
 from lib.safe_string import safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
+from perseo.extensions import database
 
 BANCOS_CSV = "seed/bancos.csv"
 
@@ -54,4 +55,41 @@ def alimentar():
     click.echo(f"Bancos terminado: {contador} bancos alimentados.")
 
 
+@click.command()
+def reiniciar_consecutivos_generados():
+    """Reiniciar los consecutivos generados de cada banco con el consecutivo"""
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Bucle por todos los bancos
+    contador = 0
+    for banco in Banco.query.filter_by(estatus="A").all():
+        # Si son diferentes
+        if banco.consecutivo_generado != banco.consecutivo:
+            # Poner el valor de consecutivo generado con el de consecutivo
+            banco.consecutivo_generado = banco.consecutivo
+
+            # Guardar el banco
+            sesion.add(banco)
+
+            # Mostrar en pantalla el cambio
+            click.echo(f"- {banco.nombre} ({banco.consecutivo_generado})")
+
+            # Incrementar el contador
+            contador += 1
+
+    # Si no hubo cambios
+    if contador == 0:
+        click.echo("No hubo necesidad de reiniciar ningun consecutivo_generado.")
+        return
+
+    # Actualizar los consecutivos_generados de cada banco
+    sesion.commit()
+
+    # Mensaje de termino
+    click.echo(f"{contador} consecutivos generados reiniciados.")
+
+
 cli.add_command(alimentar)
+cli.add_command(reiniciar_consecutivos_generados)

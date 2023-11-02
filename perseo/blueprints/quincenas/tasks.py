@@ -4,9 +4,12 @@ Quincenas, tareas en el fondo
 import re
 from datetime import datetime
 
+import pytz
 from openpyxl import Workbook
 
+from config.settings import get_settings
 from lib.safe_string import QUINCENA_REGEXP
+from lib.storage import GoogleCloudStorage, NotAllowedExtesionError, NotConfiguredError, UnknownExtensionError
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
@@ -17,6 +20,9 @@ from perseo.extensions import database
 app = create_app()
 app.app_context().push()
 database.app = app
+
+GCS_BASE_DIRECTORY = "quincenas"
+TIMEZONE = "America/Mexico_City"
 
 
 def cerrar() -> None:
@@ -61,6 +67,8 @@ def cerrar() -> None:
             banco.consecutivo = banco.consecutivo_generado
             sesion.add(banco)
             bancos_actualizados.append(f"{banco.nombre} ({antes} -> {ahora})")
+
+    # TODO: Actualizar en cada registro de nominas el numero de cheque
 
     # Hacer commit de los cambios en la base de datos
     sesion.commit()
@@ -191,11 +199,47 @@ def generar_nominas(quincena: str) -> None:
     # Actualizar los consecutivos de cada banco
     sesion.commit()
 
+    # Obtener la configuracion
+    settings = get_settings()
+
+    # Determinar la fecha y tiempo actual en la zona horaria de Mexico
+    ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
+
     # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
-    nombre_archivo = f"nominas_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"nominas_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
+
+    # Inicializar Google Cloud Storage
+    gcstorage = GoogleCloudStorage(
+        base_directory=GCS_BASE_DIRECTORY,
+        upload_date=ahora.date(),
+        allowed_extensions=["xlsx"],
+        month_in_word=False,
+        bucket_name=settings.GOOGLE_CLOUD_STORAGE,
+    )
+
+    # Subir a Google Cloud Storage
+    # es_exitoso = True
+    # try:
+    #     gcstorage.set_filename(hashed_id=lista_de_acuerdo.encode_id(), description=descripcion)
+    #     gcstorage.upload(archivo.stream.read())
+    # except NotConfiguredError:
+    #     flash("Error al subir el archivo porque falla la configuración.", "danger")
+    #     es_exitoso = False
+    # except Exception:
+    #     flash("Error al subir el archivo.", "danger")
+    #     es_exitoso = False
+
+    # Si se sube con exito, actualizar el registro con la URL del archivo y mostrar el detalle
+    # if es_exitoso:
+    #     lista_de_acuerdo.archivo = gcstorage.filename
+    #     lista_de_acuerdo.url = gcstorage.url
+    #     lista_de_acuerdo.save()
+    #     bitacora = new_success(lista_de_acuerdo, anterior_borrada)
+    #     flash(bitacora.descripcion, "success")
+    #     return redirect(bitacora.url)
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     mensajes_str = ""
