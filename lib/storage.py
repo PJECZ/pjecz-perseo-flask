@@ -113,29 +113,16 @@ import locale
 import re
 from datetime import date, datetime
 from pathlib import Path
+from typing import Any
 
 from flask import current_app
 from google.cloud import storage
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
+from lib.exceptions import MyFilenameError, MyNotAllowedExtensionError, MyUnknownExtensionError
+
 locale.setlocale(locale.LC_TIME, "es_MX.utf8")
-
-
-class NotAllowedExtesionError(Exception):
-    """Exception raised when the extension is not allowed"""
-
-
-class UnknownExtensionError(Exception):
-    """Exception raised when the extension is unknown"""
-
-
-class NoneFilenameError(Exception):
-    """Exception raised when the filename is None"""
-
-
-class NotConfiguredError(Exception):
-    """Exception raised when a environment variable is not configured"""
 
 
 class GoogleCloudStorage:
@@ -159,7 +146,7 @@ class GoogleCloudStorage:
         allowed_extensions: list = None,
         month_in_word: bool = False,
         bucket_name: str = None,
-    ):
+    ) -> None:
         """Storage constructor"""
         self.base_directory = base_directory
         if upload_date is None:
@@ -180,7 +167,7 @@ class GoogleCloudStorage:
         else:
             self.bucket_name = bucket_name
 
-    def set_content_type(self, original_filename: str):
+    def set_content_type(self, original_filename: str) -> str:
         """Set content type from original filename, casuses an error on wrong extension"""
         self.extension = None
         self.filename = None
@@ -188,30 +175,36 @@ class GoogleCloudStorage:
         self.content_type = None
         original_filename = secure_filename(original_filename)
         if "." not in original_filename:
-            raise NotAllowedExtesionError
+            raise MyNotAllowedExtensionError
         extension = original_filename.rsplit(".", 1)[1].lower()
         if extension not in self.allowed_extensions:
-            raise NotAllowedExtesionError
+            raise MyNotAllowedExtensionError
         try:
             self.content_type = self.EXTENSIONS_MIME_TYPES[extension]
         except KeyError as error:
-            raise UnknownExtensionError from error
+            raise MyUnknownExtensionError from error
         self.extension = extension
         return self.extension
 
-    def set_filename(self, hashed_id: str = "", description: str = "", max_length: int = 64, extension: str = None):
+    def set_filename(
+        self,
+        hashed_id: str = "",
+        description: str = "",
+        max_length: int = 64,
+        extension: str = None,
+    ) -> str:
         """Filename standarize, returns the filename"""
         self.filename = None
         if extension is not None:
             if extension not in self.allowed_extensions:
-                raise NotAllowedExtesionError
+                raise MyNotAllowedExtensionError
             try:
                 self.content_type = self.EXTENSIONS_MIME_TYPES[extension]
             except KeyError as error:
-                raise UnknownExtensionError from error
+                raise MyUnknownExtensionError from error
             self.extension = extension
         if self.extension is None:
-            raise UnknownExtensionError
+            raise MyUnknownExtensionError
         description = re.sub(r"[^a-zA-Z0-9()-]+", " ", unidecode(description)).upper()
         if len(description) > max_length:
             description = description[:max_length]
@@ -226,13 +219,13 @@ class GoogleCloudStorage:
             self.filename = f"{upload_date_str}-{description}-{hashed_id}.{self.extension}"
         return self.filename
 
-    def upload(self, data):
+    def upload(self, data: Any) -> str:
         """Upload to the cloud, returns the public URL"""
         self.url = None
         if self.filename is None:
-            raise NoneFilenameError
+            raise MyFilenameError
         if self.content_type is None:
-            raise UnknownExtensionError
+            raise MyUnknownExtensionError
         year_str = self.upload_date.strftime("%Y")
         if self.month_in_word:
             month_str = self.upload_date.strftime("%B")

@@ -27,12 +27,16 @@ class MyEmptyError(MyAnyError):
     """Excepción porque no hay resultados"""
 
 
-class MyFileNotAllowedError(MyAnyError):
-    """Excepción porque no se permite el tipo del archivo"""
+class MyFilenameError(MyAnyError):
+    """Exception raised when the filename is None"""
 
 
 class MyFileNotFoundError(MyAnyError):
     """Excepción porque no se encontró el archivo"""
+
+
+class MyFileNotAllowedError(MyAnyError):
+    """Excepción porque no se permite el tipo del archivo"""
 
 
 class MyIsDeletedError(MyAnyError):
@@ -40,7 +44,11 @@ class MyIsDeletedError(MyAnyError):
 
 
 class MyMissingConfigurationError(MyAnyError):
-    """Excepción porque falta configuración"""
+    """Exception raised when a environment variable is not configured"""
+
+
+class MyNotAllowedExtensionError(MyAnyError):
+    """Exception raised when the extension is not allowed"""
 
 
 class MyNotExistsError(MyAnyError):
@@ -69,6 +77,10 @@ class MyTimeoutError(MyAnyError):
 
 class MyUnknownError(MyAnyError):
     """Excepción porque hubo un error desconocido"""
+
+
+class MyUnknownExtensionError(MyAnyError):
+    """Exception raised when the extension is unknown"""
 
 
 class MyUploadError(MyAnyError):

@@ -201,8 +201,8 @@ def generar_nominas(quincena: str):
     bancos = Banco.query.filter_by(estatus="A").all()
 
     # Bucle para igualar el consecutivo_generado al consecutivo
-    for banco in bancos:
-        banco.consecutivo_generado = banco.consecutivo
+    # for banco in bancos:
+    #     banco.consecutivo_generado = banco.consecutivo
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
@@ -235,6 +235,10 @@ def generar_nominas(quincena: str):
     contador = 0
     personas_sin_cuentas = []
     for nomina in nominas:
+        # Si el modelo de la persona es 3, se omite porque otro generar se encarga de ellos
+        if nomina.persona.modelo == 3:
+            continue
+
         # Tomar las cuentas de la persona
         cuentas = nomina.persona.cuentas
 
@@ -417,6 +421,133 @@ def generar_monederos(quincena: str):
     click.echo(f"Nominas terminado: {contador} monederos generadas en {nombre_archivo}")
 
 
+@click.command()
+@click.argument("quincena", type=str)
+def generar_pensionados(quincena: str):
+    """Generar archivo XLSX con los pensionados de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida.")
+        return
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Cargar todos los bancos
+    bancos = Banco.query.filter_by(estatus="A").all()
+
+    # Bucle para igualar el consecutivo_generado al consecutivo
+    # for banco in bancos:
+    #     banco.consecutivo_generado = banco.consecutivo
+
+    # Consultar las nominas de la quincena, solo tipo SALARIO
+    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "QUINCENA",
+            "CENTRO DE TRABAJO",
+            "RFC",
+            "NOMBRE COMPLETO",
+            "NUMERO DE EMPLEADO",
+            "MODELO",
+            "PLAZA",
+            "NOMBRE DEL BANCO",
+            "BANCO ADMINISTRADOR",
+            "NUMERO DE CUENTA",
+            "MONTO A DEPOSITAR",
+            "NO DE CHEQUE",
+        ]
+    )
+
+    # Bucle para crear cada fila del archivo XLSX
+    contador = 0
+    personas_sin_cuentas = []
+    for nomina in nominas:
+        # Si el modelo de la persona NO es 3, se omite
+        if nomina.persona.modelo != 3:
+            continue
+
+        # Tomar las cuentas de la persona
+        cuentas = nomina.persona.cuentas
+
+        # Si no tiene cuentas, entonces se le crea una cuenta con el banco 10
+        if len(cuentas) == 0:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
+        su_cuenta = None
+        for cuenta in cuentas:
+            if cuenta.banco.clave != "9":
+                su_cuenta = cuenta
+                break
+
+        # Si no tiene cuenta bancaria, entonces se le crea una cuenta con el banco 10
+        if su_cuenta is None:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Tomar el banco de la cuenta de la persona
+        su_banco = su_cuenta.banco
+
+        # Incrementar la consecutivo del banco
+        su_banco.consecutivo_generado += 1
+
+        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
+        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
+
+        # Agregar la fila
+        hoja.append(
+            [
+                nomina.quincena,
+                nomina.centro_trabajo.clave,
+                nomina.persona.rfc,
+                nomina.persona.nombre_completo,
+                nomina.persona.num_empleado,
+                nomina.persona.modelo,
+                nomina.plaza.clave,
+                su_banco.nombre,
+                su_banco.clave,
+                su_cuenta.num_cuenta,
+                nomina.importe,
+                num_cheque,
+            ]
+        )
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(f"  Van {contador}...")
+
+    # Actualizar los consecutivos de cada banco
+    sesion.commit()
+
+    # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
+    nombre_archivo = f"pensionados_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo)
+
+    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    if len(personas_sin_cuentas) > 0:
+        click.echo("AVISO: Hubo personas sin cuentas:")
+        for persona in personas_sin_cuentas:
+            click.echo(f"- {persona.rfc} {persona.nombre_completo}")
+
+    # Mensaje termino
+    click.echo(f"Nominas terminado: {contador} pensionados generados en {nombre_archivo}")
+
+
 cli.add_command(alimentar)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
+cli.add_command(generar_pensionados)

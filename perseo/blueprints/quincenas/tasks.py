@@ -4,8 +4,10 @@ Quincenas, tareas en el fondo
 import re
 from datetime import datetime
 
+import pytz
 from openpyxl import Workbook
 
+from config.settings import get_settings
 from lib.safe_string import QUINCENA_REGEXP
 from lib.storage import GoogleCloudStorage, NotAllowedExtesionError, NotConfiguredError, UnknownExtensionError
 from lib.tasks import set_task_error, set_task_progress
@@ -18,6 +20,9 @@ from perseo.extensions import database
 app = create_app()
 app.app_context().push()
 database.app = app
+
+GCS_BASE_DIRECTORY = "quincenas"
+TIMEZONE = "America/Mexico_City"
 
 
 def cerrar() -> None:
@@ -194,20 +199,26 @@ def generar_nominas(quincena: str) -> None:
     # Actualizar los consecutivos de cada banco
     sesion.commit()
 
+    # Obtener la configuracion
+    settings = get_settings()
+
+    # Determinar la fecha y tiempo actual en la zona horaria de Mexico
+    ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
+
     # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
-    nombre_archivo = f"nominas_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"nominas_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
 
-    # Inicializar la liberia Google Cloud Storage con el directorio base, la fecha, las extensiones permitidas y los meses como palabras
-    # gcstorage = GoogleCloudStorage(
-    #     base_directory="nominas",
-    #     upload_date=fecha,
-    #     allowed_extensions=["xlsx"],
-    #     month_in_word=False,
-    #     bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
-    # )
+    # Inicializar Google Cloud Storage
+    gcstorage = GoogleCloudStorage(
+        base_directory=GCS_BASE_DIRECTORY,
+        upload_date=ahora.date(),
+        allowed_extensions=["xlsx"],
+        month_in_word=False,
+        bucket_name=settings.GOOGLE_CLOUD_STORAGE,
+    )
 
     # Subir a Google Cloud Storage
     # es_exitoso = True
