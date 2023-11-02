@@ -434,13 +434,6 @@ def generar_pensionados(quincena: str):
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
-    # Cargar todos los bancos
-    bancos = Banco.query.filter_by(estatus="A").all()
-
-    # Bucle para igualar el consecutivo_generado al consecutivo
-    # for banco in bancos:
-    #     banco.consecutivo_generado = banco.consecutivo
-
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
@@ -547,7 +540,121 @@ def generar_pensionados(quincena: str):
     click.echo(f"Nominas terminado: {contador} pensionados generados en {nombre_archivo}")
 
 
+@click.command()
+@click.argument("quincena", type=str)
+def generar_dispersiones_pensionados(quincena: str):
+    """Generar archivo XLSX con las dispersiones pensionados de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida.")
+        return
+
+    # TODO: Validar que la quincena este abierta
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar las nominas de la quincena, solo tipo SALARIO
+    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "CONSECUTIVO",
+            "FORMA DE PAGO",
+            "TIPO DE CUENTA",
+            "BANCO RECEPTOR",
+            "CUENTA ABONO",
+            "IMPORTE PAGO",
+            "CLAVE BENEFICIARIO",
+            "RFC",
+            "NOMBRE",
+            "REFERENCIA PAGO",
+            "CONCEPTO PAGO",
+        ]
+    )
+
+    # Bucle para crear cada fila del archivo XLSX
+    contador = 0
+    personas_sin_cuentas = []
+    for nomina in nominas:
+        # Si el modelo de la persona NO es 3, se omite
+        if nomina.persona.modelo != 3:
+            continue
+
+        # Tomar las cuentas de la persona
+        cuentas = nomina.persona.cuentas
+
+        # Si no tiene cuentas, entonces se le crea una cuenta con el banco 10
+        if len(cuentas) == 0:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
+        su_cuenta = None
+        for cuenta in cuentas:
+            if cuenta.banco.clave != "9":
+                su_cuenta = cuenta
+                break
+
+        # Si no tiene cuenta bancaria, entonces se le crea una cuenta con el banco 10
+        if su_cuenta is None:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Definir referencia_pago, se forma con los dos ultimos caracteres y los caracteres tercero y cuarto de la quincena
+        referencia_pago = f"{quincena[-2:]}{quincena[2:4]}"
+
+        # Definir concepto_pago, se forma con el texto "QUINCENA {dos digitos} PENSIONADOS"
+        concepto_pago = f"QUINCENA {quincena[-2:]} PENSIONADOS"
+
+        # Agregar la fila
+        hoja.append(
+            [
+                contador + 1,
+                "04",
+                "9",
+                su_cuenta.banco.clave_dispersion_pensionados,
+                su_cuenta.num_cuenta,
+                nomina.importe,
+                contador + 1,
+                nomina.persona.rfc,
+                nomina.persona.nombre_completo,
+                referencia_pago,
+                concepto_pago,
+            ]
+        )
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(f"  Van {contador}...")
+
+    # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
+    nombre_archivo = f"dispersiones_pensionados_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo)
+
+    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    if len(personas_sin_cuentas) > 0:
+        click.echo("AVISO: Hubo personas sin cuentas:")
+        for persona in personas_sin_cuentas:
+            click.echo(f"- {persona.rfc} {persona.nombre_completo}")
+
+    # Mensaje termino
+    click.echo(f"Nominas terminado: {contador} dispersiones pensionados generados en {nombre_archivo}")
+
+
 cli.add_command(alimentar)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)
+cli.add_command(generar_dispersiones_pensionados)

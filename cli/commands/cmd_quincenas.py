@@ -53,9 +53,13 @@ def cerrar():
     # Igualar los consecutivos a los consecutivos_generado de los bancos
     for banco in Banco.query.filter_by(estatus="A").all():
         if banco.consecutivo != banco.consecutivo_generado:
+            antes = banco.consecutivo
+            ahora = banco.consecutivo_generado
             banco.consecutivo = banco.consecutivo_generado
             sesion.add(banco)
-            click.echo(f"  Consecutivo de {banco.nombre} ahora es {banco.consecutivo}")
+            click.echo(f"  {banco.nombre} ({antes} -> {ahora})")
+
+    # TODO: Actualizar en cada registro de nominas el numero de cheque
 
     # Hacer commit de los cambios en la base de datos
     sesion.commit()
