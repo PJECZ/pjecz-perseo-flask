@@ -7,6 +7,7 @@ from datetime import datetime
 from openpyxl import Workbook
 
 from lib.safe_string import QUINCENA_REGEXP
+from lib.storage import GoogleCloudStorage, NotAllowedExtesionError, NotConfiguredError, UnknownExtensionError
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
@@ -196,6 +197,36 @@ def generar_nominas(quincena: str) -> None:
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
+
+    # Inicializar la liberia Google Cloud Storage con el directorio base, la fecha, las extensiones permitidas y los meses como palabras
+    # gcstorage = GoogleCloudStorage(
+    #     base_directory="nominas",
+    #     upload_date=fecha,
+    #     allowed_extensions=["xlsx"],
+    #     month_in_word=False,
+    #     bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+    # )
+
+    # Subir a Google Cloud Storage
+    # es_exitoso = True
+    # try:
+    #     gcstorage.set_filename(hashed_id=lista_de_acuerdo.encode_id(), description=descripcion)
+    #     gcstorage.upload(archivo.stream.read())
+    # except NotConfiguredError:
+    #     flash("Error al subir el archivo porque falla la configuración.", "danger")
+    #     es_exitoso = False
+    # except Exception:
+    #     flash("Error al subir el archivo.", "danger")
+    #     es_exitoso = False
+
+    # Si se sube con exito, actualizar el registro con la URL del archivo y mostrar el detalle
+    # if es_exitoso:
+    #     lista_de_acuerdo.archivo = gcstorage.filename
+    #     lista_de_acuerdo.url = gcstorage.url
+    #     lista_de_acuerdo.save()
+    #     bitacora = new_success(lista_de_acuerdo, anterior_borrada)
+    #     flash(bitacora.descripcion, "success")
+    #     return redirect(bitacora.url)
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     mensajes_str = ""
