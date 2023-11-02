@@ -80,37 +80,40 @@ poetry install
 
 ## Configuración
 
-Crear un archivo `.env` en la raíz del proyecto con las variables
+Crear un archivo `.env` en la raíz del proyecto con las variables, establecer sus propios SECRET_KEY, DB_PASS, CLOUD_STORAGE_DEPOSITO y SALT.
 
 ```bash
 # Flask
 FLASK_APP=perseo.app
 FLASK_DEBUG=1
-SECRET_KEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+SECRET_KEY=XXXXXXXX
 
 # Database
 DB_HOST=127.0.0.1
-DB_PORT=5432
+DB_PORT=8432
 DB_NAME=pjecz_perseo
 DB_USER=adminpjeczperseo
 DB_PASS=XXXXXXXX
-SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczperseo:XXXXXXXX@127.0.0.1:5432/pjecz_perseo"
+SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczperseo:XXXXXXXX@127.0.0.1:8432/pjecz_perseo"
+
+# Google Cloud Storage
+CLOUD_STORAGE_DEPOSITO=XXXXXXXX
 
 # Host
-HOST=http://localhost:5000
+HOST=http://localhost:5011
 
 # Redis
-REDIS_URL=redis://127.0.0.1
+REDIS_URL=redis://127.0.0.1:8379
 TASK_QUEUE=pjecz_perseo
 
-# Salt sirve para cifrar el ID con HashID, debe ser igual en la API
-SALT=XXXXXXXXXXXXXXXX
+# Salt sirve para cifrar el ID con HashID
+SALT=XXXXXXXX
 
 # Si esta en PRODUCTION se evita reiniciar la base de datos
 DEPLOYMENT_ENVIRONMENT=develop
 
 # Directorio donde se encuentran las quincenas y sus respectivos archivos de explotacion
-EXPLOTACION_BASE_DIR=/home/USUARIO/Descargas/NOMINAS
+EXPLOTACION_BASE_DIR=/home/guivaloz/Downloads/NOMINAS
 ```
 
 Crear un archivo `.bashrc` que se ejecute al iniciar la terminal
@@ -133,6 +136,7 @@ if [ -f .env ]
 then
     echo "-- Variables de entorno"
     export $(grep -v '^#' .env | xargs)
+    echo "   CLOUD_STORAGE_DEPOSITO: ${CLOUD_STORAGE_DEPOSITO}"
     echo "   DB_HOST: ${DB_HOST}"
     echo "   DB_PORT: ${DB_PORT}"
     echo "   DB_NAME: ${DB_NAME}"
@@ -175,6 +179,26 @@ then
         alias cli="python3 ${PWD}/cli/app.py"
         echo "   cli --help"
         echo
+        echo "-- Recargar datos de prueba"
+        function recargar() {
+            export CLI="python3 ${PWD}/cli/app.py"
+            $CLI db reiniciar
+            $CLI conceptos alimentar
+            $CLI bancos alimentar
+            $CLI percepciones_deducciones alimentar 202317
+            $CLI percepciones_deducciones alimentar 202318
+            $CLI percepciones_deducciones alimentar 202319
+            $CLI percepciones_deducciones alimentar 202320
+            $CLI nominas alimentar 202317
+            $CLI nominas alimentar 202318
+            $CLI nominas alimentar 202319
+            $CLI nominas alimentar 202320
+            $CLI cuentas alimentar-bancarias 202320
+            $CLI cuentas alimentar-monederos 202320
+        }
+        export -f recargar
+        echo "   recargar"
+        echo
     fi
 fi
 ```
@@ -187,7 +211,15 @@ Antes de usar el CLI o de arrancar el servidor de **Flask** debe cargar las vari
 . .bashrc
 ```
 
-## Base de datos
+## Recargar base de datos de un solo comando
+
+En `.bashrc` se encuentra la función `recargar` que ejecuta el **CLI** para reiniciar la base de datos y alimentarla con los datos de prueba de dos meses. Siempre que haya los archivos necesarios en el directorio `seed` y en el directorio `EXPLOTACION_BASE_DIR`.
+
+```bash
+recargar
+```
+
+## Preparar base de datos paso a paso
 
 Previamente debe crear el directorio `seed` y colocar allí los archivos `.csv` para alimentar las tablas principales.
 
