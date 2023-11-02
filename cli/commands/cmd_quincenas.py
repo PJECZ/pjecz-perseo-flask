@@ -4,6 +4,7 @@ CLI Quincenas
 import click
 
 from perseo.app import create_app
+from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.extensions import database
 
@@ -19,7 +20,7 @@ def cli():
 
 @click.command()
 def cerrar():
-    """Cerrar las quincenas con estado ABIERTA, a exepcion de la ultima quincena"""
+    """Cerrar TODAS las quincenas con estado ABIERTA"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -35,9 +36,6 @@ def cerrar():
     # Inicializar contador de cambios
     contador = 0
 
-    # Separar la ultima quincena de las demas
-    ultima_quincena = quincenas.pop()
-
     # Bucle por las quincenas
     for quincena_obj in quincenas:
         # Si la quincena esta abierta, cerrarla
@@ -47,20 +45,22 @@ def cerrar():
             click.echo(f"  Quincena {quincena_obj.quincena} ahora esta CERRADA")
             contador += 1
 
-    # Si la ultima quincena esta cerrada, abrirla
-    if ultima_quincena.estado == "CERRADA":
-        ultima_quincena.estado = "ABIERTA"
-        sesion.add(ultima_quincena)
-        click.echo(f"  Quincena {ultima_quincena.quincena} ahora esta ABIERTA")
-        contador += 1
+    # Si no hubo cambios, mostrar mensaje y salir
+    if contador == 0:
+        click.echo("Quincenas terminado: No se hicieron cambios")
+        return
+
+    # Igualar los consecutivos a los consecutivos_generado de los bancos
+    for banco in Banco.query.filter_by(estatus="A").all():
+        if banco.consecutivo != banco.consecutivo_generado:
+            banco.consecutivo = banco.consecutivo_generado
+            sesion.add(banco)
+            click.echo(f"  Consecutivo de {banco.nombre} ahora es {banco.consecutivo}")
 
     # Hacer commit de los cambios en la base de datos
     sesion.commit()
 
     # Mostrar mensaje de termino, si no hubo cambios o la cantidad de los mismos
-    if contador == 0:
-        click.echo("Quincenas terminado: No se hicieron cambios")
-        return
     click.echo(f"Quincenas terminado: {contador} cambios")
 
 

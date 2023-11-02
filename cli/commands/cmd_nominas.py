@@ -191,19 +191,21 @@ def generar_nominas(quincena: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena) is None:
-        click.echo("Quincena inválida")
+        click.echo("Quincena inválida.")
         return
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
-    # Cargar todos los bancos y cambiar su consecutivo_generado al consecutivo
+    # Cargar todos los bancos
     bancos = Banco.query.filter_by(estatus="A").all()
+
+    # Bucle para igualar el consecutivo_generado al consecutivo
     for banco in bancos:
         banco.consecutivo_generado = banco.consecutivo
 
-    # Consultar las nominas de la quincena
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(estatus="A").all()
+    # Consultar las nominas de la quincena, solo tipo SALARIO
+    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -233,10 +235,6 @@ def generar_nominas(quincena: str):
     contador = 0
     personas_sin_cuentas = []
     for nomina in nominas:
-        # Tomar solo nominas de tipo SALARIO, para omitir las de tipo DESPENSA
-        if nomina.tipo != Nomina.TIPOS["SALARIO"]:
-            continue
-
         # Tomar las cuentas de la persona
         cuentas = nomina.persona.cuentas
 
@@ -330,7 +328,7 @@ def generar_monederos(quincena: str):
     # Igualar el consecutivo_generado al consecutivo
     banco.consecutivo_generado = banco.consecutivo
 
-    # Consultar las nominas de la quincena con estado DESPENSA
+    # Consultar las nominas de la quincena solo tipo DESPENSA
     nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
@@ -376,17 +374,11 @@ def generar_monederos(quincena: str):
             personas_sin_cuentas.append(nomina.persona)
             continue
 
-        # Si num_cuenta es 16 ceros, entonces NO se incrementa el consecutivo del banco, pero si se agrega
-        if su_cuenta.num_cuenta != "0" * 16:
-            # Incrementar la consecutivo del banco
-            banco.consecutivo_generado += 1
+        # Incrementar el consecutivo_generado del banco
+        banco.consecutivo_generado += 1
 
-            # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
-            num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{banco.consecutivo_generado:07}"
-
-        else:
-            # El num_cheque es vacio porque no se la va a depositar
-            num_cheque = ""
+        # Elaborar el numero de cheque, juntando la clave del banco y el consecutivo_generado, siempre de 9 digitos
+        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{banco.consecutivo_generado:07}"
 
         # Agregar la fila
         hoja.append(
@@ -406,7 +398,7 @@ def generar_monederos(quincena: str):
         if contador % 100 == 0:
             click.echo(f"  Van {contador}...")
 
-    # Actualizar los consecutivos de cada banco
+    # Actualizar los consecutivo_generado de cada banco
     sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'monederos' con la quincena y la fecha como YYYY-MM-DD HHMMSS
