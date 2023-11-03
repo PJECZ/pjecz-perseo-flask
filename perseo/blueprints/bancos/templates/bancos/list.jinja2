@@ -10,9 +10,9 @@
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('bancos.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('bancos.list_active')) }}{% endif %}
         {% endif %}
-        {# if current_user.can_insert('BANCOS') %}
+        {% if current_user.can_insert('BANCOS') %}
             {{ topbar.button_new('Nuevo Banco', url_for('bancos.new')) }}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -23,6 +23,7 @@
                 <tr>
                     <th>Nombre</th>
                     <th>Clave</th>
+                    <th>Clave D. P.</th>
                     <th>Consecutivo</th>
                     <th>C. Temporal</th>
                 </tr>
@@ -39,6 +40,7 @@
         configDataTable['columns'] = [
             { data: 'detalle' },
             { data: 'clave' },
+            { data: 'clave_dispersion_pensionados' },
             { data: 'consecutivo' },
             { data: 'consecutivo_generado' }
         ];

@@ -3,7 +3,7 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Persona + {{ persona.rfc }}{% endblock %}
+{% block title %}Persona {{ persona.rfc }}{% endblock %}
 
 {% block topbar_actions %}
     {% call topbar.page_buttons('Persona ' + persona.rfc) %}

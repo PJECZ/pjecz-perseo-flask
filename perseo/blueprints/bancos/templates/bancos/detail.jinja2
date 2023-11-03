@@ -3,14 +3,14 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Banco + {{ banco.nombre }}{% endblock %}
+{% block title %}Banco {{ banco.nombre }}{% endblock %}
 
 {% block topbar_actions %}
     {% call topbar.page_buttons('Banco ' + banco.nombre) %}
         {{ topbar.button_previous('Bancos', url_for('bancos.list_active')) }}
-        {# if current_user.can_edit('BANCOS') %}
+        {% if current_user.can_edit('BANCOS') %}
             {{ topbar.button_edit('Editar', url_for('bancos.edit', banco_id=banco.id)) }}
-        {% endif #}
+        {% endif %}
         {# if current_user.can_admin('BANCOS') %}
             {% if banco.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('bancos.delete', banco_id=banco.id)) }}{% endif %}
             {% if banco.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('bancos.recover', banco_id=banco.id)) }}{% endif %}
@@ -22,6 +22,7 @@
     {% call detail.card(estatus=banco.estatus) %}
         {{ detail.label_value_big('Nombre', banco.nombre) }}
         {{ detail.label_value('Clave', banco.clave) }}
+        {{ detail.label_value('Clave dispersiones pensionados', banco.clave_dispersion_pensionados) }}
         {{ detail.label_value('Consecutivo', banco.consecutivo) }}
         {{ detail.label_value('Consecutivo temporal', banco.consecutivo_generado) }}
         {{ detail.label_value('Creado', moment(banco.creado, local=True).format('DD MMM YYYY')) }}

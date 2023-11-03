@@ -7,7 +7,7 @@
       "{% import 'macros/form.jinja2' as f with context %}",
       "{% import 'macros/topbar.jinja2' as topbar %}",
       "",
-      "{% block title %}Editar ${1:Titulo}{% endblock %}",
+      "{% block title %}Editar ${1:Titulo} {{ ${2:instancia}.${3:nombre_o_descripcion} }}{% endblock %}",
       "",
       "{% block topbar_actions %}",
       "\t{% call topbar.page_buttons('Editar ' + ${2:instancia}.${3:nombre_o_descripcion}) %}",
