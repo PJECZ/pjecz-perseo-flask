@@ -7,9 +7,10 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_rfc, safe_string
+from lib.safe_string import safe_clave, safe_message, safe_rfc, safe_string
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.cuentas.forms import CuentaEditForm, CuentaNewWithPersonaForm
 from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
@@ -101,3 +102,97 @@ def detail(cuenta_id):
     """Detalle de un cuenta"""
     cuenta = Cuenta.query.get_or_404(cuenta_id)
     return render_template("cuentas/detail.jinja2", cuenta=cuenta)
+
+
+@cuentas.route("/cuentas/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_persona(persona_id):
+    """Nueva Cuenta con Persona"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = CuentaNewWithPersonaForm()
+    if form.validate_on_submit():
+        banco = Banco.query.get_or_404(form.banco.data)
+        cuenta = Cuenta(
+            banco=banco,
+            persona=persona,
+            num_cuenta=safe_clave(form.num_cuenta.data, only_digits=True, separator=""),
+        )
+        cuenta.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nueva Cuenta de {persona.rfc} en {banco.nombre} - {cuenta.num_cuenta}"),
+            url=url_for("cuentas.detail", cuenta_id=cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.persona_rfc.data = persona.rfc  # Solo lectura
+    form.persona_nombre.data = persona.nombre_completo  # Solo lectura
+    return render_template(
+        "cuentas/new_with_persona.jinja2",
+        form=form,
+        persona=persona,
+        titulo=f"Nueva Cuenta para {persona.rfc}",
+    )
+
+
+@cuentas.route("/cuentas/edicion/<int:cuenta_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(cuenta_id):
+    """Editar Cuenta"""
+    cuenta = Cuenta.query.get_or_404(cuenta_id)
+    form = CuentaEditForm()
+    if form.validate_on_submit():
+        cuenta.num_cuenta = safe_clave(form.num_cuenta.data, only_digits=True, separator="")
+        cuenta.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editada Cuenta de {cuenta.persona.rfc} en {cuenta.banco.nombre} {cuenta.num_cuenta}"),
+            url=url_for("cuentas.detail", cuenta_id=cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.banco_nombre.data = cuenta.banco.nombre  # Solo lectura
+    form.persona_rfc.data = cuenta.persona.rfc  # Solo lectura
+    form.persona_nombre.data = cuenta.persona.nombre_completo  # Solo lectura
+    form.num_cuenta.data = cuenta.num_cuenta
+    return render_template("cuentas/edit.jinja2", form=form, cuenta=cuenta)
+
+
+@cuentas.route("/cuentas/eliminar/<int:cuenta_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(cuenta_id):
+    """Eliminar Cuenta"""
+    cuenta = Cuenta.query.get_or_404(cuenta_id)
+    if cuenta.estatus == "A":
+        cuenta.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Cuenta de {cuenta.persona.rfc} en {cuenta.banco.nombre} {cuenta.num_cuenta}"),
+            url=url_for("cuentas.detail", cuenta_id=cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("cuentas.detail", cuenta_id=cuenta.id))
+
+
+@cuentas.route("/cuentas/recuperar/<int:cuenta_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(cuenta_id):
+    """Recuperar Cuenta"""
+    cuenta = Cuenta.query.get_or_404(cuenta_id)
+    if cuenta.estatus == "B":
+        cuenta.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperada Cuenta de {cuenta.persona.rfc} en {cuenta.banco.nombre} {cuenta.num_cuenta}"),
+            url=url_for("cuentas.detail", cuenta_id=cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("cuentas.detail", cuenta_id=cuenta.id))

@@ -11,10 +11,10 @@
         {% if current_user.can_edit('BANCOS') %}
             {{ topbar.button_edit('Editar', url_for('bancos.edit', banco_id=banco.id)) }}
         {% endif %}
-        {# if current_user.can_admin('BANCOS') %}
+        {% if current_user.can_admin('BANCOS') %}
             {% if banco.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('bancos.delete', banco_id=banco.id)) }}{% endif %}
             {% if banco.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('bancos.recover', banco_id=banco.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -27,9 +27,46 @@
         {{ detail.label_value('Consecutivo temporal', banco.consecutivo_generado) }}
         {{ detail.label_value('Creado', moment(banco.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    {% if current_user.can_view('CUENTAS') %}
+        {% call detail.card('Cuentas') %}
+            <table id="cuentas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>RFC</th>
+                        <th>Nombre completo</th>
+                        <th>No. de cuenta</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('CUENTAS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/cuentas/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'banco_id': {{ banco.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'persona_rfc' },
+                { data: 'persona_nombre_completo' },
+                { data: 'num_cuenta' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                }
+            ];
+            $('#cuentas_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
     {% if current_user.can_admin('BANCOS') %}
         {% if banco.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + banco.clave + '?') }}{% endif %}
         {% if banco.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + banco.clave + '?') }}{% endif %}
