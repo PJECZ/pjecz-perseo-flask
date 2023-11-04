@@ -2,25 +2,27 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Editar Percepción Deducción {{ percepcion_deduccion.id }}{% endblock %}
+{% block title %}Editar Nómina {{ nomina.id }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar Percepción Deducción ' + percepcion_deduccion.id | string) %}
+    {% call topbar.page_buttons('Editar ' + nomina.id) %}
         {{ topbar.button_cancel() }}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% set form_kwargs = {'percepcion_deduccion_id': percepcion_deduccion.id} %}
-        {% call f.form_tag('percepciones_deducciones.edit', fid='percepcion_deduccion_form', **form_kwargs) %}
+        {% set form_kwargs = {'nomina_id': nomina.id} %}
+        {% call f.form_tag('nominas.edit', fid='nomina_form', **form_kwargs) %}
             {% call f.form_group(form.quincena, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_rfc, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
             {% call f.form_group(form.centro_trabajo_clave, readonly=true) %}{% endcall %}
             {% call f.form_group(form.plaza_clave, readonly=true) %}{% endcall %}
-            {% call f.form_group(form.concepto) %}{% endcall %}
+            {% call f.form_group(form.percepcion) %}{% endcall %}
+            {% call f.form_group(form.deduccion) %}{% endcall %}
             {% call f.form_group(form.importe) %}{% endcall %}
+            {% call f.form_group(form.tipo) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}

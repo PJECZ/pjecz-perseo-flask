@@ -2,20 +2,19 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Editar Plaza {{ plaza.clave }}{% endblock %}
+{% block title %}Nueva Quincena{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar ' + plaza.clave) %}
+    {% call topbar.page_buttons('Nueva Quincena') %}
         {{ topbar.button_cancel() }}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% set form_kwargs = {'plaza_id': plaza.id} %}
-        {% call f.form_tag('plazas.edit', fid='plaza_form', **form_kwargs) %}
-            {% call f.form_group(form.clave) %}{% endcall %}
-            {% call f.form_group(form.descripcion) %}{% endcall %}
+        {% call f.form_tag('quincenas.new', fid='quincena_form') %}
+            {% call f.form_group(form.quincena) %}{% endcall %}
+            {% call f.form_group(form.estado) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}

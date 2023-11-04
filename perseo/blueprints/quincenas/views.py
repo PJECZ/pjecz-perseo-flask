@@ -7,8 +7,11 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_quincena
+from lib.safe_string import safe_message, safe_quincena
+from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.quincenas.forms import QuincenaForm
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -97,3 +100,110 @@ def close():
     current_user.launch_task(comando="quincenas.tasks.cerrar", mensaje="Lanzando cerrar quincenas...")
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     return redirect(url_for("quincenas.list_active"))
+
+
+@quincenas.route("/quincenas/edicion/<int:quincena_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(quincena_id):
+    """Editar Quincena"""
+    quincena = Quincena.query.get_or_404(quincena_id)
+    form = QuincenaForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Validar la quincena con safe_quincena
+        try:
+            quincena_str = safe_quincena(form.quincena.data)
+        except ValueError:
+            flash("Quincena inválida", "warning")
+            es_valido = False
+        # Si cambia la quincena, verificar que no este en uso
+        if quincena_str != quincena.quincena:
+            quincena_existente = Quincena.query.filter_by(quincena=quincena_str).first()
+            if quincena_existente and quincena_existente.id != quincena.id:
+                flash("La quincena ya está en uso. Debe de ser única.", "warning")
+                es_valido = False
+        # Si es valido actualizar
+        if es_valido:
+            quincena.estado = form.estado.data
+            quincena.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editada Quincena {quincena.quincena} con estado {quincena.estado}"),
+                url=url_for("quincenas.detail", quincena_id=quincena.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.quincena.data = quincena.quincena
+    form.estado.data = quincena.estado
+    return render_template("quincenas/edit.jinja2", form=form, quincena=quincena)
+
+
+@quincenas.route("/quincenas/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Quincena"""
+    form = QuincenaForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Validar la quincena con safe_quincena
+        try:
+            quincena_str = safe_quincena(form.quincena.data)
+        except ValueError:
+            flash("Quincena inválida", "warning")
+            es_valido = False
+        # Validar que quincena (6 digitos) no se repita
+        if Quincena.query.filter_by(quincena=quincena_str).first():
+            flash("La quincena ya está en uso. Debe de ser única.", "warning")
+            es_valido = False
+        # Si es valido, guardar
+        if es_valido:
+            quincena = Quincena(quincena=quincena_str, estado=form.estado.data)
+            quincena.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nueva Quincena {quincena.quincena} como {quincena.estado}"),
+                url=url_for("quincenas.detail", quincena_id=quincena.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    return render_template("quincenas/new.jinja2", form=form)
+
+
+@quincenas.route("/quincenas/eliminar/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(quincena_id):
+    """Eliminar Quincena"""
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus == "A":
+        quincena.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminada Quincena {quincena.quincena}"),
+            url=url_for("quincenas.detail", quincena_id=quincena.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+
+
+@quincenas.route("/quincenas/recuperar/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(quincena_id):
+    """Recuperar Quincena"""
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus == "B":
+        quincena.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperada Quincena {quincena.quincena}"),
+            url=url_for("quincenas.detail", quincena_id=quincena.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena.id))

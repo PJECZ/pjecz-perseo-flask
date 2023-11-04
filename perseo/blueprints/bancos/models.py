@@ -1,6 +1,7 @@
 """
 Bancos, modelos
 """
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -20,7 +21,7 @@ class Banco(database.Model, UniversalMixin):
     # Columnas
     clave = Column(String(2), unique=True, nullable=False)
     clave_dispersion_pensionados = Column(String(3), unique=True, nullable=False)
-    nombre = Column(String(256), nullable=False)
+    nombre = Column(String(256), unique=True, nullable=False)
     consecutivo = Column(Integer, nullable=False, default=0)
     consecutivo_generado = Column(Integer, nullable=False, default=0)
 

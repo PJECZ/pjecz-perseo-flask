@@ -2,10 +2,10 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Editar Autoridad{% endblock %}
+{% block title %}Editar Autoridad {{ autoridad.clave }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar ' + autoridad.descripcion) %}
+    {% call topbar.page_buttons('Editar ' + autoridad.clave) %}
         {{ topbar.button_cancel() }}
     {% endcall %}
 {% endblock %}

@@ -9,10 +9,10 @@ from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.roles.models import Rol
 
 NIVELES = [
-    (1, "VER"),
-    (2, "VER y MODIFICAR"),
-    (3, "VER, MODIFICAR y CREAR"),
-    (4, "ADMINISTRAR"),
+    (1, "1) Ver"),
+    (2, "2) Ver y Modificar"),
+    (3, "3) Ver, Modificar y Crear"),
+    (4, "4) ADMINISTRAR (Todos los anteriores más eliminar y recuperar)"),
 ]
 
 

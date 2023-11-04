@@ -38,7 +38,7 @@
       "{% import 'macros/modals.jinja2' as modals %}",
       "{% import 'macros/topbar.jinja2' as topbar %}",
       "",
-      "{% block title %}${1:Titulo} + {{ ${2:instancia}.${3:clave} }}{% endblock %}",
+      "{% block title %}${1:Titulo} {{ ${2:instancia}.${3:clave} }}{% endblock %}",
       "",
       "{% block topbar_actions %}",
       "\t{% call topbar.page_buttons('${1:Titulo} ' + ${2:instancia}.${3:clave}) %}",

@@ -8,13 +8,13 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Cuenta ' + cuenta.banco.nombre + ' ' + cuenta.num_cuenta) %}
         {{ topbar.button_previous('Cuentas', url_for('cuentas.list_active')) }}
-        {# if current_user.can_edit('CUENTAS') %}
+        {% if current_user.can_edit('CUENTAS') %}
             {{ topbar.button_edit('Editar', url_for('cuentas.edit', cuenta_id=cuenta.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('CUENTAS') %}
+        {% endif %}
+        {% if current_user.can_admin('CUENTAS') %}
             {% if cuenta.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('cuentas.delete', cuenta_id=cuenta.id)) }}{% endif %}
             {% if cuenta.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('cuentas.recover', cuenta_id=cuenta.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

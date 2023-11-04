@@ -3,7 +3,7 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Concepto + {{ concepto.clave }}{% endblock %}
+{% block title %}Concepto {{ concepto.clave }}{% endblock %}
 
 {% block topbar_actions %}
     {% call topbar.page_buttons('Concepto ' + concepto.clave) %}

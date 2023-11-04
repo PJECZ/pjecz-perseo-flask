@@ -11,7 +11,7 @@ from lib.safe_string import safe_clave, safe_message, safe_quincena, safe_rfc
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.modulos.models import Modulo
-from perseo.blueprints.percepciones_deducciones.forms import PercepcionDeduccionNewWithPersonaForm
+from perseo.blueprints.percepciones_deducciones.forms import PercepcionDeduccionEditForm
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.models import Persona
@@ -112,69 +112,31 @@ def detail(percepcion_deduccion_id):
     return render_template("percepciones_deducciones/detail.jinja2", percepcion_deduccion=percepcion_deduccion)
 
 
-@percepciones_deducciones.route("/percepciones_deducciones/nuevo_con_persona/<int:persona_id>", methods=["GET", "POST"])
-@permission_required(MODULO, Permiso.CREAR)
-def new_with_persona(persona_id):
-    """Nueva Percepcion Deduccion"""
-    persona = Persona.query.get_or_404(persona_id)
-    form = PercepcionDeduccionNewWithPersonaForm()
-    if form.validate_on_submit():
-        percepcion_deduccion = PercepcionDeduccion(
-            persona=persona,
-            centro_trabajo_id=form.centro_trabajo.data,
-            concepto_id=form.concepto.data,
-            plaza_id=form.plaza.data,
-            quincena=form.quincena.data,
-            importe=form.importe.data,
-        )
-        percepcion_deduccion.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nuevo Percepcion Deduccion {percepcion_deduccion.importe}"),
-            url=url_for("percepciones_deducciones.detail", percepcion_deduccion_id=percepcion_deduccion.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
-    form.persona_rfc.data = persona.rfc  # Solo lectura
-    form.persona_nombre_completo.data = persona.nombre_completo  # Solo lectura
-    return render_template(
-        "percepciones_deducciones/new_with_persona.jinja2",
-        titulo=f"Agregar Percepción-Deducción a {persona.rfc}",
-        form=form,
-        persona=persona,
-    )
-
-
 @percepciones_deducciones.route("/percepciones_deducciones/edicion/<int:percepcion_deduccion_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.MODIFICAR)
 def edit(percepcion_deduccion_id):
     """Editar Percepcion Deduccion"""
     percepcion_deduccion = PercepcionDeduccion.query.get_or_404(percepcion_deduccion_id)
-    form = PercepcionDeduccionNewWithPersonaForm()
+    form = PercepcionDeduccionEditForm()
     if form.validate_on_submit():
-        percepcion_deduccion.centro_trabajo_id = form.centro_trabajo.data
         percepcion_deduccion.concepto_id = form.concepto.data
-        percepcion_deduccion.plaza_id = form.plaza.data
-        percepcion_deduccion.quincena = form.quincena.data
         percepcion_deduccion.importe = form.importe.data
         percepcion_deduccion.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Editado Percepcion Deduccion {percepcion_deduccion.importe}"),
+            descripcion=safe_message(f"Editado Percepcion Deduccion {percepcion_deduccion.id}"),
             url=url_for("percepciones_deducciones.detail", percepcion_deduccion_id=percepcion_deduccion.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
+    form.quincena.data = percepcion_deduccion.quincena
     form.persona_rfc.data = percepcion_deduccion.persona.rfc  # Solo lectura
     form.persona_nombre_completo.data = percepcion_deduccion.persona.nombre_completo  # Solo lectura
-    form.centro_trabajo.data = percepcion_deduccion.centro_trabajo_id
+    form.centro_trabajo_clave.data = percepcion_deduccion.centro_trabajo.clave  # Solo lectura
+    form.plaza_clave.data = percepcion_deduccion.plaza.clave  # Solo lectura
     form.concepto.data = percepcion_deduccion.concepto_id
-    form.plaza.data = percepcion_deduccion.plaza_id
-    form.quincena.data = percepcion_deduccion.quincena
     form.importe.data = percepcion_deduccion.importe
     return render_template("percepciones_deducciones/edit.jinja2", form=form, percepcion_deduccion=percepcion_deduccion)
 

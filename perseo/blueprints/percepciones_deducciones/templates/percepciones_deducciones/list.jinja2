@@ -88,6 +88,11 @@
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.id + '</a>';
                 }
+            },
+            {
+                targets: 7, // importe
+                render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                className: "dt-body-right",
             }
         ];
         // Filtros percepciones-deducciones
