@@ -13,9 +13,9 @@
         {% if current_user.can_admin('QUINCENAS') %}
             {{ topbar.button('Cerrar Quincenas', url_for('quincenas.close'), 'mdi:stop') }}
         {% endif %}
-        {# if current_user.can_insert('QUINCENAS') %}
+        {% if current_user.can_insert('QUINCENAS') %}
             {{ topbar.button_new('Nueva Quincena', url_for('quincenas.new')) }}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

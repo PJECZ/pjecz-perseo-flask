@@ -3,30 +3,103 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Quincena + {{ quincena.quincena }}{% endblock %}
+{% block title %}Quincena {{ quincena.quincena }}{% endblock %}
 
 {% block topbar_actions %}
     {% call topbar.page_buttons('Quincena ' + quincena.quincena) %}
         {{ topbar.button_previous('Quincenas', url_for('quincenas.list_active')) }}
-        {# if current_user.can_edit('QUINCENA') %}
+        {% if current_user.can_edit('QUINCENAS') %}
             {{ topbar.button_edit('Editar', url_for('quincenas.edit', quincena_id=quincena.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('QUINCENA') %}
+        {% endif %}
+        {% if current_user.can_admin('QUINCENAS') %}
             {% if quincena.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('quincenas.delete', quincena_id=quincena.id)) }}{% endif %}
             {% if quincena.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('quincenas.recover', quincena_id=quincena.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle de la quincena -->
     {% call detail.card(estatus=quincena.estatus) %}
         {{ detail.label_value_big('Quincena', quincena.quincena) }}
         {{ detail.label_value('Estado', quincena.estado) }}
         {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Nominas de la quincena -->
+    {% if current_user.can_view('NOMINAS') %}
+        {% call detail.card('Nóminas') %}
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroPersonaRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                                <label for="filtroPersonaRFC">RFC</label>
+                            </div>
+                        </div>
+                        <div class="col-9 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <table id="nominas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>RFC</th>
+                        <th>Nombre completo</th>
+                        <th>Percepcion</th>
+                        <th>Deduccion</th>
+                        <th>Importe</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    {% if current_user.can_view('NOMINAS') %}
+        <script>
+            // Datatable nominas
+            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDataTable = constructorDataTable.config();
+            configDataTable['ajax']['url'] = '/nominas/datatable_json';
+            configDataTable['ajax']['data'] = { estatus: 'A', quincena: '{{ quincena.quincena }}' };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'persona_rfc' },
+                { data: 'persona_nombre_completo' },
+                { data: 'percepcion' },
+                { data: 'deduccion' },
+                { data: 'importe' },
+                { data: 'tipo' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: [3, 4, 5], // percepcion, deduccion, importe
+                    render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            // Filtros nominas
+            const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDataTable);
+            filtrosNominas.agregarInput('filtroPersonaRFC', 'persona_rfc');
+            filtrosNominas.precargar();
+        </script>
+    {% endif %}
     {% if current_user.can_admin('QUINCENA') %}
         {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.quincena + '?') }}{% endif %}
         {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.quincena + '?') }}{% endif %}

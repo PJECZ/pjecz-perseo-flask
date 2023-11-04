@@ -10,6 +10,7 @@ from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_message, safe_quincena, safe_rfc, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
+from perseo.blueprints.nominas.forms import NominaEditForm
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.models import Persona
@@ -79,11 +80,11 @@ def datatable_json():
 
 @nominas.route("/nominas")
 def list_active():
-    """Listado de Nominas activos"""
+    """Listado de Nóminas activas"""
     return render_template(
         "nominas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="Nominas",
+        titulo="Nóminas",
         estatus="A",
     )
 
@@ -91,11 +92,11 @@ def list_active():
 @nominas.route("/nominas/inactivos")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
-    """Listado de Nominas inactivos"""
+    """Listado de Nóminas inactivas"""
     return render_template(
         "nominas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Nominas inactivos",
+        titulo="Nóminas inactivas",
         estatus="B",
     )
 
@@ -105,3 +106,72 @@ def detail(nomina_id):
     """Detalle de un Nomina"""
     nomina = Nomina.query.get_or_404(nomina_id)
     return render_template("nominas/detail.jinja2", nomina=nomina)
+
+
+@nominas.route("/nominas/edicion/<int:nomina_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(nomina_id):
+    """Editar Nomina"""
+    nomina = Nomina.query.get_or_404(nomina_id)
+    form = NominaEditForm()
+    if form.validate_on_submit():
+        nomina.percepcion = safe_string(form.percepcion.data)
+        nomina.deduccion = safe_string(form.deduccion.data)
+        nomina.importe = safe_string(form.importe.data)
+        nomina.tipo = safe_string(form.tipo.data)
+        nomina.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Nomina {nomina.id}"),
+            url=url_for("nominas.detail", nomina_id=nomina.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.quincena.data = nomina.quincena
+    form.persona_rfc.data = nomina.persona.rfc  # Solo lectura
+    form.persona_nombre_completo.data = nomina.persona.nombre_completo  # Solo lectura
+    form.centro_trabajo_clave.data = nomina.centro_trabajo.clave  # Solo lectura
+    form.plaza_clave.data = nomina.plaza.clave  # Solo lectura
+    form.percepcion.data = nomina.percepcion
+    form.deduccion.data = nomina.deduccion
+    form.importe.data = nomina.importe
+    form.tipo.data = nomina.tipo
+    return render_template("nominas/edit.jinja2", form=form, nomina=nomina)
+
+
+@nominas.route("/nominas/eliminar/<int:nomina_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(nomina_id):
+    """Eliminar Nomina"""
+    nomina = Nomina.query.get_or_404(nomina_id)
+    if nomina.estatus == "A":
+        nomina.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Nomina {nomina.id}"),
+            url=url_for("nominas.detail", nomina_id=nomina.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("nominas.detail", nomina_id=nomina.id))
+
+
+@nominas.route("/nominas/recuperar/<int:nomina_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(nomina_id):
+    """Recuperar Nomina"""
+    nomina = Nomina.query.get_or_404(nomina_id)
+    if nomina.estatus == "B":
+        nomina.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Nomina {nomina.id}"),
+            url=url_for("nominas.detail", nomina_id=nomina.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("nominas.detail", nomina_id=nomina.id))

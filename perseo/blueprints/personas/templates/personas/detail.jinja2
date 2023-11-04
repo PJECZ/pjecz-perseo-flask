@@ -15,13 +15,11 @@
             {% if persona.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas.delete', persona_id=persona.id)) }}{% endif %}
             {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
         {% endif %}
-        {% if current_user.can_insert('PERCEPCIONES DEDUCCIONES') %}
-            {{ topbar.button_new('Nueva Percepción-Deducción', url_for('percepciones_deducciones.new_with_persona', persona_id=persona.id)) }}
-        {% endif %}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle de la persona -->
     {% call detail.card(estatus=persona.estatus) %}
         {{ detail.label_value_big('RFC', persona.rfc) }}
         {{ detail.label_value('Nombres', persona.nombres) }}
@@ -32,9 +30,9 @@
         {{ detail.label_value('Modelo', persona.modelo) }}
         {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Cuentas de la persona -->
     {% if current_user.can_view('CUENTAS') %}
         {% call detail.card('Cuentas') %}
-            <!-- Datatable cuentas -->
             <table id="cuentas_datatable" class="table display nowrap" style="width:100%">
                 <thead>
                     <tr>
@@ -49,6 +47,7 @@
             {% endif %}
         {% endcall %}
     {% endif %}
+    <!-- Nominas de la persona -->
     {% if current_user.can_view('NOMINAS') %}
         {% call detail.card('Nominas') %}
             <table id="nominas_datatable" class="table display nowrap" style="width:100%">
