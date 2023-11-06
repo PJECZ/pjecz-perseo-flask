@@ -23,7 +23,7 @@ class Persona(database.Model, UniversalMixin):
     apellido_primero = Column(String(256), nullable=False, index=True)
     apellido_segundo = Column(String(256), nullable=False, default="", index=True)
     curp = Column(String(18), nullable=False, default="")
-    modelo = Column(Integer, nullable=False, default=0)
+    modelo = Column(Integer, nullable=False, default=0, index=True)  # 1: Empleado, 2: Sindicato, 3: Jubilado, 4: Beneficiario
     num_empleado = Column(Integer, nullable=False, default=0)
 
     # Hijos

@@ -198,7 +198,7 @@ def generar_nominas(quincena: str):
     sesion = database.session
 
     # Cargar todos los bancos
-    bancos = Banco.query.filter_by(estatus="A").all()
+    # bancos = Banco.query.filter_by(estatus="A").all()
 
     # Bucle para igualar el consecutivo_generado al consecutivo
     # for banco in bancos:
@@ -235,7 +235,7 @@ def generar_nominas(quincena: str):
     contador = 0
     personas_sin_cuentas = []
     for nomina in nominas:
-        # Si el modelo de la persona es 3, se omite porque otro generar se encarga de ellos
+        # Si el modelo de la persona es 3, se omite
         if nomina.persona.modelo == 3:
             continue
 
@@ -551,9 +551,6 @@ def generar_dispersiones_pensionados(quincena: str):
         return
 
     # TODO: Validar que la quincena este abierta
-
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
