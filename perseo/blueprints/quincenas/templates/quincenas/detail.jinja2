@@ -19,12 +19,43 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Detalle de la quincena -->
-    {% call detail.card(estatus=quincena.estatus) %}
-        {{ detail.label_value_big('Quincena', quincena.quincena) }}
-        {{ detail.label_value('Estado', quincena.estado) }}
-        {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
-    {% endcall %}
+    <!-- Detalle y acciones -->
+    <div class="row">
+        <div class="col-4">
+            <!-- Detalle de la quincena -->
+            {% call detail.card(title='Detalle', estatus=quincena.estatus) %}
+                {{ detail.label_value('Estado', quincena.estado) }}
+                {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
+            {% endcall %}
+        </div>
+        <div class="col-4">
+            <!-- Generar nominas -->
+            <div class="card mb-4 rounded-3 shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title"><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas</h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas 2023-09-27 15:30</li>
+                        <li><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas 2023-09-27 13:40</li>
+                        <li><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas 2023-09-26 10:20</li>
+                    </ul>
+                    {{ modals.button_modal_big('Generar ' + quincena.quincena, url_for('nominas.generate_nominas', quincena_str=quincena.quincena), 'GenerateNominas', 'mdi:cash-fast', "¿Necesita generar un nuevo XLSX para nóminas?") }}
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <!-- Generar monederos -->
+            <div class="card mb-4 rounded-3 shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title"><span class="iconify" data-icon="mdi:cart"></span> Monederos</h1>
+                    <ul class="list-unstyled mt-3 mb-4">
+                        <li><span class="iconify" data-icon="mdi:cart"></span> Monederos2023-09-27 15:30</li>
+                        <li><span class="iconify" data-icon="mdi:cart"></span> Monederos2023-09-27 13:40</li>
+                    </ul>
+                    {{ modals.button_modal_big('Generar ' + quincena.quincena, url_for('nominas.generate_monederos', quincena_str=quincena.quincena), 'GenerateMonederos', 'mdi:cart', "¿Necesita generar un nuevo XLSX para monederos?") }}
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Nominas de la quincena -->
     {% if current_user.can_view('NOMINAS') %}
         {% call detail.card('Nóminas') %}
@@ -62,6 +93,8 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
+    {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     {% if current_user.can_view('NOMINAS') %}

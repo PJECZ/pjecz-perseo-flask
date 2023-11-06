@@ -21,6 +21,11 @@
     <a class="btn btn-sm btn-outline-success" href="javascript:void(0)" onclick="showModal{{ id }}('{{ url }}', '{{ message }}');"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
 {%- endmacro -%}
 
+{# Button modal #}
+{%- macro button_modal_big(label, url, id, icon, message) -%}
+    <a class="w-100 btn btn-lg btn-outline-primary" href="javascript:void(0)" onclick="showModal{{ id }}('{{ url }}', '{{ message }}');"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
 {# Modal #}
 {%- macro modal(title, message, id, onclick_js) -%}
     <div class="modal fade" id="modal{{ id }}" tabindex="-1" aria-labelledby="modal{{ id }}Label" aria-hidden="true">

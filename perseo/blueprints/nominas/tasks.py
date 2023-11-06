@@ -176,7 +176,7 @@ def generar_nominas(quincena: str) -> None:
     Path(LOCAL_BASE_DIRECTORY).mkdir(parents=True, exist_ok=True)
 
     # Guardar el archivo XLSX
-    libro.save(nombre_archivo_xlsx)
+    libro.save(archivo_xlsx)
 
     # Obtener la configuracion
     settings = get_settings()
@@ -196,7 +196,9 @@ def generar_nominas(quincena: str) -> None:
             )
             gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx)
             gcstorage.upload(archivo.read())
-            mensajes.append(f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}")
+            mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
+            mensajes.append(mensaje)
+            bitacora.info(mensaje)
         except MyAnyError as error:
             mensaje_error = str(error)
             set_task_error(mensaje_error)
@@ -342,8 +344,8 @@ def generar_monederos(quincena: str) -> None:
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
 
     # Determinar el nombre y ruta del archivo XLSX
-    nombre_archivo_xlsx = f"nominas_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
-    descripcion_archivo_xlsx = f"Nominas {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
+    nombre_archivo_xlsx = f"monederos_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    descripcion_archivo_xlsx = f"Monederos {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
     archivo_xlsx = Path(LOCAL_BASE_DIRECTORY, nombre_archivo_xlsx)
 
     # Si no existe la carpeta LOCAL_BASE_DIRECTORY, crearla
@@ -370,7 +372,9 @@ def generar_monederos(quincena: str) -> None:
             )
             gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx)
             gcstorage.upload(archivo.read())
-            mensajes.append(f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}")
+            mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
+            mensajes.append(mensaje)
+            bitacora.info(mensaje)
         except MyAnyError as error:
             mensaje_error = str(error)
             set_task_error(mensaje_error)
@@ -393,7 +397,7 @@ def generar_monederos(quincena: str) -> None:
 
 
 def generar_dispersiones_pensionados(quincena: str) -> None:
-    """Generar archivo XLSX con las dispersiones pensionados de una quincena"""
+    """Generar archivo XLSX con las dispersiones pensionados de una quincena CERRADA"""
 
     # Iniciar la tarea en el fondo
     set_task_progress(0, f"Generar archivo XLSX con las dispersiones pensionados de {quincena}...")
@@ -514,7 +518,7 @@ def generar_dispersiones_pensionados(quincena: str) -> None:
 
     # Determinar el nombre y ruta del archivo XLSX
     nombre_archivo_xlsx = f"dispersiones_pensionados_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
-    descripcion_archivo_xlsx = f"dispersiones pensionados {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
+    descripcion_archivo_xlsx = f"Dispersiones Pensionados {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
     archivo_xlsx = Path(LOCAL_BASE_DIRECTORY, nombre_archivo_xlsx)
 
     # Si no existe la carpeta LOCAL_BASE_DIRECTORY, crearla
@@ -541,7 +545,9 @@ def generar_dispersiones_pensionados(quincena: str) -> None:
             )
             gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx)
             gcstorage.upload(archivo.read())
-            mensajes.append(f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}")
+            mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
+            mensajes.append(mensaje)
+            bitacora.info(mensaje)
         except MyAnyError as error:
             mensaje = str(error)
             set_task_error(error)

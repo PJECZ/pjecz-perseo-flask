@@ -1,5 +1,6 @@
 {% extends 'layouts/app.jinja2' %}
 {% import 'macros/list.jinja2' as list %}
+{% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
 {% block title %}{{ titulo }}{% endblock %}
@@ -11,7 +12,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('quincenas.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_admin('QUINCENAS') %}
-            {{ topbar.button('Cerrar Quincenas', url_for('quincenas.close'), 'mdi:stop') }}
+            {{ modals.button_modal('Cerrar Quincenas', url_for('quincenas.close'), 'Close', 'mdi:stop', "¿Está seguro de cerrar todas las quincenas abiertas?") }}
         {% endif %}
         {% if current_user.can_insert('QUINCENAS') %}
             {{ topbar.button_new('Nueva Quincena', url_for('quincenas.new')) }}
@@ -20,49 +21,6 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Acciones -->
-    <div class="row">
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-body">
-                    <h1 class="card-title"><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas</h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>Primero</li>
-                        <li>Segundo</li>
-                        <li>Tercero</li>
-                    </ul>
-                    <button type="button" class="w-100 btn btn-lg btn-outline-primary">Generar XLSX</button>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-body">
-                    <h1 class="card-title"><span class="iconify" data-icon="mdi:cart"></span> Monederos</h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>Primero</li>
-                        <li>Segundo</li>
-                        <li>Tercero</li>
-                    </ul>
-                    <button type="button" class="w-100 btn btn-lg btn-outline-primary">Generar XLSX</button>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-body">
-                    <h1 class="card-title"><span class="iconify" data-icon="mdi:human-cane"></span> Pensiones</h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>Primero</li>
-                        <li>Segundo</li>
-                        <li>Tercero</li>
-                    </ul>
-                    <button type="button" class="w-100 btn btn-lg btn-outline-primary">Generar XLSX</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Datatable -->
     {% call list.card() %}
         <table id="quincenas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
@@ -76,6 +34,7 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ modals.custom_javascript('Cerrar Quincenas', '', 'Close') }}
     {{ list.config_datatable() }}
     <script>
         configDataTable['ajax']['url'] = '/quincenas/datatable_json';
