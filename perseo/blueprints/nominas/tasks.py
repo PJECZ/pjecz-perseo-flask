@@ -187,16 +187,18 @@ def generar_nominas(quincena: str) -> None:
     # Abrir el archivo XLSX para subirlo a Google Cloud Storage
     with open(archivo_xlsx, "rb") as archivo:
         try:
+            bitacora.info("Subiendo archivo a Bucket %s", settings.CLOUD_STORAGE_DEPOSITO)
             gcstorage = GoogleCloudStorage(
                 base_directory=GCS_BASE_DIRECTORY,
                 upload_date=ahora.date(),
                 allowed_extensions=["xlsx"],
                 month_in_word=False,
-                bucket_name=settings.GOOGLE_CLOUD_STORAGE,
+                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
             )
-            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx)
+            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx, extension="xlsx")
+            bitacora.info("Por depositar %s", gcs_nombre_archivo_xlsx)
             gcstorage.upload(archivo.read())
-            mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
+            mensaje = "Archivo depositado en GCS"
             mensajes.append(mensaje)
             bitacora.info(mensaje)
         except MyAnyError as error:
@@ -368,9 +370,9 @@ def generar_monederos(quincena: str) -> None:
                 upload_date=ahora.date(),
                 allowed_extensions=["xlsx"],
                 month_in_word=False,
-                bucket_name=settings.GOOGLE_CLOUD_STORAGE,
+                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
             )
-            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx)
+            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx, extension="xlsx")
             gcstorage.upload(archivo.read())
             mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
             mensajes.append(mensaje)
@@ -541,17 +543,17 @@ def generar_dispersiones_pensionados(quincena: str) -> None:
                 upload_date=ahora.date(),
                 allowed_extensions=["xlsx"],
                 month_in_word=False,
-                bucket_name=settings.GOOGLE_CLOUD_STORAGE,
+                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
             )
-            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx)
+            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx, extension="xlsx")
             gcstorage.upload(archivo.read())
             mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
             mensajes.append(mensaje)
             bitacora.info(mensaje)
         except MyAnyError as error:
-            mensaje = str(error)
-            set_task_error(error)
-            bitacora.error(mensaje)
+            mensaje_error = str(error)
+            set_task_error(mensaje_error)
+            bitacora.error(mensaje_error)
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     if len(personas_sin_cuentas) > 0:

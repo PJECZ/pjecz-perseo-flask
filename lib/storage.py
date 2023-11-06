@@ -204,7 +204,7 @@ class GoogleCloudStorage:
                 raise MyUnknownExtensionError from error
             self.extension = extension
         if self.extension is None:
-            raise MyUnknownExtensionError
+            raise MyUnknownExtensionError("Extension not set")
         description = re.sub(r"[^a-zA-Z0-9()-]+", " ", unidecode(description)).upper()
         if len(description) > max_length:
             description = description[:max_length]
