@@ -40,7 +40,7 @@ def datatable_json():
     if "usuario_id" in request.form:
         consulta = consulta.filter_by(usuario_id=request.form["usuario_id"])
     # Ordenar y paginar
-    registros = consulta.order_by(Tarea.id.desc()).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Tarea.creado.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []

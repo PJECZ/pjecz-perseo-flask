@@ -14,6 +14,7 @@ from perseo.blueprints.nominas.forms import NominaEditForm
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "NOMINAS"
@@ -175,3 +176,45 @@ def recover(nomina_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("nominas.detail", nomina_id=nomina.id))
+
+
+@nominas.route("/nominas/generar_nominas/<quincena_str>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_nominas(quincena_str):
+    """Lanzar tarea en el fondo para generar archivo XLSX con las nominas de una quincena ABIERTA"""
+    quincena_obj = Quincena.query.filter_by(quincena=quincena_str).first_or_404()
+    current_user.launch_task(
+        comando="nominas.tasks.generar_nominas",
+        mensaje="Lanzando generar nominas...",
+        quincena=quincena_str,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena_obj.id))
+
+
+@nominas.route("/nominas/generar_monederos/<quincena_str>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_monederos(quincena_str):
+    """Lanzar tarea en el fondo para generar archivo XLSX con los monederos de una quincena ABIERTA"""
+    quincena_obj = Quincena.query.filter_by(quincena=quincena_str).first_or_404()
+    current_user.launch_task(
+        comando="nominas.tasks.generar_monederos",
+        mensaje="Lanzando generar monederos...",
+        quincena=quincena_str,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena_obj.id))
+
+
+@nominas.route("/nominas/generar_dispersiones_pensionados/<quincena_str>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_dispersiones_pensionados(quincena_str):
+    """Lanzar tarea en el fondo para Generar archivo XLSX con las dispersiones pensionados de una quincena CERRADA"""
+    quincena_obj = Quincena.query.filter_by(quincena=quincena_str).first_or_404()
+    current_user.launch_task(
+        comando="nominas.tasks.generar_dispersiones_pensionados",
+        mensaje="Lanzando generar dispersiones pensionados...",
+        quincena=quincena_str,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena_obj.id))

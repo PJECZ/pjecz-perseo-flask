@@ -53,7 +53,7 @@ def get_secret(secret_id: str) -> str:
 class Settings(BaseSettings):
     """Settings"""
 
-    GOOGLE_CLOUD_STORAGE: str = get_secret("google_cloud_storage")
+    CLOUD_STORAGE_DEPOSITO: str = get_secret("cloud_storage_deposito")
     HOST: str = get_secret("host")
     REDIS_URL: str = get_secret("redis_url")
     SALT: str = get_secret("salt")

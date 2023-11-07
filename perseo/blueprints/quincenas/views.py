@@ -93,15 +93,6 @@ def detail(quincena_id):
     return render_template("quincenas/detail.jinja2", quincena=quincena)
 
 
-@quincenas.route("/quincenas/cerrar")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
-def close():
-    """Lanzar tarea en el fondo para cerrar las quincenas pasadas, menos la ultima"""
-    current_user.launch_task(comando="quincenas.tasks.cerrar", mensaje="Lanzando cerrar quincenas...")
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
-    return redirect(url_for("quincenas.list_active"))
-
-
 @quincenas.route("/quincenas/edicion/<int:quincena_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.MODIFICAR)
 def edit(quincena_id):
@@ -207,3 +198,12 @@ def recover(quincena_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+
+
+@quincenas.route("/quincenas/cerrar")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def close():
+    """Lanzar tarea en el fondo para cerrar las quincenas pasadas, menos la ultima"""
+    current_user.launch_task(comando="quincenas.tasks.cerrar", mensaje="Lanzando cerrar quincenas...")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.list_active"))
