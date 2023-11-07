@@ -71,6 +71,14 @@ class MyRequestError(MyAnyError):
     """Excepción porque falló el request"""
 
 
+class MyResponseError(MyAnyError):
+    """Excepción porque falló la respuesta"""
+
+
+class MyStatusCodeError(MyAnyError):
+    """Excepción porque el status code no es 200"""
+
+
 class MyTimeoutError(MyAnyError):
     """Excepción porque se agoto el tiempo de espera"""
 

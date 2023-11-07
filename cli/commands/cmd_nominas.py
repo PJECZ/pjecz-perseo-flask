@@ -264,7 +264,7 @@ def generar_nominas(quincena: str):
         # Tomar el banco de la cuenta de la persona
         su_banco = su_cuenta.banco
 
-        # Incrementar la consecutivo del banco
+        # Incrementer el consecutivo_generado del banco
         su_banco.consecutivo_generado += 1
 
         # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos

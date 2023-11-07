@@ -106,6 +106,10 @@ HOST=http://localhost:5011
 REDIS_URL=redis://127.0.0.1:8379
 TASK_QUEUE=pjecz_perseo
 
+# RRHH Personal API
+RRHH_PERSONAL_URL=https://rrhh-personal-api-key.justiciadigital.gob.mx/v4
+RRHH_PERSONAL_API_KEY=XXXXXXXX
+
 # Salt sirve para cifrar el ID con HashID
 SALT=XXXXXXXX
 
