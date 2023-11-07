@@ -8,6 +8,8 @@ from redis import Redis
 from config.settings import Settings
 from perseo.blueprints.autoridades.views import autoridades
 from perseo.blueprints.bancos.views import bancos
+from perseo.blueprints.beneficiarios.views import beneficiarios
+from perseo.blueprints.beneficiarios_cuentas.views import beneficiarios_cuentas
 from perseo.blueprints.bitacoras.views import bitacoras
 from perseo.blueprints.centros_trabajos.views import centros_trabajos
 from perseo.blueprints.conceptos.views import conceptos
@@ -17,7 +19,6 @@ from perseo.blueprints.distritos.views import distritos
 from perseo.blueprints.entradas_salidas.views import entradas_salidas
 from perseo.blueprints.modulos.views import modulos
 from perseo.blueprints.nominas.views import nominas
-from perseo.blueprints.nominas_reportes.views import nominas_reportes
 from perseo.blueprints.percepciones_deducciones.views import percepciones_deducciones
 from perseo.blueprints.permisos.views import permisos
 from perseo.blueprints.personas.views import personas
@@ -49,8 +50,10 @@ def create_app():
     # Registrar blueprints
     app.register_blueprint(autoridades)
     app.register_blueprint(bancos)
-    app.register_blueprint(distritos)
+    app.register_blueprint(beneficiarios)
+    app.register_blueprint(beneficiarios_cuentas)
     app.register_blueprint(bitacoras)
+    app.register_blueprint(distritos)
     app.register_blueprint(centros_trabajos)
     app.register_blueprint(conceptos)
     app.register_blueprint(conceptos_productos)
@@ -58,7 +61,6 @@ def create_app():
     app.register_blueprint(entradas_salidas)
     app.register_blueprint(modulos)
     app.register_blueprint(nominas)
-    app.register_blueprint(nominas_reportes)
     app.register_blueprint(percepciones_deducciones)
     app.register_blueprint(permisos)
     app.register_blueprint(personas)

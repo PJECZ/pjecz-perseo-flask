@@ -38,9 +38,6 @@ class Nomina(database.Model, UniversalMixin):
     tipo = Column(Enum(*TIPOS, name="tipo_nomina"), nullable=False)
     num_cheque = Column(String(24), nullable=False, default="", server_default="")
 
-    # Hijos
-    nominas_reportes = relationship("NominaReporte", back_populates="nomina")
-
     def __repr__(self):
         """Representación"""
         return f"<Nomina {self.id}>"

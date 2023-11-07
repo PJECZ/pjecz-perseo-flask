@@ -650,8 +650,22 @@ def generar_dispersiones_pensionados(quincena: str):
     click.echo(f"Nominas terminado: {contador} dispersiones pensionados generados en {nombre_archivo}")
 
 
+@click.command()
+@click.argument("quincena", type=str)
+def generar_beneficiarios(quincena: str):
+    """Generar archivo XLSX con los numeros de cheque para los beneficiarios de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida.")
+        return
+
+    # TODO: Validar que la quincena este abierta
+
+
 cli.add_command(alimentar)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)
 cli.add_command(generar_dispersiones_pensionados)
+cli.add_command(generar_beneficiarios)
