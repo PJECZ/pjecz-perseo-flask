@@ -1,7 +1,7 @@
 """
 Personas, modelos
 """
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Date, Integer, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -25,6 +25,9 @@ class Persona(database.Model, UniversalMixin):
     curp = Column(String(18), nullable=False, default="")
     modelo = Column(Integer, nullable=False, default=0, index=True)  # 1: Empleado, 2: Sindicato, 3: Jubilado, 4: Beneficiario
     num_empleado = Column(Integer, nullable=False, default=0)
+    ingreso_gobierno_fecha = Column(Date)
+    ingreso_pj_fecha = Column(Date)
+    nacimiento_fecha = Column(Date)
 
     # Hijos
     cuentas = relationship("Cuenta", back_populates="persona")
