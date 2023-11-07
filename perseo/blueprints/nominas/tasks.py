@@ -178,40 +178,37 @@ def generar_nominas(quincena: str) -> None:
     # Guardar el archivo XLSX
     libro.save(archivo_xlsx)
 
-    # Obtener la configuracion
+    # Si esta configurado settings.CLOUD_STORAGE_DEPOSITO, entonces subir el archivo XLSX a Google Cloud Storage
     settings = get_settings()
-
-    # Inicializar los mensajes
-    mensajes = []
-
-    # Abrir el archivo XLSX para subirlo a Google Cloud Storage
-    with open(archivo_xlsx, "rb") as archivo:
-        try:
-            bitacora.info("Subiendo archivo a Bucket %s", settings.CLOUD_STORAGE_DEPOSITO)
-            gcstorage = GoogleCloudStorage(
-                base_directory=GCS_BASE_DIRECTORY,
-                upload_date=ahora.date(),
-                allowed_extensions=["xlsx"],
-                month_in_word=False,
-                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
-            )
-            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx, extension="xlsx")
-            bitacora.info("Por depositar %s", gcs_nombre_archivo_xlsx)
-            gcstorage.upload(archivo.read())
-            mensaje = "Archivo depositado en GCS"
-            mensajes.append(mensaje)
-            bitacora.info(mensaje)
-        except MyAnyError as error:
-            mensaje_error = str(error)
-            set_task_error(mensaje_error)
-            bitacora.error(mensaje_error)
+    if settings.CLOUD_STORAGE_DEPOSITO != "":
+        with open(archivo_xlsx, "rb") as archivo:
+            try:
+                bitacora.info("GCS: Bucket %s", settings.CLOUD_STORAGE_DEPOSITO)
+                gcstorage = GoogleCloudStorage(
+                    base_directory=GCS_BASE_DIRECTORY,
+                    upload_date=ahora.date(),
+                    allowed_extensions=["xlsx"],
+                    month_in_word=False,
+                    bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
+                )
+                gcs_nombre_archivo_xlsx = gcstorage.set_filename(
+                    description=descripcion_archivo_xlsx,
+                    extension="xlsx",
+                    start_with_date=False,
+                )
+                bitacora.info("GCS: Subiendo %s", gcs_nombre_archivo_xlsx)
+                gcs_public_path = gcstorage.upload(archivo.read())
+                bitacora.info("GCS: Depositado %s", gcs_public_path)
+            except MyAnyError as error:
+                mensaje_error = str(error)
+                set_task_error(mensaje_error)
+                bitacora.error(mensaje_error)
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
+    mensajes = []
     if len(personas_sin_cuentas) > 0:
         mensajes.append(f"AVISO: Hubo {len(personas_sin_cuentas)} personas sin cuentas:")
         mensajes += [f"- {p.rfc} {p.nombre_completo}" for p in personas_sin_cuentas]
-
-    # Agregar en la bitacora los mensajes como warning
     if len(mensajes) > 0:
         for m in mensajes:
             bitacora.warning(m)
@@ -356,38 +353,37 @@ def generar_monederos(quincena: str) -> None:
     # Guardar el archivo XLSX
     libro.save(archivo_xlsx)
 
-    # Obtener la configuracion
+    # Si esta configurado settings.CLOUD_STORAGE_DEPOSITO, entonces subir el archivo XLSX a Google Cloud Storage
     settings = get_settings()
-
-    # Inicializar los mensajes
-    mensajes = []
-
-    # Abrir el archivo XLSX para subirlo a Google Cloud Storage
-    with open(archivo_xlsx, "rb") as archivo:
-        try:
-            gcstorage = GoogleCloudStorage(
-                base_directory=GCS_BASE_DIRECTORY,
-                upload_date=ahora.date(),
-                allowed_extensions=["xlsx"],
-                month_in_word=False,
-                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
-            )
-            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx, extension="xlsx")
-            gcstorage.upload(archivo.read())
-            mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
-            mensajes.append(mensaje)
-            bitacora.info(mensaje)
-        except MyAnyError as error:
-            mensaje_error = str(error)
-            set_task_error(mensaje_error)
-            bitacora.error(mensaje_error)
+    if settings.CLOUD_STORAGE_DEPOSITO != "":
+        with open(archivo_xlsx, "rb") as archivo:
+            try:
+                bitacora.info("GCS: Bucket %s", settings.CLOUD_STORAGE_DEPOSITO)
+                gcstorage = GoogleCloudStorage(
+                    base_directory=GCS_BASE_DIRECTORY,
+                    upload_date=ahora.date(),
+                    allowed_extensions=["xlsx"],
+                    month_in_word=False,
+                    bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
+                )
+                gcs_nombre_archivo_xlsx = gcstorage.set_filename(
+                    description=descripcion_archivo_xlsx,
+                    extension="xlsx",
+                    start_with_date=False,
+                )
+                bitacora.info("GCS: Subiendo %s", gcs_nombre_archivo_xlsx)
+                gcs_public_path = gcstorage.upload(archivo.read())
+                bitacora.info("GCS: Depositado %s", gcs_public_path)
+            except MyAnyError as error:
+                mensaje_error = str(error)
+                set_task_error(mensaje_error)
+                bitacora.error(mensaje_error)
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
+    mensajes = []
     if len(personas_sin_cuentas) > 0:
         mensajes.append(f"AVISO: Hubo {len(personas_sin_cuentas)} personas sin cuentas:")
         mensajes += [f"- {p.rfc} {p.nombre_completo}" for p in personas_sin_cuentas]
-
-    # Agregar en la bitacora los mensajes como warning
     if len(mensajes) > 0:
         for m in mensajes:
             bitacora.warning(m)
@@ -529,38 +525,37 @@ def generar_dispersiones_pensionados(quincena: str) -> None:
     # Guardar el archivo XLSX
     libro.save(archivo_xlsx)
 
-    # Obtener la configuracion
+    # Si esta configurado settings.CLOUD_STORAGE_DEPOSITO, entonces subir el archivo XLSX a Google Cloud Storage
     settings = get_settings()
-
-    # Inicializar los mensajes
-    mensajes = []
-
-    # Abrir el archivo XLSX para subirlo a Google Cloud Storage
-    with open(archivo_xlsx, "rb") as archivo:
-        try:
-            gcstorage = GoogleCloudStorage(
-                base_directory=GCS_BASE_DIRECTORY,
-                upload_date=ahora.date(),
-                allowed_extensions=["xlsx"],
-                month_in_word=False,
-                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
-            )
-            gcs_nombre_archivo_xlsx = gcstorage.set_filename(description=descripcion_archivo_xlsx, extension="xlsx")
-            gcstorage.upload(archivo.read())
-            mensaje = f"Se subio a GCS e archivo {gcs_nombre_archivo_xlsx}"
-            mensajes.append(mensaje)
-            bitacora.info(mensaje)
-        except MyAnyError as error:
-            mensaje_error = str(error)
-            set_task_error(mensaje_error)
-            bitacora.error(mensaje_error)
+    if settings.CLOUD_STORAGE_DEPOSITO != "":
+        with open(archivo_xlsx, "rb") as archivo:
+            try:
+                bitacora.info("GCS: Bucket %s", settings.CLOUD_STORAGE_DEPOSITO)
+                gcstorage = GoogleCloudStorage(
+                    base_directory=GCS_BASE_DIRECTORY,
+                    upload_date=ahora.date(),
+                    allowed_extensions=["xlsx"],
+                    month_in_word=False,
+                    bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
+                )
+                gcs_nombre_archivo_xlsx = gcstorage.set_filename(
+                    description=descripcion_archivo_xlsx,
+                    extension="xlsx",
+                    start_with_date=False,
+                )
+                bitacora.info("GCS: Subiendo %s", gcs_nombre_archivo_xlsx)
+                gcs_public_path = gcstorage.upload(archivo.read())
+                bitacora.info("GCS: Depositado %s", gcs_public_path)
+            except MyAnyError as error:
+                mensaje_error = str(error)
+                set_task_error(mensaje_error)
+                bitacora.error(mensaje_error)
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
+    mensajes = []
     if len(personas_sin_cuentas) > 0:
         mensajes.append(f"AVISO: Hubo {len(personas_sin_cuentas)} personas sin cuentas:")
         mensajes += [f"- {p.rfc} {p.nombre_completo}" for p in personas_sin_cuentas]
-
-    # Agregar en la bitacora los mensajes como warning
     if len(mensajes) > 0:
         for m in mensajes:
             bitacora.warning(m)

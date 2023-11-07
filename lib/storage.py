@@ -188,10 +188,11 @@ class GoogleCloudStorage:
 
     def set_filename(
         self,
-        hashed_id: str = "",
         description: str = "",
-        max_length: int = 64,
         extension: str = None,
+        hashed_id: str = "",
+        max_length: int = 64,
+        start_with_date: bool = True,
     ) -> str:
         """Filename standarize, returns the filename"""
         self.filename = None
@@ -214,9 +215,15 @@ class GoogleCloudStorage:
             description = "SIN-DESCRIPCION"
         upload_date_str = self.upload_date.strftime("%Y-%m-%d")
         if hashed_id == "":
-            self.filename = f"{upload_date_str}-{description}.{self.extension}"
+            if start_with_date:
+                self.filename = f"{upload_date_str}-{description}.{self.extension}"
+            else:
+                self.filename = f"{description}.{self.extension}"
         else:
-            self.filename = f"{upload_date_str}-{description}-{hashed_id}.{self.extension}"
+            if start_with_date:
+                self.filename = f"{upload_date_str}-{description}-{hashed_id}.{self.extension}"
+            else:
+                self.filename = f"{description}-{hashed_id}.{self.extension}"
         return self.filename
 
     def upload(self, data: Any) -> str:
