@@ -21,8 +21,8 @@ class Persona(database.Model, UniversalMixin):
     rfc = Column(String(13), nullable=False, unique=True)
     nombres = Column(String(256), nullable=False, index=True)
     apellido_primero = Column(String(256), nullable=False, index=True)
-    apellido_segundo = Column(String(256), nullable=False, default="", index=True)
-    curp = Column(String(18), nullable=False, default="")
+    apellido_segundo = Column(String(256), nullable=False, default="", server_default="")
+    curp = Column(String(18), nullable=False, default="", server_default="")
     modelo = Column(Integer, nullable=False, default=0, index=True)  # 1: Empleado, 2: Sindicato, 3: Jubilado, 4: Beneficiario
     num_empleado = Column(Integer, nullable=False, default=0)
     ingreso_gobierno_fecha = Column(Date)

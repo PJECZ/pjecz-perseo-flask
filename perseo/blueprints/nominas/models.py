@@ -31,7 +31,7 @@ class Nomina(database.Model, UniversalMixin):
     plaza = relationship("Plaza", back_populates="nominas")
 
     # Columnas
-    quincena = Column(String(6), nullable=False)
+    quincena = Column(String(6), nullable=False, index=True)
     percepcion = Column(Numeric(precision=24, scale=4), nullable=False)
     deduccion = Column(Numeric(precision=24, scale=4), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)

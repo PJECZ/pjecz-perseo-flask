@@ -1,0 +1,65 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('BENEFICIARIOS QUINCENAS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('beneficiarios_quincenas.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('beneficiarios_quincenas.list_active')) }}{% endif %}
+        {% endif %}
+        {# if current_user.can_insert('BENEFICIARIOS QUINCENAS') %}
+            {{ topbar.button_new('Nuevo Beneficiario Quincena', url_for('beneficiarios_quincenas.new')) }}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <table id="beneficiarios_quincenas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quincena</th>
+                    <th>RFC</th>
+                    <th>Nombre completo</th>
+                    <th>Importe</th>
+                    <th>No. Cuenta</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ list.config_datatable() }}
+    <script>
+        configDataTable['ajax']['url'] = '/beneficiarios_quincenas/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'quincena' },
+            { data: 'beneficiario_rfc' },
+            { data: 'beneficiario_nombre_completo' },
+            { data: 'importe' },
+            { data: 'num_cheque' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 4, // importe
+                render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                className: "dt-body-right",
+            }
+        ];
+        $('#beneficiarios_quincenas_datatable').DataTable(configDataTable);
+    </script>
+{% endblock %}

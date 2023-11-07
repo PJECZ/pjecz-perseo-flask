@@ -14,6 +14,8 @@ from openpyxl import Workbook
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
+from perseo.blueprints.beneficiarios.models import Beneficiario
+from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
@@ -661,6 +663,33 @@ def generar_beneficiarios(quincena: str):
         return
 
     # TODO: Validar que la quincena este abierta
+
+    # Consultar los beneficiarios activos
+    beneficiarios = Beneficiario.query.filter_by(estatus="A").all()
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "QUINCENA",
+            "CT CLASIF",
+            "RFC",
+            "NOMBRE DEL BENEFICIARIO",
+            "NUM EMPLEADO",
+            "MODELO",
+            "PLAZA",
+            "NOMBRE DEL BANCO",
+            "CLAVE DEL BANCO",
+            "NUMERO DE CUENTA",
+            "MONTO TOTAL",
+            "CHEQUE",
+        ]
+    )
 
 
 cli.add_command(alimentar)

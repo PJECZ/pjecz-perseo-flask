@@ -1,5 +1,5 @@
 """
-Beneficiarios Cuentas, vistas
+Beneficiarios Quincenas, vistas
 """
 import json
 
@@ -8,31 +8,31 @@ from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_message, safe_string
-from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
+from perseo.blueprints.beneficiarios_quincenas.models import BeneficiarioQuincena
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import permission_required
 
-MODULO = "BENEFICIARIOS CUENTAS"
+MODULO = "BENEFICIARIOS QUINCENAS"
 
-beneficiarios_cuentas = Blueprint("beneficiarios_cuentas", __name__, template_folder="templates")
+beneficiarios_quincenas = Blueprint("beneficiarios_quincenas", __name__, template_folder="templates")
 
 
-@beneficiarios_cuentas.before_request
+@beneficiarios_quincenas.before_request
 @login_required
 @permission_required(MODULO, Permiso.VER)
 def before_request():
     """Permiso por defecto"""
 
 
-@beneficiarios_cuentas.route("/beneficiarios_cuentas/datatable_json", methods=["GET", "POST"])
+@beneficiarios_quincenas.route("/beneficiarios_quincenas/datatable_json", methods=["GET", "POST"])
 def datatable_json():
-    """DataTable JSON para listado de BeneficiariosCuentas"""
+    """DataTable JSON para listado de Beneficiarios Quincenas"""
     # Tomar parámetros de Datatables
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
-    consulta = BeneficiarioCuenta.query
+    consulta = BeneficiarioQuincena.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
         consulta = consulta.filter_by(estatus=request.form["estatus"])
@@ -41,7 +41,7 @@ def datatable_json():
     if "beneficiario_id" in request.form:
         consulta = consulta.filter_by(beneficiario_id=request.form["beneficiario_id"])
     # Ordenar y paginar
-    registros = consulta.order_by(BeneficiarioCuenta.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(BeneficiarioQuincena.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -50,43 +50,44 @@ def datatable_json():
             {
                 "detalle": {
                     "id": resultado.id,
-                    "url": url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=resultado.id),
+                    "url": url_for("beneficiarios_quincenas.detail", beneficiario_quincena_id=resultado.id),
                 },
+                "quincena": resultado.quincena,
                 "beneficiario_rfc": resultado.beneficiario.rfc,
                 "beneficiario_nombre_completo": resultado.beneficiario.nombre_completo,
-                "banco_nombre": resultado.banco.nombre,
-                "num_cuenta": resultado.num_cuenta,
+                "importe": resultado.importe,
+                "num_cheque": resultado.num_cheque,
             }
         )
     # Entregar JSON
     return output_datatable_json(draw, total, data)
 
 
-@beneficiarios_cuentas.route("/beneficiarios_cuentas")
+@beneficiarios_quincenas.route("/beneficiarios_quincenas")
 def list_active():
-    """Listado de Beneficiarios Cuentas activos"""
+    """Listado de Beneficiarios Quincenas activos"""
     return render_template(
-        "beneficiarios_cuentas/list.jinja2",
+        "beneficiarios_quincenas/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="Beneficiarios Cuentas",
+        titulo="Beneficiarios Quincenas",
         estatus="A",
     )
 
 
-@beneficiarios_cuentas.route("/beneficiarios_cuentas/inactivos")
+@beneficiarios_quincenas.route("/beneficiarios_quincenas/inactivos")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def list_inactive():
-    """Listado de Beneficiarios Cuentas inactivos"""
+    """Listado de Beneficiarios Quincenas inactivos"""
     return render_template(
-        "beneficiarios_cuentas/list.jinja2",
+        "beneficiarios_quincenas/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Beneficiarios Cuentas inactivos",
+        titulo="Beneficiarios Quincenas inactivos",
         estatus="B",
     )
 
 
-@beneficiarios_cuentas.route("/beneficiarios_cuentas/<int:beneficiario_cuenta_id>")
-def detail(beneficiario_cuenta_id):
-    """Detalle de un Beneficiario Cuenta"""
-    beneficiario_cuenta = BeneficiarioCuenta.query.get_or_404(beneficiario_cuenta_id)
-    return render_template("beneficiarios_cuentas/detail.jinja2", beneficiario_cuenta=beneficiario_cuenta)
+@beneficiarios_quincenas.route("/beneficiarios_quincenas/<int:beneficiario_quincena_id>")
+def detail(beneficiario_quincena_id):
+    """Detalle de un Beneficiario Quincena"""
+    beneficiario_quincena = BeneficiarioQuincena.query.get_or_404(beneficiario_quincena_id)
+    return render_template("beneficiarios_quincenas/detail.jinja2", beneficiario_quincena=beneficiario_quincena)

@@ -10,6 +10,7 @@ from perseo.blueprints.autoridades.views import autoridades
 from perseo.blueprints.bancos.views import bancos
 from perseo.blueprints.beneficiarios.views import beneficiarios
 from perseo.blueprints.beneficiarios_cuentas.views import beneficiarios_cuentas
+from perseo.blueprints.beneficiarios_quincenas.views import beneficiarios_quincenas
 from perseo.blueprints.bitacoras.views import bitacoras
 from perseo.blueprints.centros_trabajos.views import centros_trabajos
 from perseo.blueprints.conceptos.views import conceptos
@@ -52,6 +53,7 @@ def create_app():
     app.register_blueprint(bancos)
     app.register_blueprint(beneficiarios)
     app.register_blueprint(beneficiarios_cuentas)
+    app.register_blueprint(beneficiarios_quincenas)
     app.register_blueprint(bitacoras)
     app.register_blueprint(distritos)
     app.register_blueprint(centros_trabajos)

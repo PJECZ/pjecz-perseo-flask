@@ -21,6 +21,7 @@
 {% block content %}
     {% call detail.card(estatus=nomina.estatus) %}
         {{ detail.label_value_big('ID', nomina.id) }}
+        {{ detail.label_value('Quincena', nomina.quincena) }}
         {% set persona_texto = nomina.persona.rfc + ' - ' + nomina.persona.nombre_completo %}
         {% if current_user.can_view("PERSONAS") %}
             {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=nomina.persona_id)) }}
@@ -39,10 +40,10 @@
         {% else %}
             {{ detail.label_value('Plaza', plaza_texto) }}
         {% endif %}
-        {{ detail.label_value('Quincena', nomina.quincena) }}
         {{ detail.label_value('Percepción', nomina.percepcion) }}
         {{ detail.label_value('Deducción', nomina.deduccion) }}
         {{ detail.label_value('Importe', nomina.importe) }}
+        {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
         {{ detail.label_value('Tipo', nomina.tipo) }}
         {{ detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}

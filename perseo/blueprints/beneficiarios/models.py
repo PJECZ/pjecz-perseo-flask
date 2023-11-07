@@ -21,13 +21,14 @@ class Beneficiario(database.Model, UniversalMixin):
     rfc = Column(String(13), nullable=False, unique=True)
     nombres = Column(String(256), nullable=False, index=True)
     apellido_primero = Column(String(256), nullable=False, index=True)
-    apellido_segundo = Column(String(256), nullable=False, default="", index=True)
-    curp = Column(String(18), nullable=False, default="")
+    apellido_segundo = Column(String(256), nullable=False, default="", server_default="")
+    curp = Column(String(18), nullable=False, default="", server_default="")
     nacimiento_fecha = Column(Date)
     modelo = Column(Integer, nullable=False, default=0, index=True)  # 1: Empleado, 2: Sindicato, 3: Jubilado, 4: Beneficiario
 
     # Hijos
     beneficiarios_cuentas = relationship("BeneficiarioCuenta", back_populates="beneficiario")
+    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="beneficiario")
 
     @property
     def nombre_completo(self):
