@@ -14,6 +14,8 @@ from openpyxl import Workbook
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
+from perseo.blueprints.beneficiarios.models import Beneficiario
+from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
@@ -262,7 +264,7 @@ def generar_nominas(quincena: str):
         # Tomar el banco de la cuenta de la persona
         su_banco = su_cuenta.banco
 
-        # Incrementar la consecutivo del banco
+        # Incrementer el consecutivo_generado del banco
         su_banco.consecutivo_generado += 1
 
         # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
@@ -650,8 +652,49 @@ def generar_dispersiones_pensionados(quincena: str):
     click.echo(f"Nominas terminado: {contador} dispersiones pensionados generados en {nombre_archivo}")
 
 
+@click.command()
+@click.argument("quincena", type=str)
+def generar_beneficiarios(quincena: str):
+    """Generar archivo XLSX con los numeros de cheque para los beneficiarios de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena) is None:
+        click.echo("Quincena inválida.")
+        return
+
+    # TODO: Validar que la quincena este abierta
+
+    # Consultar los beneficiarios activos
+    beneficiarios = Beneficiario.query.filter_by(estatus="A").all()
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "QUINCENA",
+            "CT CLASIF",
+            "RFC",
+            "NOMBRE DEL BENEFICIARIO",
+            "NUM EMPLEADO",
+            "MODELO",
+            "PLAZA",
+            "NOMBRE DEL BANCO",
+            "CLAVE DEL BANCO",
+            "NUMERO DE CUENTA",
+            "MONTO TOTAL",
+            "CHEQUE",
+        ]
+    )
+
+
 cli.add_command(alimentar)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)
 cli.add_command(generar_dispersiones_pensionados)
+cli.add_command(generar_beneficiarios)

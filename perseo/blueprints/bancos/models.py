@@ -26,6 +26,7 @@ class Banco(database.Model, UniversalMixin):
     consecutivo_generado = Column(Integer, nullable=False, default=0)
 
     # Hijos
+    beneficiarios_cuentas = relationship("BeneficiarioCuenta", back_populates="banco")
     cuentas = relationship("Cuenta", back_populates="banco")
 
     def __repr__(self):

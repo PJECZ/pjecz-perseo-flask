@@ -1,0 +1,39 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Beneficiario {{ beneficiario.rfc }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Beneficiario ' + beneficiario.rfc) %}
+        {{ topbar.button_previous('Beneficiarios', url_for('beneficiarios.list_active')) }}
+        {# if current_user.can_edit('BENEFICIARIOS') %}
+            {{ topbar.button_edit('Editar', url_for('beneficiarios.edit', beneficiario_id=beneficiario.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('BENEFICIARIOS') %}
+            {% if beneficiario.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('beneficiarios.delete', beneficiario_id=beneficiario.id)) }}{% endif %}
+            {% if beneficiario.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('beneficiarios.recover', beneficiario_id=beneficiario.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=beneficiario.estatus) %}
+        {{ detail.label_value_big('RFC', beneficiario.rfc) }}
+        {{ detail.label_value('Nombres', beneficiario.nombres) }}
+        {{ detail.label_value('Apellido primero', beneficiario.apellido_primero) }}
+        {{ detail.label_value('Apellido segundo', beneficiario.apellido_segundo) }}
+        {{ detail.label_value('CURP', beneficiario.curp) }}
+        {{ detail.label_value('Modelo', beneficiario.modelo) }}
+        {{ detail.label_value('Creado', moment(beneficiario.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('BENEFICIARIOS') %}
+        {% if beneficiario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario.rfc + '?') }}{% endif %}
+        {% if beneficiario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario.rfc + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

@@ -28,7 +28,7 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
     plaza = relationship("Plaza", back_populates="percepciones_deducciones")
 
     # Columnas
-    quincena = Column(String(6), nullable=False)
+    quincena = Column(String(6), nullable=False, index=True)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
 
     def __repr__(self):

@@ -1,0 +1,60 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('BENEFICIARIOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('beneficiarios.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('beneficiarios.list_active')) }}{% endif %}
+        {% endif %}
+        {# if current_user.can_insert('BENEFICIARIOS') %}
+            {{ topbar.button_new('Nuevo Beneficiario', url_for('beneficiarios.new')) }}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <table id="beneficiarios_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>RFC</th>
+                    <th>Nombre</th>
+                    <th>Apellido primero</th>
+                    <th>Apellido segundo</th>
+                    <th>CURP</th>
+                    <th>Modelo</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ list.config_datatable() }}
+    <script>
+        configDataTable['ajax']['url'] = '/beneficiarios/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'nombres' },
+            { data: 'apellido_primero' },
+            { data: 'apellido_segundo' },
+            { data: 'curp' },
+            { data: 'modelo' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.rfc + '</a>';
+                }
+            }
+        ];
+        $('#beneficiarios_datatable').DataTable(configDataTable);
+    </script>
+{% endblock %}
