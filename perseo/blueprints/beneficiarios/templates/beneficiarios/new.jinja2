@@ -1,0 +1,26 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nuevo Beneficiario{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nuevo Beneficiario') %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('beneficiarios.new', fid='beneficiario_form') %}
+            {% call f.form_group(form.rfc) %}{% endcall %}
+            {% call f.form_group(form.nombres) %}{% endcall %}
+            {% call f.form_group(form.apellido_primero) %}{% endcall %}
+            {% call f.form_group(form.apellido_segundo) %}{% endcall %}
+            {% call f.form_group(form.curp) %}{% endcall %}
+            {% call f.form_group(form.nacimiento_fecha) %}{% endcall %}
+            {% call f.form_group(form.modelo) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
