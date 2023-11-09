@@ -135,10 +135,10 @@ def new():
         if es_valido:
             persona = Persona(
                 rfc=rfc,
-                nombres=safe_string(form.nombres.data),
-                apellido_primero=safe_string(form.apellido_primero.data),
-                apellido_segundo=safe_string(form.apellido_segundo.data),
-                curp=safe_string(form.curp.data),
+                nombres=safe_string(form.nombres.data, save_enie=True),
+                apellido_primero=safe_string(form.apellido_primero.data, save_enie=True),
+                apellido_segundo=safe_string(form.apellido_segundo.data, save_enie=True),
+                curp=curp,
             )
             persona.save()
             bitacora = Bitacora(
@@ -188,9 +188,9 @@ def edit(persona_id):
         # Si es válido, guardar
         if es_valido:
             persona.rfc = rfc
-            persona.nombres = safe_string(form.nombres.data)
-            persona.apellido_primero = safe_string(form.apellido_primero.data)
-            persona.apellido_segundo = safe_string(form.apellido_segundo.data)
+            persona.nombres = safe_string(form.nombres.data, save_enie=True)
+            persona.apellido_primero = safe_string(form.apellido_primero.data, save_enie=True)
+            persona.apellido_segundo = safe_string(form.apellido_segundo.data, save_enie=True)
             persona.curp = curp
             persona.save()
             bitacora = Bitacora(
