@@ -179,8 +179,8 @@ def edit(beneficiario_quincena_id):
     beneficiario_quincena = BeneficiarioQuincena.query.get_or_404(beneficiario_quincena_id)
     form = BeneficiarioQuincenaEditForm()
     if form.validate_on_submit():
-        beneficiario_quincena.importe = safe_string(form.importe.data)
-        beneficiario_quincena.num_cheque = safe_string(form.num_cheque.data)
+        beneficiario_quincena.importe = form.importe.data
+        beneficiario_quincena.num_cheque = form.num_cheque.data
         beneficiario_quincena.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -191,9 +191,9 @@ def edit(beneficiario_quincena_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    form.quincena.data = beneficiario_quincena.quincena
+    form.quincena.data = beneficiario_quincena.quincena  # Solo lectura
+    form.beneficiario_rfc.data = beneficiario_quincena.beneficiario.rfc  # Solo lectura
     form.beneficiario_nombre.data = beneficiario_quincena.beneficiario.nombre_completo  # Solo lectura
-    form.beneficiario_rfc.data = beneficiario_quincena.beneficiario.rfc
     form.importe.data = beneficiario_quincena.importe
     form.num_cheque.data = beneficiario_quincena.num_cheque
     return render_template("beneficiarios_quincenas/edit.jinja2", form=form, beneficiario_quincena=beneficiario_quincena)

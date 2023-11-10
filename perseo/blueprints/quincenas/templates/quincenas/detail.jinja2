@@ -56,19 +56,37 @@
             </div>
         </div>
     </div>
-    <!-- Nominas de la quincena -->
+    <!-- Nominas de la Quincena -->
     {% if current_user.can_view('NOMINAS') %}
-        {% call detail.card('Nóminas') %}
+        {% call detail.card('Nómina ' + quincena.quincena) %}
             <div class="row">
                 <div class="col">
                     <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
-                        <div class="col-3">
+                        <div class="col-2">
                             <div class="form-floating">
                                 <input id="filtroPersonaRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
                                 <label for="filtroPersonaRFC">RFC</label>
                             </div>
                         </div>
-                        <div class="col-9 text-end">
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroPersonaNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
+                                <label for="filtroPersonaNombres">Nombres</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroPersonaApellidoPrimero" type="text" class="form-control" aria-label="Apellido primero" style="text-transform: uppercase;">
+                                <label for="filtroPersonaApellidoPrimero">Primer apellido</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroPersonaApellidoSegundo" type="text" class="form-control" aria-label="Apellido segundo" style="text-transform: uppercase;">
+                                <label for="filtroPersonaApellidoSegundo">Segundo apellido</label>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
                             <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
                             <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                         </div>
@@ -83,7 +101,7 @@
                         <th>Nombre completo</th>
                         <th>Percepcion</th>
                         <th>Deduccion</th>
-                        <th>Importe</th>
+                        <th style="text-align:right">Importe</th>
                         <th>Tipo</th>
                     </tr>
                 </thead>
@@ -93,13 +111,12 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
-    {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
+    <!-- Nominas -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     {% if current_user.can_view('NOMINAS') %}
         <script>
-            // Datatable nominas
+            // Datatable Nominas
             const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
             let configDataTable = constructorDataTable.config();
             configDataTable['ajax']['url'] = '/nominas/datatable_json';
@@ -127,15 +144,22 @@
                     className: "dt-body-right",
                 }
             ];
-            // Filtros nominas
+            // Filtros Nominas
             const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDataTable);
             filtrosNominas.agregarInput('filtroPersonaRFC', 'persona_rfc');
+            filtrosNominas.agregarInput('filtroPersonaNombres', 'persona_nombres');
+            filtrosNominas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');
+            filtrosNominas.agregarInput('filtroPersonaApellidoSegundo', 'persona_apellido_segundo');
             filtrosNominas.precargar();
         </script>
     {% endif %}
+    <!-- Modales -->
+    {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
+    {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
     {% if current_user.can_admin('QUINCENA') %}
         {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.quincena + '?') }}{% endif %}
         {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.quincena + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment.js -->
     {{ detail.moment_js(moment) }}
 {% endblock %}
