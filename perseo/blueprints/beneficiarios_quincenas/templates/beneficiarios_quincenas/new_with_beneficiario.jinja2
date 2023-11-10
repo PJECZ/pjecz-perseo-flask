@@ -1,0 +1,25 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'beneficiario_id': beneficiario.id} %}
+        {% call f.form_tag('beneficiarios_quincenas.new_with_beneficiario', fid='beneficiario_quincena_form', **form_kwargs) %}
+            {% call f.form_group(form.quincena) %}{% endcall %}
+            {% call f.form_group(form.beneficiario_rfc, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.beneficiario_nombre, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.importe) %}{% endcall %}
+            {# call f.form_group(form.num_cheque, readonly=true) %}{% endcall #}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

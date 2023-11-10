@@ -55,9 +55,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Quincena</th>
-                        <th>Percepcion</th>
-                        <th>Deduccion</th>
-                        <th>Importe</th>
+                        <th style="text-align:right">Percepcion</th>
+                        <th style="text-align:right">Deduccion</th>
+                        <th style="text-align:right">Importe</th>
                         <th>Tipo</th>
                     </tr>
                 </thead>
@@ -67,8 +67,8 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <script src="/static/js/datatables-constructor.js"></script>
-    <script src="/static/js/datatables-filtros.js"></script>
+    {{ detail.config_datatable() }}
+    <!-- Cuentas de la persona -->
     {% if current_user.can_view('CUENTAS') %}
         <script>
             const constructorDataTableCuentas = new ConfigDataTable( '{{ csrf_token() }}' );
@@ -92,7 +92,7 @@
             $('#cuentas_datatable').DataTable(configDataTableCuentas);
         </script>
     {% endif %}
-    {{ detail.config_datatable() }}
+    <!-- Nominas de la persona -->
     {% if current_user.can_view('NOMINAS') %}
         <script>
             configDataTable['ajax']['url'] = '/nominas/datatable_json';
@@ -122,9 +122,11 @@
             $('#nominas_datatable').DataTable(configDataTable);
         </script>
     {% endif %}
+    <!-- Modales -->
     {% if current_user.can_admin('PERSONAS') %}
         {% if persona.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + persona.rfc + '?') }}{% endif %}
         {% if persona.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + persona.rfc + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment.js -->
     {{ detail.moment_js(moment) }}
 {% endblock %}

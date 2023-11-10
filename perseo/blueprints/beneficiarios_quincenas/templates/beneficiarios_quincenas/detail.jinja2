@@ -3,41 +3,41 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Beneficiario Quincena {{ beneficiario_quincena.id }}{% endblock %}
+{% block title %}Beneficiario Quincena {{ beneficiario_quincena.quincena }} de {{ beneficiario_quincena.beneficiario.rfc }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Beneficiario Quincena ' + beneficiario_quincena.id) %}
+    {% call topbar.page_buttons('Beneficiario Quincena ' + beneficiario_quincena.quincena + ' de ' + beneficiario_quincena.beneficiario.rfc) %}
         {{ topbar.button_previous('Beneficiarios Quincenas', url_for('beneficiarios_quincenas.list_active')) }}
-        {# if current_user.can_edit('BENEFICIARIOS QUINCENAS') %}
+        {% if current_user.can_edit('BENEFICIARIOS QUINCENAS') %}
             {{ topbar.button_edit('Editar', url_for('beneficiarios_quincenas.edit', beneficiario_quincena_id=beneficiario_quincena.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('BENEFICIARIOS QUINCENAS') %}
+        {% endif %}
+        {% if current_user.can_admin('BENEFICIARIOS QUINCENAS') %}
             {% if beneficiario_quincena.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('beneficiarios_quincenas.delete', beneficiario_quincena_id=beneficiario_quincena.id)) }}{% endif %}
             {% if beneficiario_quincena.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('beneficiarios_quincenas.recover', beneficiario_quincena_id=beneficiario_quincena.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
     {% call detail.card(estatus=beneficiario_quincena.estatus) %}
         {{ detail.label_value_big('ID', beneficiario_quincena.id) }}
-        {{ detail.label_value('Quincena', nomina.quincena) }}
+        {{ detail.label_value('Quincena', beneficiario_quincena.quincena) }}
         {% set beneficiario_texto = beneficiario_quincena.beneficiario.rfc + ' - ' + beneficiario_quincena.beneficiario.nombre_completo %}
         {% if current_user.can_view("BENEFICIARIOS") %}
             {{ detail.label_value('Beneficiario', beneficiario_texto, url_for('beneficiarios.detail', beneficiario_id=beneficiario_quincena.beneficiario_id)) }}
         {% else %}
             {{ detail.label_value('Beneficiario', beneficiario_texto) }}
         {% endif %}
-        {{ detail.label_value('Importe', nomina.importe) }}
-        {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
-        {{ detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) }}
+        {{ detail.label_value('Importe', beneficiario_quincena.importe) }}
+        {{ detail.label_value('No. de Cheque', beneficiario_quincena.num_cheque) }}
+        {{ detail.label_value('Creado', moment(beneficiario_quincena.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
     {% if current_user.can_admin('BENEFICIARIOS QUINCENAS') %}
-        {% if beneficiario_quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario_quincena.id + '?') }}{% endif %}
-        {% if beneficiario_quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario_quincena.id + '?') }}{% endif %}
+        {% if beneficiario_quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ID ' + beneficiario_quincena.id | string + '?') }}{% endif %}
+        {% if beneficiario_quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ID ' + beneficiario_quincena.id | string + '?') }}{% endif %}
     {% endif %}
     {{ detail.moment_js(moment) }}
 {% endblock %}

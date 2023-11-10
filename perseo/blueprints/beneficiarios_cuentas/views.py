@@ -7,7 +7,10 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_clave, safe_message, safe_rfc, safe_string
+from perseo.blueprints.bancos.models import Banco
+from perseo.blueprints.beneficiarios.models import Beneficiario
+from perseo.blueprints.beneficiarios_cuentas.forms import BeneficiarioCuentaEditForm, BeneficiarioCuentaNewWithBeneficiarioForm
 from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
@@ -38,8 +41,32 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "banco_id" in request.form:
+        consulta = consulta.filter_by(banco_id=request.form["banco_id"])
     if "beneficiario_id" in request.form:
         consulta = consulta.filter_by(beneficiario_id=request.form["beneficiario_id"])
+    # Luego filtrar por columnas de otras tablas
+    if (
+        "beneficiario_rfc" in request.form
+        or "beneficiario_nombres" in request.form
+        or "beneficiario_apellido_primero" in request.form
+        or "beneficiario_apellido_segundo" in request.form
+    ):
+        consulta = consulta.join(Beneficiario)
+    if "beneficiario_rfc" in request.form:
+        consulta = consulta.filter(Beneficiario.rfc.contains(safe_rfc(request.form["beneficiario_rfc"], search_fragment=True)))
+    if "beneficiario_nombres" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.nombres.contains(safe_string(request.form["beneficiario_nombres"], save_enie=True))
+        )
+    if "beneficiario_apellido_primero" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.apellido_primero.contains(safe_string(request.form["beneficiario_apellido_primero"], save_enie=True))
+        )
+    if "beneficiario_apellido_segundo" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.apellido_segundo.contains(safe_string(request.form["beneficiario_apellido_segundo"], save_enie=True))
+        )
     # Ordenar y paginar
     registros = consulta.order_by(BeneficiarioCuenta.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -90,3 +117,97 @@ def detail(beneficiario_cuenta_id):
     """Detalle de un Beneficiario Cuenta"""
     beneficiario_cuenta = BeneficiarioCuenta.query.get_or_404(beneficiario_cuenta_id)
     return render_template("beneficiarios_cuentas/detail.jinja2", beneficiario_cuenta=beneficiario_cuenta)
+
+
+@beneficiarios_cuentas.route("/beneficiarios_cuentas/nuevo_con_beneficiario/<int:beneficiario_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new_with_beneficiario(beneficiario_id):
+    """Nuevo Beneficiario Cuenta"""
+    beneficiario = Beneficiario.query.get_or_404(beneficiario_id)
+    form = BeneficiarioCuentaNewWithBeneficiarioForm()
+    if form.validate_on_submit():
+        banco = Banco.query.get_or_404(form.banco.data)
+        beneficiario_cuenta = BeneficiarioCuenta(
+            banco=banco,
+            beneficiario=beneficiario,
+            num_cuenta=safe_clave(form.num_cuenta.data, max_len=24, only_digits=True, separator=""),
+        )
+        beneficiario_cuenta.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Beneficiario Cuenta {beneficiario_cuenta.num_cuenta}"),
+            url=url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=beneficiario_cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.beneficiario_rfc.data = beneficiario.rfc  # Solo lectura
+    form.beneficiario_nombre.data = beneficiario.nombre_completo  # Solo lectura
+    return render_template(
+        "beneficiarios_cuentas/new_with_beneficiario.jinja2",
+        form=form,
+        beneficiario=beneficiario,
+        titulo=f"Nueva Cuenta para Beneficiario {beneficiario.rfc}",
+    )
+
+
+@beneficiarios_cuentas.route("/beneficiarios_cuentas/edicion/<int:beneficiario_cuenta_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(beneficiario_cuenta_id):
+    """Editar Beneficiario Cuenta"""
+    beneficiario_cuenta = BeneficiarioCuenta.query.get_or_404(beneficiario_cuenta_id)
+    form = BeneficiarioCuentaEditForm()
+    if form.validate_on_submit():
+        beneficiario_cuenta.num_cuenta = safe_clave(form.num_cuenta.data, max_len=24, only_digits=True, separator="")
+        beneficiario_cuenta.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Editado Beneficiario Cuenta {beneficiario_cuenta.num_cuenta}"),
+            url=url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=beneficiario_cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    form.banco_nombre.data = beneficiario_cuenta.banco.nombre
+    form.beneficiario_rfc.data = beneficiario_cuenta.beneficiario.rfc
+    form.beneficiario_nombre.data = beneficiario_cuenta.beneficiario.nombre_completo
+    form.num_cuenta.data = beneficiario_cuenta.num_cuenta
+    return render_template("beneficiarios_cuentas/edit.jinja2", form=form, beneficiario_cuenta=beneficiario_cuenta)
+
+
+@beneficiarios_cuentas.route("/beneficiarios_cuentas/eliminar/<int:beneficiario_cuenta_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(beneficiario_cuenta_id):
+    """Eliminar Beneficiario Cuenta"""
+    beneficiario_cuenta = BeneficiarioCuenta.query.get_or_404(beneficiario_cuenta_id)
+    if beneficiario_cuenta.estatus == "A":
+        beneficiario_cuenta.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Beneficiario Cuenta ID {beneficiario_cuenta.id}"),
+            url=url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=beneficiario_cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=beneficiario_cuenta.id))
+
+
+@beneficiarios_cuentas.route("/beneficiarios_cuentas/recuperar/<int:beneficiario_cuenta_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(beneficiario_cuenta_id):
+    """Recuperar Beneficiario Cuenta"""
+    beneficiario_cuenta = BeneficiarioCuenta.query.get_or_404(beneficiario_cuenta_id)
+    if beneficiario_cuenta.estatus == "B":
+        beneficiario_cuenta.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Beneficiario Cuenta ID {beneficiario_cuenta.id}"),
+            url=url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=beneficiario_cuenta.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("beneficiarios_cuentas.detail", beneficiario_cuenta_id=beneficiario_cuenta.id))

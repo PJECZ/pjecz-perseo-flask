@@ -8,17 +8,18 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Beneficiario ' + beneficiario.rfc) %}
         {{ topbar.button_previous('Beneficiarios', url_for('beneficiarios.list_active')) }}
-        {# if current_user.can_edit('BENEFICIARIOS') %}
+        {% if current_user.can_edit('BENEFICIARIOS') %}
             {{ topbar.button_edit('Editar', url_for('beneficiarios.edit', beneficiario_id=beneficiario.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('BENEFICIARIOS') %}
+        {% endif %}
+        {% if current_user.can_admin('BENEFICIARIOS') %}
             {% if beneficiario.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('beneficiarios.delete', beneficiario_id=beneficiario.id)) }}{% endif %}
             {% if beneficiario.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('beneficiarios.recover', beneficiario_id=beneficiario.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle del beneficiario -->
     {% call detail.card(estatus=beneficiario.estatus) %}
         {{ detail.label_value_big('RFC', beneficiario.rfc) }}
         {{ detail.label_value('Nombres', beneficiario.nombres) }}
@@ -28,12 +29,100 @@
         {{ detail.label_value('Modelo', beneficiario.modelo) }}
         {{ detail.label_value('Creado', moment(beneficiario.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Cuentas del beneficiario -->
+    {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
+        {% call detail.card('Cuentas') %}
+            <table id="beneficiarios_cuentas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Banco</th>
+                        <th>No. de cuenta</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('BENEFICIARIOS CUENTAS') %}
+            <a href="{{ url_for('beneficiarios_cuentas.new_with_beneficiario', beneficiario_id=beneficiario.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+    <!-- Quincenas del beneficiario -->
+    {% if current_user.can_view('BENEFICIARIOS QUINCENAS') %}
+        {% call detail.card('Quincenas') %}
+            <table id="beneficiarios_quincenas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>No. Cheque</th>
+                        <th style="text-align:right">Importe</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('BENEFICIARIOS QUINCENAS') %}
+            <a href="{{ url_for('beneficiarios_quincenas.new_with_beneficiario', beneficiario_id=beneficiario.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ detail.config_datatable() }}
+    <!-- Cuentas del beneficiario -->
+    {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'banco_nombre' },
+                { data: 'num_cuenta' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                }
+            ];
+            $('#beneficiarios_cuentas_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+    <!-- Quincenas del beneficiario -->
+    {% if current_user.can_view('BENEFICIARIOS QUINCENAS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/beneficiarios_quincenas/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena' },
+                { data: 'num_cheque' },
+                { data: 'importe' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 3, // importe
+                    render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            $('#beneficiarios_quincenas_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+    <!-- Modales -->
     {% if current_user.can_admin('BENEFICIARIOS') %}
         {% if beneficiario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario.rfc + '?') }}{% endif %}
         {% if beneficiario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario.rfc + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment.js -->
     {{ detail.moment_js(moment) }}
 {% endblock %}
