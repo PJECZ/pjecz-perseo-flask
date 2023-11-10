@@ -7,7 +7,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_clave, safe_message
+from lib.safe_string import safe_clave, safe_message, safe_rfc, safe_string
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.beneficiarios.models import Beneficiario
 from perseo.blueprints.beneficiarios_cuentas.forms import BeneficiarioCuentaEditForm, BeneficiarioCuentaNewWithBeneficiarioForm
@@ -41,8 +41,32 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "banco_id" in request.form:
+        consulta = consulta.filter_by(banco_id=request.form["banco_id"])
     if "beneficiario_id" in request.form:
         consulta = consulta.filter_by(beneficiario_id=request.form["beneficiario_id"])
+    # Luego filtrar por columnas de otras tablas
+    if (
+        "beneficiario_rfc" in request.form
+        or "beneficiario_nombres" in request.form
+        or "beneficiario_apellido_primero" in request.form
+        or "beneficiario_apellido_segundo" in request.form
+    ):
+        consulta = consulta.join(Beneficiario)
+    if "beneficiario_rfc" in request.form:
+        consulta = consulta.filter(Beneficiario.rfc.contains(safe_rfc(request.form["beneficiario_rfc"], search_fragment=True)))
+    if "beneficiario_nombres" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.nombres.contains(safe_string(request.form["beneficiario_nombres"], save_enie=True))
+        )
+    if "beneficiario_apellido_primero" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.apellido_primero.contains(safe_string(request.form["beneficiario_apellido_primero"], save_enie=True))
+        )
+    if "beneficiario_apellido_segundo" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.apellido_segundo.contains(safe_string(request.form["beneficiario_apellido_segundo"], save_enie=True))
+        )
     # Ordenar y paginar
     registros = consulta.order_by(BeneficiarioCuenta.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()

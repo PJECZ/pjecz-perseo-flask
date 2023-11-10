@@ -7,14 +7,17 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_message, safe_quincena, safe_rfc, safe_string
 from perseo.blueprints.beneficiarios.models import Beneficiario
-from perseo.blueprints.beneficiarios_cuentas.forms import BeneficiarioCuentaNewWithBeneficiarioForm
-from perseo.blueprints.beneficiarios_quincenas.forms import BeneficiarioQuincenaEditForm
+from perseo.blueprints.beneficiarios_quincenas.forms import (
+    BeneficiarioQuincenaEditForm,
+    BeneficiarioQuincenaNewWithBeneficiarioForm,
+)
 from perseo.blueprints.beneficiarios_quincenas.models import BeneficiarioQuincena
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "BENEFICIARIOS QUINCENAS"
@@ -43,6 +46,30 @@ def datatable_json():
         consulta = consulta.filter_by(estatus="A")
     if "beneficiario_id" in request.form:
         consulta = consulta.filter_by(beneficiario_id=request.form["beneficiario_id"])
+    if "quincena" in request.form:
+        consulta = consulta.filter_by(quincena=request.form["quincena"])
+    # Luego filtrar por columnas de otras tablas
+    if (
+        "beneficiario_rfc" in request.form
+        or "beneficiario_nombres" in request.form
+        or "beneficiario_apellido_primero" in request.form
+        or "beneficiario_apellido_segundo" in request.form
+    ):
+        consulta = consulta.join(Beneficiario)
+    if "beneficiario_rfc" in request.form:
+        consulta = consulta.filter(Beneficiario.rfc.contains(safe_rfc(request.form["beneficiario_rfc"], search_fragment=True)))
+    if "beneficiario_nombres" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.nombres.contains(safe_string(request.form["beneficiario_nombres"], save_enie=True))
+        )
+    if "beneficiario_apellido_primero" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.apellido_primero.contains(safe_string(request.form["beneficiario_apellido_primero"], save_enie=True))
+        )
+    if "beneficiario_apellido_segundo" in request.form:
+        consulta = consulta.filter(
+            Beneficiario.apellido_segundo.contains(safe_string(request.form["beneficiario_apellido_segundo"], save_enie=True))
+        )
     # Ordenar y paginar
     registros = consulta.order_by(BeneficiarioQuincena.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -58,8 +85,8 @@ def datatable_json():
                 "quincena": resultado.quincena,
                 "beneficiario_rfc": resultado.beneficiario.rfc,
                 "beneficiario_nombre_completo": resultado.beneficiario.nombre_completo,
-                "importe": resultado.importe,
                 "num_cheque": resultado.num_cheque,
+                "importe": resultado.importe,
             }
         )
     # Entregar JSON
@@ -101,24 +128,40 @@ def detail(beneficiario_quincena_id):
 def new_with_beneficiario(beneficiario_id):
     """Nuevo Beneficiario Quincena"""
     beneficiario = Beneficiario.query.get_or_404(beneficiario_id)
-    form = BeneficiarioCuentaNewWithBeneficiarioForm()
+    form = BeneficiarioQuincenaNewWithBeneficiarioForm()
     if form.validate_on_submit():
-        beneficiario_quincena = BeneficiarioQuincena(
-            beneficiario=beneficiario,
-            quincena=form.quincena.data,
-            importe=form.importe.data,
-            num_cheque=form.num_cheque.data,
-        )
-        beneficiario_quincena.save()
-        bitacora = Bitacora(
-            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-            usuario=current_user,
-            descripcion=safe_message(f"Nuevo Beneficiario Quincena {beneficiario_quincena.num_cheque}"),
-            url=url_for("beneficiarios_quincenas.detail", beneficiario_quincena_id=beneficiario_quincena.id),
-        )
-        bitacora.save()
-        flash(bitacora.descripcion, "success")
-        return redirect(bitacora.url)
+        es_valido = True
+        # Validar la quincena
+        try:
+            quincena_str = safe_quincena(form.quincena.data)
+        except ValueError:
+            flash("Quincena inválida", "warning")
+            es_valido = False
+        quincena = Quincena.query.filter_by(quincena=quincena_str).first()
+        if es_valido and quincena is None:
+            flash("La Quincena no existe", "warning")
+            es_valido = False
+        if es_valido and quincena.estado != "ABIERTA":
+            flash("La Quincena no está abierta", "warning")
+            es_valido = False
+        # Si es valido, crear el Beneficiario Quincena
+        if es_valido:
+            beneficiario_quincena = BeneficiarioQuincena(
+                beneficiario=beneficiario,
+                quincena=quincena_str,
+                importe=form.importe.data,
+                num_cheque=form.num_cheque.data,
+            )
+            beneficiario_quincena.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nuevo Beneficiario Quincena {beneficiario_quincena.num_cheque}"),
+                url=url_for("beneficiarios_quincenas.detail", beneficiario_quincena_id=beneficiario_quincena.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
     form.beneficiario_rfc.data = beneficiario.rfc  # Solo lectura
     form.beneficiario_nombre.data = beneficiario.nombre_completo  # Solo lectura
     return render_template(
@@ -136,7 +179,6 @@ def edit(beneficiario_quincena_id):
     beneficiario_quincena = BeneficiarioQuincena.query.get_or_404(beneficiario_quincena_id)
     form = BeneficiarioQuincenaEditForm()
     if form.validate_on_submit():
-        beneficiario_quincena.quincena = safe_string(form.quincena.data)
         beneficiario_quincena.importe = safe_string(form.importe.data)
         beneficiario_quincena.num_cheque = safe_string(form.num_cheque.data)
         beneficiario_quincena.save()

@@ -15,16 +15,16 @@ class BeneficiarioQuincenaEditForm(FlaskForm):
     beneficiario_rfc = StringField("Beneficiario RFC")  # Solo lectura
     beneficiario_nombre = StringField("Beneficiario nombre")  # Solo lectura
     importe = FloatField("Importe", validators=[DataRequired()])
-    num_cheque = StringField("No. de cheque", validators=[DataRequired(), Length(max=24)])
+    num_cheque = StringField("No. de cheque")  # Solo lectura
     guardar = SubmitField("Guardar")
 
 
 class BeneficiarioQuincenaNewWithBeneficiarioForm(FlaskForm):
     """Formulario BeneficiarioQuincena"""
 
-    quincena = StringField("Quincena", validators=[DataRequired(), Regexp(QUINCENA_REGEXP)])
+    quincena = StringField("Quincena (6 dígitos)", validators=[DataRequired(), Regexp(QUINCENA_REGEXP)])
     beneficiario_rfc = StringField("Beneficiario RFC")  # Solo lectura
     beneficiario_nombre = StringField("Beneficiario nombre")  # Solo lectura
     importe = FloatField("Importe", validators=[DataRequired()])
-    num_cheque = StringField("No. de cheque", validators=[DataRequired(), Length(max=24)])
+    num_cheque = StringField("No. de cheque")  # Solo lectura
     guardar = SubmitField("Guardar")

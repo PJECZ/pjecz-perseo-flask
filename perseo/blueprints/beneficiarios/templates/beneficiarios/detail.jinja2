@@ -54,8 +54,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Quincena</th>
+                        <th>No. Cheque</th>
                         <th>Importe</th>
-                        <th>No. Cuenta</th>
                     </tr>
                 </thead>
             </table>
@@ -72,7 +72,7 @@
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
         <script>
             configDataTable['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_cuenta_id': {{ beneficiario_cuenta.id}} };
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
             configDataTable['columns'] = [
                 { data: 'detalle' },
                 { data: 'banco_nombre' },
@@ -91,16 +91,15 @@
         </script>
     {% endif %}
     <!-- Quincenas del beneficiario -->
-    {{ detail.config_datatable() }}
     {% if current_user.can_view('BENEFICIARIOS QUINCENAS') %}
         <script>
             configDataTable['ajax']['url'] = '/beneficiarios_quincenas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_quincena_id': {{ beneficiario_quincena.id}} };
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
             configDataTable['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena' },
-                { data: 'importe' },
-                { data: 'num_cheque' }
+                { data: 'num_cheque' },
+                { data: 'importe' }
             ];
             configDataTable['columnDefs'] = [
                 {
@@ -111,7 +110,7 @@
                     }
                 },
                 {
-                    targets: 2, // importe
+                    targets: 3, // importe
                     render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
                     className: "dt-body-right",
                 }
@@ -119,10 +118,11 @@
             $('#beneficiarios_quincenas_datatable').DataTable(configDataTable);
         </script>
     {% endif %}
-    <!-- Modales eliminar y recuperar -->
+    <!-- Modales -->
     {% if current_user.can_admin('BENEFICIARIOS') %}
         {% if beneficiario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario.rfc + '?') }}{% endif %}
         {% if beneficiario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario.rfc + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment.js -->
     {{ detail.moment_js(moment) }}
 {% endblock %}

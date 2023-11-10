@@ -8,38 +8,38 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Cuenta ' + beneficiario_cuenta.banco.nombre + ' ' + beneficiario_cuenta.num_cuenta) %}
         {{ topbar.button_previous('Beneficiarios Cuentas', url_for('beneficiarios_cuentas.list_active')) }}
-        {# if current_user.can_edit('BENEFICIARIOS CUENTAS') %}
+        {% if current_user.can_edit('BENEFICIARIOS CUENTAS') %}
             {{ topbar.button_edit('Editar', url_for('beneficiarios_cuentas.edit', beneficiario_cuenta_id=beneficiario_cuenta.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('BENEFICIARIOS CUENTAS') %}
+        {% endif %}
+        {% if current_user.can_admin('BENEFICIARIOS CUENTAS') %}
             {% if beneficiario_cuenta.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('beneficiarios_cuentas.delete', beneficiario_cuenta_id=beneficiario_cuenta.id)) }}{% endif %}
             {% if beneficiario_cuenta.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('beneficiarios_cuentas.recover', beneficiario_cuenta_id=beneficiario_cuenta.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
 {% block content %}
     {% call detail.card(estatus=beneficiario_cuenta.estatus) %}
-        {% if current_user.can_view("BANCOS") %}
-            {{ detail.label_value('Banco', beneficiario_cuenta.banco.nombre, url_for('bancos.detail', banco_id=beneficiario_cuenta.banco_id)) }}
-        {% else %}
-            {{ detail.label_value('Banco', beneficiario_cuenta.banco.nombre) }}
-        {% endif %}
-        {{ detail.label_value_big('No. cuenta', beneficiario_cuenta.num_cuenta) }}
         {% set beneficiario_texto = beneficiario_cuenta.beneficiario.rfc + ' - ' + beneficiario_cuenta.beneficiario.nombre_completo %}
         {% if current_user.can_view("BENEFICIARIOS") %}
             {{ detail.label_value('Beneficiario', beneficiario_texto, url_for('beneficiarios.detail', beneficiario_id=beneficiario_cuenta.beneficiario_id)) }}
         {% else %}
             {{ detail.label_value('Beneficiario', beneficiario_texto) }}
         {% endif %}
+        {% if current_user.can_view("BANCOS") %}
+            {{ detail.label_value('Banco', beneficiario_cuenta.banco.nombre, url_for('bancos.detail', banco_id=beneficiario_cuenta.banco_id)) }}
+        {% else %}
+            {{ detail.label_value('Banco', beneficiario_cuenta.banco.nombre) }}
+        {% endif %}
+        {{ detail.label_value_big('No. cuenta', beneficiario_cuenta.num_cuenta) }}
         {{ detail.label_value('Creado', moment(beneficiario_cuenta.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
     {% if current_user.can_admin('BENEFICIARIOS CUENTAS') %}
-        {% if beneficiario_cuenta.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario_cuenta.id + '?') }}{% endif %}
-        {% if beneficiario_cuenta.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario_cuenta.id + '?') }}{% endif %}
+        {% if beneficiario_cuenta.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ID ' + beneficiario_cuenta.id | string + '?') }}{% endif %}
+        {% if beneficiario_cuenta.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ID ' + beneficiario_cuenta.id | string + '?') }}{% endif %}
     {% endif %}
     {{ detail.moment_js(moment) }}
 {% endblock %}

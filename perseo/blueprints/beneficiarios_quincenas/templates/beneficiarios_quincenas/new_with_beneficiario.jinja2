@@ -14,11 +14,11 @@
     {% call f.card() %}
         {% set form_kwargs = {'beneficiario_id': beneficiario.id} %}
         {% call f.form_tag('beneficiarios_quincenas.new_with_beneficiario', fid='beneficiario_quincena_form', **form_kwargs) %}
-            {% call f.form_group(form.quincena, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.quincena) %}{% endcall %}
             {% call f.form_group(form.beneficiario_rfc, readonly=true) %}{% endcall %}
             {% call f.form_group(form.beneficiario_nombre, readonly=true) %}{% endcall %}
             {% call f.form_group(form.importe) %}{% endcall %}
-            {% call f.form_group(form.num_cheque, readonly=true) %}{% endcall %}
+            {# call f.form_group(form.num_cheque, readonly=true) %}{% endcall #}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}

@@ -206,6 +206,12 @@ def edit(beneficiario_id):
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
     form.rfc.data = beneficiario.rfc
+    form.nombres.data = beneficiario.nombres
+    form.apellido_primero.data = beneficiario.apellido_primero
+    form.apellido_segundo.data = beneficiario.apellido_segundo
+    form.curp.data = beneficiario.curp
+    form.nacimiento_fecha.data = beneficiario.nacimiento_fecha
+    form.modelo.data = beneficiario.modelo
     return render_template("beneficiarios/edit.jinja2", form=form, beneficiario=beneficiario)
 
 

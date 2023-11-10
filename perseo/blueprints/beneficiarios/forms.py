@@ -21,5 +21,5 @@ class BeneficiarioForm(FlaskForm):
     apellido_segundo = StringField("Apellido segundo", validators=[Optional(), Length(max=256)])
     curp = StringField("CURP", validators=[Optional(), Regexp(CURP_REGEXP)])
     nacimiento_fecha = DateField("Fecha de nacimiento", validators=[Optional()])
-    modelo = RadioField("Modelo", validators=[DataRequired()], choices=MODELOS, coerce=int)
+    modelo = RadioField("Modelo", choices=MODELOS, coerce=int, default=4, validators=[DataRequired()])
     guardar = SubmitField("Guardar")

@@ -49,9 +49,25 @@ def datatable_json():
     if "persona_id" in request.form:
         consulta = consulta.filter_by(persona_id=request.form["persona_id"])
     # Luego filtrar por columnas de otras tablas
-    if "persona_rfc" in request.form:
+    if (
+        "persona_rfc" in request.form
+        or "persona_nombres" in request.form
+        or "persona_apellido_primero" in request.form
+        or "persona_apellido_segundo" in request.form
+    ):
         consulta = consulta.join(Persona)
+    if "persona_rfc" in request.form:
         consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
+    if "persona_nombres" in request.form:
+        consulta = consulta.filter(Persona.nombres.contains(safe_string(request.form["persona_nombres"], save_enie=True)))
+    if "persona_apellido_primero" in request.form:
+        consulta = consulta.filter(
+            Persona.apellido_primero.contains(safe_string(request.form["persona_apellido_primero"], save_enie=True))
+        )
+    if "persona_apellido_segundo" in request.form:
+        consulta = consulta.filter(
+            Persona.apellido_segundo.contains(safe_string(request.form["persona_apellido_segundo"], save_enie=True))
+        )
     # Ordenar y paginar
     registros = consulta.order_by(Nomina.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()

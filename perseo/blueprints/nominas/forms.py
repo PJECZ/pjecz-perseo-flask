@@ -11,7 +11,7 @@ from perseo.blueprints.nominas.models import Nomina
 class NominaEditForm(FlaskForm):
     """Formulario Nomina"""
 
-    quincena = StringField("Quincena (6 dígitos)")  # Solo lectura
+    quincena = StringField("Quincena")  # Solo lectura
     persona_rfc = StringField("RFC")  # Solo lectura
     persona_nombre_completo = StringField("Nombre completo")  # Solo lectura
     centro_trabajo_clave = StringField("Centro de Trabajo")  # Solo lectura
