@@ -26,10 +26,16 @@ class TestQuincena(unittest.TestCase):
         self.assertRaises(ValueError, quincena_to_fecha, "202325")
         self.assertRaises(ValueError, quincena_to_fecha, "202327")
 
-    def test_quincena_correcta(self):
-        """Quincenas correctas"""
+    def test_quincena_correcta_dia_primero(self):
+        """Quincenas correctas con fecha de día primero"""
         self.assertEqual(quincena_to_fecha("202303"), date(2023, 2, 1))
         self.assertEqual(quincena_to_fecha("202324"), date(2023, 12, 16))
+
+    def test_quincena_correcta_dia_ultimo(self):
+        """Quincenas correctas con fecha de día último"""
+        self.assertEqual(quincena_to_fecha("202304", dame_ultimo_dia=True), date(2023, 2, 28))
+        self.assertEqual(quincena_to_fecha("202306", dame_ultimo_dia=True), date(2023, 3, 31))
+        self.assertEqual(quincena_to_fecha("202323", dame_ultimo_dia=True), date(2023, 12, 15))
 
 
 if __name__ == "__main__":
