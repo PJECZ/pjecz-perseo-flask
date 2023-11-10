@@ -25,3 +25,19 @@ def crear_clave_quincena(fecha: date = None) -> str:
 
     # Entregar la clave de quincena como AAAANN
     return anio_str + str(quincena).zfill(2)
+
+
+def quincena_count(desde: date, hasta: date) -> int:
+    """Cuenta el número de quincenas entre dos fechas dadas"""
+    return 0
+
+
+def fecha_to_quincena(fecha: date) -> str:
+    """Convierte una fecha en quincena"""
+
+    quincena = fecha.month * 2
+
+    if fecha.day < 16:
+        quincena = quincena - 1
+
+    return f"{fecha.year}{quincena:02d}"
