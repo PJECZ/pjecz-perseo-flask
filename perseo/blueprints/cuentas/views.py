@@ -115,7 +115,7 @@ def new_with_persona(persona_id):
         cuenta = Cuenta(
             banco=banco,
             persona=persona,
-            num_cuenta=safe_clave(form.num_cuenta.data, only_digits=True, separator=""),
+            num_cuenta=safe_clave(form.num_cuenta.data, max_len=24, only_digits=True, separator=""),
         )
         cuenta.save()
         bitacora = Bitacora(
@@ -144,7 +144,7 @@ def edit(cuenta_id):
     cuenta = Cuenta.query.get_or_404(cuenta_id)
     form = CuentaEditForm()
     if form.validate_on_submit():
-        cuenta.num_cuenta = safe_clave(form.num_cuenta.data, only_digits=True, separator="")
+        cuenta.num_cuenta = safe_clave(form.num_cuenta.data, max_len=24, only_digits=True, separator="")
         cuenta.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

@@ -24,7 +24,7 @@ class Cuenta(database.Model, UniversalMixin):
     persona = relationship("Persona", back_populates="cuentas")
 
     # Columnas
-    num_cuenta = Column(String(256), nullable=False)
+    num_cuenta = Column(String(24), nullable=False)
 
     def __repr__(self):
         """Representación"""
