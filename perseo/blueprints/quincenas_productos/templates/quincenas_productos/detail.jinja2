@@ -20,10 +20,11 @@
 
 {% block content %}
     {% call detail.card(estatus=quincena_producto.estatus) %}
+        {{ detail.label_value_big('ID', quincena_producto.id) }}
         {{ detail.label_value('Quincena', quincena_producto.quincena.quincena) }}
-        {{ detail.label_value('Archivo', quincena_producto.archivo) }}
-        {{ detail.label_value_boolean('Tiene errores', quincena_producto.tiene_errores) }}
+        {{ detail.label_value('Fuente', quincena_producto.fuente) }}
         {{ detail.label_value('Mensajes', quincena_producto.mensajes) }}
+        {{ detail.label_value('Archivo', quincena_producto.archivo) }}
         {{ detail.label_value('Creado', moment(quincena_producto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}

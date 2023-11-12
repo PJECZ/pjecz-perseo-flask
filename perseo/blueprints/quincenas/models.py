@@ -24,7 +24,7 @@ class Quincena(database.Model, UniversalMixin):
 
     # Columnas
     quincena = Column(String(6), unique=True, nullable=False)
-    estado = Column(Enum(*ESTADOS, name="estado_quincena"), nullable=False)
+    estado = Column(Enum(*ESTADOS, name="quincenas_estados"), nullable=False)
 
     # Hijos
     quincenas_productos = relationship("QuincenaProducto", back_populates="quincena")

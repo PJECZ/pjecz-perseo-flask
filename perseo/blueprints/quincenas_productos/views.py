@@ -45,7 +45,7 @@ def datatable_json():
     #     consulta = consulta.join(Persona)
     #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
     # Ordenar y paginar
-    registros = consulta.order_by(QuincenaProducto.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(QuincenaProducto.id.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -57,7 +57,8 @@ def datatable_json():
                     "url": url_for("quincenas_productos.detail", quincena_producto_id=resultado.id),
                 },
                 "quincena": resultado.quincena.quincena,
-                "tiene_errores": "ERRORES" if resultado.tiene_errores else "Sin errores",
+                "fuente": resultado.fuente,
+                "mensajes": resultado.mensajes,
                 "archivo": {
                     "nombre_archivo": resultado.archivo,
                     "url": resultado.url,

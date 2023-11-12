@@ -23,8 +23,9 @@
                 <tr>
                     <th>ID</th>
                     <th>Quincena</th>
+                    <th>Fuente</th>
+                    <th>Mensajes</th>
                     <th>Archivo</th>
-                    <th>Tiene errores</th>
                 </tr>
             </thead>
         </table>
@@ -39,7 +40,8 @@
         configDataTable['columns'] = [
             { data: 'detalle' },
             { data: 'quincena' },
-            { data: 'tiene_errores' },
+            { data: 'fuente' },
+            { data: 'mensajes' },
             { data: 'archivo' }
         ];
         configDataTable['columnDefs'] = [
@@ -47,11 +49,11 @@
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
                 }
             },
             {
-                targets: 3, // archivo
+                targets: 4, // archivo
                 data: null,
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.nombre_archivo + '</a>';

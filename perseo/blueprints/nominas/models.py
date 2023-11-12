@@ -35,7 +35,7 @@ class Nomina(database.Model, UniversalMixin):
     percepcion = Column(Numeric(precision=24, scale=4), nullable=False)
     deduccion = Column(Numeric(precision=24, scale=4), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
-    tipo = Column(Enum(*TIPOS, name="tipo_nomina"), nullable=False)
+    tipo = Column(Enum(*TIPOS, name="nominas_tipos"), nullable=False)
     num_cheque = Column(String(24), nullable=False, default="", server_default="")
 
     def __repr__(self):
