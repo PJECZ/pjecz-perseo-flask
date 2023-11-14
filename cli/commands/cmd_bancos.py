@@ -69,6 +69,9 @@ def reiniciar_consecutivos_generados():
     for banco in Banco.query.filter_by(estatus="A").all():
         # Si son diferentes
         if banco.consecutivo_generado != banco.consecutivo:
+            # Recordar el valor anterior
+            anterior = banco.consecutivo_generado
+
             # Poner el valor de consecutivo generado con el de consecutivo
             banco.consecutivo_generado = banco.consecutivo
 
@@ -76,7 +79,7 @@ def reiniciar_consecutivos_generados():
             sesion.add(banco)
 
             # Mostrar en pantalla el cambio
-            click.echo(f"- {banco.nombre} ({banco.consecutivo_generado})")
+            click.echo(f"  {banco.nombre} cambia de {anterior} a {banco.consecutivo_generado}")
 
             # Incrementar el contador
             contador += 1
@@ -90,7 +93,7 @@ def reiniciar_consecutivos_generados():
     sesion.commit()
 
     # Mensaje de termino
-    click.echo(f"{contador} consecutivos generados reiniciados.")
+    click.echo(f"Reiniciar los consecutivos generados terminado: {contador} reiniciados.")
 
 
 cli.add_command(alimentar)

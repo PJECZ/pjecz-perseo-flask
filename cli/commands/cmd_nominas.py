@@ -320,7 +320,7 @@ def generar_nominas(quincena_clave: str):
     sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
-    nombre_archivo = f"nominas_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"nominas_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
@@ -449,7 +449,7 @@ def generar_monederos(quincena_clave: str):
     sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'monederos' con la quincena y la fecha como YYYY-MM-DD HHMMSS
-    nombre_archivo = f"monederos_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"monederos_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
@@ -586,7 +586,7 @@ def generar_pensionados(quincena_clave: str):
     sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
-    nombre_archivo = f"pensionados_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"pensionados_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
@@ -684,10 +684,10 @@ def generar_dispersiones_pensionados(quincena_clave: str):
             continue
 
         # Definir referencia_pago, se forma con los dos ultimos caracteres y los caracteres tercero y cuarto de la quincena
-        referencia_pago = f"{quincena[-2:]}{quincena[2:4]}"
+        referencia_pago = f"{quincena_clave[-2:]}{quincena_clave[2:4]}"
 
         # Definir concepto_pago, se forma con el texto "QUINCENA {dos digitos} PENSIONADOS"
-        concepto_pago = f"QUINCENA {quincena[-2:]} PENSIONADOS"
+        concepto_pago = f"QUINCENA {quincena_clave[-2:]} PENSIONADOS"
 
         # Agregar la fila
         hoja.append(
@@ -712,7 +712,7 @@ def generar_dispersiones_pensionados(quincena_clave: str):
             click.echo(f"  Van {contador}...")
 
     # Determinar el nombre del archivo XLSX, juntando 'nominas' con la quincena y la fecha como YYYY-MM-DD HHMMSS
-    nombre_archivo = f"dispersiones_pensionados_{quincena}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"dispersiones_pensionados_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
