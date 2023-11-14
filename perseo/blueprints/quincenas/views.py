@@ -39,9 +39,9 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    if "quincena" in request.form:
+    if "quincena_clave" in request.form:
         try:
-            consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena"]))
+            consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena_clave"]))
         except ValueError:
             pass
     # Ordenar y paginar
@@ -53,7 +53,7 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "quincena": resultado.quincena,
+                    "clave": resultado.quincena.clave,
                     "url": url_for("quincenas.detail", quincena_id=resultado.id),
                 },
                 "estado": resultado.estado,

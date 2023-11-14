@@ -14,7 +14,7 @@
     {% call f.card() %}
         {% set form_kwargs = {'percepcion_deduccion_id': percepcion_deduccion.id} %}
         {% call f.form_tag('percepciones_deducciones.edit', fid='percepcion_deduccion_form', **form_kwargs) %}
-            {% call f.form_group(form.quincena, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.quincena_clave, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_rfc, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
             {% call f.form_group(form.centro_trabajo_clave, readonly=true) %}{% endcall %}

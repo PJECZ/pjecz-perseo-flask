@@ -13,6 +13,7 @@ from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.beneficiarios.models import Beneficiario
 from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
 from perseo.blueprints.beneficiarios_quincenas.models import BeneficiarioQuincena
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.extensions import database
 
 BENEFICIARIOS_CSV = "seed/beneficiarios.csv"
@@ -28,12 +29,12 @@ def cli():
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def alimentar(quincena: str):
+@click.argument("quincena_clave", type=str)
+def alimentar(quincena_clave: str):
     """Alimentar Beneficiarios"""
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida.")
         return
 
@@ -48,6 +49,15 @@ def alimentar(quincena: str):
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
 
     # Leer el archivo CSV
     click.echo("Alimentando beneficiarios...")

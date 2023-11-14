@@ -41,15 +41,15 @@ def cli():
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def alimentar(quincena: str):
+@click.argument("quincena_clave", type=str)
+def alimentar(quincena_clave: str):
     """Alimentar nominas"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida")
         return
 
@@ -59,7 +59,7 @@ def alimentar(quincena: str):
         return
 
     # Validar si existe el archivo
-    ruta = Path(EXPLOTACION_BASE_DIR, quincena, NOMINAS_FILENAME_XLS)
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, NOMINAS_FILENAME_XLS)
     if not ruta.exists():
         click.echo(f"AVISO: {str(ruta)} no se encontró.")
         return
@@ -67,12 +67,14 @@ def alimentar(quincena: str):
         click.echo(f"AVISO: {str(ruta)} no es un archivo.")
         return
 
-    # Revisar si existe el registro en quincenas, de lo contrario insertarlo
-    quincena_obj = Quincena.query.filter_by(quincena=quincena).first()
-    if quincena_obj is None:
-        quincena_obj = Quincena(quincena=quincena, estado=Quincena.ESTADOS["ABIERTA"])
-        sesion.add(quincena_obj)
-        click.echo(f"  Quincena {quincena} insertada")
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
@@ -187,27 +189,29 @@ def alimentar(quincena: str):
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def generar_nominas(quincena: str):
+@click.argument("quincena_clave", type=str)
+def generar_nominas(quincena_clave: str):
     """Generar archivo XLSX con las nominas de una quincena"""
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida.")
         return
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
-    # Cargar todos los bancos
-    # bancos = Banco.query.filter_by(estatus="A").all()
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
-    # Bucle para igualar el consecutivo_generado al consecutivo
-    # for banco in bancos:
-    #     banco.consecutivo_generado = banco.consecutivo
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -273,7 +277,7 @@ def generar_nominas(quincena: str):
         # Agregar la fila
         hoja.append(
             [
-                nomina.quincena,
+                nomina.quincena.clave,
                 nomina.centro_trabajo.clave,
                 nomina.persona.rfc,
                 nomina.persona.nombre_completo,
@@ -313,17 +317,26 @@ def generar_nominas(quincena: str):
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def generar_monederos(quincena: str):
+@click.argument("quincena_clave", type=str)
+def generar_monederos(quincena_clave: str):
     """Generar archivo XLSX con los monederos de una quincena"""
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida")
         return
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
 
     # Cargar solo el banco con la clave 9 que es PREVIVALE
     banco = Banco.query.filter_by(clave="9").first()
@@ -335,7 +348,7 @@ def generar_monederos(quincena: str):
     banco.consecutivo_generado = banco.consecutivo
 
     # Consultar las nominas de la quincena solo tipo DESPENSA
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -394,7 +407,7 @@ def generar_monederos(quincena: str):
                 nomina.importe,
                 num_cheque,
                 su_cuenta.num_cuenta,
-                nomina.quincena,
+                nomina.quincena.clave,
                 nomina.persona.modelo,
             ]
         )
@@ -424,20 +437,29 @@ def generar_monederos(quincena: str):
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def generar_pensionados(quincena: str):
+@click.argument("quincena_clave", type=str)
+def generar_pensionados(quincena_clave: str):
     """Generar archivo XLSX con los pensionados de una quincena"""
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida.")
         return
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
+
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -503,7 +525,7 @@ def generar_pensionados(quincena: str):
         # Agregar la fila
         hoja.append(
             [
-                nomina.quincena,
+                nomina.quincena.clave,
                 nomina.centro_trabajo.clave,
                 nomina.persona.rfc,
                 nomina.persona.nombre_completo,
@@ -543,16 +565,26 @@ def generar_pensionados(quincena: str):
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def generar_dispersiones_pensionados(quincena: str):
+@click.argument("quincena_clave", type=str)
+def generar_dispersiones_pensionados(quincena_clave: str):
     """Generar archivo XLSX con las dispersiones pensionados de una quincena"""
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida.")
         return
 
-    # TODO: Validar que la quincena este abierta
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
@@ -652,49 +684,8 @@ def generar_dispersiones_pensionados(quincena: str):
     click.echo(f"Nominas terminado: {contador} dispersiones pensionados generados en {nombre_archivo}")
 
 
-@click.command()
-@click.argument("quincena", type=str)
-def generar_beneficiarios(quincena: str):
-    """Generar archivo XLSX con los numeros de cheque para los beneficiarios de una quincena"""
-
-    # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
-        click.echo("Quincena inválida.")
-        return
-
-    # TODO: Validar que la quincena este abierta
-
-    # Consultar los beneficiarios activos
-    beneficiarios = Beneficiario.query.filter_by(estatus="A").all()
-
-    # Iniciar el archivo XLSX
-    libro = Workbook()
-
-    # Tomar la hoja del libro XLSX
-    hoja = libro.active
-
-    # Agregar la fila con las cabeceras de las columnas
-    hoja.append(
-        [
-            "QUINCENA",
-            "CT CLASIF",
-            "RFC",
-            "NOMBRE DEL BENEFICIARIO",
-            "NUM EMPLEADO",
-            "MODELO",
-            "PLAZA",
-            "NOMBRE DEL BANCO",
-            "CLAVE DEL BANCO",
-            "NUMERO DE CUENTA",
-            "MONTO TOTAL",
-            "CHEQUE",
-        ]
-    )
-
-
 cli.add_command(alimentar)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)
 cli.add_command(generar_dispersiones_pensionados)
-cli.add_command(generar_beneficiarios)

@@ -21,7 +21,7 @@
 {% block content %}
     {% call detail.card(estatus=percepcion_deduccion.estatus) %}
         {{ detail.label_value_big('ID', percepcion_deduccion.id) }}
-        {{ detail.label_value('Quincena', percepcion_deduccion.quincena) }}
+        {{ detail.label_value('Quincena', percepcion_deduccion.quincena.clave) }}
         {% set persona_texto = percepcion_deduccion.persona.rfc + ' - ' + percepcion_deduccion.persona.nombre_completo %}
         {% if current_user.can_view("PERSONAS") %}
             {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=percepcion_deduccion.persona_id)) }}

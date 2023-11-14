@@ -89,7 +89,7 @@
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
-            { data: 'quincena' },
+            { data: 'quincena_clave' },
             { data: 'beneficiario_rfc' },
             { data: 'beneficiario_nombre_completo' },
             { data: 'num_cheque' },
@@ -111,7 +111,7 @@
         ];
         // Filtros Beneficiarios Quincenas
         const filtrosBeneficiariosQuincenas = new FiltrosDataTable('#beneficiarios_quincenas_datatable', configDataTable);
-        filtrosBeneficiariosQuincenas.agregarInput('filtroQuincena', 'quincena');
+        filtrosBeneficiariosQuincenas.agregarInput('filtroQuincena', 'quincena_clave');
         filtrosBeneficiariosQuincenas.agregarInput('filtroBeneficiarioRFC', 'beneficiario_rfc');
         filtrosBeneficiariosQuincenas.agregarInput('filtroBeneficiarioNombres', 'beneficiario_nombres');
         filtrosBeneficiariosQuincenas.agregarInput('filtroBeneficiarioApellidoPrimero', 'beneficiario_apellido_primero');

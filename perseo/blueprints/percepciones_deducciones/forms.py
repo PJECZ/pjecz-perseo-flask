@@ -11,7 +11,7 @@ from perseo.blueprints.conceptos.models import Concepto
 class PercepcionDeduccionEditForm(FlaskForm):
     """Formulario Percepcion Deduccion"""
 
-    quincena = StringField("Quincena")  # Solo lectura
+    quincena_clave = StringField("Quincena")  # Solo lectura
     persona_rfc = StringField("RFC")  # Solo lectura
     persona_nombre_completo = StringField("Nombre completo")  # Solo lectura
     centro_trabajo_clave = StringField("Centro de Trabajo")  # Solo lectura

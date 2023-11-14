@@ -35,7 +35,7 @@ def cerrar() -> None:
     sesion = database.session
 
     # Consultar todas las quincenas con estatus "A"
-    quincenas = sesion.query(Quincena).order_by(Quincena.quincena).filter_by(estatus="A").all()
+    quincenas = sesion.query(Quincena).order_by(Quincena.clave).filter_by(estatus="A").all()
 
     # Si no hay quincenas, mostrar mensaje de error y salir
     if len(quincenas) == 0:
@@ -48,12 +48,12 @@ def cerrar() -> None:
     quincenas_cerradas = []
 
     # Bucle por las quincenas
-    for quincena_obj in quincenas:
+    for quincena in quincenas:
         # Si la quincena esta abierta, cerrarla
-        if quincena_obj.estado == "ABIERTA":
-            quincena_obj.estado = "CERRADA"
-            sesion.add(quincena_obj)
-            quincenas_cerradas.append(quincena_obj)
+        if quincena.estado == "ABIERTA":
+            quincena.estado = "CERRADA"
+            sesion.add(quincena)
+            quincenas_cerradas.append(quincena)
 
     # Si no hubo cambios, mostrar mensaje y salir
     if len(quincenas_cerradas) == 0:
@@ -81,7 +81,7 @@ def cerrar() -> None:
     bancos_actualizados_str = ""
     if len(bancos_actualizados) > 0:
         bancos_actualizados_str = "Consecutivos:" + ", ".join([b for b in bancos_actualizados])
-    cerradas_str = ", ".join([q.quincena for q in quincenas_cerradas])
+    cerradas_str = ", ".join([q.clave for q in quincenas_cerradas])
     mensaje = f"Quincenas cerradas: {cerradas_str}. {bancos_actualizados_str}"
     set_task_progress(100, mensaje)
     bitacora.info(mensaje)

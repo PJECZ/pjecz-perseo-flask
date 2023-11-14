@@ -3,10 +3,10 @@
 {% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Quincena {{ quincena.quincena }}{% endblock %}
+{% block title %}Quincena {{ quincena.clave }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Quincena ' + quincena.quincena) %}
+    {% call topbar.page_buttons('Quincena ' + quincena.clave) %}
         {{ topbar.button_previous('Quincenas', url_for('quincenas.list_active')) }}
         {% if current_user.can_edit('QUINCENAS') %}
             {{ topbar.button_edit('Editar', url_for('quincenas.edit', quincena_id=quincena.id)) }}
@@ -38,7 +38,7 @@
                         <li><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas 2023-09-27 13:40</li>
                         <li><span class="iconify" data-icon="mdi:cash-fast"></span> Nóminas 2023-09-26 10:20</li>
                     </ul>
-                    {{ modals.button_modal_big('Generar ' + quincena.quincena, url_for('nominas.generate_nominas', quincena_str=quincena.quincena), 'GenerateNominas', 'mdi:cash-fast', "¿Necesita generar un nuevo XLSX para nóminas?") }}
+                    {{ modals.button_modal_big('Generar ' + quincena.clave, url_for('nominas.generate_nominas', quincena_clave=quincena.clave), 'GenerateNominas', 'mdi:cash-fast', "¿Necesita generar un nuevo XLSX para nóminas?") }}
                 </div>
             </div>
         </div>
@@ -51,14 +51,14 @@
                         <li><span class="iconify" data-icon="mdi:cart"></span> Monederos2023-09-27 15:30</li>
                         <li><span class="iconify" data-icon="mdi:cart"></span> Monederos2023-09-27 13:40</li>
                     </ul>
-                    {{ modals.button_modal_big('Generar ' + quincena.quincena, url_for('nominas.generate_monederos', quincena_str=quincena.quincena), 'GenerateMonederos', 'mdi:cart', "¿Necesita generar un nuevo XLSX para monederos?") }}
+                    {{ modals.button_modal_big('Generar ' + quincena.clave, url_for('nominas.generate_monederos', quincena_clave=quincena.clave), 'GenerateMonederos', 'mdi:cart', "¿Necesita generar un nuevo XLSX para monederos?") }}
                 </div>
             </div>
         </div>
     </div>
     <!-- Nominas de la Quincena -->
     {% if current_user.can_view('NOMINAS') %}
-        {% call detail.card('Nómina ' + quincena.quincena) %}
+        {% call detail.card('Nómina ' + quincena.clave) %}
             <div class="row">
                 <div class="col">
                     <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
@@ -120,7 +120,7 @@
             const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
             let configDataTable = constructorDataTable.config();
             configDataTable['ajax']['url'] = '/nominas/datatable_json';
-            configDataTable['ajax']['data'] = { estatus: 'A', quincena: '{{ quincena.quincena }}' };
+            configDataTable['ajax']['data'] = { estatus: 'A', quincena: '{{ quincena.clave }}' };
             configDataTable['columns'] = [
                 { data: 'detalle' },
                 { data: 'persona_rfc' },
@@ -157,8 +157,8 @@
     {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
     {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
     {% if current_user.can_admin('QUINCENA') %}
-        {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.quincena + '?') }}{% endif %}
-        {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.quincena + '?') }}{% endif %}
+        {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.clave + '?') }}{% endif %}
+        {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.clave + '?') }}{% endif %}
     {% endif %}
     <!-- Moment.js -->
     {{ detail.moment_js(moment) }}

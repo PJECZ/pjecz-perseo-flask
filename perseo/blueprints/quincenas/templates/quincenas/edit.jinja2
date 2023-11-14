@@ -14,7 +14,7 @@
     {% call f.card() %}
         {% set form_kwargs = {'quincena_id': quincena.id} %}
         {% call f.form_tag('quincenas.edit', fid='quincena_form', **form_kwargs) %}
-            {% call f.form_group(form.quincena) %}{% endcall %}
+            {% call f.form_group(form.clave) %}{% endcall %}
             {% call f.form_group(form.estado) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}

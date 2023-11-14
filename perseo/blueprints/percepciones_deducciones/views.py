@@ -15,6 +15,7 @@ from perseo.blueprints.percepciones_deducciones.forms import PercepcionDeduccion
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "PERCEPCIONES DEDUCCIONES"
@@ -41,16 +42,18 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    if "quincena" in request.form:
-        try:
-            consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena"]))
-        except ValueError:
-            pass
     if "concepto_id" in request.form:
         consulta = consulta.filter_by(concepto_id=request.form["concepto_id"])
     if "persona_id" in request.form:
         consulta = consulta.filter_by(persona_id=request.form["persona_id"])
     # Luego filtrar por columnas de otras tablas
+    if "quincena_clave" in request.form:
+        try:
+            quincena_clave = safe_quincena(request.form["quincena_clave"])
+            consulta = consulta.join(Quincena)
+            consulta = consulta.filter(Quincena.clave == quincena_clave)
+        except ValueError:
+            pass
     if "concepto_clave" in request.form:
         consulta = consulta.join(Concepto)
         consulta = consulta.filter(Concepto.clave == safe_clave(request.form["concepto_clave"]))
@@ -74,7 +77,7 @@ def datatable_json():
                 "centro_trabajo_clave": resultado.centro_trabajo.clave,
                 "concepto_clave": resultado.concepto.clave,
                 "plaza_clave": resultado.plaza.clave,
-                "quincena": resultado.quincena,
+                "quincena_clave": resultado.quincena.clave,
                 "importe": resultado.importe,
             }
         )
@@ -131,7 +134,7 @@ def edit(percepcion_deduccion_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    form.quincena.data = percepcion_deduccion.quincena
+    form.quincena_clave.data = percepcion_deduccion.quincena.clave  # Solo lectura
     form.persona_rfc.data = percepcion_deduccion.persona.rfc  # Solo lectura
     form.persona_nombre_completo.data = percepcion_deduccion.persona.nombre_completo  # Solo lectura
     form.centro_trabajo_clave.data = percepcion_deduccion.centro_trabajo.clave  # Solo lectura
@@ -151,7 +154,7 @@ def delete(percepcion_deduccion_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Percepcion Deduccion {percepcion_deduccion.id}"),
+            descripcion=safe_message(f"Eliminado Percepcion Deduccion ID {percepcion_deduccion.id}"),
             url=url_for("percepciones_deducciones.detail", percepcion_deduccion_id=percepcion_deduccion.id),
         )
         bitacora.save()
@@ -169,7 +172,7 @@ def recover(percepcion_deduccion_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Percepcion Deduccion {percepcion_deduccion.id}"),
+            descripcion=safe_message(f"Recuperado Percepcion Deduccion ID {percepcion_deduccion.id}"),
             url=url_for("percepciones_deducciones.detail", percepcion_deduccion_id=percepcion_deduccion.id),
         )
         bitacora.save()

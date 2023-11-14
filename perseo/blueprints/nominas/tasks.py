@@ -36,32 +36,32 @@ app.app_context().push()
 database.app = app
 
 
-def generar_nominas(quincena: str) -> None:
+def generar_nominas(quincena_clave: str) -> None:
     """Generar archivo XLSX con las nominas de una quincena ABIERTA"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con las nominas de {quincena}...")
+    set_task_progress(0, f"Generar archivo XLSX con las nominas de {quincena_clave}...")
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         mensaje_error = "Quincena inválida."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Consultar quincena
-    quincena_obj = Quincena.query.filter_by(quincena=quincena).filter_by(estatus="A").first()
+    quincena = Quincena.query.filter_by(clave=quincena_clave).filter_by(estatus="A").first()
 
     # Si no existe la quincena, provocar error y terminar
-    if quincena_obj is None:
-        mensaje_error = f"No existe la quincena {quincena}."
+    if quincena is None:
+        mensaje_error = f"No existe la quincena {quincena_clave}."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Si la quincena no esta ABIERTA, provocar error y terminar
-    if quincena_obj.estado != "ABIERTA":
-        mensaje_error = f"La quincena {quincena} no esta ABIERTA."
+    if quincena.estado != "ABIERTA":
+        mensaje_error = f"La quincena {quincena_clave} no esta ABIERTA."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
@@ -70,11 +70,11 @@ def generar_nominas(quincena: str) -> None:
     sesion = database.session
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Si no hay registros, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena}."
+        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
@@ -143,7 +143,7 @@ def generar_nominas(quincena: str) -> None:
         # Agregar la fila
         hoja.append(
             [
-                nomina.quincena,
+                nomina.quincena.clave,
                 nomina.centro_trabajo.clave,
                 nomina.persona.rfc,
                 nomina.persona.nombre_completo,
@@ -168,8 +168,8 @@ def generar_nominas(quincena: str) -> None:
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
 
     # Determinar el nombre y ruta del archivo XLSX
-    nombre_archivo_xlsx = f"nominas_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
-    descripcion_archivo_xlsx = f"Nominas {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
+    nombre_archivo_xlsx = f"nominas_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    descripcion_archivo_xlsx = f"Nominas {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"
     archivo_xlsx = Path(LOCAL_BASE_DIRECTORY, nombre_archivo_xlsx)
 
     # Si no existe la carpeta LOCAL_BASE_DIRECTORY, crearla
@@ -219,32 +219,32 @@ def generar_nominas(quincena: str) -> None:
     bitacora.info(mensaje_termino)
 
 
-def generar_monederos(quincena: str) -> None:
+def generar_monederos(quincena_clave: str) -> None:
     """Generar archivo XLSX con los monederos de una quincena ABIERTA"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con los monederos de {quincena}...")
+    set_task_progress(0, f"Generar archivo XLSX con los monederos de {quincena_clave}...")
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         mensaje_error = "Quincena inválida."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Consultar quincena
-    quincena_obj = Quincena.query.filter_by(quincena=quincena).filter_by(estatus="A").first()
+    quincena = Quincena.query.filter_by(quincena=quincena_clave).filter_by(estatus="A").first()
 
     # Si no existe la quincena, provocar error y terminar
-    if quincena_obj is None:
-        mensaje_error = f"No existe la quincena {quincena}."
+    if quincena is None:
+        mensaje_error = f"No existe la quincena {quincena_clave}."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Si la quincena no esta ABIERTA, provocar error y terminar
-    if quincena_obj.estado != "ABIERTA":
-        mensaje_error = f"La quincena {quincena} no esta ABIERTA."
+    if quincena.estado != "ABIERTA":
+        mensaje_error = f"La quincena {quincena_clave} no esta ABIERTA."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
@@ -262,11 +262,11 @@ def generar_monederos(quincena: str) -> None:
     banco.consecutivo_generado = banco.consecutivo
 
     # Consultar las nominas de la quincena solo tipo DESPENSA
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
     # Si no hay registros, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo DESPENSA en la quincena {quincena}."
+        mensaje_error = f"No hay nominas de tipo DESPENSA en la quincena {quincena_clave}."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
@@ -328,7 +328,7 @@ def generar_monederos(quincena: str) -> None:
                 nomina.importe,
                 num_cheque,
                 su_cuenta.num_cuenta,
-                nomina.quincena,
+                nomina.quincena.clave,
                 nomina.persona.modelo,
             ]
         )
@@ -343,8 +343,8 @@ def generar_monederos(quincena: str) -> None:
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
 
     # Determinar el nombre y ruta del archivo XLSX
-    nombre_archivo_xlsx = f"monederos_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
-    descripcion_archivo_xlsx = f"Monederos {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
+    nombre_archivo_xlsx = f"monederos_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    descripcion_archivo_xlsx = f"Monederos {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"
     archivo_xlsx = Path(LOCAL_BASE_DIRECTORY, nombre_archivo_xlsx)
 
     # Si no existe la carpeta LOCAL_BASE_DIRECTORY, crearla
@@ -394,42 +394,42 @@ def generar_monederos(quincena: str) -> None:
     bitacora.info(mensaje_termino)
 
 
-def generar_dispersiones_pensionados(quincena: str) -> None:
+def generar_dispersiones_pensionados(quincena_clave: str) -> None:
     """Generar archivo XLSX con las dispersiones pensionados de una quincena CERRADA"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con las dispersiones pensionados de {quincena}...")
+    set_task_progress(0, f"Generar archivo XLSX con las dispersiones pensionados de {quincena_clave}...")
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         mensaje_error = "Quincena inválida."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Consultar quincena
-    quincena_obj = Quincena.query.filter_by(quincena=quincena).filter_by(estatus="A").first()
+    quincena = Quincena.query.filter_by(quincena=quincena_clave).filter_by(estatus="A").first()
 
     # Si no existe la quincena, provocar error y terminar
-    if quincena_obj is None:
-        mensaje_error = f"No existe la quincena {quincena}."
+    if quincena is None:
+        mensaje_error = f"No existe la quincena {quincena_clave}."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Si la quincena no esta CERRADA, provocar error y terminar
-    if quincena_obj.estado != "CERRADA":
-        mensaje_error = f"La quincena {quincena} no esta CERRADA."
+    if quincena.estado != "CERRADA":
+        mensaje_error = f"La quincena {quincena_clave} no esta CERRADA."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Si no hay registros, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena}."
+        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
@@ -486,10 +486,10 @@ def generar_dispersiones_pensionados(quincena: str) -> None:
             continue
 
         # Definir referencia_pago, se forma con los dos ultimos caracteres y los caracteres tercero y cuarto de la quincena
-        referencia_pago = f"{quincena[-2:]}{quincena[2:4]}"
+        referencia_pago = f"{quincena_clave[-2:]}{quincena_clave[2:4]}"
 
         # Definir concepto_pago, se forma con el texto "QUINCENA {dos digitos} PENSIONADOS"
-        concepto_pago = f"QUINCENA {quincena[-2:]} PENSIONADOS"
+        concepto_pago = f"QUINCENA {quincena_clave[-2:]} PENSIONADOS"
 
         # Agregar la fila
         hoja.append(
@@ -515,8 +515,8 @@ def generar_dispersiones_pensionados(quincena: str) -> None:
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
 
     # Determinar el nombre y ruta del archivo XLSX
-    nombre_archivo_xlsx = f"dispersiones_pensionados_{quincena}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
-    descripcion_archivo_xlsx = f"Dispersiones Pensionados {quincena} {ahora.strftime('%Y-%m-%d %H%M%S')}"
+    nombre_archivo_xlsx = f"dispersiones_pensionados_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    descripcion_archivo_xlsx = f"Dispersiones Pensionados {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"
     archivo_xlsx = Path(LOCAL_BASE_DIRECTORY, nombre_archivo_xlsx)
 
     # Si no existe la carpeta LOCAL_BASE_DIRECTORY, crearla

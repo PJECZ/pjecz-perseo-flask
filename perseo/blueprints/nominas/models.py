@@ -29,9 +29,11 @@ class Nomina(database.Model, UniversalMixin):
     persona = relationship("Persona", back_populates="nominas")
     plaza_id = Column(Integer, ForeignKey("plazas.id"), index=True, nullable=False)
     plaza = relationship("Plaza", back_populates="nominas")
+    quincena_id = Column(Integer, ForeignKey("quincenas.id"), index=True, nullable=False)
+    quincena = relationship("Quincena", back_populates="nominas")
 
     # Columnas
-    quincena = Column(String(6), nullable=False, index=True)
+    # quincena = Column(String(6), nullable=False, index=True)
     percepcion = Column(Numeric(precision=24, scale=4), nullable=False)
     deduccion = Column(Numeric(precision=24, scale=4), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)

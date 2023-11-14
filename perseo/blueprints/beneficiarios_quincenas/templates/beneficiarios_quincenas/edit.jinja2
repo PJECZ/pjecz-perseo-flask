@@ -14,7 +14,7 @@
     {% call f.card() %}
         {% set form_kwargs = {'beneficiario_quincena_id': beneficiario_quincena.id} %}
         {% call f.form_tag('beneficiarios_quincenas.edit', fid='beneficiario_quincena_form', **form_kwargs) %}
-            {% call f.form_group(form.quincena, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.quincena_clave, readonly=true) %}{% endcall %}
             {% call f.form_group(form.beneficiario_rfc, readonly=true) %}{% endcall %}
             {% call f.form_group(form.beneficiario_nombre, readonly=true) %}{% endcall %}
             {% call f.form_group(form.importe) %}{% endcall %}

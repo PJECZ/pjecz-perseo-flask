@@ -73,7 +73,7 @@
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
-            { data: 'quincena' },
+            { data: 'quincena_clave' },
             { data: 'persona_rfc' },
             { data: 'persona_nombre_completo' },
             { data: 'centro_trabajo_clave' },
@@ -97,7 +97,7 @@
         ];
         // Filtros percepciones-deducciones
         const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDataTable);
-        filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena');
+        filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
         filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
         filtrosPercepcionesDeducciones.agregarInput('filtroPersonaRFC', 'persona_rfc');
         filtrosPercepcionesDeducciones.precargar();
