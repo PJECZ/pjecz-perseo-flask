@@ -185,7 +185,7 @@ def alimentar(quincena_clave: str):
     sesion.close()
 
     # Mensaje termino
-    click.echo(f"Nominas terminado: {contador} nominas alimentadas en la quincena {quincena}.")
+    click.echo(f"Nominas terminado: {contador} nominas alimentadas en la quincena {quincena_clave}.")
 
 
 @click.command()

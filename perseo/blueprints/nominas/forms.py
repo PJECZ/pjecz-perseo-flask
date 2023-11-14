@@ -15,7 +15,7 @@ class NominaEditForm(FlaskForm):
     persona_rfc = StringField("RFC")  # Solo lectura
     persona_nombre_completo = StringField("Nombre completo")  # Solo lectura
     centro_trabajo_clave = StringField("Centro de Trabajo")  # Solo lectura
-    plaza_clave = SelectField("Plaza")  # Solo lectura
+    plaza_clave = StringField("Plaza")  # Solo lectura
     percepcion = FloatField("Percepción", validators=[DataRequired()])
     deduccion = FloatField("Deducción", validators=[DataRequired()])
     importe = FloatField("Importe", validators=[DataRequired()])

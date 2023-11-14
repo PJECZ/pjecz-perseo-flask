@@ -37,15 +37,15 @@ def cli():
 
 
 @click.command()
-@click.argument("quincena", type=str)
-def alimentar(quincena: str):
+@click.argument("quincena_clave", type=str)
+def alimentar(quincena_clave: str):
     """Alimentar percepciones-deducciones"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
     # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida")
         return
 
@@ -55,7 +55,7 @@ def alimentar(quincena: str):
         return
 
     # Validar si existe el archivo
-    ruta = Path(EXPLOTACION_BASE_DIR, quincena, NOMINAS_FILENAME_XLS)
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, NOMINAS_FILENAME_XLS)
     if not ruta.exists():
         click.echo(f"AVISO: {str(ruta)} no se encontró.")
         return
@@ -64,11 +64,11 @@ def alimentar(quincena: str):
         return
 
     # Revisar si existe el registro en quincenas, de lo contrario insertarlo
-    quincena_obj = Quincena.query.filter_by(quincena=quincena).first()
-    if quincena_obj is None:
-        quincena_obj = Quincena(quincena=quincena, estado=Quincena.ESTADOS["ABIERTA"])
-        sesion.add(quincena_obj)
-        click.echo(f"  Quincena {quincena} insertada")
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado=Quincena.ESTADOS["ABIERTA"])
+        sesion.add(quincena)
+        click.echo(f"  Quincena {quincena_clave} insertada")
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
@@ -183,7 +183,7 @@ def alimentar(quincena: str):
     # Mensaje termino
     if len(conceptos_no_existentes) > 0:
         click.echo(f"  AVISO: Conceptos no existentes: {','.join(conceptos_no_existentes)}")
-    click.echo(f"Percepciones-Deducciones terminado: {contador} alimentados en la quincena {quincena}.")
+    click.echo(f"Percepciones-Deducciones terminado: {contador} alimentados en la quincena {quincena_clave}.")
 
 
 cli.add_command(alimentar)

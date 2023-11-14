@@ -53,7 +53,7 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "clave": resultado.quincena.clave,
+                    "clave": resultado.clave,
                     "url": url_for("quincenas.detail", quincena_id=resultado.id),
                 },
                 "estado": resultado.estado,

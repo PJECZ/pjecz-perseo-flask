@@ -21,7 +21,11 @@
 {% block content %}
     {% call detail.card(estatus=quincena_producto.estatus) %}
         {{ detail.label_value_big('ID', quincena_producto.id) }}
-        {{ detail.label_value('Quincena', quincena_producto.quincena.clave) }}
+        {% if current_user.can_view("QUINCENAS") %}
+            {{ detail.label_value('Quincena', quincena_producto.quincena.clave, url_for('quincenas.detail', quincena_id=quincena_producto.quincena_id)) }}
+        {% else %}
+            {{ detail.label_value('Quincena', quincena_producto.quincena.clave) }}
+        {% endif %}
         {{ detail.label_value('Fuente', quincena_producto.fuente) }}
         {{ detail.label_value('Mensajes', quincena_producto.mensajes) }}
         {{ detail.label_value('Archivo', quincena_producto.archivo) }}

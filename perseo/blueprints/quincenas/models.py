@@ -27,7 +27,7 @@ class Quincena(database.Model, UniversalMixin):
     estado = Column(Enum(*ESTADOS, name="quincenas_estados"), nullable=False)
 
     # Hijos
-    beneficiarios_quincenas = relationship("QuincenaProducto", back_populates="quincena")
+    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="quincena")
     quincenas_productos = relationship("QuincenaProducto", back_populates="quincena")
     nominas = relationship("Nomina", back_populates="quincena")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="quincena")

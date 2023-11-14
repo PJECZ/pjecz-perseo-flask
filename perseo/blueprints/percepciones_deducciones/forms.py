@@ -15,7 +15,7 @@ class PercepcionDeduccionEditForm(FlaskForm):
     persona_rfc = StringField("RFC")  # Solo lectura
     persona_nombre_completo = StringField("Nombre completo")  # Solo lectura
     centro_trabajo_clave = StringField("Centro de Trabajo")  # Solo lectura
-    plaza_clave = SelectField("Plaza")  # Solo lectura
+    plaza_clave = StringField("Plaza")  # Solo lectura
     concepto = SelectField("Concepto", coerce=int, validators=[DataRequired()])
     importe = FloatField("Importe", validators=[DataRequired()])
     guardar = SubmitField("Guardar")
