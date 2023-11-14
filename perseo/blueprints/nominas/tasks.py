@@ -50,7 +50,7 @@ def generar_nominas(quincena_clave: str) -> None:
         return
 
     # Consultar quincena
-    quincena = Quincena.query.filter_by(clave=quincena_clave).filter_by(estatus="A").first()
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
     # Si no existe la quincena, provocar error y terminar
     if quincena is None:
@@ -66,11 +66,19 @@ def generar_nominas(quincena_clave: str) -> None:
         bitacora.error(mensaje_error)
         return
 
+    # Si la quincena esta eliminada, provocar error y terminar
+    if quincena.estatus != "A":
+        mensaje_error = f"La quincena {quincena_clave} esta eliminada."
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return
+
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.join(Quincena).filter(Quincena.clave == quincena_clave)
+    nominas = nominas.filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Si no hay registros, provocar error y salir
     if len(nominas) == 0:
@@ -233,7 +241,7 @@ def generar_monederos(quincena_clave: str) -> None:
         return
 
     # Consultar quincena
-    quincena = Quincena.query.filter_by(quincena=quincena_clave).filter_by(estatus="A").first()
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
     # Si no existe la quincena, provocar error y terminar
     if quincena is None:
@@ -245,6 +253,13 @@ def generar_monederos(quincena_clave: str) -> None:
     # Si la quincena no esta ABIERTA, provocar error y terminar
     if quincena.estado != "ABIERTA":
         mensaje_error = f"La quincena {quincena_clave} no esta ABIERTA."
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return
+
+    # Si la quincena esta eliminada, provocar error y terminar
+    if quincena.estatus != "A":
+        mensaje_error = f"La quincena {quincena_clave} esta eliminada."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return
@@ -408,7 +423,7 @@ def generar_dispersiones_pensionados(quincena_clave: str) -> None:
         return
 
     # Consultar quincena
-    quincena = Quincena.query.filter_by(quincena=quincena_clave).filter_by(estatus="A").first()
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
     # Si no existe la quincena, provocar error y terminar
     if quincena is None:
@@ -420,6 +435,13 @@ def generar_dispersiones_pensionados(quincena_clave: str) -> None:
     # Si la quincena no esta CERRADA, provocar error y terminar
     if quincena.estado != "CERRADA":
         mensaje_error = f"La quincena {quincena_clave} no esta CERRADA."
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return
+
+    # Si la quincena esta eliminada, provocar error y terminar
+    if quincena.estatus != "A":
+        mensaje_error = f"La quincena {quincena_clave} esta eliminada."
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
         return

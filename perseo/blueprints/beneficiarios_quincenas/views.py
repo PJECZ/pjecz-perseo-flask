@@ -149,7 +149,7 @@ def new_with_beneficiario(beneficiario_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Nuevo Beneficiario Quincena {beneficiario_quincena.num_cheque}"),
+                descripcion=safe_message(f"Nuevo Beneficiario Quincena ID {beneficiario_quincena.id}"),
                 url=url_for("beneficiarios_quincenas.detail", beneficiario_quincena_id=beneficiario_quincena.id),
             )
             bitacora.save()

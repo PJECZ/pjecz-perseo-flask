@@ -41,9 +41,6 @@ def cli():
 def alimentar(quincena_clave: str):
     """Alimentar percepciones-deducciones"""
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
-
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida")
@@ -63,12 +60,27 @@ def alimentar(quincena_clave: str):
         click.echo(f"AVISO: {str(ruta)} no es un archivo.")
         return
 
-    # Revisar si existe el registro en quincenas, de lo contrario insertarlo
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
+
+    # Si no existe la quincena, se agrega
     if quincena is None:
-        quincena = Quincena(clave=quincena_clave, estado=Quincena.ESTADOS["ABIERTA"])
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
         sesion.add(quincena)
-        click.echo(f"  Quincena {quincena_clave} insertada")
+        sesion.commit()
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))

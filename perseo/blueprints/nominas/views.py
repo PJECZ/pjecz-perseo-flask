@@ -228,7 +228,7 @@ def generate_monederos(quincena_clave):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_dispersiones_pensionados(quincena_clave):
     """Lanzar tarea en el fondo para Generar archivo XLSX con las dispersiones pensionados de una quincena CERRADA"""
-    quincena = Quincena.query.filter_by(quincena=quincena_clave).first_or_404()
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
     current_user.launch_task(
         comando="nominas.tasks.generar_dispersiones_pensionados",
         mensaje="Lanzando generar dispersiones pensionados...",

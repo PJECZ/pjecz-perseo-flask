@@ -53,6 +53,16 @@ def alimentar(quincena_clave: str):
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
+
     # Si no existe la quincena, se agrega
     if quincena is None:
         quincena = Quincena(clave=quincena_clave, estado="ABIERTA")

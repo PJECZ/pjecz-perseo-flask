@@ -34,4 +34,4 @@ class Quincena(database.Model, UniversalMixin):
 
     def __repr__(self):
         """Representación"""
-        return f"<Quincena {self.quincena}>"
+        return f"<Quincena {self.clave}>"

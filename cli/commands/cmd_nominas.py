@@ -70,6 +70,16 @@ def alimentar(quincena_clave: str):
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
+
     # Si no existe la quincena, se agrega
     if quincena is None:
         quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
@@ -204,14 +214,23 @@ def generar_nominas(quincena_clave: str):
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
-    # Si no existe la quincena, se agrega
+    # Si no existe la quincena, entonces se termina
     if quincena is None:
-        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
-        sesion.add(quincena)
-        sesion.commit()
+        click.echo("Quincena no existe.")
+        return
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -332,11 +351,20 @@ def generar_monederos(quincena_clave: str):
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
-    # Si no existe la quincena, se agrega
+    # Si no existe la quincena, entonces se termina
     if quincena is None:
-        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
-        sesion.add(quincena)
-        sesion.commit()
+        click.echo("Quincena no existe.")
+        return
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
 
     # Cargar solo el banco con la clave 9 que es PREVIVALE
     banco = Banco.query.filter_by(clave="9").first()
@@ -348,7 +376,7 @@ def generar_monederos(quincena_clave: str):
     banco.consecutivo_generado = banco.consecutivo
 
     # Consultar las nominas de la quincena solo tipo DESPENSA
-    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -452,14 +480,23 @@ def generar_pensionados(quincena_clave: str):
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
-    # Si no existe la quincena, se agrega
+    # Si no existe la quincena, entonces se termina
     if quincena is None:
-        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
-        sesion.add(quincena)
-        sesion.commit()
+        click.echo("Quincena no existe.")
+        return
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -574,20 +611,26 @@ def generar_dispersiones_pensionados(quincena_clave: str):
         click.echo("Quincena inválida.")
         return
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
-
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
-    # Si no existe la quincena, se agrega
+    # Si no existe la quincena, entonces se termina
     if quincena is None:
-        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
-        sesion.add(quincena)
-        sesion.commit()
+        click.echo("Quincena no existe.")
+        return
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena.estado != "ABIERTA":
+        click.echo("Quincena no esta ABIERTA.")
+        return
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena.estatus != "A":
+        click.echo("Quincena ha sido eliminada.")
+        return
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena=quincena).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()

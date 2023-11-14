@@ -26,7 +26,7 @@ class BeneficiarioQuincenaNewWithBeneficiarioForm(FlaskForm):
     beneficiario_rfc = StringField("Beneficiario RFC")  # Solo lectura
     beneficiario_nombre = StringField("Beneficiario nombre")  # Solo lectura
     importe = FloatField("Importe", validators=[DataRequired()])
-    num_cheque = StringField("No. de cheque")  # Solo lectura
+    num_cheque = StringField("No. de cheque")
     guardar = SubmitField("Guardar")
 
     def __init__(self, *args, **kwargs):
