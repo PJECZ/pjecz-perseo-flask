@@ -136,19 +136,7 @@ def new_with_beneficiario(beneficiario_id):
     form = BeneficiarioQuincenaNewWithBeneficiarioForm()
     if form.validate_on_submit():
         es_valido = True
-        # Validar la quincena
-        # try:
-        #     quincena_str = safe_quincena(form.quincena.data)
-        # except ValueError:
-        #     flash("Quincena inválida", "warning")
-        #     es_valido = False
-        # quincena = Quincena.query.filter_by(quincena=quincena_str).first()
-        # if es_valido and quincena is None:
-        #     flash("La Quincena no existe", "warning")
-        #     es_valido = False
-        # if es_valido and quincena.estado != "ABIERTA":
-        #     flash("La Quincena no está abierta", "warning")
-        #     es_valido = False
+        # TODO: Validar que el numero de cheque no este en uso
         # Si es valido, crear el Beneficiario Quincena
         if es_valido:
             beneficiario_quincena = BeneficiarioQuincena(

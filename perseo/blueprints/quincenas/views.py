@@ -101,32 +101,33 @@ def edit(quincena_id):
     form = QuincenaForm()
     if form.validate_on_submit():
         es_valido = True
-        # Validar la quincena con safe_quincena
+        # Validar la clave de la quincena
         try:
-            quincena_str = safe_quincena(form.quincena.data)
+            clave = safe_quincena(form.clave.data)
         except ValueError:
             flash("Quincena inválida", "warning")
             es_valido = False
-        # Si cambia la quincena, verificar que no este en uso
-        if quincena_str != quincena.quincena:
-            quincena_existente = Quincena.query.filter_by(quincena=quincena_str).first()
+        # Si cambia la clave, verificar que no este en uso
+        if es_valido and clave != quincena.clave:
+            quincena_existente = Quincena.query.filter_by(clave=clave).first()
             if quincena_existente and quincena_existente.id != quincena.id:
                 flash("La quincena ya está en uso. Debe de ser única.", "warning")
                 es_valido = False
         # Si es valido actualizar
         if es_valido:
+            quincena.clave = clave
             quincena.estado = form.estado.data
             quincena.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Editada Quincena {quincena.quincena} con estado {quincena.estado}"),
+                descripcion=safe_message(f"Editada Quincena {quincena.clave} con estado {quincena.estado}"),
                 url=url_for("quincenas.detail", quincena_id=quincena.id),
             )
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
-    form.quincena.data = quincena.quincena
+    form.clave.data = quincena.clave
     form.estado.data = quincena.estado
     return render_template("quincenas/edit.jinja2", form=form, quincena=quincena)
 
@@ -138,24 +139,24 @@ def new():
     form = QuincenaForm()
     if form.validate_on_submit():
         es_valido = True
-        # Validar la quincena con safe_quincena
+        # Validar la clave de la quincena
         try:
-            quincena_str = safe_quincena(form.quincena.data)
+            clave = safe_quincena(form.clave.data)
         except ValueError:
             flash("Quincena inválida", "warning")
             es_valido = False
-        # Validar que quincena (6 digitos) no se repita
-        if Quincena.query.filter_by(quincena=quincena_str).first():
+        # Validar que la clave no este en uso
+        if es_valido and Quincena.query.filter_by(clave=clave).first():
             flash("La quincena ya está en uso. Debe de ser única.", "warning")
             es_valido = False
         # Si es valido, guardar
         if es_valido:
-            quincena = Quincena(quincena=quincena_str, estado=form.estado.data)
+            quincena = Quincena(clave=clave, estado=form.estado.data)
             quincena.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Nueva Quincena {quincena.quincena} como {quincena.estado}"),
+                descripcion=safe_message(f"Nueva Quincena {quincena.clave} como {quincena.estado}"),
                 url=url_for("quincenas.detail", quincena_id=quincena.id),
             )
             bitacora.save()
@@ -174,7 +175,7 @@ def delete(quincena_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminada Quincena {quincena.quincena}"),
+            descripcion=safe_message(f"Eliminada Quincena {quincena.clave}"),
             url=url_for("quincenas.detail", quincena_id=quincena.id),
         )
         bitacora.save()
@@ -192,7 +193,7 @@ def recover(quincena_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperada Quincena {quincena.quincena}"),
+            descripcion=safe_message(f"Recuperada Quincena {quincena.clave}"),
             url=url_for("quincenas.detail", quincena_id=quincena.id),
         )
         bitacora.save()
