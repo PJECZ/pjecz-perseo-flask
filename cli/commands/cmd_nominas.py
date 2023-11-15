@@ -8,7 +8,6 @@ from pathlib import Path
 
 import click
 import xlrd
-from dotenv import load_dotenv
 from openpyxl import Workbook
 
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
@@ -233,6 +232,11 @@ def generar_nominas(quincena_clave: str):
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
+    # Si no hay nominas, entonces se termina
+    if len(nominas) == 0:
+        click.echo(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}.")
+        return
+
     # Iniciar el archivo XLSX
     libro = Workbook()
 
@@ -379,6 +383,11 @@ def generar_monederos(quincena_clave: str):
     # Consultar las nominas de la quincena solo tipo DESPENSA
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
+    # Si no hay nominas, entonces se termina
+    if len(nominas) == 0:
+        click.echo(f"No hay nominas de tipo DESPENSA en la quincena {quincena_clave}.")
+        return
+
     # Iniciar el archivo XLSX
     libro = Workbook()
 
@@ -498,6 +507,11 @@ def generar_pensionados(quincena_clave: str):
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+
+    # Si no hay nominas, entonces se termina
+    if len(nominas) == 0:
+        click.echo(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}.")
+        return
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -632,6 +646,11 @@ def generar_dispersiones_pensionados(quincena_clave: str):
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+
+    # Si no hay nominas, entonces se termina
+    if len(nominas) == 0:
+        click.echo(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}.")
+        return
 
     # Iniciar el archivo XLSX
     libro = Workbook()
