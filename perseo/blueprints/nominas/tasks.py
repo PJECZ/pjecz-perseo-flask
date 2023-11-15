@@ -18,6 +18,7 @@ from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.quincenas.models import Quincena
+from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.extensions import database
 
 GCS_BASE_DIRECTORY = "reports/nominas"
@@ -62,7 +63,7 @@ def consultar_validar_quincena(quincena_clave: str) -> Quincena:
     return quincena
 
 
-def crear_nominas(quincena_clave: str) -> str:
+def crear_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
     """Crear archivo XLSX con las nominas de una quincena"""
 
     # Consultar y validar quincena
@@ -178,6 +179,7 @@ def crear_nominas(quincena_clave: str) -> str:
     libro.save(archivo_xlsx)
 
     # Si esta configurado settings.CLOUD_STORAGE_DEPOSITO, entonces subir el archivo XLSX a Google Cloud Storage
+    gcs_public_path = ""
     settings = get_settings()
     if settings.CLOUD_STORAGE_DEPOSITO != "":
         with open(archivo_xlsx, "rb") as archivo:
@@ -210,11 +212,31 @@ def crear_nominas(quincena_clave: str) -> str:
         for m in mensajes:
             bitacora.warning(m)
 
-    # Mensaje de termino
+    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
+    if quincena_producto_id == 0:
+        quincena_producto = QuincenaProducto(
+            quincena=quincena,
+            archivo=nombre_archivo_xlsx,
+            es_satisfactorio=(len(mensajes) == 0),
+            fuente="NOMINAS",
+            mensajes="\n".join(mensajes),
+            url=gcs_public_path,
+        )
+    else:
+        # Si quincena_producto_id es diferente de cero, actualizar el registro
+        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
+        quincena_producto.archivo = nombre_archivo_xlsx
+        quincena_producto.es_satisfactorio = len(mensajes) == 0
+        quincena_producto.fuente = "NOMINAS"
+        quincena_producto.mensajes = "\n".join(mensajes)
+        quincena_producto.url = gcs_public_path
+    quincena_producto.save()
+
+    # Entregar mensaje de termino
     return f"Generar nominas: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_nominas(quincena_clave: str) -> str:
+def generar_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -222,7 +244,7 @@ def generar_nominas(quincena_clave: str) -> str:
 
     # Ejecutar el creador
     try:
-        mensaje_termino = crear_nominas(quincena_clave)
+        mensaje_termino = crear_nominas(quincena_clave, quincena_producto_id)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
@@ -235,7 +257,7 @@ def generar_nominas(quincena_clave: str) -> str:
     return mensaje_termino
 
 
-def crear_monederos(quincena_clave: str) -> str:
+def crear_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
     """Crear archivo XLSX con los monederos de una quincena"""
 
     # Consultar y validar quincena
@@ -376,11 +398,31 @@ def crear_monederos(quincena_clave: str) -> str:
         for m in mensajes:
             bitacora.warning(m)
 
-    # Mensaje de termino
+    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
+    if quincena_producto_id == 0:
+        quincena_producto = QuincenaProducto(
+            quincena=quincena,
+            archivo=nombre_archivo_xlsx,
+            es_satisfactorio=(len(mensajes) == 0),
+            fuente="MONEDEROS",
+            mensajes="\n".join(mensajes),
+            url=gcs_public_path,
+        )
+    else:
+        # Si quincena_producto_id es diferente de cero, actualizar el registro
+        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
+        quincena_producto.archivo = nombre_archivo_xlsx
+        quincena_producto.es_satisfactorio = len(mensajes) == 0
+        quincena_producto.fuente = "MONEDEROS"
+        quincena_producto.mensajes = "\n".join(mensajes)
+        quincena_producto.url = gcs_public_path
+    quincena_producto.save()
+
+    # Entregar mensaje de termino
     return f"Generar monederos: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_monederos(quincena_clave: str) -> str:
+def generar_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -388,7 +430,7 @@ def generar_monederos(quincena_clave: str) -> str:
 
     # Ejecutar el creador
     try:
-        mensaje_termino = crear_monederos(quincena_clave)
+        mensaje_termino = crear_monederos(quincena_clave, quincena_producto_id)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
@@ -401,7 +443,7 @@ def generar_monederos(quincena_clave: str) -> str:
     return mensaje_termino
 
 
-def crear_pensionados(quincena_clave: str) -> str:
+def crear_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Crear archivo XLSX con los pensionados de una quincena"""
 
     # Consultar y validar quincena
@@ -543,11 +585,31 @@ def crear_pensionados(quincena_clave: str) -> str:
         for m in mensajes:
             bitacora.warning(m)
 
-    # Mensaje de termino
+    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
+    if quincena_producto_id == 0:
+        quincena_producto = QuincenaProducto(
+            quincena=quincena,
+            archivo=nombre_archivo_xlsx,
+            es_satisfactorio=(len(mensajes) == 0),
+            fuente="PENSIONADOS",
+            mensajes="\n".join(mensajes),
+            url=gcs_public_path,
+        )
+    else:
+        # Si quincena_producto_id es diferente de cero, actualizar el registro
+        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
+        quincena_producto.archivo = nombre_archivo_xlsx
+        quincena_producto.es_satisfactorio = len(mensajes) == 0
+        quincena_producto.fuente = "PENSIONADOS"
+        quincena_producto.mensajes = "\n".join(mensajes)
+        quincena_producto.url = gcs_public_path
+    quincena_producto.save()
+
+    # Entregar mensaje de termino
     return f"Generar pensionados: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_pensionados(quincena_clave: str) -> str:
+def generar_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -555,7 +617,7 @@ def generar_pensionados(quincena_clave: str) -> str:
 
     # Ejecutar el creador
     try:
-        mensaje_termino = crear_pensionados(quincena_clave)
+        mensaje_termino = crear_pensionados(quincena_clave, quincena_producto_id)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
@@ -568,7 +630,7 @@ def generar_pensionados(quincena_clave: str) -> str:
     return mensaje_termino
 
 
-def crear_dispersiones_pensionados(quincena_clave: str) -> str:
+def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Crear archivo XLSX con las dispersiones pensionados de una quincena"""
 
     # Consultar y validar quincena
@@ -705,11 +767,31 @@ def crear_dispersiones_pensionados(quincena_clave: str) -> str:
         for m in mensajes:
             bitacora.warning(m)
 
-    # Mensaje de termino
+    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
+    if quincena_producto_id == 0:
+        quincena_producto = QuincenaProducto(
+            quincena=quincena,
+            archivo=nombre_archivo_xlsx,
+            es_satisfactorio=(len(mensajes) == 0),
+            fuente="DIPSERSIONES PENSIONADOS",
+            mensajes="\n".join(mensajes),
+            url=gcs_public_path,
+        )
+    else:
+        # Si quincena_producto_id es diferente de cero, actualizar el registro
+        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
+        quincena_producto.archivo = nombre_archivo_xlsx
+        quincena_producto.es_satisfactorio = len(mensajes) == 0
+        quincena_producto.fuente = "DIPSERSIONES PENSIONADOS"
+        quincena_producto.mensajes = "\n".join(mensajes)
+        quincena_producto.url = gcs_public_path
+    quincena_producto.save()
+
+    # Entregar mensaje de termino
     return f"Generar dispersiones pensionados: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_dispersiones_pensionados(quincena_clave: str) -> str:
+def generar_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -717,7 +799,7 @@ def generar_dispersiones_pensionados(quincena_clave: str) -> str:
 
     # Ejecutar el creador
     try:
-        mensaje_termino = crear_dispersiones_pensionados(quincena_clave)
+        mensaje_termino = crear_dispersiones_pensionados(quincena_clave, quincena_producto_id)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
@@ -738,21 +820,21 @@ def generar_todos(quincena_clave: str) -> str:
 
     # Ejecutar cada uno de los generadores
     try:
-        mensaje_crear_nominas = crear_nominas(quincena_clave)
-        set_task_progress(25, mensaje_crear_nominas)
-        mensaje_crear_monederos = crear_monederos(quincena_clave)
-        set_task_progress(50, mensaje_crear_monederos)
-        mensaje_crear_pensionados = crear_pensionados(quincena_clave)
-        set_task_progress(75, mensaje_crear_pensionados)
-        mensaje_crear_dispersiones_pensionados = crear_dispersiones_pensionados(quincena_clave)
-        set_task_progress(100, mensaje_crear_dispersiones_pensionados)
+        mensaje_1 = crear_nominas(quincena_clave, 0)
+        set_task_progress(25, mensaje_1)
+        mensaje_2 = crear_monederos(quincena_clave, 0)
+        set_task_progress(50, mensaje_2)
+        mensaje_3 = crear_pensionados(quincena_clave, 0)
+        set_task_progress(75, mensaje_3)
+        mensaje_4 = crear_dispersiones_pensionados(quincena_clave, 0)
+        set_task_progress(100, mensaje_4)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
 
-    # Mensaje de termino
-    mensaje_termino = "Generar todos: terminado"
+    # Entregar mensaje de termino
+    mensaje_termino = f"{mensaje_1}. \n{mensaje_2}. \n{mensaje_3}. \n{mensaje_4}"
     set_task_progress(100, mensaje_termino)
     bitacora.info(mensaje_termino)
     return mensaje_termino

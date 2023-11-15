@@ -13,6 +13,7 @@ from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.quincenas.forms import QuincenaForm
 from perseo.blueprints.quincenas.models import Quincena
+from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "QUINCENAS"
@@ -207,4 +208,163 @@ def close():
     """Lanzar tarea en el fondo para cerrar las quincenas pasadas, menos la ultima"""
     current_user.launch_task(comando="quincenas.tasks.cerrar", mensaje="Lanzando cerrar quincenas...")
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.list_active"))
+
+
+@quincenas.route("/quincenas/generar_nominas/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_nominas(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="NOMINAS",
+        mensajes="Lanzando nominas.tasks.generar_nominas...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.generar_nominas",
+        mensaje="Lanzando nominas.tasks.generar_nominas...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_monederos/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_monederos(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="MONEDEROS",
+        mensajes="Lanzando nominas.tasks.generar_monederos...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.generar_monederos",
+        mensaje="Lanzando nominas.tasks.generar_monederos...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_pensionados/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_pensionados(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="PENSIONADOS",
+        mensajes="Lanzando nominas.tasks.generar_pensionados...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.generar_pensionados",
+        mensaje="Lanzando nominas.tasks.generar_pensionados...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_dispersiones_pensionados/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generar_dispersiones_pensionados(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="DISPERSIONES PENSIONADOS",
+        mensajes="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.generar_dispersiones_pensionados",
+        mensaje="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_todos/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generar_todos(quincena_id):
+    """Lanzar tarea en el fondo para crear todos los archivo XLSX de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.generar_todos",
+        mensaje="Lanzando nominas.tasks.generar_todos...",
+        quincena_clave=quincena.clave,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al listado de productos activos
     return redirect(url_for("quincenas.list_active"))

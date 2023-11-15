@@ -1,7 +1,7 @@
 """
 Quincenas Productos, modelos
 """
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -30,6 +30,7 @@ class QuincenaProducto(database.Model, UniversalMixin):
 
     # Columnas
     archivo = Column(String(256), nullable=False)
+    es_satisfactorio = Column(Boolean, nullable=False)
     fuente = Column(Enum(*FUENTES, name="quincenas_productos_fuentes"), nullable=False)
     mensajes = Column(Text)
     url = Column(String(512), nullable=False)
