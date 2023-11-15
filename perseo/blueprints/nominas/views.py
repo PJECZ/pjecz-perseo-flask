@@ -200,7 +200,23 @@ def recover(nomina_id):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_nominas(quincena_clave):
     """Lanzar tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    # Validar la clave de quincena
+    try:
+        quincena_clave = safe_quincena(quincena_clave)
+    except ValueError:
+        flash("Clave de quincena inválida", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if not quincena:
+        flash("Quincena no encontrada", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.generar_nominas",
         mensaje="Lanzando nominas.tasks.generar_nominas...",
@@ -214,7 +230,23 @@ def generate_nominas(quincena_clave):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_monederos(quincena_clave):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    # Validar la clave de quincena
+    try:
+        quincena_clave = safe_quincena(quincena_clave)
+    except ValueError:
+        flash("Clave de quincena inválida", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if not quincena:
+        flash("Quincena no encontrada", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.generar_monederos",
         mensaje="Lanzando nominas.tasks.generar_monederos...",
@@ -228,7 +260,23 @@ def generate_monederos(quincena_clave):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_pensionados(quincena_clave):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    # Validar la clave de quincena
+    try:
+        quincena_clave = safe_quincena(quincena_clave)
+    except ValueError:
+        flash("Clave de quincena inválida", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if not quincena:
+        flash("Quincena no encontrada", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.generar_pensionados",
         mensaje="Lanzando nominas.tasks.generar_pensionados...",
@@ -242,7 +290,23 @@ def generate_pensionados(quincena_clave):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_dispersiones_pensionados(quincena_clave):
     """Lanzar tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    # Validar la clave de quincena
+    try:
+        quincena_clave = safe_quincena(quincena_clave)
+    except ValueError:
+        flash("Clave de quincena inválida", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if not quincena:
+        flash("Quincena no encontrada", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.generar_dispersiones_pensionados",
         mensaje="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
@@ -256,7 +320,23 @@ def generate_dispersiones_pensionados(quincena_clave):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_todos(quincena_clave):
     """Lanzar tarea en el fondo para crear todos los archivo XLSX de una quincena"""
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    # Validar la clave de quincena
+    try:
+        quincena_clave = safe_quincena(quincena_clave)
+    except ValueError:
+        flash("Clave de quincena inválida", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if not quincena:
+        flash("Quincena no encontrada", "warning")
+        return redirect(url_for("quincenas.list_active"))
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.generar_todos",
         mensaje="Lanzando nominas.tasks.generar_todos...",
