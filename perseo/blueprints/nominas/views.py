@@ -199,11 +199,11 @@ def recover(nomina_id):
 @nominas.route("/nominas/generar_nominas/<quincena_clave>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_nominas(quincena_clave):
-    """Lanzar tarea en el fondo para generar archivo XLSX con las nominas de una quincena ABIERTA"""
+    """Lanzar tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
     quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
     current_user.launch_task(
         comando="nominas.tasks.generar_nominas",
-        mensaje="Lanzando generar nominas...",
+        mensaje="Lanzando nominas.tasks.generar_nominas...",
         quincena_clave=quincena_clave,
     )
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
@@ -213,11 +213,25 @@ def generate_nominas(quincena_clave):
 @nominas.route("/nominas/generar_monederos/<quincena_clave>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_monederos(quincena_clave):
-    """Lanzar tarea en el fondo para generar archivo XLSX con los monederos de una quincena ABIERTA"""
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
     quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
     current_user.launch_task(
         comando="nominas.tasks.generar_monederos",
-        mensaje="Lanzando generar monederos...",
+        mensaje="Lanzando nominas.tasks.generar_monederos...",
+        quincena_clave=quincena_clave,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+
+
+@nominas.route("/nominas/generar_pensionados/<quincena_clave>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_pensionados(quincena_clave):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    current_user.launch_task(
+        comando="nominas.tasks.generar_pensionados",
+        mensaje="Lanzando nominas.tasks.generar_pensionados...",
         quincena_clave=quincena_clave,
     )
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
@@ -227,11 +241,25 @@ def generate_monederos(quincena_clave):
 @nominas.route("/nominas/generar_dispersiones_pensionados/<quincena_clave>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def generate_dispersiones_pensionados(quincena_clave):
-    """Lanzar tarea en el fondo para Generar archivo XLSX con las dispersiones pensionados de una quincena CERRADA"""
+    """Lanzar tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
     quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
     current_user.launch_task(
         comando="nominas.tasks.generar_dispersiones_pensionados",
-        mensaje="Lanzando generar dispersiones pensionados...",
+        mensaje="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
+        quincena_clave=quincena_clave,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+
+
+@nominas.route("/nominas/generar_todos/<quincena_clave>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_todos(quincena_clave):
+    """Lanzar tarea en el fondo para crear todos los archivo XLSX de una quincena"""
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first_or_404()
+    current_user.launch_task(
+        comando="nominas.tasks.generar_todos",
+        mensaje="Lanzando nominas.tasks.generar_todos...",
         quincena_clave=quincena_clave,
     )
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")

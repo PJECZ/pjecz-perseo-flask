@@ -62,20 +62,11 @@ def consultar_validar_quincena(quincena_clave: str) -> Quincena:
     return quincena
 
 
-def generar_nominas(quincena_clave: str) -> None:
-    """Generar archivo XLSX con las nominas de una quincena"""
-
-    # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con las nominas de {quincena_clave}...")
+def crear_nominas(quincena_clave: str) -> str:
+    """Crear archivo XLSX con las nominas de una quincena"""
 
     # Consultar y validar quincena
-    try:
-        quincena = consultar_validar_quincena(quincena_clave)
-    except MyAnyError as error:
-        mensaje_error = str(error)
-        set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
-        return
+    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -83,12 +74,9 @@ def generar_nominas(quincena_clave: str) -> None:
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
-    # Si no hay registros, provocar error y salir
+    # Si no hay nominas, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}."
-        set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
-        return
+        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -211,9 +199,7 @@ def generar_nominas(quincena_clave: str) -> None:
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
-                mensaje_error = str(error)
-                set_task_error(mensaje_error)
-                bitacora.error(mensaje_error)
+                raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     mensajes = []
@@ -225,36 +211,45 @@ def generar_nominas(quincena_clave: str) -> None:
             bitacora.warning(m)
 
     # Mensaje de termino
-    mensaje_termino = f"Generar nominas: {contador} filas en {nombre_archivo_xlsx}"
-    set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
+    return f"Generar nominas: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_monederos(quincena_clave: str) -> None:
-    """Generar archivo XLSX con los monederos de una quincena"""
+def generar_nominas(quincena_clave: str) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con los monederos de {quincena_clave}...")
+    set_task_progress(0, f"Generar archivo XLSX con las nominas de {quincena_clave}...")
 
-    # Consultar y validar quincena
+    # Ejecutar el creador
     try:
-        quincena = consultar_validar_quincena(quincena_clave)
+        mensaje_termino = crear_nominas(quincena_clave)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
-        return
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino)
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
+
+
+def crear_monederos(quincena_clave: str) -> str:
+    """Crear archivo XLSX con los monederos de una quincena"""
+
+    # Consultar y validar quincena
+    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
     # Cargar solo el banco con la clave 9 que es PREVIVALE
     banco = Banco.query.filter_by(clave="9").first()
+
+    # Si no existe el banco, provocar error y salir
     if banco is None:
-        mensaje_error = "No existe el banco con clave 9."
-        set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
-        return
+        raise MyNotExistsError("No existe el banco con clave 9")
 
     # Igualar el consecutivo_generado al consecutivo
     banco.consecutivo_generado = banco.consecutivo
@@ -262,12 +257,9 @@ def generar_monederos(quincena_clave: str) -> None:
     # Consultar las nominas de la quincena solo tipo DESPENSA
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
-    # Si no hay registros, provocar error y salir
+    # Si no hay nominas, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo DESPENSA en la quincena {quincena_clave}."
-        set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
-        return
+        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -373,9 +365,7 @@ def generar_monederos(quincena_clave: str) -> None:
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
-                mensaje_error = str(error)
-                set_task_error(mensaje_error)
-                bitacora.error(mensaje_error)
+                raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     mensajes = []
@@ -387,35 +377,42 @@ def generar_monederos(quincena_clave: str) -> None:
             bitacora.warning(m)
 
     # Mensaje de termino
-    mensaje_termino = f"Generar monederos: {contador} filas en {nombre_archivo_xlsx}"
-    set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
+    return f"Generar monederos: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_pensionados(quincena_clave: str) -> None:
-    """Generar archivo XLSX con los pensionados de una quincena"""
+def generar_monederos(quincena_clave: str) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con los pensionados de {quincena_clave}...")
+    set_task_progress(0, f"Generar archivo XLSX con los monederos de {quincena_clave}...")
 
-    # Consultar y validar quincena
+    # Ejecutar el creador
     try:
-        quincena = consultar_validar_quincena(quincena_clave)
+        mensaje_termino = crear_monederos(quincena_clave)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
-        return
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino)
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
+
+
+def crear_pensionados(quincena_clave: str) -> str:
+    """Crear archivo XLSX con los pensionados de una quincena"""
+
+    # Consultar y validar quincena
+    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
-    # Si no hay registros, provocar error y salir
+    # Si no hay nominas, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}."
-        set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
-        return
+        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -535,9 +532,7 @@ def generar_pensionados(quincena_clave: str) -> None:
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
-                mensaje_error = str(error)
-                set_task_error(mensaje_error)
-                bitacora.error(mensaje_error)
+                raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     mensajes = []
@@ -549,35 +544,42 @@ def generar_pensionados(quincena_clave: str) -> None:
             bitacora.warning(m)
 
     # Mensaje de termino
-    mensaje_termino = f"Generar pensionados: {contador} filas en {nombre_archivo_xlsx}"
-    set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
+    return f"Generar pensionados: {contador} filas en {nombre_archivo_xlsx}"
 
 
-def generar_dispersiones_pensionados(quincena_clave: str) -> None:
-    """Generar archivo XLSX con las dispersiones pensionados de una quincena"""
+def generar_pensionados(quincena_clave: str) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, f"Generar archivo XLSX con las dispersiones pensionados de {quincena_clave}...")
+    set_task_progress(0, f"Generar archivo XLSX con los pensionados de {quincena_clave}...")
 
-    # Consultar y validar quincena
+    # Ejecutar el creador
     try:
-        quincena = consultar_validar_quincena(quincena_clave)
+        mensaje_termino = crear_pensionados(quincena_clave)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
-        return
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino)
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
+
+
+def crear_dispersiones_pensionados(quincena_clave: str) -> str:
+    """Crear archivo XLSX con las dispersiones pensionados de una quincena"""
+
+    # Consultar y validar quincena
+    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
-    # Si no hay registros, provocar error y salir
+    # Si no hay nominas, provocar error y salir
     if len(nominas) == 0:
-        mensaje_error = f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}."
-        set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
-        return
+        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -692,9 +694,7 @@ def generar_dispersiones_pensionados(quincena_clave: str) -> None:
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
-                mensaje_error = str(error)
-                set_task_error(mensaje_error)
-                bitacora.error(mensaje_error)
+                raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
     mensajes = []
@@ -706,6 +706,53 @@ def generar_dispersiones_pensionados(quincena_clave: str) -> None:
             bitacora.warning(m)
 
     # Mensaje de termino
-    mensaje_termino = f"Generar dispersiones pensionados: {contador} filas en {nombre_archivo_xlsx}"
+    return f"Generar dispersiones pensionados: {contador} filas en {nombre_archivo_xlsx}"
+
+
+def generar_dispersiones_pensionados(quincena_clave: str) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
+
+    # Iniciar la tarea en el fondo
+    set_task_progress(0, f"Generar archivo XLSX con las dispersiones pensionados de {quincena_clave}...")
+
+    # Ejecutar el creador
+    try:
+        mensaje_termino = crear_dispersiones_pensionados(quincena_clave)
+    except MyAnyError as error:
+        mensaje_error = str(error)
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
     bitacora.info(mensaje_termino)
+    return mensaje_termino
+
+
+def generar_todos(quincena_clave: str) -> str:
+    """Generar todos los archivos XLSX de una quincena"""
+
+    # Iniciar la tarea en el fondo
+    set_task_progress(0, f"Generar todos los archivos XLSX de {quincena_clave}...")
+
+    # Ejecutar cada uno de los generadores
+    try:
+        mensaje_crear_nominas = crear_nominas(quincena_clave)
+        set_task_progress(25, mensaje_crear_nominas)
+        mensaje_crear_monederos = crear_monederos(quincena_clave)
+        set_task_progress(50, mensaje_crear_monederos)
+        mensaje_crear_pensionados = crear_pensionados(quincena_clave)
+        set_task_progress(75, mensaje_crear_pensionados)
+        mensaje_crear_dispersiones_pensionados = crear_dispersiones_pensionados(quincena_clave)
+        set_task_progress(100, mensaje_crear_dispersiones_pensionados)
+    except MyAnyError as error:
+        mensaje_error = str(error)
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+
+    # Mensaje de termino
+    mensaje_termino = "Generar todos: terminado"
+    set_task_progress(100, mensaje_termino)
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
