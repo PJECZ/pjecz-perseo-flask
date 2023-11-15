@@ -209,5 +209,66 @@ def alimentar_monederos(quincena: str):
     click.echo(f"Cuentas terminado: {contador} monederos alimentados.")
 
 
+@click.command()
+def agregar_cuentas_faltantes():
+    """Agregar cuentas a las personas que no tienen"""
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar el Banco Santander
+    banco = Banco.query.filter_by(clave="5").first()
+
+    # Si no se encuentra el banco, se termina
+    if banco is None:
+        click.echo("ERROR: No se encontró el banco Santander.")
+        return
+
+    # Consultar las personas activas
+    personas = Persona.query.filter_by(estatus="A").all()
+
+    # Si no hay personas, se termina
+    if len(personas) == 0:
+        click.echo("ERROR: No hay personas.")
+        return
+
+    # Bucle por todas las personas
+    contador = 0
+    for persona in personas:
+        # Consultar las cuentas de la persona
+        cuentas = Cuenta.query.filter_by(persona_id=persona.id).all()
+
+        # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
+        tiene_cuenta_bancaria = False
+        for cuenta in cuentas:
+            if cuenta.banco.clave != "9":
+                tiene_cuenta_bancaria = True
+                break
+
+        # Si la persona no tiene cuenta bancaria, se le agrega una
+        if not tiene_cuenta_bancaria:
+            # Agregar la cuenta
+            cuenta = Cuenta(
+                persona=persona,
+                banco=banco,
+                num_cuenta="8" * 11,
+            )
+            database.session.add(cuenta)
+
+            # Incrementar contador
+            contador += 1
+
+    # Si no hubo que agregar cuentas, se termina
+    if contador == 0:
+        click.echo("No se agregaron cuentas.")
+        return
+
+    # Actualizar
+    sesion.commit()
+
+    # Mensaje termino
+    click.echo(f"Agregar cuentas faltantes: {contador} cuentas en SANTANDER con ochos")
+
+
 cli.add_command(alimentar_bancarias)
 cli.add_command(alimentar_monederos)

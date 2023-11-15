@@ -195,7 +195,7 @@ def alimentar(quincena_clave: str):
     # Mensaje termino
     if len(conceptos_no_existentes) > 0:
         click.echo(f"  AVISO: Conceptos no existentes: {','.join(conceptos_no_existentes)}")
-    click.echo(f"Percepciones-Deducciones terminado: {contador} alimentados en la quincena {quincena_clave}.")
+    click.echo(f"Alimentar percepciones-deducciones: {contador} registros en la quincena {quincena_clave}.")
 
 
 cli.add_command(alimentar)

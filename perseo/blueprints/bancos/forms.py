@@ -3,7 +3,7 @@ Bancos, formularios
 """
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length, Regexp
+from wtforms.validators import DataRequired, Length, Optional, Regexp
 
 CLAVE_REGEXP = r"^\d{1,2}$"
 CLAVE_DISPERSION_PENSIONADOS_REGEXP = r"^\d{1,3}$"
@@ -21,6 +21,6 @@ class BancoForm(FlaskForm):
             Regexp(CLAVE_DISPERSION_PENSIONADOS_REGEXP),
         ],
     )
-    consecutivo = IntegerField("Consecutivo (CON CUIDADO)", validators=[DataRequired()])
-    consecutivo_generado = IntegerField("Consecutivo temporal", validators=[DataRequired()])
+    consecutivo = IntegerField("Consecutivo (CON CUIDADO)", validators=[Optional()])
+    consecutivo_generado = IntegerField("Consecutivo temporal", validators=[Optional()])
     guardar = SubmitField("Guardar")

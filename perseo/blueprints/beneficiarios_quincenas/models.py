@@ -24,7 +24,6 @@ class BeneficiarioQuincena(database.Model, UniversalMixin):
     quincena = relationship("Quincena", back_populates="beneficiarios_quincenas")
 
     # Columnas
-    # quincena = Column(String(6), nullable=False, index=True)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
     num_cheque = Column(String(24), nullable=False, default="", server_default="")
 

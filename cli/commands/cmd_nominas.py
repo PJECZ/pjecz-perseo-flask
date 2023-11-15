@@ -19,6 +19,7 @@ from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
+from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
@@ -45,13 +46,13 @@ def cli():
 def alimentar(quincena_clave: str):
     """Alimentar nominas"""
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
-
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("Quincena inválida")
         return
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
     if EXPLOTACION_BASE_DIR is None:
@@ -195,7 +196,7 @@ def alimentar(quincena_clave: str):
     sesion.close()
 
     # Mensaje termino
-    click.echo(f"Nominas terminado: {contador} nominas alimentadas en la quincena {quincena_clave}.")
+    click.echo(f"Alimentar nominas: {contador} registros en la quincena {quincena_clave}.")
 
 
 @click.command()
@@ -332,7 +333,7 @@ def generar_nominas(quincena_clave: str):
             click.echo(f"- {persona.rfc} {persona.nombre_completo}")
 
     # Mensaje termino
-    click.echo(f"Nominas terminado: {contador} nominas generadas en {nombre_archivo}")
+    click.echo(f"Generar nominas: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -461,7 +462,7 @@ def generar_monederos(quincena_clave: str):
             click.echo(f"- {persona.rfc} {persona.nombre_completo}")
 
     # Mensaje termino
-    click.echo(f"Nominas terminado: {contador} monederos generadas en {nombre_archivo}")
+    click.echo(f"Generar monederos: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -598,7 +599,7 @@ def generar_pensionados(quincena_clave: str):
             click.echo(f"- {persona.rfc} {persona.nombre_completo}")
 
     # Mensaje termino
-    click.echo(f"Nominas terminado: {contador} pensionados generados en {nombre_archivo}")
+    click.echo(f"Generar pensionados: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -724,7 +725,7 @@ def generar_dispersiones_pensionados(quincena_clave: str):
             click.echo(f"- {persona.rfc} {persona.nombre_completo}")
 
     # Mensaje termino
-    click.echo(f"Nominas terminado: {contador} dispersiones pensionados generados en {nombre_archivo}")
+    click.echo(f"Generar dispersiones pensionados: {contador} filas en {nombre_archivo}")
 
 
 cli.add_command(alimentar)

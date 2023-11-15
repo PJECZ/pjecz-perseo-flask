@@ -107,18 +107,17 @@ def alimentar(quincena_clave: str):
             sesion.add(beneficiario_cuenta)
 
             # Incrementer el consecutivo_generado del banco
-            banco.consecutivo_generado += 1
-            sesion.add(banco)
+            # banco.consecutivo_generado += 1
+            # sesion.add(banco)
 
             # Elaborar el numero de cheque, juntando la clave del banco y el consecutivo, siempre de 9 digitos
-            num_cheque = f"{banco.clave.zfill(2)}{banco.consecutivo_generado:07}"
+            # num_cheque = f"{banco.clave.zfill(2)}{banco.consecutivo_generado:07}"
 
             # Agregar quincena al beneficiario
             beneficiario_quincena = BeneficiarioQuincena(
                 beneficiario=beneficiario,
                 quincena=quincena,
                 importe=row["IMPORTE"],
-                num_cheque=num_cheque,
             )
             sesion.add(beneficiario_quincena)
 
