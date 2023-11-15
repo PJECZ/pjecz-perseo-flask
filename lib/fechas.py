@@ -6,6 +6,7 @@ import math
 import re
 from datetime import date
 
+
 QUINCENA_REGEXP = r"^\d{6}$"
 
 
@@ -69,3 +70,24 @@ def quincena_to_fecha(quincena: str, dame_ultimo_dia: bool = False) -> date:
 
     # Entregar
     return date(anio, mes, dia)
+
+
+def quinquenio_count(desde: date, hasta: date) -> int:
+    """Cuenta la cantidad de quinquenios entre dos fechas dadas"""
+
+    # Si la fecha 'desde' es mayor a la de 'hasta' intercambiar las fechas.
+    if desde > hasta:
+        desde, hasta = hasta, desde
+
+    # Diferencia de años entre fechas
+    diff_fechas = hasta - desde
+    diff_years = diff_fechas.days / 365.25
+
+    # Contamos cada quinquenio, grupos de 5 años
+    count = math.floor(diff_years / 5)
+
+    # Solo puede haber un máximo de 6 quinquenios
+    count = min(count, 6)
+
+    # Entregar el conteo de quinquenios
+    return count
