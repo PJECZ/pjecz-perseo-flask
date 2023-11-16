@@ -85,7 +85,7 @@
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
-            { data: 'quincena' },
+            { data: 'quincena_clave' },
             { data: 'persona_rfc' },
             { data: 'persona_nombre_completo' },
             { data: 'percepcion' },
@@ -109,7 +109,7 @@
         ];
         // Filtros Nominas
         const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDataTable);
-        filtrosNominas.agregarInput('filtroQuincena', 'quincena');
+        filtrosNominas.agregarInput('filtroQuincena', 'quincena_clave');
         filtrosNominas.agregarInput('filtroPersonaRFC', 'persona_rfc');
         filtrosNominas.agregarInput('filtroPersonaNombres', 'persona_nombres');
         filtrosNominas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');

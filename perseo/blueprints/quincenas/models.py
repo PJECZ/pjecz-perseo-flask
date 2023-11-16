@@ -23,12 +23,15 @@ class Quincena(database.Model, UniversalMixin):
     id = Column(Integer, primary_key=True)
 
     # Columnas
-    quincena = Column(String(6), unique=True, nullable=False)
-    estado = Column(Enum(*ESTADOS, name="estado_quincena"), nullable=False)
+    clave = Column(String(6), unique=True, nullable=False)
+    estado = Column(Enum(*ESTADOS, name="quincenas_estados"), nullable=False)
 
     # Hijos
+    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="quincena")
     quincenas_productos = relationship("QuincenaProducto", back_populates="quincena")
+    nominas = relationship("Nomina", back_populates="quincena")
+    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="quincena")
 
     def __repr__(self):
         """Representación"""
-        return f"<Quincena {self.quincena}>"
+        return f"<Quincena {self.clave}>"

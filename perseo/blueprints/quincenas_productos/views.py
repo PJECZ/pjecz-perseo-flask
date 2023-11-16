@@ -7,10 +7,11 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_message, safe_quincena, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -38,14 +39,18 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    # if "persona_id" in request.form:
-    #     consulta = consulta.filter_by(persona_id=request.form["persona_id"])
+    if "fuente" in request.form:
+        consulta = consulta.filter_by(fuente=request.form["fuente"])
     # Luego filtrar por columnas de otras tablas
-    # if "persona_rfc" in request.form:
-    #     consulta = consulta.join(Persona)
-    #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
+    if "quincena_clave" in request.form:
+        try:
+            quincena_clave = safe_quincena(request.form["quincena_clave"])
+            consulta = consulta.join(Quincena)
+            consulta = consulta.filter(Quincena.clave == quincena_clave)
+        except ValueError:
+            pass
     # Ordenar y paginar
-    registros = consulta.order_by(QuincenaProducto.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(QuincenaProducto.id.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
@@ -56,8 +61,9 @@ def datatable_json():
                     "id": resultado.id,
                     "url": url_for("quincenas_productos.detail", quincena_producto_id=resultado.id),
                 },
-                "quincena": resultado.quincena.quincena,
-                "tiene_errores": "ERRORES" if resultado.tiene_errores else "Sin errores",
+                "quincena_clave": resultado.quincena.clave,
+                "fuente": resultado.fuente,
+                "mensajes": resultado.mensajes,
                 "archivo": {
                     "nombre_archivo": resultado.archivo,
                     "url": resultado.url,
@@ -74,7 +80,7 @@ def list_active():
     return render_template(
         "quincenas_productos/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="Quincenas Productos",
+        titulo="Productos",
         estatus="A",
     )
 
@@ -86,7 +92,7 @@ def list_inactive():
     return render_template(
         "quincenas_productos/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Quincenas Productos inactivos",
+        titulo="Productos inactivos",
         estatus="B",
     )
 

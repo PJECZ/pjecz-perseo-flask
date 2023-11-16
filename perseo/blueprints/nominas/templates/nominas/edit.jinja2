@@ -14,7 +14,7 @@
     {% call f.card() %}
         {% set form_kwargs = {'nomina_id': nomina.id} %}
         {% call f.form_tag('nominas.edit', fid='nomina_form', **form_kwargs) %}
-            {% call f.form_group(form.quincena, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.quincena_clave, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_rfc, readonly=true) %}{% endcall %}
             {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
             {% call f.form_group(form.centro_trabajo_clave, readonly=true) %}{% endcall %}

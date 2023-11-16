@@ -33,21 +33,21 @@ def crear_clave_quincena(fecha: date = None) -> str:
     return anio_str + str(quincena).zfill(2)
 
 
-def quincena_to_fecha(quincena: str, dame_ultimo_dia: bool = False) -> date:
+def quincena_to_fecha(quincena_clave: str, dame_ultimo_dia: bool = False) -> date:
     """Dando un quincena AAAANN donde NN es el número de quincena regresamos una fecha"""
 
     # Validar str de quincena
-    quincena = quincena.strip()
-    if re.match(QUINCENA_REGEXP, quincena) is None:
+    quincena_clave = quincena_clave.strip()
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         raise ValueError("Quincena invalida")
 
     # Validar año de la quincena
-    anio = int(quincena[:-2])
+    anio = int(quincena_clave[:-2])
     if anio < 2000 or anio > date.today().year:
         raise ValueError("Quincena (año) fuera de rango")
 
     # Validar número de quincena
-    num_quincena = int(quincena[4:])
+    num_quincena = int(quincena_clave[4:])
     if 0 <= num_quincena >= 25:
         raise ValueError("Quincena (número de quincena) fuera de rango")
 

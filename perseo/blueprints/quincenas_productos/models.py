@@ -1,7 +1,7 @@
 """
 Quincenas Productos, modelos
 """
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -10,6 +10,13 @@ from perseo.extensions import database
 
 class QuincenaProducto(database.Model, UniversalMixin):
     """QuincenaProducto"""
+
+    FUENTES = {
+        "NOMINAS": "NOMINAS",
+        "MONEDEROS": "MONEDEROS",
+        "PENSIONADOS": "PENSIONADOS",
+        "DISPERSIONES PENSIONADOS": "DISPERSIONES PENSIONADOS",
+    }
 
     # Nombre de la tabla
     __tablename__ = "quincenas_productos"
@@ -23,9 +30,10 @@ class QuincenaProducto(database.Model, UniversalMixin):
 
     # Columnas
     archivo = Column(String(256), nullable=False)
-    url = Column(String(512), nullable=False)
-    tiene_errores = Column(Boolean, nullable=False, default=False)
+    es_satisfactorio = Column(Boolean, nullable=False)
+    fuente = Column(Enum(*FUENTES, name="quincenas_productos_fuentes"), nullable=False)
     mensajes = Column(Text)
+    url = Column(String(512), nullable=False)
 
     def __repr__(self):
         """Representación"""

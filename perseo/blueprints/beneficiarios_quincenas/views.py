@@ -46,9 +46,14 @@ def datatable_json():
         consulta = consulta.filter_by(estatus="A")
     if "beneficiario_id" in request.form:
         consulta = consulta.filter_by(beneficiario_id=request.form["beneficiario_id"])
-    if "quincena" in request.form:
-        consulta = consulta.filter_by(quincena=request.form["quincena"])
     # Luego filtrar por columnas de otras tablas
+    if "quincena_clave" in request.form:
+        try:
+            quincena_clave = safe_quincena(request.form["quincena_clave"])
+            consulta = consulta.join(Quincena)
+            consulta = consulta.filter(Quincena.clave == quincena_clave)
+        except ValueError:
+            pass
     if (
         "beneficiario_rfc" in request.form
         or "beneficiario_nombres" in request.form
@@ -82,7 +87,7 @@ def datatable_json():
                     "id": resultado.id,
                     "url": url_for("beneficiarios_quincenas.detail", beneficiario_quincena_id=resultado.id),
                 },
-                "quincena": resultado.quincena,
+                "quincena_clave": resultado.quincena.clave,
                 "beneficiario_rfc": resultado.beneficiario.rfc,
                 "beneficiario_nombre_completo": resultado.beneficiario.nombre_completo,
                 "num_cheque": resultado.num_cheque,
@@ -131,24 +136,12 @@ def new_with_beneficiario(beneficiario_id):
     form = BeneficiarioQuincenaNewWithBeneficiarioForm()
     if form.validate_on_submit():
         es_valido = True
-        # Validar la quincena
-        try:
-            quincena_str = safe_quincena(form.quincena.data)
-        except ValueError:
-            flash("Quincena inválida", "warning")
-            es_valido = False
-        quincena = Quincena.query.filter_by(quincena=quincena_str).first()
-        if es_valido and quincena is None:
-            flash("La Quincena no existe", "warning")
-            es_valido = False
-        if es_valido and quincena.estado != "ABIERTA":
-            flash("La Quincena no está abierta", "warning")
-            es_valido = False
+        # TODO: Validar que el numero de cheque no este en uso
         # Si es valido, crear el Beneficiario Quincena
         if es_valido:
             beneficiario_quincena = BeneficiarioQuincena(
                 beneficiario=beneficiario,
-                quincena=quincena_str,
+                quincena=form.quincena.data,
                 importe=form.importe.data,
                 num_cheque=form.num_cheque.data,
             )
@@ -156,7 +149,7 @@ def new_with_beneficiario(beneficiario_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Nuevo Beneficiario Quincena {beneficiario_quincena.num_cheque}"),
+                descripcion=safe_message(f"Nuevo Beneficiario Quincena ID {beneficiario_quincena.id}"),
                 url=url_for("beneficiarios_quincenas.detail", beneficiario_quincena_id=beneficiario_quincena.id),
             )
             bitacora.save()
@@ -191,7 +184,7 @@ def edit(beneficiario_quincena_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    form.quincena.data = beneficiario_quincena.quincena  # Solo lectura
+    form.quincena_clave.data = beneficiario_quincena.quincena.clave  # Solo lectura
     form.beneficiario_rfc.data = beneficiario_quincena.beneficiario.rfc  # Solo lectura
     form.beneficiario_nombre.data = beneficiario_quincena.beneficiario.nombre_completo  # Solo lectura
     form.importe.data = beneficiario_quincena.importe

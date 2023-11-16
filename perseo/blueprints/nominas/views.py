@@ -41,14 +41,16 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    if "quincena" in request.form:
-        try:
-            consulta = consulta.filter_by(quincena=safe_quincena(request.form["quincena"]))
-        except ValueError:
-            pass
     if "persona_id" in request.form:
         consulta = consulta.filter_by(persona_id=request.form["persona_id"])
     # Luego filtrar por columnas de otras tablas
+    if "quincena_clave" in request.form:
+        try:
+            quincena_clave = safe_quincena(request.form["quincena_clave"])
+            consulta = consulta.join(Quincena)
+            consulta = consulta.filter(Quincena.clave == quincena_clave)
+        except ValueError:
+            pass
     if (
         "persona_rfc" in request.form
         or "persona_nombres" in request.form
@@ -80,7 +82,7 @@ def datatable_json():
                     "id": resultado.id,
                     "url": url_for("nominas.detail", nomina_id=resultado.id),
                 },
-                "quincena": resultado.quincena,
+                "quincena_clave": resultado.quincena.clave,
                 "persona_rfc": resultado.persona.rfc,
                 "persona_nombre_completo": resultado.persona.nombre_completo,
                 "centro_trabajo_clave": resultado.centro_trabajo.clave,
@@ -146,7 +148,7 @@ def edit(nomina_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    form.quincena.data = nomina.quincena
+    form.quincena_clave.data = nomina.quincena.clave  # Solo lectura
     form.persona_rfc.data = nomina.persona.rfc  # Solo lectura
     form.persona_nombre_completo.data = nomina.persona.nombre_completo  # Solo lectura
     form.centro_trabajo_clave.data = nomina.centro_trabajo.clave  # Solo lectura
@@ -168,7 +170,7 @@ def delete(nomina_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Eliminado Nomina {nomina.id}"),
+            descripcion=safe_message(f"Eliminado Nomina ID {nomina.id}"),
             url=url_for("nominas.detail", nomina_id=nomina.id),
         )
         bitacora.save()
@@ -186,51 +188,9 @@ def recover(nomina_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperado Nomina {nomina.id}"),
+            descripcion=safe_message(f"Recuperado Nomina ID {nomina.id}"),
             url=url_for("nominas.detail", nomina_id=nomina.id),
         )
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("nominas.detail", nomina_id=nomina.id))
-
-
-@nominas.route("/nominas/generar_nominas/<quincena_str>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
-def generate_nominas(quincena_str):
-    """Lanzar tarea en el fondo para generar archivo XLSX con las nominas de una quincena ABIERTA"""
-    quincena_obj = Quincena.query.filter_by(quincena=quincena_str).first_or_404()
-    current_user.launch_task(
-        comando="nominas.tasks.generar_nominas",
-        mensaje="Lanzando generar nominas...",
-        quincena=quincena_str,
-    )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
-    return redirect(url_for("quincenas.detail", quincena_id=quincena_obj.id))
-
-
-@nominas.route("/nominas/generar_monederos/<quincena_str>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
-def generate_monederos(quincena_str):
-    """Lanzar tarea en el fondo para generar archivo XLSX con los monederos de una quincena ABIERTA"""
-    quincena_obj = Quincena.query.filter_by(quincena=quincena_str).first_or_404()
-    current_user.launch_task(
-        comando="nominas.tasks.generar_monederos",
-        mensaje="Lanzando generar monederos...",
-        quincena=quincena_str,
-    )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
-    return redirect(url_for("quincenas.detail", quincena_id=quincena_obj.id))
-
-
-@nominas.route("/nominas/generar_dispersiones_pensionados/<quincena_str>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
-def generate_dispersiones_pensionados(quincena_str):
-    """Lanzar tarea en el fondo para Generar archivo XLSX con las dispersiones pensionados de una quincena CERRADA"""
-    quincena_obj = Quincena.query.filter_by(quincena=quincena_str).first_or_404()
-    current_user.launch_task(
-        comando="nominas.tasks.generar_dispersiones_pensionados",
-        mensaje="Lanzando generar dispersiones pensionados...",
-        quincena=quincena_str,
-    )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
-    return redirect(url_for("quincenas.detail", quincena_id=quincena_obj.id))

@@ -6,6 +6,9 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('QUINCENAS') %}
+            {{ topbar.button('Quincenas', url_for('quincenas.list_active'), 'mdi:calendar') }}
+        {% endif %}
         {# if current_user.can_admin('QUINCENAS PRODUCTOS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('quincenas_productos.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('quincenas_productos.list_active')) }}{% endif %}
@@ -23,8 +26,9 @@
                 <tr>
                     <th>ID</th>
                     <th>Quincena</th>
+                    <th>Fuente</th>
+                    <th>Mensajes</th>
                     <th>Archivo</th>
-                    <th>Tiene errores</th>
                 </tr>
             </thead>
         </table>
@@ -38,8 +42,9 @@
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
-            { data: 'quincena' },
-            { data: 'tiene_errores' },
+            { data: 'quincena_clave' },
+            { data: 'fuente' },
+            { data: 'mensajes' },
             { data: 'archivo' }
         ];
         configDataTable['columnDefs'] = [
@@ -47,11 +52,11 @@
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
                 }
             },
             {
-                targets: 3, // archivo
+                targets: 4, // archivo
                 data: null,
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.nombre_archivo + '</a>';

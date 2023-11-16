@@ -13,7 +13,7 @@
 {% block content %}
     {% call f.card() %}
         {% call f.form_tag('quincenas.new', fid='quincena_form') %}
-            {% call f.form_group(form.quincena) %}{% endcall %}
+            {% call f.form_group(form.clave) %}{% endcall %}
             {% call f.form_group(form.estado) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}

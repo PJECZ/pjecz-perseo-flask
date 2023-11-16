@@ -169,8 +169,8 @@ def edit(banco_id):
             banco.nombre = safe_string(form.nombre.data)
             banco.clave = safe_string(form.clave.data)
             banco.clave_dispersion_pensionados = safe_string(form.clave_dispersion_pensionados.data)
-            banco.consecutivo = safe_string(form.consecutivo.data)
-            banco.consecutivo_generado = safe_string(form.consecutivo_generado.data)
+            banco.consecutivo = form.consecutivo.data
+            banco.consecutivo_generado = form.consecutivo_generado.data
             banco.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),

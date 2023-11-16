@@ -31,7 +31,7 @@ class EntradaSalida(database.Model, UniversalMixin):
     usuario = relationship("Usuario", back_populates="entradas_salidas")
 
     # Columnas
-    tipo = Column(Enum(*TIPOS, name="tipos_entradas_salidas", native_enum=False), index=True, nullable=False)
+    tipo = Column(Enum(*TIPOS, name="entradas_salidas_tipos", native_enum=False), index=True, nullable=False)
     direccion_ip = Column(String(64), nullable=False)
 
     def __repr__(self):

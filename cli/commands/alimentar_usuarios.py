@@ -2,6 +2,7 @@
 Alimentar usuarios
 """
 import csv
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -20,11 +21,11 @@ def alimentar_usuarios():
     """Alimentar usuarios"""
     ruta = Path(USUARIOS_CSV)
     if not ruta.exists():
-        click.echo(f"AVISO: {ruta.name} no se encontró.")
-        return
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {ruta.name} no es un archivo.")
-        return
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
     click.echo("Alimentando usuarios...")
     contador = 0
     with open(ruta, encoding="utf8") as puntero:
@@ -44,7 +45,8 @@ def alimentar_usuarios():
                     click.echo(f"  AVISO: Falta la autoridad_id {autoridad_id}")
                     continue
             else:
-                raise Exception("  ERROR: No tiene la columna autoridad_clave o autoridad_id")
+                click.echo("ERROR: No tiene la columna autoridad_clave o autoridad_id")
+                sys.exit(1)
 
             # Validar consecutivo
             usuario_id = int(row["usuario_id"])
