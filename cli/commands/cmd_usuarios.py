@@ -1,6 +1,7 @@
 """
 CLI usuarios
 """
+import sys
 from datetime import datetime, timedelta
 
 import click
@@ -35,8 +36,8 @@ def nueva_api_key(email, dias):
     """Nueva API key"""
     usuario = Usuario.query.filter_by(email=email).first()
     if usuario is None:
-        click.echo(f"No existe el e-mail {email} en usuarios")
-        return
+        click.echo(f"ERROR: No existe el e-mail {email} en usuarios")
+        sys.exit(1)
     api_key = generar_api_key(usuario.id, usuario.email)
     api_key_expiracion = datetime.now() + timedelta(days=dias)
     usuario.api_key = api_key
@@ -53,8 +54,8 @@ def mostrar_api_key(email):
     """Mostrar API Key"""
     usuario = Usuario.query.filter_by(email=email).first()
     if usuario is None:
-        click.echo(f"No existe el e-mail {email} en usuarios")
-        return
+        click.echo(f"ERROR: No existe el e-mail {email} en usuarios")
+        sys.exit(1)
     click.echo(f"Usuario: {usuario.email}")
     click.echo(f"API key: {usuario.api_key}")
     click.echo(f"Expira:  {usuario.api_key_expiracion.strftime('%Y-%m-%d')}")
@@ -66,13 +67,13 @@ def nueva_contrasena(email):
     """Nueva contraseña"""
     usuario = Usuario.query.filter_by(email=email).first()
     if usuario is None:
-        click.echo(f"No existe el e-mail {email} en usuarios")
-        return
+        click.echo(f"ERROR: No existe el e-mail {email} en usuarios")
+        sys.exit(1)
     contrasena_1 = input("Contraseña: ")
     contrasena_2 = input("De nuevo la misma contraseña: ")
     if contrasena_1 != contrasena_2:
-        click.echo("No son iguales las contraseñas. Por favor intente de nuevo.")
-        return
+        click.echo("ERROR: No son iguales las contraseñas. Por favor intente de nuevo.")
+        sys.exit(1)
     usuario.contrasena = pwd_context.hash(contrasena_1.strip())
     usuario.save()
     click.echo(f"Se ha cambiado la contraseña de {email} en usuarios")

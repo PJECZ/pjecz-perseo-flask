@@ -2,6 +2,7 @@
 Alimentar permisos
 """
 import csv
+import sys
 from pathlib import Path
 
 import click
@@ -18,15 +19,15 @@ def alimentar_permisos():
     """Alimentar permisos"""
     ruta = Path(PERMISOS_CSV)
     if not ruta.exists():
-        click.echo(f"AVISO: {ruta.name} no se encontró.")
-        return
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {ruta.name} no es un archivo.")
-        return
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
     modulos = Modulo.query.all()
     if len(modulos) == 0:
-        click.echo("AVISO: Faltan de alimentar los modulos")
-        return
+        click.echo("ERROR: Faltan de alimentar los modulos")
+        sys.exit(1)
     click.echo("Alimentando permisos...")
     contador = 0
     with open(ruta, encoding="utf8") as puntero:
@@ -36,7 +37,7 @@ def alimentar_permisos():
             rol = Rol.query.get(rol_id)
             if rol is None:
                 click.echo(f"  ERROR: Falta el rol_id {rol_id}")
-                return
+                sys.exit(1)
             for modulo in modulos:
                 columna = modulo.nombre.lower()
                 if columna not in row:

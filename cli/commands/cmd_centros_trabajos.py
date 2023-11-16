@@ -2,6 +2,7 @@
 CLI Centros de Trabajo
 """
 import os
+import sys
 
 import click
 import requests
@@ -31,16 +32,17 @@ def cli():
 @click.command()
 def sincronizar():
     """Sincronizar los Centros de Trabajo con la informacion de RRHH Personal"""
+    click.echo("Sincronizando Centros de Trabajo...")
 
     # Validar que se haya definido RRHH_PERSONAL_URL
     if RRHH_PERSONAL_URL is None:
-        click.echo("AVISO: No se ha definido RRHH_PERSONAL_URL.")
-        return
+        click.echo("ERROR: No se ha definido RRHH_PERSONAL_URL.")
+        sys.exit(1)
 
     # Validar que se haya definido RRHH_PERSONAL_API_KEY
     if RRHH_PERSONAL_API_KEY is None:
-        click.echo("AVISO: No se ha definido RRHH_PERSONAL_API_KEY.")
-        return
+        click.echo("ERROR: No se ha definido RRHH_PERSONAL_API_KEY.")
+        sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -57,23 +59,23 @@ def sincronizar():
             )
             respuesta.raise_for_status()
         except requests.exceptions.ConnectionError:
-            click.echo("No hubo respuesta al solicitar centros de trabajo")
-            return
+            click.echo("ERROR: No hubo respuesta al solicitar centros de trabajo")
+            sys.exit(1)
         except requests.exceptions.HTTPError as error:
-            click.echo("Status Code al solicitar centros de trabajo: " + str(error))
-            return
+            click.echo("ERROR: Status Code al solicitar centros de trabajo: " + str(error))
+            sys.exit(1)
         except requests.exceptions.RequestException:
-            click.echo("Error inesperado al solicitar centros de trabajo")
-            return
+            click.echo("ERROR: Inesperado al solicitar centros de trabajo")
+            sys.exit(1)
         datos = respuesta.json()
         if "success" not in datos:
-            click.echo("Fallo al solicitar centros de trabajo")
-            return
+            click.echo("ERROR: Fallo al solicitar centros de trabajo")
+            sys.exit(1)
         if datos["success"] is False:
             if "message" in datos:
-                click.echo(f"Fallo al solicitar centros de trabajo con clave {centro_trabajo.clave}: {datos['message']}")
+                click.echo(f"  AVISO: Fallo en Centro de Trabajo {centro_trabajo.clave}: {datos['message']}")
             else:
-                click.echo(f"Fallo al solicitar centros de trabajo con clave {centro_trabajo.clave}")
+                click.echo(f"  AVISO: Fallo en Centro de Trabajo {centro_trabajo.clave}")
             continue
 
         # Actualizar el Centro de Trabajo
@@ -82,7 +84,9 @@ def sincronizar():
             centro_trabajo.descripcion = descripcion
             sesion.add(centro_trabajo)
             contador += 1
-            click.echo(f"Centro de Trabajo {centro_trabajo.clave} actualizado.")
+            if contador % 100 == 0:
+                click.echo(f"  Van {contador}...")
+            # click.echo(f"Centro de Trabajo {centro_trabajo.clave} actualizado.")
 
     # Guardar cambios
     if contador > 0:
@@ -90,7 +94,7 @@ def sincronizar():
         sesion.close()
 
     # Mensaje de termino
-    click.echo(f"Centros de Trabajo {contador} sincronizados.")
+    click.echo(f"Centros de Trabajo: {contador} sincronizados.")
 
 
 cli.add_command(sincronizar)

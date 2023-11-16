@@ -365,6 +365,6 @@ def generar_todos(quincena_id):
         mensaje="Lanzando nominas.tasks.generar_todos...",
         quincena_clave=quincena.clave,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al listado de productos activos
     return redirect(url_for("quincenas.list_active"))

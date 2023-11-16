@@ -80,7 +80,7 @@ def list_active():
     return render_template(
         "quincenas_productos/list.jinja2",
         filtros=json.dumps({"estatus": "A"}),
-        titulo="Quincenas Productos",
+        titulo="Productos",
         estatus="A",
     )
 
@@ -92,7 +92,7 @@ def list_inactive():
     return render_template(
         "quincenas_productos/list.jinja2",
         filtros=json.dumps({"estatus": "B"}),
-        titulo="Quincenas Productos inactivos",
+        titulo="Productos inactivos",
         estatus="B",
     )
 

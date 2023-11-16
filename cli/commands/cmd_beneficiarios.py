@@ -3,6 +3,7 @@ CLI Beneficiarios
 """
 import csv
 import re
+import sys
 from pathlib import Path
 
 import click
@@ -35,17 +36,17 @@ def alimentar(quincena_clave: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("Quincena inválida.")
-        return
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
 
     # Validar archivo
     ruta = Path(BENEFICIARIOS_CSV)
     if not ruta.exists():
-        click.echo(f"AVISO: {ruta.name} no se encontró.")
-        return
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {ruta.name} no es un archivo.")
-        return
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -55,13 +56,13 @@ def alimentar(quincena_clave: str):
 
     # Si existe la quincena, pero no esta ABIERTA, entonces se termina
     if quincena and quincena.estado != "ABIERTA":
-        click.echo("Quincena no esta ABIERTA.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
 
     # Si existe la quincena, pero ha sido eliminada, entonces se termina
     if quincena and quincena.estatus != "A":
-        click.echo("Quincena ha sido eliminada.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} ha sido eliminada.")
+        sys.exit(1)
 
     # Si no existe la quincena, se agrega
     if quincena is None:
@@ -70,7 +71,7 @@ def alimentar(quincena_clave: str):
         sesion.commit()
 
     # Leer el archivo CSV
-    click.echo("Alimentando beneficiarios...")
+    click.echo("Alimentando Beneficiarios...")
     contador = 0
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
@@ -82,15 +83,29 @@ def alimentar(quincena_clave: str):
                 click.echo(str(error))
                 continue
 
-            # Agregar beneficiario
-            beneficiario = Beneficiario(
-                rfc=rfc,
-                nombres=safe_string(row["NOMBRES"], save_enie=True),
-                apellido_primero=safe_string(row["APELLIDO PRIMERO"], save_enie=True),
-                apellido_segundo=safe_string(row["APELLIDO SEGUNDO"], save_enie=True),
-                modelo=4,
-            )
-            sesion.add(beneficiario)
+            # Revistar si ya existe el beneficiario
+            beneficiario = Beneficiario.query.filter_by(rfc=rfc).first()
+            if beneficiario is None:
+                # Agregar beneficiario
+                beneficiario = Beneficiario(
+                    rfc=rfc,
+                    nombres=safe_string(row["NOMBRES"], save_enie=True),
+                    apellido_primero=safe_string(row["APELLIDO PRIMERO"], save_enie=True),
+                    apellido_segundo=safe_string(row["APELLIDO SEGUNDO"], save_enie=True),
+                    modelo=4,
+                )
+                sesion.add(beneficiario)
+            else:
+                # Si cambio nombres, apellido_primero o apellido_segundo, se actualizan
+                if (
+                    beneficiario.nombres != safe_string(row["NOMBRES"], save_enie=True)
+                    or beneficiario.apellido_primero != safe_string(row["APELLIDO PRIMERO"], save_enie=True)
+                    or beneficiario.apellido_segundo != safe_string(row["APELLIDO SEGUNDO"], save_enie=True)
+                ):
+                    beneficiario.nombres = safe_string(row["NOMBRES"], save_enie=True)
+                    beneficiario.apellido_primero = safe_string(row["APELLIDO PRIMERO"], save_enie=True)
+                    beneficiario.apellido_segundo = safe_string(row["APELLIDO SEGUNDO"], save_enie=True)
+                    sesion.add(beneficiario)
 
             # Consultar banco
             banco = Banco.query.filter_by(clave=row["BANCO"]).first()

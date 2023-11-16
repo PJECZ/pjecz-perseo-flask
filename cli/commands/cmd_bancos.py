@@ -2,6 +2,7 @@
 CLI Bancos
 """
 import csv
+import sys
 from pathlib import Path
 
 import click
@@ -27,12 +28,12 @@ def alimentar():
     """Alimentar bancos"""
     ruta = Path(BANCOS_CSV)
     if not ruta.exists():
-        click.echo(f"AVISO: {ruta.name} no se encontró.")
-        return
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {ruta.name} no es un archivo.")
-        return
-    click.echo("Alimentando bancos...")
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+    click.echo("Alimentando Bancos...")
     contador = 0
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
@@ -86,8 +87,8 @@ def reiniciar_consecutivos_generados():
 
     # Si no hubo cambios
     if contador == 0:
-        click.echo("No hubo necesidad de reiniciar ningun consecutivo_generado.")
-        return
+        click.echo("AVISO: No hubo necesidad de reiniciar ningun consecutivo_generado.")
+        sys.exit(0)
 
     # Actualizar los consecutivos_generados de cada banco
     sesion.commit()

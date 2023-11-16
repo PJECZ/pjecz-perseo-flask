@@ -773,7 +773,7 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
             quincena=quincena,
             archivo=nombre_archivo_xlsx,
             es_satisfactorio=(len(mensajes) == 0),
-            fuente="DIPSERSIONES PENSIONADOS",
+            fuente="DISPERSIONES PENSIONADOS",
             mensajes="\n".join(mensajes),
             url=gcs_public_path,
         )
@@ -782,7 +782,7 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
         quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
         quincena_producto.archivo = nombre_archivo_xlsx
         quincena_producto.es_satisfactorio = len(mensajes) == 0
-        quincena_producto.fuente = "DIPSERSIONES PENSIONADOS"
+        quincena_producto.fuente = "DISPERSIONES PENSIONADOS"
         quincena_producto.mensajes = "\n".join(mensajes)
         quincena_producto.url = gcs_public_path
     quincena_producto.save()

@@ -7,6 +7,9 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('QUINCENAS PRODUCTOS') %}
+            {{ topbar.button('Productos', url_for('quincenas_productos.list_active'), 'mdi:calendar-export') }}
+        {% endif %}
         {% if current_user.can_admin('QUINCENAS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('quincenas.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('quincenas.list_active')) }}{% endif %}

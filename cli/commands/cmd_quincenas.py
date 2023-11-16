@@ -1,6 +1,8 @@
 """
 CLI Quincenas
 """
+import sys
+
 import click
 
 from perseo.app import create_app
@@ -31,12 +33,10 @@ def cerrar():
     # Si no hay quincenas, mostrar mensaje de error y salir
     if len(quincenas) == 0:
         click.echo("ERROR: No hay quincenas activas.")
-        return
-
-    # Inicializar contador de cambios
-    contador = 0
+        sys.exit(1)
 
     # Bucle por las quincenas
+    contador = 0
     for quincena_obj in quincenas:
         # Si la quincena esta abierta, cerrarla
         if quincena_obj.estado == "ABIERTA":
@@ -45,12 +45,12 @@ def cerrar():
             click.echo(f"  Quincena {quincena_obj.quincena} ahora esta CERRADA")
             contador += 1
 
-    # Si no hubo cambios, mostrar mensaje y salir
+    # Si no hubo cambios, mostrar mensaje
     if contador == 0:
-        click.echo("Quincenas terminado: No se hicieron cambios")
-        return
+        click.echo("AVISO: No hubo quincenas por cerrar.")
 
     # Igualar los consecutivos a los consecutivos_generado de los bancos
+    bancos_actualizados_contador = 0
     for banco in Banco.query.filter_by(estatus="A").all():
         if banco.consecutivo != banco.consecutivo_generado:
             antes = banco.consecutivo
@@ -58,14 +58,19 @@ def cerrar():
             banco.consecutivo = banco.consecutivo_generado
             sesion.add(banco)
             click.echo(f"  {banco.nombre} ({antes} -> {ahora})")
+            bancos_actualizados_contador += 1
 
-    # TODO: Actualizar en cada registro de nominas el numero de cheque
+    # Si no hubo cambios, mostrar mensaje
+    if bancos_actualizados_contador == 0:
+        click.echo("AVISO: No hubo consecutivos de los bancos por cambiar.")
+
+    # TODO: Actualizar nominas, beneficiarios_quincenas con su numero de cheque definitivo
 
     # Hacer commit de los cambios en la base de datos
     sesion.commit()
 
     # Mostrar mensaje de termino, si no hubo cambios o la cantidad de los mismos
-    click.echo(f"Quincenas terminado: {contador} cambios")
+    click.echo(f"Quincenas terminado: {contador} cambios en quincenas, {bancos_actualizados_contador} cambios en bancos.")
 
 
 cli.add_command(cerrar)

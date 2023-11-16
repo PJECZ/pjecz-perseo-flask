@@ -1,13 +1,11 @@
 """
 CLI Beneficiarios Quincenas
 """
-import csv
 import re
+import sys
 from datetime import datetime
-from pathlib import Path
 
 import click
-import xlrd
 from dotenv import load_dotenv
 from openpyxl import Workbook
 
@@ -37,8 +35,8 @@ def generar(quincena_clave: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("Quincena inválida.")
-        return
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -48,18 +46,18 @@ def generar(quincena_clave: str):
 
     # Si no existe la quincena, entonces se termina
     if quincena is None:
-        click.echo("Quincena no existe.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} no existe.")
+        sys.exit(1)
 
     # Si existe la quincena, pero no esta ABIERTA, entonces se termina
     if quincena.estado != "ABIERTA":
-        click.echo("Quincena no esta ABIERTA.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
 
     # Si existe la quincena, pero ha sido eliminada, entonces se termina
     if quincena.estatus != "A":
-        click.echo("Quincena ha sido eliminada.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} esta eliminada.")
+        sys.exit(1)
 
     # Consultar las quincenas de los beneficiarios activos
     beneficiarios_quincenas = BeneficiarioQuincena.query.filter_by(quincena_id=quincena.id).filter_by(estatus="A").all()

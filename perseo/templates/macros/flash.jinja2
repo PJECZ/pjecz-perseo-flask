@@ -7,12 +7,29 @@
                 <div class="alert alert-{{ category }}" role="alert">
                     {{ msg }}
                     {% if msg.endswith('recargar en 10 segundos...') %}
-                    <script>
-                        // Refresh the page after 10 seconds
-                        setTimeout(function(){
-                            location.reload();
-                        }, 10000); // 10000 milliseconds = 10 seconds
-                    </script>
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Elaborando...</span>
+                        </div>
+                        <script>
+                            // Refresh the page after 10 seconds
+                            setTimeout(function(){
+                                location.reload();
+                            }, 10000); // 10000 milliseconds = 10 seconds
+                        </script>
+                    {% endif %}
+                    {% if msg.endswith('recargar en 30 segundos...') %}
+                        <div class="progress-bar">
+                            <span class="progress-bar-fill" style="width: 10%"></span>
+                        </div>
+                        <script>
+                            $('.progress-bar-fill').delay(30000).queue(function () {
+                                $(this).css('width', '100%')
+                            });
+                            // Refresh the page after 30 seconds
+                            setTimeout(function(){
+                                location.reload();
+                            }, 30000); // 30000 milliseconds = 30 seconds
+                        </script>
                     {% endif %}
                 </div>
             {% endfor %}

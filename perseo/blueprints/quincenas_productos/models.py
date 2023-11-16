@@ -15,7 +15,7 @@ class QuincenaProducto(database.Model, UniversalMixin):
         "NOMINAS": "NOMINAS",
         "MONEDEROS": "MONEDEROS",
         "PENSIONADOS": "PENSIONADOS",
-        "DIPSERSIONES PENSIONADOS": "DIPSERSIONES PENSIONADOS",
+        "DISPERSIONES PENSIONADOS": "DISPERSIONES PENSIONADOS",
     }
 
     # Nombre de la tabla

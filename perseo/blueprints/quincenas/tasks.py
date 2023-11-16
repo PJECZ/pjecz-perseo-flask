@@ -25,7 +25,7 @@ app.app_context().push()
 database.app = app
 
 
-def cerrar() -> None:
+def cerrar() -> str:
     """Cerrar TODAS las quincenas con estado ABIERTA"""
 
     # Iniciar la tarea en el fondo
@@ -39,10 +39,10 @@ def cerrar() -> None:
 
     # Si no hay quincenas, mostrar mensaje de error y salir
     if len(quincenas) == 0:
-        mensaje = "No hay quincenas activas."
-        set_task_error(mensaje)
-        bitacora.error(mensaje)
-        return
+        mensaje_error = "No hay quincenas activas."
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return mensaje_error
 
     # Inicializar listado de quincenas cerradas
     quincenas_cerradas = []
@@ -60,7 +60,7 @@ def cerrar() -> None:
         mensaje = "No se hicieron cambios."
         set_task_progress(100, mensaje)
         bitacora.info(mensaje)
-        return
+        return mensaje
 
     # Igualar los consecutivos a los consecutivos_generado de los bancos
     bancos_actualizados = []
@@ -85,3 +85,4 @@ def cerrar() -> None:
     mensaje = f"Quincenas cerradas: {cerradas_str}. {bancos_actualizados_str}"
     set_task_progress(100, mensaje)
     bitacora.info(mensaje)
+    return mensaje

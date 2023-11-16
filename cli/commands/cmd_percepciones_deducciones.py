@@ -1,16 +1,16 @@
 """
 CLI Percepciones-Deducciones
 """
-import csv
 import os
 import re
+import sys
 from pathlib import Path
 
 import click
 import xlrd
 from dotenv import load_dotenv
 
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
+from lib.safe_string import QUINCENA_REGEXP, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
@@ -43,22 +43,22 @@ def alimentar(quincena_clave: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("Quincena inválida")
-        return
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
     if EXPLOTACION_BASE_DIR is None:
-        click.echo("Variable de entorno EXPLOTACION_BASE_DIR no definida.")
-        return
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
 
     # Validar si existe el archivo
     ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, NOMINAS_FILENAME_XLS)
     if not ruta.exists():
-        click.echo(f"AVISO: {str(ruta)} no se encontró.")
-        return
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {str(ruta)} no es un archivo.")
-        return
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -68,13 +68,13 @@ def alimentar(quincena_clave: str):
 
     # Si existe la quincena, pero no esta ABIERTA, entonces se termina
     if quincena and quincena.estado != "ABIERTA":
-        click.echo("Quincena no esta ABIERTA.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
 
     # Si existe la quincena, pero ha sido eliminada, entonces se termina
     if quincena and quincena.estatus != "A":
-        click.echo("Quincena ha sido eliminada.")
-        return
+        click.echo(f"ERROR: Quincena {quincena_clave} ha sido eliminada.")
+        sys.exit(1)
 
     # Si no existe la quincena, se agrega
     if quincena is None:
@@ -95,7 +95,7 @@ def alimentar(quincena_clave: str):
     contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando percepciones-deducciones...")
+    click.echo("Alimentando Percepciones Deducciones...")
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)
@@ -116,7 +116,7 @@ def alimentar(quincena_clave: str):
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
-            click.echo(f"  Centro de Trabajo {centro_trabajo_clave} insertado")
+            # click.echo(f"  Centro de Trabajo {centro_trabajo_clave} insertado")
 
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -130,14 +130,16 @@ def alimentar(quincena_clave: str):
                 num_empleado=num_empleado,
             )
             sesion.add(persona)
-            click.echo(f"  Persona {rfc} insertada")
+            # click.echo(f"  Persona {rfc} insertada")
+
+        # TODO: Si la persona existe, revisar si hubo cambios en sus datos, si los hubo, actualizarlos
 
         # Revisar si la Plaza existe, de lo contrario insertarla
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
         if plaza is None:
             plaza = Plaza(clave=plaza_clave, descripcion="ND")
             sesion.add(plaza)
-            click.echo(f"  Plaza {plaza_clave} insertada")
+            # click.echo(f"  Plaza {plaza_clave} insertada")
 
         # Buscar percepciones y deducciones
         col_num = 26

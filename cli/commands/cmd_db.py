@@ -2,6 +2,7 @@
 CLI db
 """
 import os
+import sys
 
 import click
 from dotenv import load_dotenv
@@ -48,7 +49,7 @@ def alimentar():
     """Alimentar"""
     if ENTORNO_IMPLEMENTACION == "PRODUCTION":
         click.echo("PROHIBIDO: No se alimenta porque este es el servidor de producción.")
-        return
+        sys.exit(1)
     alimentar_modulos()
     alimentar_roles()
     alimentar_permisos()
@@ -64,7 +65,7 @@ def inicializar():
     """Inicializar"""
     if ENTORNO_IMPLEMENTACION == "PRODUCTION":
         click.echo("PROHIBIDO: No se inicializa porque este es el servidor de producción.")
-        return
+        sys.exit(1)
     database.drop_all()
     database.create_all()
     click.echo("Termina inicializar.")

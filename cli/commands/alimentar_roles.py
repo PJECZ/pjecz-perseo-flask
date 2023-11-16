@@ -2,6 +2,7 @@
 Alimentar roles
 """
 import csv
+import sys
 from pathlib import Path
 
 import click
@@ -16,11 +17,11 @@ def alimentar_roles():
     """Alimentar roles"""
     ruta = Path(ROLES_CSV)
     if not ruta.exists():
-        click.echo(f"AVISO: {ruta.name} no se encontró.")
-        return
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {ruta.name} no es un archivo.")
-        return
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
     click.echo("Alimentando roles...")
     contador = 0
     with open(ruta, encoding="utf8") as puntero:

@@ -2,6 +2,7 @@
 Alimentar usuarios-roles
 """
 import csv
+import sys
 from pathlib import Path
 
 import click
@@ -18,14 +19,14 @@ def alimentar_usuarios_roles():
     """Alimentar usuarios-roles"""
     ruta = Path(USUARIOS_ROLES_CSV)
     if not ruta.exists():
-        click.echo(f"AVISO: {ruta.name} no se encontró.")
-        return
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {ruta.name} no es un archivo.")
-        return
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
     if Usuario.query.count() == 0:
-        click.echo("AVISO: Faltan de alimentar los usuarios")
-        return
+        click.echo("ERROR: Faltan de alimentar los usuarios")
+        sys.exit(1)
     click.echo("Alimentando usuarios-roles...")
     contador = 0
     with open(ruta, encoding="utf8") as puntero:
@@ -35,7 +36,7 @@ def alimentar_usuarios_roles():
             usuario = Usuario.query.get(usuario_id)
             if usuario is None:
                 click.echo(f"  ERROR: Falta el usuario_id {usuario_id}")
-                return
+                sys.exit(1)
             for rol_str in row["roles"].split(","):
                 rol_str = rol_str.strip().upper()
                 if rol_str == "":

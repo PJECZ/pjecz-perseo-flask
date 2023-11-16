@@ -8,6 +8,7 @@ Necesita la quincena como argumento para saber donde buscar el archivo
 """
 import os
 import re
+import sys
 from pathlib import Path
 
 import click
@@ -45,29 +46,29 @@ def cli():
 @click.command()
 @click.argument("quincena", type=str)
 def alimentar_bancarias(quincena: str):
-    """Alimentar cuentas bancarias"""
+    """Alimentar Cuentas Bancarias"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena) is None:
-        click.echo("Quincena inválida")
-        return
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
     if EXPLOTACION_BASE_DIR is None:
-        click.echo("Variable de entorno EXPLOTACION_BASE_DIR no definida.")
-        return
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
 
     # Validar si existe el archivo
     ruta = Path(EXPLOTACION_BASE_DIR, quincena, CUENTAS_FILENAME_XLS)
     if not ruta.exists():
-        click.echo(f"AVISO: {str(ruta)} no se encontró.")
-        return
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {str(ruta)} no es un archivo.")
-        return
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
@@ -79,7 +80,7 @@ def alimentar_bancarias(quincena: str):
     contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando cuentas...")
+    click.echo("Alimentando Cuentas...")
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 0)
@@ -134,28 +135,28 @@ def alimentar_monederos(quincena: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena) is None:
-        click.echo("Quincena inválida")
-        return
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
     if EXPLOTACION_BASE_DIR is None:
-        click.echo("Variable de entorno EXPLOTACION_BASE_DIR no definida.")
-        return
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
 
     # Validar si existe el archivo
     ruta = Path(EXPLOTACION_BASE_DIR, quincena, MONEDEROS_FILENAME_XLS)
     if not ruta.exists():
-        click.echo(f"AVISO: {str(ruta)} no se encontró.")
-        return
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
     if not ruta.is_file():
-        click.echo(f"AVISO: {str(ruta)} no es un archivo.")
-        return
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
 
     # Consultar el banco con clave 9 que es PREVIVALE
     banco = Banco.query.filter_by(clave="9").first()
     if banco is None:
         click.echo("ERROR: No existe el banco con clave 9")
-        return
+        sys.exit(1)
 
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
@@ -222,7 +223,7 @@ def agregar_cuentas_faltantes():
     # Si no se encuentra el banco, se termina
     if banco is None:
         click.echo("ERROR: No se encontró el banco Santander.")
-        return
+        sys.exit(1)
 
     # Consultar las personas activas
     personas = Persona.query.filter_by(estatus="A").all()
@@ -230,7 +231,7 @@ def agregar_cuentas_faltantes():
     # Si no hay personas, se termina
     if len(personas) == 0:
         click.echo("ERROR: No hay personas.")
-        return
+        sys.exit(1)
 
     # Bucle por todas las personas
     contador = 0
@@ -260,8 +261,8 @@ def agregar_cuentas_faltantes():
 
     # Si no hubo que agregar cuentas, se termina
     if contador == 0:
-        click.echo("No se agregaron cuentas.")
-        return
+        click.echo("AVISO: No se agregaron cuentas.")
+        sys.exit(0)
 
     # Actualizar
     sesion.commit()
