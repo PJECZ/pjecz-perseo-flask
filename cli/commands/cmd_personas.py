@@ -7,8 +7,9 @@ import sys
 import click
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
 
-from lib.safe_string import safe_curp, safe_rfc
+from lib.safe_string import safe_curp, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.personas.models import Persona
 from perseo.extensions import database
@@ -32,7 +33,7 @@ def cli():
 @click.command()
 def sincronizar():
     """Sincronizar las Personas con la información de RRHH Personal"""
-    click.echo("Sincronizando Centros de Trabajo...")
+    click.echo("Sincronizando Personas...")
 
     # Validar que se haya definido RRHH_PERSONAL_URL
     if RRHH_PERSONAL_URL is None:
@@ -49,7 +50,7 @@ def sincronizar():
 
     # Bucle por los RFC's de Personas
     contador = 0
-    for persona in Persona.query.filter_by(estatus="A").all():
+    for persona in Persona.query.filter_by(estatus="A").order_by(Persona.rfc).all():
         # Consultar a la API
         try:
             respuesta = requests.get(
@@ -79,30 +80,29 @@ def sincronizar():
                 click.echo(f"  AVISO: Fallo en Persona {persona.rfc}")
             continue
 
-        # Actualizar el CURP de la persona
-        curp = safe_curp(datos["items"][0]["curp"])
-        if persona.curp != curp:
+        # Si no contiene resultados, saltar
+        if len(datos["items"]) <= 0:
+            click.echo(f"  RFC: {persona.rfc} no encontrado")
+            continue
+
+        # Actualizar datos de la persona
+        curp = safe_string(datos["items"][0]["curp"])
+        fecha_ingreso_gobierno = datos["items"][0]["fecha_ingreso_gobierno"]
+        fecha_ingreso_pj = datos["items"][0]["fecha_ingreso_pj"]
+        actualizar = False
+        if curp != "" and persona.curp != curp:
+            actualizar = True
             persona.curp = curp
-            sesion.add(persona)
-            contador += 1
-            if contador % 100 == 0:
-                click.echo(f"  Van {contador}...")
-        # Actualizar el Fecha_ingreso_gobierno de la persona
-        fecha_ingreso_gobierno = safe_curp(datos["items"][0]["fecha_ingreso_gobierno"])
-        if persona.ingreso_gobierno_fecha != fecha_ingreso_gobierno:
             persona.ingreso_gobierno_fecha = fecha_ingreso_gobierno
-            sesion.add(persona)
-            contador += 1
-            if contador % 100 == 0:
-                click.echo(f"  Van {contador}...")
-        # Actualizar el Fecha_ingreso_PJ de la persona
-        fecha_ingreso_pj = safe_curp(datos["items"][0]["fecha_ingreso_pj"])
-        if persona.ingreso_pj_fecha != fecha_ingreso_pj:
             persona.ingreso_pj_fecha = fecha_ingreso_pj
+        # Añadir cambios e incrementar el contador
+        if actualizar:
+            click.echo(f"  Persona con cambios: {persona}")
             sesion.add(persona)
             contador += 1
             if contador % 100 == 0:
                 click.echo(f"  Van {contador}...")
+                sesion.commit()
 
     # Guardar cambios
     if contador > 0:
