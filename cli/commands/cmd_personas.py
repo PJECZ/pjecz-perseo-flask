@@ -82,7 +82,7 @@ def sincronizar():
 
         # Si no contiene resultados, saltar
         if len(datos["items"]) == 0:
-            click.echo(f"  RFC: {persona.rfc} no encontrado")
+            click.echo(f"  AVISO: RFC: {persona.rfc} no encontrado")
             continue
         item = datos["items"][0]
 
@@ -90,7 +90,7 @@ def sincronizar():
         try:
             curp = safe_curp(item["curp"])
         except ValueError:
-            click.echo(f"  ERROR: La persona {persona.rfc}, tiene una CURP incorrecta {item['curp']}")
+            click.echo(f"  AVISO: La persona {persona.rfc}, tiene una CURP incorrecta {item['curp']}")
             curp = ""
 
         # Verificar la fecha de ingreso a gobierno como fecha
