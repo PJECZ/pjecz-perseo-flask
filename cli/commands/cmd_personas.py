@@ -94,21 +94,22 @@ def sincronizar():
             curp = ""
 
         # Verificar la fecha de ingreso a gobierno como fecha
+        fecha_ingreso_gobierno = None
         try:
-            fecha_ingreso_gobierno = datetime.strptime(item["fecha_ingreso_gobierno"], "%Y-%m-%d")
-        except error as err:
-            click.echo(f"  ERROR: La persona {persona.rfc}, tiene una Fecha de ingreso a gobierno incorrecta. {err}")
-            fecha_ingreso_gobierno = None
+            if item["fecha_ingreso_gobierno"] is not None:
+                fecha_ingreso_gobierno = datetime.strptime(item["fecha_ingreso_gobierno"], "%Y-%m-%d").date()
+        except ValueError as e:
+            click.echo(f"  AVISO: La persona {persona.rfc}, tiene una Fecha de ingreso a gobierno incorrecta. {e}")
 
         # Verificar la fecha de ingreso a PJ como fecha
+        fecha_ingreso_pj = None
         try:
-            fecha_ingreso_pj = datetime.strptime(item["fecha_ingreso_pj"], "%Y-%m-%d")
-        except error as err:
-            click.echo(f"  ERROR: La persona {persona.rfc}, tiene una Fecha de ingreso a PJ incorrecta. {err}")
-            fecha_ingreso_pj = None
+            if item["fecha_ingreso_pj"] is not None:
+                fecha_ingreso_pj = datetime.strptime(item["fecha_ingreso_pj"], "%Y-%m-%d").date()
+        except ValueError as e:
+            click.echo(f"  AVISO: La persona {persona.rfc}, tiene una Fecha de ingreso a PJ incorrecta. {e}")
 
         # Actualizar si hay cambios
-        # FIXME: No puedo hacer que distinga si tiene fechas iguales.
         actualizar = False
         if curp != "" and persona.curp != curp:
             actualizar = True
