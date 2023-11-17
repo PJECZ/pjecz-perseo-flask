@@ -91,8 +91,11 @@ def alimentar(quincena_clave: str):
     # Iniciar listado de conceptos que no existen
     conceptos_no_existentes = []
 
-    # Iniciar contador de percepciones-deducciones alimentadas
+    # Iniciar contadores
     contador = 0
+    centros_trabajos_insertados_contador = 0
+    personas_insertadas_contador = 0
+    plazas_insertadas_contador = 0
 
     # Bucle por cada fila
     click.echo("Alimentando Percepciones Deducciones...")
@@ -116,7 +119,7 @@ def alimentar(quincena_clave: str):
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
-            # click.echo(f"  Centro de Trabajo {centro_trabajo_clave} insertado")
+            centros_trabajos_insertados_contador += 1
 
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -130,7 +133,7 @@ def alimentar(quincena_clave: str):
                 num_empleado=num_empleado,
             )
             sesion.add(persona)
-            # click.echo(f"  Persona {rfc} insertada")
+            personas_insertadas_contador += 1
 
         # TODO: Si la persona existe, revisar si hubo cambios en sus datos, si los hubo, actualizarlos
 
@@ -139,7 +142,7 @@ def alimentar(quincena_clave: str):
         if plaza is None:
             plaza = Plaza(clave=plaza_clave, descripcion="ND")
             sesion.add(plaza)
-            # click.echo(f"  Plaza {plaza_clave} insertada")
+            plazas_insertadas_contador += 1
 
         # Buscar percepciones y deducciones
         col_num = 26
@@ -196,8 +199,14 @@ def alimentar(quincena_clave: str):
 
     # Mensaje termino
     if len(conceptos_no_existentes) > 0:
-        click.echo(f"  AVISO: Conceptos no existentes: {','.join(conceptos_no_existentes)}")
-    click.echo(f"Alimentar percepciones-deducciones: {contador} registros en la quincena {quincena_clave}.")
+        click.echo(f"AVISO: Conceptos no existentes: {','.join(conceptos_no_existentes)}")
+    if centros_trabajos_insertados_contador > 0:
+        click.echo(f"Centros de Trabajo:       {centros_trabajos_insertados_contador} insertados")
+    if personas_insertadas_contador > 0:
+        click.echo(f"Personas:                 {personas_insertadas_contador} insertadas")
+    if plazas_insertadas_contador > 0:
+        click.echo(f"Plazas:                   {plazas_insertadas_contador} insertadas")
+    click.echo(f"Percepciones-Deducciones: {contador} registros en la quincena {quincena_clave}.")
 
 
 cli.add_command(alimentar)

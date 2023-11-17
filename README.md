@@ -151,6 +151,8 @@ then
     echo "   FLASK_APP: ${FLASK_APP}"
     echo "   HOST: ${HOST}"
     echo "   REDIS_URL: ${REDIS_URL}"
+    echo "   RRHH_PERSONAL_URL: ${RRHH_PERSONAL_URL}"
+    echo "   RRHH_PERSONAL_API_KEY: ${RRHH_PERSONAL_API_KEY}"
     echo "   SALT: ${SALT}"
     echo "   SECRET_KEY: ${SECRET_KEY}"
     echo "   SQLALCHEMY_DATABASE_URI: ${SQLALCHEMY_DATABASE_URI}"
@@ -171,10 +173,12 @@ then
     export PYTHONPATH=$(pwd)
     echo "   PYTHONPATH: ${PYTHONPATH}"
     echo
-    echo "-- Arrancar Flask o RQ Worker"
+    echo "-- Arrancar Flask"
     alias arrancar="flask run --port=5000"
-    alias fondear="rq worker ${TASK_QUEUE}"
     echo "   arrancar = flask run --port=5000"
+    echo
+    echo "-- Dejar corriendo RQ Worker para las tareas en el fondo"
+    alias fondear="rq worker ${TASK_QUEUE}"
     echo "   fondear = rq worker ${TASK_QUEUE}"
     echo
     if [ -f cli/app.py ]
@@ -183,25 +187,42 @@ then
         alias cli="python3 ${PWD}/cli/app.py"
         echo "   cli --help"
         echo
-        echo "-- Recargar datos de prueba"
-        function recargar() {
+        echo "-- 1) Reiniciar la base de datos"
+        function reiniciar() {
             export CLI="python3 ${PWD}/cli/app.py"
             $CLI db reiniciar
             $CLI conceptos alimentar
             $CLI bancos alimentar
-            $CLI percepciones_deducciones alimentar 202317
-            $CLI percepciones_deducciones alimentar 202318
-            $CLI percepciones_deducciones alimentar 202319
-            $CLI percepciones_deducciones alimentar 202320
-            $CLI nominas alimentar 202317
-            $CLI nominas alimentar 202318
-            $CLI nominas alimentar 202319
-            $CLI nominas alimentar 202320
-            $CLI cuentas alimentar-bancarias 202320
-            $CLI cuentas alimentar-monederos 202320
+        }
+        export -f reiniciar
+        echo "   reiniciar"
+        echo
+        echo "-- 2) Recargar archivos de explotacion"
+        function recargar() {
+            export CLAVE=$1
+            export CLI="python3 ${PWD}/cli/app.py"
+            $CLI percepciones_deducciones alimentar $CLAVE
+            $CLI nominas alimentar $CLAVE
+            $CLI cuentas alimentar-bancarias $CLAVE
+            $CLI cuentas alimentar-monederos $CLAVE
+            $CLI beneficiarios alimentar $CLAVE
+            $CLI centros_trabajos sincronizar
         }
         export -f recargar
-        echo "   recargar"
+        echo "   recargar <QUINCENA>"
+        echo
+        echo "-- Generar cada producto"
+        function generar() {
+            export CLAVE=$1
+            export CLI="python3 ${PWD}/cli/app.py"
+            $CLI bancos reiniciar-consecutivos-generados
+            $CLI nominas generar-nominas $CLAVE
+            $CLI nominas generar-monederos $CLAVE
+            $CLI nominas generar-pensionados $CLAVE
+            $CLI nominas generar-dispersiones-pensionados $CLAVE
+        }
+        export -f generar
+        echo "   generar <QUINCENA>"
         echo
     fi
 fi
@@ -215,60 +236,37 @@ Antes de usar el CLI o de arrancar el servidor de **Flask** debe cargar las vari
 . .bashrc
 ```
 
-## Recargar base de datos de un solo comando
-
-En `.bashrc` se encuentra la función `recargar` que ejecuta el **CLI** para reiniciar la base de datos y alimentarla con los datos de prueba de dos meses. Siempre que haya los archivos necesarios en el directorio `seed` y en el directorio `EXPLOTACION_BASE_DIR`.
+Tendrá el alias al **CLI**
 
 ```bash
-recargar
+cli --help
 ```
 
-## Preparar base de datos paso a paso
+## Reiniciar la base de datos
 
-Previamente debe crear el directorio `seed` y colocar allí los archivos `.csv` para alimentar las tablas principales.
-
-Puede inicializar (eliminar las tablas y crearlas) y alimentar con el **CLI**:
+En `.bashrc` se encuentra la función `reiniciar` que ejecuta el **CLI** para reiniciar la base de datos y alimentarla con los datos iniciales. Siempre que haya los archivos necesarios en el directorio `seed`.
 
 ```bash
-cli db inicializar
-cli db alimentar
+reiniciar
 ```
 
-O puede reiniciar (eliminar las tablas, crearlas y alimentarlas) con:
+## Recargar archivos de explotacion
+
+Con los archivos de explotacion en el directorio `EXPLOTACION_BASE_DIR` puede recargar los datos de la quincena **202320** con:
 
 ```bash
-cli db reiniciar
+recargar 202320
 ```
 
-Alimentar los conceptos
+## Generar cada producto
+
+Para crear los archivos XLSX a partir del **CLI** ejecute:
 
 ```bash
-cli conceptos alimentar
+generar 202320
 ```
 
-Alimentar los bancos
-
-```bash
-cli bancos alimentar
-```
-
-Alimentar las nominas de la quincena **202320**
-
-```bash
-cli nominas alimentar 202320
-```
-
-Alimentar las percepciones-deducciones de la quincena **202320**
-
-```bash
-cli percepciones_deducciones alimentar 202320
-```
-
-Alimentar las cuentas de la quincena **202320**
-
-```bash
-cli cuentas alimentar 202320
-```
+En cambio, esos generadores para el sistema web en **Flask** se ejecutan como tareas en el fondo con **RQ Worker**.
 
 ## Tareas en el fondo
 
@@ -290,4 +288,10 @@ arrancar
 
 Así se arrancará el servidor de **Flask**.
 
-Abrir en su navegador de internet <http://localhost:5000>
+## Requirements.txt
+
+Como se usa _poetry_ al cambiar las dependencias debe crear un nuevo `requirements.txt` con:
+
+```bash
+poetry export -f requirements.txt --output requirements.txt --without-hashes
+```

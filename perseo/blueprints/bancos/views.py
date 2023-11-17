@@ -223,3 +223,17 @@ def recover(banco_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("bancos.detail", banco_id=banco.id))
+
+
+@bancos.route("/bancos/reiniciar_consecutivos_generados")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def reiniciar_consecutivos_generados():
+    """Lanzar tarea en el fondo para reiniciar los consecutivos generados de cada banco con el consecutivo"""
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.reiniciar_consecutivos_generados",
+        mensaje="Lanzando reiniciar_consecutivos_generados...",
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    # Redireccionar al listado de productos activos
+    return redirect(url_for("bancos.list_active"))

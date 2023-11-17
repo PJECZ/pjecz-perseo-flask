@@ -1,5 +1,6 @@
 {% extends 'layouts/app.jinja2' %}
 {% import 'macros/list.jinja2' as list %}
+{% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
 {% block title %}{{ titulo }}{% endblock %}
@@ -9,6 +10,9 @@
         {% if current_user.can_admin('BANCOS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('bancos.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('bancos.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_admin('BANCOS') %}
+            {{ modals.button_modal('Reiniciar C. T.', url_for('bancos.reiniciar_consecutivos_generados'), 'RestartSequencesTemp', 'mdi:stop', "¿Está seguro de reiniciar los consecutivos temporales?") }}
         {% endif %}
         {% if current_user.can_insert('BANCOS') %}
             {{ topbar.button_new('Nuevo Banco', url_for('bancos.new')) }}
@@ -33,6 +37,7 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ modals.custom_javascript('Reiniciar C. T.', '', 'RestartSequencesTemp') }}
     {{ list.config_datatable() }}
     <script>
         configDataTable['ajax']['url'] = '/bancos/datatable_json';

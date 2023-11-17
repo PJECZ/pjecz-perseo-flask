@@ -95,6 +95,7 @@ def alimentar(quincena_clave: str):
 
     # Iniciar contadores
     contador = 0
+    centros_trabajos_insertados_contador = 0
     personas_insertadas_contador = 0
     plazas_insertadas_contador = 0
 
@@ -123,7 +124,7 @@ def alimentar(quincena_clave: str):
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
-            # click.echo(f"  Centro de Trabajo {centro_trabajo_clave} insertado")
+            centro_trabajos_insertados_contador += 1
 
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -138,7 +139,6 @@ def alimentar(quincena_clave: str):
             )
             sesion.add(persona)
             personas_insertadas_contador += 1
-            # click.echo(f"  Persona {rfc} insertada")
 
         # TODO: Si la persona existe, revisar si hubo cambios en sus datos, si los hubo, actualizarlos
 
@@ -148,7 +148,6 @@ def alimentar(quincena_clave: str):
             plaza = Plaza(clave=plaza_clave, descripcion="ND")
             sesion.add(plaza)
             plazas_insertadas_contador += 1
-            # click.echo(f"  Plaza {plaza_clave} insertada")
 
         # Bucle entre P-D para determinar el tipo entre SALARIO y DESPENSA
         nomina_tipo = None
@@ -202,8 +201,10 @@ def alimentar(quincena_clave: str):
     sesion.close()
 
     # Mensaje termino
-    click.echo(f"Personas: {personas_insertadas_contador} insertadas")
-    click.echo(f"Plazas:   {plazas_insertadas_contador} insertadas")
+    if personas_insertadas_contador > 0:
+        click.echo(f"Personas: {personas_insertadas_contador} insertadas")
+    if plazas_insertadas_contador > 0:
+        click.echo(f"Plazas:   {plazas_insertadas_contador} insertadas")
     click.echo(f"Nominas:  {contador} insertadas en la quincena {quincena_clave}.")
 
 
