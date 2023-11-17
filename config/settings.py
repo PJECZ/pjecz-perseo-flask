@@ -1,15 +1,15 @@
 """
 Settings
 
-Configure los siguientes secretos en google cloud secret manager:
+Para produccion, configure los siguientes secretos en Google Cloud Secret Manager:
 
-+ cloud_storage_deposito
-- host
-- redis_url
-- salt
-- secret_key
-- sqlalchemy_database_uri
-- task_queue
+- pjecz_perseo_cloud_storage_deposito
+- pjecz_perseo_host
+- pjecz_perseo_redis_url
+- pjecz_perseo_salt
+- pjecz_perseo_secret_key
+- pjecz_perseo_sqlalchemy_database_uri
+- pjecz_perseo_task_queue
 
 Para desarrollo, debe crear un archivo .env con las variables de entorno:
 
