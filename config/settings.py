@@ -3,21 +3,23 @@ Settings
 
 Configure los siguientes secretos en google cloud secret manager:
 
++ cloud_storage_deposito
 - host
 - redis_url
-- task_queue
 - salt
 - secret_key
 - sqlalchemy_database_uri
+- task_queue
 
 Para desarrollo, debe crear un archivo .env con las variables de entorno:
 
+- CLOUD_STORAGE_DEPOSITO
 - HOST
 - REDIS_URL
-- TASK_QUEUE
 - SALT
 - SECRET_KEY
 - SQLALCHEMY_DATABASE_URI
+- TASK_QUEUE
 """
 import os
 from functools import lru_cache
