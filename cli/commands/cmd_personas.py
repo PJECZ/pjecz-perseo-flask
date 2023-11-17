@@ -81,20 +81,45 @@ def sincronizar():
             continue
 
         # Si no contiene resultados, saltar
-        if len(datos["items"]) <= 0:
+        if len(datos["items"]) == 0:
             click.echo(f"  RFC: {persona.rfc} no encontrado")
             continue
+        item = datos["items"][0]
 
-        # Actualizar datos de la persona
-        curp = safe_string(datos["items"][0]["curp"])
-        fecha_ingreso_gobierno = datos["items"][0]["fecha_ingreso_gobierno"]
-        fecha_ingreso_pj = datos["items"][0]["fecha_ingreso_pj"]
+        # Verificar la CURP de la persona
+        try:
+            curp = safe_curp(item["curp"])
+        except ValueError:
+            click.echo(f"  ERROR: La persona {persona.rfc}, tiene una CURP incorrecta {item['curp']}")
+            curp = ""
+
+        # Verificar la fecha de ingreso a gobierno como fecha
+        try:
+            fecha_ingreso_gobierno = datetime.strptime(item["fecha_ingreso_gobierno"], "%Y-%m-%d")
+        except error as err:
+            click.echo(f"  ERROR: La persona {persona.rfc}, tiene una Fecha de ingreso a gobierno incorrecta. {err}")
+            fecha_ingreso_gobierno = None
+
+        # Verificar la fecha de ingreso a PJ como fecha
+        try:
+            fecha_ingreso_pj = datetime.strptime(item["fecha_ingreso_pj"], "%Y-%m-%d")
+        except error as err:
+            click.echo(f"  ERROR: La persona {persona.rfc}, tiene una Fecha de ingreso a PJ incorrecta. {err}")
+            fecha_ingreso_pj = None
+
+        # Actualizar si hay cambios
+        # FIXME: No puedo hacer que distinga si tiene fechas iguales.
         actualizar = False
         if curp != "" and persona.curp != curp:
             actualizar = True
             persona.curp = curp
+        if fecha_ingreso_gobierno is not None and fecha_ingreso_gobierno != persona.ingreso_gobierno_fecha:
+            actualizar = True
             persona.ingreso_gobierno_fecha = fecha_ingreso_gobierno
+        if fecha_ingreso_pj is not None and fecha_ingreso_pj != persona.ingreso_pj_fecha:
+            actualizar = True
             persona.ingreso_pj_fecha = fecha_ingreso_pj
+
         # Añadir cambios e incrementar el contador
         if actualizar:
             click.echo(f"  Persona con cambios: {persona}")
