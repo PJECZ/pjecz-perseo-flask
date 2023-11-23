@@ -17,7 +17,7 @@
 
 {% block content %}
     {% call detail.card(estatus=quincena_producto.estatus) %}
-        {{ detail.label_value_big('ID', quincena_producto.id) }}
+        {{ detail.label_value('ID', quincena_producto.id) }}
         {% if current_user.can_view("QUINCENAS") %}
             {{ detail.label_value('Quincena', quincena_producto.quincena.clave, url_for('quincenas.detail', quincena_id=quincena_producto.quincena_id)) }}
         {% else %}
@@ -25,9 +25,11 @@
         {% endif %}
         {{ detail.label_value('Fuente', quincena_producto.fuente) }}
         {{ detail.label_value('Mensajes', quincena_producto.mensajes) }}
-        {{ detail.label_value('Archivo', quincena_producto.archivo) }}
-        {{ detail.label_value('URL', quincena_producto.url, quincena_producto.url) }}
         {{ detail.label_value('Creado', moment(quincena_producto.creado, local=True).format('DD MMM YYYY')) }}
+        <a type="button" class="w-100 btn btn-lg btn-success my-2" href="{{ quincena_producto.url }}" target="_blank">
+            <span class="iconify" data-icon="mdi:file-download" style="font-size: 2.0em; margin-right: 4px;"></span>
+            {{ quincena_producto.archivo }}
+        </a>
     {% endcall %}
 {% endblock %}
 

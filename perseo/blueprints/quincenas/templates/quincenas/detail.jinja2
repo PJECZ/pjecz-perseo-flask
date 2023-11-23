@@ -19,57 +19,134 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Detalle y acciones -->
-    <div class="row">
-        <div class="col-6">
-            <!-- Detalle de la quincena -->
-            {% call detail.card(title='Detalle', estatus=quincena.estatus) %}
-                {{ detail.label_value('Estado', quincena.estado) }}
-                {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
-            {% endcall %}
-        </div>
-        <div class="col-6">
-            <!-- Generar nominas -->
-            <div class="card mb-4 rounded-3 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Generar productos</h5>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li class="mb-2">{{ modals.button_modal_big(
-                            'Nominas ' + quincena.clave,
-                            url_for('quincenas.generate_nominas', quincena_id=quincena.id),
-                            'GenerateNominas',
-                            'mdi:cash-fast',
-                            "¿Necesita generar un nuevo XLSX para nóminas?") }}</li>
-                        <li class="mb-2">{{ modals.button_modal_big(
-                            'Monederos ' + quincena.clave,
-                            url_for('quincenas.generate_monederos', quincena_id=quincena.id),
-                            'GenerateMonederos',
-                            'mdi:cart',
-                            "¿Necesita generar un nuevo XLSX para monederos?") }}</li>
-                        <li class="mb-2">{{ modals.button_modal_big(
-                            'Pensionados ' + quincena.clave,
-                            url_for('quincenas.generate_pensionados', quincena_id=quincena.id),
-                            'GeneratePensionados',
-                            'mdi:folder',
-                            "¿Necesita generar un nuevo XLSX para pensionados?") }}</li>
-                        <li class="mb-2">{{ modals.button_modal_big(
-                            'Dispersiones Pensionados ' + quincena.clave,
-                            url_for('quincenas.generar_dispersiones_pensionados', quincena_id=quincena.id),
-                            'GenerateDispersionesPensionados',
-                            'mdi:folder',
-                            "¿Necesita generar un nuevo XLSX para dispersiones pensionados?") }}</li>
-                        <li class="mb-2">{{ modals.button_modal_big(
-                            'Todos ' + quincena.clave,
-                            url_for('quincenas.generar_todos', quincena_id=quincena.id),
-                            'GenerateTodos',
-                            'mdi:folder',
-                            "¿Necesita generar todos los XLSX?") }}</li>
-                    </ul>
-                </div>
+    {# Detalle de la quincena #}
+    {% call detail.card(title='Detalle', estatus=quincena.estatus) %}
+        {{ detail.label_value('Quincena', quincena.clave) }}
+        {{ detail.label_value('Estado', quincena.estado) }}
+        {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+    {# Vinculos para descargar los productos de la ultima quincena #}
+    {% call detail.card(title='Descargar últimos productos') %}
+        <div class="row">
+            <div class="col-md-3">
+                <h4 class="text-center">Nominas</h4>
+                {% if quincena_producto_nominas %}
+                <a href="{{ quincena_producto_nominas.url }}" class="btn btn-success btn-block w-100" target="_blank">
+                    <span class="iconify" data-icon="mdi:cash-fast" style="font-size: 2.4em; margin-right: 4px;"></span>
+                    {{ moment(quincena_producto_nominas.creado, local=True).format('DD MMM YYYY hh:mm') }}
+                </a>
+                {% else %}
+                <p class="lead text-center">No hay archivo</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-center">Monederos</h4>
+                {% if quincena_producto_monederos %}
+                <a href="{{ quincena_producto_monederos.url }}" class="btn btn-success btn-block w-100" target="_blank">
+                    <span class="iconify" data-icon="mdi:cart" style="font-size: 2.4em; margin-right: 4px;"></span>
+                    {{ moment(quincena_producto_monederos.creado, local=True).format('DD MMM YYYY hh:mm') }}
+                </a>
+                {% else %}
+                <p class="lead text-center">No hay archivo</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-center">Pensionados</h4>
+                {% if quincena_producto_pensionados %}
+                <a href="{{ quincena_producto_pensionados.url }}" class="btn btn-success btn-block w-100" target="_blank">
+                    <span class="iconify" data-icon="mdi:human-female-boy" style="font-size: 2.4em; margin-right: 4px;"></span>
+                    {{ moment(quincena_producto_pensionados.creado, local=True).format('DD MMM YYYY hh:mm') }}
+                </a>
+                {% else %}
+                <p class="lead text-center">No hay archivo</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-center">Dispersiones Pensionados</h4>
+                {% if quincena_producto_dispersiones_pensionados %}
+                <a href="{{ quincena_producto_dispersiones_pensionados.url }}" class="btn btn-success btn-block w-100" target="_blank">
+                    <span class="iconify" data-icon="mdi:human-wheelchair" style="font-size: 2.4em; margin-right: 4px;"></span>
+                    {{ moment(quincena_producto_dispersiones_pensionados.creado, local=True).format('DD MMM YYYY hh:mm') }}
+                </a>
+                {% else %}
+                <p class="lead text-center">No hay archivo</p>
+                {% endif %}
             </div>
         </div>
-    </div>
-    <!-- Nominas de la Quincena -->
+    {% endcall %}
+    {# Botones para generar los productos #}
+    {% call detail.card(title='Generar productos') %}
+        <div class="row">
+            <div class="col-md-3">
+                <h4 class="text-center">Nominas</h4>
+                {% if quincena.estado == 'ABIERTA' %}
+                    {{ modals.button_modal_big(
+                    quincena.clave,
+                    url_for('quincenas.generate_nominas', quincena_id=quincena.id),
+                    'GenerateNominas',
+                    'mdi:cash-fast',
+                    "¿Necesita generar un nuevo XLSX para nóminas?") }}
+                {% else %}
+                    <p class="lead text-center">Deshabilitado por estar cerrada</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-center">Monederos</h4>
+                {% if quincena.estado == 'ABIERTA' %}
+                    {{ modals.button_modal_big(
+                    quincena.clave,
+                    url_for('quincenas.generate_monederos', quincena_id=quincena.id),
+                    'GenerateMonederos',
+                    'mdi:cart',
+                    "¿Necesita generar un nuevo XLSX para monederos?") }}
+                {% else %}
+                    <p class="lead text-center">Deshabilitado por estar cerrada</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-center">Pensionados</h4>
+                {% if quincena.estado == 'ABIERTA' %}
+                    {{ modals.button_modal_big(
+                    quincena.clave,
+                    url_for('quincenas.generate_pensionados', quincena_id=quincena.id),
+                    'GeneratePensionados',
+                    'mdi:human-female-boy',
+                    "¿Necesita generar un nuevo XLSX para pensionados?") }}
+                {% else %}
+                    <p class="lead text-center">Deshabilitado por estar cerrada</p>
+                {% endif %}
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-center">Dispersiones Pensionados</h4>
+                {% if quincena.estado == 'ABIERTA' %}
+                    {{ modals.button_modal_big(
+                    quincena.clave,
+                    url_for('quincenas.generar_dispersiones_pensionados', quincena_id=quincena.id),
+                    'GenerateDispersionesPensionados',
+                    'mdi:human-wheelchair',
+                    "¿Necesita generar un nuevo XLSX para dispersiones pensionados?") }}
+                {% else %}
+                    <p class="lead text-center">Deshabilitado por estar cerrada</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <h4 class="text-center">Generar todos</h4>
+                {% if quincena.estado == 'ABIERTA' %}
+                    {{ modals.button_modal_big(
+                    'Todos ' + quincena.clave,
+                    url_for('quincenas.generar_todos', quincena_id=quincena.id),
+                    'GenerateTodos',
+                    'mdi:file-multiple',
+                    "¿Necesita generar todos los XLSX?") }}
+                {% else %}
+                    <p class="lead text-center">Deshabilitado por estar cerrada</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endcall %}
+    {# Datatable con las nominas de la Quincena #}
     {% if current_user.can_view('NOMINAS') %}
         {% call detail.card('Nómina ' + quincena.clave) %}
             <div class="row">
