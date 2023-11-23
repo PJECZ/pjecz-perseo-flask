@@ -207,6 +207,7 @@ then
             $CLI cuentas alimentar-monederos $CLAVE
             $CLI beneficiarios alimentar $CLAVE
             $CLI centros_trabajos sincronizar
+            $CLI personas sincronizar
         }
         export -f recargar
         echo "   recargar <QUINCENA>"
