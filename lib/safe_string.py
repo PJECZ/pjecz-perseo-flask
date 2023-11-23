@@ -8,7 +8,7 @@ from unidecode import unidecode
 CLAVE_REGEXP = r"^[a-zA-Z0-9-]{1,16}$"
 CONCEPTO_REGEXP = r"^[PD][a-zA-Z0-9][a-zA-Z0-9]$"
 CONTRASENA_REGEXP = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,48}$"
-CURP_REGEXP = r"^[a-zA-Z]{4}\d{6}[a-zA-Z]{6}\d{2}$"
+CURP_REGEXP = r"^[a-zA-Z]{4}\d{6}[a-zA-Z]{6}[A-Z0-9]{2}$"
 EMAIL_REGEXP = r"^[\w.-]+@[\w.-]+\.\w+$"
 PLAZA_REGEXP = r"^[a-zA-Z0-9]{1,24}$"
 QUINCENA_REGEXP = r"^\d{6}$"
