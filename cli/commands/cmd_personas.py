@@ -3,13 +3,13 @@ CLI Personas
 """
 import os
 import sys
+from datetime import datetime
 
 import click
 import requests
 from dotenv import load_dotenv
-from datetime import datetime
 
-from lib.safe_string import safe_curp, safe_rfc, safe_string
+from lib.safe_string import safe_curp, safe_rfc
 from perseo.app import create_app
 from perseo.blueprints.personas.models import Persona
 from perseo.extensions import database
@@ -123,7 +123,7 @@ def sincronizar():
 
         # Añadir cambios e incrementar el contador
         if actualizar:
-            click.echo(f"  Persona con cambios: {persona}")
+            # click.echo(f"  Persona con cambios: {persona}")
             sesion.add(persona)
             contador += 1
             if contador % 100 == 0:
