@@ -90,8 +90,46 @@ def list_inactive():
 @quincenas.route("/quincenas/<int:quincena_id>")
 def detail(quincena_id):
     """Detalle de una Quincena"""
+    # Consultar la quincena
     quincena = Quincena.query.get_or_404(quincena_id)
-    return render_template("quincenas/detail.jinja2", quincena=quincena)
+
+    # Consultar el ultimo producto de quincenas con fuente NOMINAS
+    quincena_producto_nominas = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="NOMINAS", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
+    # Consultar el ultimo producto de quincenas con fuente MONEDEROS
+    quincena_producto_monederos = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="MONEDEROS", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
+    # Consultar el ultimo producto de quincenas con fuente PENSIONADOS
+    quincena_producto_pensionados = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="PENSIONADOS", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
+    # Consultar el ultimo producto de quincenas con fuente DISPERSIONES PENSIONADOS
+    quincena_producto_dispersiones_pensionados = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="DISPERSIONES PENSIONADOS", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
+    # Entregar detalle
+    return render_template(
+        "quincenas/detail.jinja2",
+        quincena=quincena,
+        quincena_producto_nominas=quincena_producto_nominas,
+        quincena_producto_monederos=quincena_producto_monederos,
+        quincena_producto_pensionados=quincena_producto_pensionados,
+        quincena_producto_dispersiones_pensionados=quincena_producto_dispersiones_pensionados,
+    )
 
 
 @quincenas.route("/quincenas/edicion/<int:quincena_id>", methods=["GET", "POST"])
