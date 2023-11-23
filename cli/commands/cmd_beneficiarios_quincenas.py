@@ -108,7 +108,7 @@ def generar(quincena_clave: str):
         # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
         su_cuenta = None
         for cuenta in cuentas:
-            if cuenta.banco.clave != "9":
+            if cuenta.banco.clave != "9" and cuenta.estatus == "A":
                 su_cuenta = cuenta
                 break
 

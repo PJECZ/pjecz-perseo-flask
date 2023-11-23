@@ -76,12 +76,12 @@ def cerrar() -> str:
     sesion.commit()
 
     # Definir el mensaje con las quincenas cerradas
-    quincenas_cerradas_str = ", ".join([q.clave for q in quincenas_cerradas])
+    quincenas_cerradas_str = ", ".join(quincenas_cerradas)
 
     # Definir el mensaje con los bancos actualizados
     bancos_actualizados_str = ""
     if len(bancos_actualizados) > 0:
-        bancos_actualizados_str = ", ".join([b.nombre for b in bancos_actualizados])
+        bancos_actualizados_str = ", ".join(bancos_actualizados)
 
     # Mensaje de termino
     mensaje = f"Quincenas cerradas: {quincenas_cerradas_str}. Bancos actualizados {bancos_actualizados_str}"
