@@ -209,7 +209,7 @@ def alimentar(quincena_clave: str):
         click.echo(click.style(f"  Personas: {personas_insertadas_contador} insertadas", fg="green"))
     if plazas_insertadas_contador > 0:
         click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
-    click.echo(click.style(f"  Percepciones-Deducciones: {contador} alimentados en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Percepciones-Deducciones: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 cli.add_command(alimentar)

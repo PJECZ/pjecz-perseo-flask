@@ -216,7 +216,7 @@ def alimentar(quincena_clave: str):
         click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Nominas:  {contador} alimentados en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Nominas:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()

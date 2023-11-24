@@ -155,7 +155,7 @@ def alimentar_bancarias(quincena: str):
             click.echo(click.style(mensaje, fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Cuentas bancarias: {contador} alimentadas.", fg="green"))
+    click.echo(click.style(f"  Cuentas bancarias: {contador} insertadas.", fg="green"))
 
 
 @click.command()
@@ -266,7 +266,11 @@ def alimentar_monederos(quincena: str):
 
     # Si hubo numeros de tarjeta invalidos, se muestra el mensaje
     if contador_num_tarjeta_invalido > 0:
-        click.echo(click.style(f"  Hubo {contador_num_tarjeta_invalido} numeros de tarjeta invalidos", fg="yellow"))
+        click.echo(
+            click.style(
+                f"  Hubo {contador_num_tarjeta_invalido} numeros de tarjeta invalidos que se llenaron con ceros.", fg="yellow"
+            )
+        )
 
     # Si hubo personas que no existen, se muestra el mensaje
     if len(personas_que_no_existen) > 0:
@@ -274,7 +278,7 @@ def alimentar_monederos(quincena: str):
             click.echo(click.style(mensaje, fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Monederos: {contador_nuevas} nuevos y {contador_bajas} eliminados.", fg="green"))
+    click.echo(click.style(f"  Monederos: {contador_nuevas} insertados y {contador_bajas} eliminados.", fg="green"))
 
 
 @click.command()
