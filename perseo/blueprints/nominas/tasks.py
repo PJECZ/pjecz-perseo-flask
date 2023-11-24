@@ -17,6 +17,7 @@ from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.bancos.tasks import reiniciar_consecutivos_generados
+from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
@@ -107,6 +108,7 @@ def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheq
     # Bucle para crear cada fila del archivo XLSX
     contador = 0
     personas_sin_cuentas = []
+    cuentas_duplicadas = []
     for nomina in nominas:
         # Si el modelo de la persona es 3, se omite
         if nomina.persona.modelo == 3:
@@ -130,6 +132,20 @@ def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheq
         # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if su_cuenta is None:
             personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Validar que no haya otra persona con el mismo banco y numero de cuenta
+        hay_cuenta_duplicada = False
+        for posible_cuenta_duplicada in (
+            Cuenta.query.filter_by(banco_id=su_cuenta.banco_id)
+            .filter_by(num_cuenta=su_cuenta.num_cuenta)
+            .filter_by(estatus="A")
+            .all()
+        ):
+            if posible_cuenta_duplicada.persona_id != nomina.persona_id:
+                cuentas_duplicadas.append(f"  Duplicada {nomina.persona.rfc} {su_cuenta.banco.nombre} {su_cuenta.num_cuenta}")
+                hay_cuenta_duplicada = False
+        if hay_cuenta_duplicada:
             continue
 
         # Tomar el banco de la cuenta de la persona
@@ -221,6 +237,11 @@ def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheq
     if len(mensajes) > 0:
         for m in mensajes:
             bitacora.warning(m)
+
+    # Si hubo cuentas duplicadas, entonces juntarlas para mensajes
+    if len(cuentas_duplicadas) > 0:
+        mensajes.append(f"AVISO: Hubo {len(cuentas_duplicadas)} cuentas duplicadas:")
+        mensajes += cuentas_duplicadas
 
     # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
     if quincena_producto_id == 0:
