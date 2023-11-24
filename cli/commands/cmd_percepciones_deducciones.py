@@ -98,7 +98,7 @@ def alimentar(quincena_clave: str):
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando Percepciones Deducciones...")
+    click.echo("Alimentando Percepciones Deducciones: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)
@@ -168,7 +168,7 @@ def alimentar(quincena_clave: str):
                 conceptos_no_existentes.append(concepto_clave)
                 concepto = Concepto(clave=concepto_clave, descripcion="DESCONOCIDO")
                 sesion.add(concepto)
-                click.echo(f"  Concepto {concepto_clave} insertado")
+                # click.echo(f"  Concepto {concepto_clave} insertado")
 
             # Alimentar percepcion-deduccion
             percepcion_deduccion = PercepcionDeduccion(
@@ -191,7 +191,10 @@ def alimentar(quincena_clave: str):
             # Incrementar contador
             contador += 1
             if contador % 100 == 0:
-                click.echo(f"  Van {contador}...")
+                click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
@@ -199,14 +202,14 @@ def alimentar(quincena_clave: str):
 
     # Mensaje termino
     if len(conceptos_no_existentes) > 0:
-        click.echo(f"AVISO: Conceptos no existentes: {','.join(conceptos_no_existentes)}")
+        click.echo(click.style(f"  AVISO: Conceptos NO existentes: {','.join(conceptos_no_existentes)}", fg="yellow"))
     if centros_trabajos_insertados_contador > 0:
-        click.echo(f"Centros de Trabajo:       {centros_trabajos_insertados_contador} insertados")
+        click.echo(click.style(f"  Centros de Trabajo: {centros_trabajos_insertados_contador} insertados", fg="green"))
     if personas_insertadas_contador > 0:
-        click.echo(f"Personas:                 {personas_insertadas_contador} insertadas")
+        click.echo(click.style(f"  Personas: {personas_insertadas_contador} insertadas", fg="green"))
     if plazas_insertadas_contador > 0:
-        click.echo(f"Plazas:                   {plazas_insertadas_contador} insertadas")
-    click.echo(f"Percepciones-Deducciones: {contador} registros en la quincena {quincena_clave}.")
+        click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
+    click.echo(click.style(f"  Percepciones-Deducciones: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 cli.add_command(alimentar)

@@ -70,9 +70,13 @@ def alimentar(quincena_clave: str):
         sesion.add(quincena)
         sesion.commit()
 
+    # Inicializar contadores
+    contador_beneficiarios_insertados = 0
+    contador_beneficiarios_actualizados = 0
+    contador_quincenas_insertadas = 0
+
     # Leer el archivo CSV
-    click.echo("Alimentando Beneficiarios...")
-    contador = 0
+    click.echo("Alimentando Beneficiarios: ", nl=False)
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -95,6 +99,7 @@ def alimentar(quincena_clave: str):
                     modelo=4,
                 )
                 sesion.add(beneficiario)
+                contador_beneficiarios_insertados += 1
             else:
                 # Si cambio nombres, apellido_primero o apellido_segundo, se actualizan
                 if (
@@ -106,6 +111,7 @@ def alimentar(quincena_clave: str):
                     beneficiario.apellido_primero = safe_string(row["APELLIDO PRIMERO"], save_enie=True)
                     beneficiario.apellido_segundo = safe_string(row["APELLIDO SEGUNDO"], save_enie=True)
                     sesion.add(beneficiario)
+                    contador_beneficiarios_actualizados += 1
 
             # Consultar banco
             banco = Banco.query.filter_by(clave=row["BANCO"]).first()
@@ -121,13 +127,6 @@ def alimentar(quincena_clave: str):
             )
             sesion.add(beneficiario_cuenta)
 
-            # Incrementer el consecutivo_generado del banco
-            # banco.consecutivo_generado += 1
-            # sesion.add(banco)
-
-            # Elaborar el numero de cheque, juntando la clave del banco y el consecutivo, siempre de 9 digitos
-            # num_cheque = f"{banco.clave.zfill(2)}{banco.consecutivo_generado:07}"
-
             # Agregar quincena al beneficiario
             beneficiario_quincena = BeneficiarioQuincena(
                 beneficiario=beneficiario,
@@ -137,16 +136,27 @@ def alimentar(quincena_clave: str):
             sesion.add(beneficiario_quincena)
 
             # Incrementar contador
-            contador += 1
-            if contador % 100 == 0:
-                click.echo(f"  Van {contador}...")
+            contador_quincenas_insertadas += 1
+            if contador_quincenas_insertadas % 100 == 0:
+                click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
+    # Si hubo beneficiarios insertados, se muestra la cantidad
+    if contador_beneficiarios_insertados > 0:
+        click.echo(click.style(f"  Beneficiarios: {contador_beneficiarios_insertados} insertados.", fg="green"))
+
+    # Si hubo beneficiarios actualizados, se muestra la cantidad
+    if contador_beneficiarios_actualizados > 0:
+        click.echo(click.style(f"  Beneficiarios: {contador_beneficiarios_actualizados} actualizados.", fg="green"))
+
     # Mensaje de termino
-    click.echo(f"Beneficiarios terminado: {contador} beneficiarios alimentados.")
+    click.echo(click.style(f"  Beneficiarios: {contador_quincenas_insertadas} quincenas insertadas.", fg="green"))
 
 
 cli.add_command(alimentar)

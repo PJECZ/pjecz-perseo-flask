@@ -16,6 +16,7 @@ from lib.storage import GoogleCloudStorage
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
+from perseo.blueprints.bancos.tasks import reiniciar_consecutivos_generados
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
@@ -63,7 +64,7 @@ def consultar_validar_quincena(quincena_clave: str) -> Quincena:
     return quincena
 
 
-def crear_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
+def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheque=False) -> str:
     """Crear archivo XLSX con las nominas de una quincena"""
 
     # Consultar y validar quincena
@@ -158,8 +159,17 @@ def crear_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
             ]
         )
 
+        # Si fijar_num_cheque es verdadero, entonces actualizar el registro de la nominas con el numero de cheque
+        if fijar_num_cheque:
+            nomina.num_cheque = num_cheque
+            sesion.add(nomina)
+
         # Incrementar contador
         contador += 1
+
+    # Si contador es cero, entregar mensaje de aviso y terminar
+    if contador == 0:
+        return "AVISO: No hubo registros para generar nominas. Tarea terminada sin generar archivo."
 
     # Actualizar los consecutivos de cada banco
     sesion.commit()
@@ -257,7 +267,7 @@ def generar_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
     return mensaje_termino
 
 
-def crear_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
+def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_cheque=False) -> str:
     """Crear archivo XLSX con los monederos de una quincena"""
 
     # Consultar y validar quincena
@@ -345,8 +355,17 @@ def crear_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
             ]
         )
 
+        # Si fijar_num_cheque es verdadero, entonces actualizar el registro de la nominas con el numero de cheque
+        if fijar_num_cheque:
+            nomina.num_cheque = num_cheque
+            sesion.add(nomina)
+
         # Incrementar contador
         contador += 1
+
+    # Si contador es cero, entregar mensaje de aviso y terminar
+    if contador == 0:
+        return "AVISO: No hubo registros para generar monederos. Tarea terminada sin generar archivo."
 
     # Actualizar los consecutivo_generado de cada banco
     sesion.commit()
@@ -443,11 +462,14 @@ def generar_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
     return mensaje_termino
 
 
-def crear_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
+def crear_pensionados(quincena_clave: str, quincena_producto_id: int, fijar_num_cheque=False) -> str:
     """Crear archivo XLSX con los pensionados de una quincena"""
 
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
 
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
@@ -535,8 +557,20 @@ def crear_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
             ]
         )
 
+        # Si fijar_num_cheque es veradero, entonces actualizar el registro de la nominas con el numero de cheque
+        if fijar_num_cheque:
+            nomina.num_cheque = num_cheque
+            sesion.add(nomina)
+
         # Incrementar contador
         contador += 1
+
+    # Si contador es cero, entregar mensaje de aviso y terminar
+    if contador == 0:
+        return "AVISO: No hubo registros para generar monederos. Tarea terminada sin generar archivo."
+
+    # Actualizar los consecutivo_generado de cada banco
+    sesion.commit()
 
     # Determinar la fecha y tiempo actual en la zona horaria de Mexico
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
@@ -720,6 +754,10 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
         # Incrementar contador
         contador += 1
 
+    # Si contador es cero, entregar mensaje de aviso y terminar
+    if contador == 0:
+        return "AVISO: No hubo registros para generar dispersiones pensionados. Tarea terminada sin generar archivo."
+
     # Determinar la fecha y tiempo actual en la zona horaria de Mexico
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
 
@@ -819,22 +857,25 @@ def generar_todos(quincena_clave: str) -> str:
     set_task_progress(0, f"Generar todos los archivos XLSX de {quincena_clave}...")
 
     # Ejecutar cada uno de los generadores
+    mensajes = []
     try:
-        mensaje_1 = crear_nominas(quincena_clave, 0)
-        set_task_progress(25, mensaje_1)
-        mensaje_2 = crear_monederos(quincena_clave, 0)
-        set_task_progress(50, mensaje_2)
-        mensaje_3 = crear_pensionados(quincena_clave, 0)
-        set_task_progress(75, mensaje_3)
-        mensaje_4 = crear_dispersiones_pensionados(quincena_clave, 0)
-        set_task_progress(100, mensaje_4)
+        mensajes.append(msg := reiniciar_consecutivos_generados())
+        set_task_progress(20, msg)
+        mensajes.append(msg := crear_nominas(quincena_clave, 0, True))
+        set_task_progress(40, msg)
+        mensajes.append(msg := crear_monederos(quincena_clave, 0, True))
+        set_task_progress(60, msg)
+        mensajes.append(msg := crear_pensionados(quincena_clave, 0, True))
+        set_task_progress(80, msg)
+        mensajes.append(msg := crear_dispersiones_pensionados(quincena_clave, 0))
+        set_task_progress(100, msg)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
 
-    # Entregar mensaje de termino
-    mensaje_termino = f"{mensaje_1}. \n{mensaje_2}. \n{mensaje_3}. \n{mensaje_4}"
+    # Entregar mensajes de termino
+    mensaje_termino = "\n".join(mensajes)
     set_task_progress(100, mensaje_termino)
     bitacora.info(mensaje_termino)
     return mensaje_termino

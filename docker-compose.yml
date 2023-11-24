@@ -26,6 +26,7 @@ services:
       - db
       - redis
     environment:
+      CLOUD_STORAGE_DEPOSITO:
       DEPLOYMENT_ENVIRONMENT: develop
       HOST: http://localhost:5000
       PYTHONPATH: /code

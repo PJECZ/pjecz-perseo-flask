@@ -100,10 +100,10 @@ SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczperseo:XXXXXXXX@127.0.0
 CLOUD_STORAGE_DEPOSITO=XXXXXXXX
 
 # Host
-HOST=http://localhost:5011
+HOST=http://localhost:5000
 
 # Redis
-REDIS_URL=redis://127.0.0.1:8379
+REDIS_URL=redis://127.0.0.1:6379
 TASK_QUEUE=pjecz_perseo
 
 # RRHH Personal API
@@ -206,8 +206,8 @@ then
             $CLI cuentas alimentar-bancarias $CLAVE
             $CLI cuentas alimentar-monederos $CLAVE
             $CLI beneficiarios alimentar $CLAVE
-            $CLI centros_trabajos sincronizar
-            $CLI personas sincronizar
+            #$CLI centros_trabajos sincronizar
+            #$CLI personas sincronizar
         }
         export -f recargar
         echo "   recargar <QUINCENA>"

@@ -12,6 +12,7 @@
             {{ topbar.button_edit('Editar', url_for('quincenas.edit', quincena_id=quincena.id)) }}
         {% endif %}
         {% if current_user.can_admin('QUINCENAS') %}
+            {{ modals.button_modal('Cerrar Quincenas', url_for('quincenas.close'), 'Close', 'mdi:stop', "¿Está seguro de cerrar todas las quincenas abiertas?") }}
             {% if quincena.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('quincenas.delete', quincena_id=quincena.id)) }}{% endif %}
             {% if quincena.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('quincenas.recover', quincena_id=quincena.id)) }}{% endif %}
         {% endif %}
@@ -139,7 +140,7 @@
                     url_for('quincenas.generar_todos', quincena_id=quincena.id),
                     'GenerateTodos',
                     'mdi:file-multiple',
-                    "¿Necesita generar todos los XLSX?") }}
+                    "Se reiniciarán los consecutivos temporales, se crearán todos los XLSX en orden y se conservarán los números de cheques. ¿Está seguro?") }}
                 {% else %}
                     <p class="lead text-center">Deshabilitado por estar cerrada</p>
                 {% endif %}
@@ -193,6 +194,7 @@
                         <th>Deduccion</th>
                         <th style="text-align:right">Importe</th>
                         <th>Tipo</th>
+                        <th>No. Cheque</th>
                     </tr>
                 </thead>
             </table>
@@ -218,7 +220,8 @@
                 { data: 'percepcion' },
                 { data: 'deduccion' },
                 { data: 'importe' },
-                { data: 'tipo' }
+                { data: 'tipo' },
+                { data: 'num_cheque' }
             ];
             configDataTable['columnDefs'] = [
                 {
@@ -244,6 +247,7 @@
         </script>
     {% endif %}
     <!-- Modales -->
+    {{ modals.custom_javascript('Cerrar Quincenas', '', 'Close') }}
     {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
     {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
     {{ modals.custom_javascript('Generar Pensionados', '', 'GeneratePensionados') }}
