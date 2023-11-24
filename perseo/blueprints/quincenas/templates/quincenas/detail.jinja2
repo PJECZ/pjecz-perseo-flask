@@ -139,7 +139,7 @@
                     url_for('quincenas.generar_todos', quincena_id=quincena.id),
                     'GenerateTodos',
                     'mdi:file-multiple',
-                    "¿Necesita generar todos los XLSX?") }}
+                    "Se reiniciarán los consecutivos temporales, se crearán todos los XLSX en orden y se conservarán los números de cheques. ¿Está seguro?") }}
                 {% else %}
                     <p class="lead text-center">Deshabilitado por estar cerrada</p>
                 {% endif %}
@@ -193,6 +193,7 @@
                         <th>Deduccion</th>
                         <th style="text-align:right">Importe</th>
                         <th>Tipo</th>
+                        <th>No. Cheque</th>
                     </tr>
                 </thead>
             </table>
@@ -218,7 +219,8 @@
                 { data: 'percepcion' },
                 { data: 'deduccion' },
                 { data: 'importe' },
-                { data: 'tipo' }
+                { data: 'tipo' },
+                { data: 'num_cheque' }
             ];
             configDataTable['columnDefs'] = [
                 {

@@ -91,6 +91,7 @@ def datatable_json():
                 "deduccion": resultado.deduccion,
                 "importe": resultado.importe,
                 "tipo": resultado.tipo,
+                "num_cheque": resultado.num_cheque,
             }
         )
     # Entregar JSON

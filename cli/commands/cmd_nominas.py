@@ -100,7 +100,7 @@ def alimentar(quincena_clave: str):
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando Nominas...")
+    click.echo("Alimentando Nominas: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)
@@ -124,7 +124,7 @@ def alimentar(quincena_clave: str):
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
-            centro_trabajos_insertados_contador += 1
+            centros_trabajos_insertados_contador += 1
 
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -194,18 +194,29 @@ def alimentar(quincena_clave: str):
         # Incrementar contador
         contador += 1
         if contador % 100 == 0:
-            click.echo(f"  Van {contador}...")
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
-    # Mensaje termino
+    # Si hubo centros_trabajos_insertados, mostrar contador
+    if centros_trabajos_insertados_contador > 0:
+        click.echo(click.style(f"  Centros de Trabajo: {centros_trabajos_insertados_contador} insertados", fg="green"))
+
+    # Si hubo personas insertadas, mostrar contador
     if personas_insertadas_contador > 0:
-        click.echo(f"Personas: {personas_insertadas_contador} insertadas")
+        click.echo(click.style(f"  Personas: {personas_insertadas_contador} insertadas", fg="green"))
+
+    # Si hubo plazas insertadas, mostrar contador
     if plazas_insertadas_contador > 0:
-        click.echo(f"Plazas:   {plazas_insertadas_contador} insertadas")
-    click.echo(f"Nominas:  {contador} insertadas en la quincena {quincena_clave}.")
+        click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Nominas:  {contador} alimentados en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()

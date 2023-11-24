@@ -78,9 +78,11 @@ def alimentar_bancarias(quincena: str):
 
     # Iniciar contador de cuentas alimentadas
     contador = 0
+    bancos_que_no_existen = []
+    personas_que_no_existen = []
 
     # Bucle por cada fila
-    click.echo("Alimentando Cuentas...")
+    click.echo("Alimentando Cuentas:", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 0)
@@ -90,18 +92,36 @@ def alimentar_bancarias(quincena: str):
         # Revisar si el banco existe
         banco = Banco.query.filter_by(clave=bco_admdor).first()
         if banco is None:
-            click.echo(f"  No existe el banco {bco_admdor}")
+            bancos_que_no_existen.append(f"  No existe el banco {bco_admdor}")
             continue
 
         # Revisar si la persona existe
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
-            click.echo(f"  No existe la persona {rfc}")
+            personas_que_no_existen.append(f"  No existe la persona con RFC '{rfc}'")
             continue
 
-        # Si esa persona ya tiene esa cuenta, se salta
-        cuenta_existente = Cuenta.query.filter_by(persona_id=persona.id).filter_by(num_cuenta=emp_cta_bancaria).first()
-        if cuenta_existente is not None:
+        # Bucle por las cuentas de la persona
+        tiene_cuenta = False
+        contador_cuentas_bajas = 0
+        for cuentas in persona.cuentas:
+            # Se saltan las cuentas eliminadas
+            if cuentas.estatus == "B":
+                continue
+            # Se salta la cuenta del banco con clave 9 que es PREVIVALE
+            if cuentas.banco.clave == "9":
+                continue
+            # Si el banco y la cuenta son iguales, se salta
+            if cuentas.banco.clave == bco_admdor and cuentas.num_cuenta == emp_cta_bancaria:
+                tiene_cuenta = True
+                continue
+            # Entonces se elimina la cuenta porque se va a agregar una nueva mas adelante
+            cuentas.estatus = "B"
+            sesion.add(cuentas)
+            contador_cuentas_bajas += 1
+
+        # Si tiene_cuenta es verdadero, se salta
+        if tiene_cuenta:
             continue
 
         # Alimentar la cuenta
@@ -115,14 +135,27 @@ def alimentar_bancarias(quincena: str):
         # Incrementar contador
         contador += 1
         if contador % 100 == 0:
-            click.echo(f"  Van {contador}...")
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
+    # Si hubo bancos que no existen, se muestra el mensaje
+    if len(bancos_que_no_existen) > 0:
+        for mensaje in bancos_que_no_existen:
+            click.echo(click.style(mensaje, fg="yellow"))
+
+    # Si hubo personas que no existen, se muestra el mensaje
+    if len(personas_que_no_existen) > 0:
+        for mensaje in personas_que_no_existen:
+            click.echo(click.style(mensaje, fg="yellow"))
+
     # Mensaje termino
-    click.echo(f"Alimentar cuentas bancarias: {contador} alimentados.")
+    click.echo(click.style(f"  Cuentas bancarias: {contador} alimentadas.", fg="green"))
 
 
 @click.command()
@@ -167,9 +200,11 @@ def alimentar_monederos(quincena: str):
     # Iniciar contador de monederos alimentadas
     contador_nuevas = 0
     contador_bajas = 0
+    contador_num_tarjeta_invalido = 0
+    personas_que_no_existen = []
 
     # Bucle por cada fila
-    click.echo("Alimentando monederos...")
+    click.echo("Alimentando Monederos: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = str(hoja.cell_value(fila, 1)).strip().upper()
@@ -177,54 +212,69 @@ def alimentar_monederos(quincena: str):
 
         # Validar que el num_tarjeta sea de 16 digitos, de lo contrario, se pone en 16 ceros
         if re.match(r"^\d{16}$", num_tarjeta) is None:
-            click.echo(f"  El numero de tarjeta {num_tarjeta} no es de 16 digitos.")
+            contador_num_tarjeta_invalido += 1
             num_tarjeta = "0" * 16
 
         # Revisar si la persona existe
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
-            click.echo(f"  No existe la persona {rfc}")
+            personas_que_no_existen.append(f"  No existe la persona con RFC '{rfc}'")
             continue
-
-        # Inicializar hay_nueva_cuenta en falso
-        hay_nueva_cuenta = False
 
         # Consultar las cuentas de la persona, con el banco 9
         cuentas = Cuenta.query.filter_by(persona_id=persona.id).filter_by(banco_id=banco.id).all()
 
+        # Inicializar hay_nueva_cuenta en falso
+        hay_que_agregar_cuenta = False
+
         # Si no tiene cuentas, hay que agregar una cuenta nueva
         if len(cuentas) == 0:
-            hay_nueva_cuenta = True
-        else:
-            # De lo contrario, ya tiene cuentas, hay que revisar sus cuentas
-            for cuenta in cuentas:
-                # Si el num_cuenta es diferente, se le agrega la nueva y se da de baja la anterior
-                if cuenta.num_cuenta != num_tarjeta and cuenta.estatus == "A":
-                    hay_nueva_cuenta = True
-                    cuenta.estatus = "B"
-                    sesion.add(cuenta)
-                    contador_bajas += 1
+            hay_que_agregar_cuenta = True
 
-        # Si hay_nueva_cuenta es verdadero, se agrega la cuenta nueva
-        if hay_nueva_cuenta:
-            cuenta_nueva = Cuenta(
-                persona_id=persona.id,
-                banco_id=banco.id,
-                num_cuenta=num_tarjeta,
-            )
-            sesion.add(cuenta_nueva)
+        #  De lo contrario, ya tiene cuentas, hay que revisar sus cuentas
+        for cuenta in cuentas:
+            # Si el num_cuenta es diferente, se le agrega la nueva y se da de baja la anterior
+            if cuenta.num_cuenta != num_tarjeta and cuenta.estatus == "A":
+                hay_que_agregar_cuenta = True
+                cuenta.estatus = "B"
+                sesion.add(cuenta)
+                contador_bajas += 1
 
-            # Incrementar contador
-            contador_nuevas += 1
-            if contador_nuevas % 100 == 0:
-                click.echo(f"  Van {contador_nuevas}...")
+        # Si no hay que agregar una cuenta, se salta
+        if not hay_que_agregar_cuenta:
+            continue
+
+        # Agregar la cuenta nueva
+        cuenta_nueva = Cuenta(
+            persona_id=persona.id,
+            banco_id=banco.id,
+            num_cuenta=num_tarjeta,
+        )
+        sesion.add(cuenta_nueva)
+
+        # Incrementar contador
+        contador_nuevas += 1
+        if contador_nuevas % 100 == 0:
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
+    # Si hubo numeros de tarjeta invalidos, se muestra el mensaje
+    if contador_num_tarjeta_invalido > 0:
+        click.echo(click.style(f"  Hubo {contador_num_tarjeta_invalido} numeros de tarjeta invalidos", fg="yellow"))
+
+    # Si hubo personas que no existen, se muestra el mensaje
+    if len(personas_que_no_existen) > 0:
+        for mensaje in personas_que_no_existen:
+            click.echo(click.style(mensaje, fg="yellow"))
+
     # Mensaje termino
-    click.echo(f"Alimentar monederos: {contador_nuevas} nuevas y {contador_bajas} bajas.")
+    click.echo(click.style(f"  Monederos: {contador_nuevas} nuevos y {contador_bajas} eliminados.", fg="green"))
 
 
 @click.command()
