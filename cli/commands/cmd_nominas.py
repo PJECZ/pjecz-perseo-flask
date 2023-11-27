@@ -875,7 +875,7 @@ def generar_timbrados(quincena_clave: str):
             "D2 IMPORTE",
             "D3 CLAVE",
             "D3 IMPORTE",
-            "ORIGEN RECURO",
+            "ORIGEN RECURSO",
             "MONTO DEL RECURSO",
             "CODIGO POSTAL FISCAL",
         ]
@@ -919,40 +919,40 @@ def generar_timbrados(quincena_clave: str):
                 nomina.persona.nombres,  # NOMBRES
                 nomina.persona.rfc,  # RFC
                 nomina.persona.curp,  # CURP
-                "",  # NO DE SEGURIDAD SOCIAL
+                nomina.persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
                 nomina.persona.ingreso_pj_fecha,  # FECHA DE INGRESO
                 "O",  # CLAVE TIPO NOMINA ordinarias
                 "SI" if nomina.persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
                 su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
                 su_cuenta.num_cuenta,  # NUMERO DE CUENTA
-                "",  # PLANTA es vacio
+                "",  # PLANTA nula
                 "",  # SALARIO DIARIO
                 "",  # SALARIO INTEGRADO
                 quincena_fecha_inicial,  # FECHA INICIAL PERIODO
                 quincena_fecha_final,  # FECHA FINAL PERIODO
                 "",  # FECHA DE PAGO
                 "",  # DIAS TRABAJADOS
-                "",  # RFC DEL PATRON
-                "",  # CLASE RIESGO PUESTO SAT
-                "",  # TIPO CONTRATO SAT
-                "",  # JORNADA SAT
-                "",  # TIPO REGIMEN SAT
+                "PJE901211TI9",  # RFC DEL PATRON
+                "",  # CLASE RIESGO PUESTO SAT nulo
+                "01",  # TIPO CONTRATO SAT
+                "08",  # JORNADA SAT
+                "02",  # TIPO REGIMEN SAT
                 "",  # ANIO
                 "",  # MES
-                "",  # PERIODO NOM
-                "",  # CLAVE COMPANIA
-                "",  # RFC COMPANIA
-                "",  # NOMBRE COMPANIA
-                "",  # CP DE LA COMPANIA
-                "",  # REGIMEN FISCAL
-                "",  # ESTADO SAT
-                "",  # CLAVE PLANTA U OFICINA
-                "",  # PLANTA U OFICINA
-                "",  # CLAVE CENTRO COSTOS
-                "",  # CENTRO COSTOS
-                "",  # FORMA DE PAGO
-                "",  # CLAVE DEPARTAMENTO
-                "",  # NOMBRE DEPARTAMENTO
+                "99 OTRA PERIODICIDAD",  # PERIODO NOM
+                "",  # CLAVE COMPANIA nulo
+                "PJE901211TI9",  # RFC COMPANIA
+                "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA",  # NOMBRE COMPANIA
+                "25000",  # CP DE LA COMPANIA
+                "603 PERSONAS MORALES CON FINES NO LUCRATIVOS",  # REGIMEN FISCAL
+                "05 COA",  # ESTADO SAT
+                "",  # CLAVE PLANTA U OFICINA nulo
+                "",  # PLANTA U OFICINA nulo
+                "",  # CLAVE CENTRO COSTOS nulo
+                "",  # CENTRO COSTOS nulo
+                "04",  # FORMA DE PAGO
+                nomina.centro_trabajo.clave,  # CLAVE DEPARTAMENTO
+                nomina.centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
                 "",  # NOMBRE PUESTO
                 "",  # P1 CLAVE
                 "",  # P1 IMPORTE
@@ -966,9 +966,9 @@ def generar_timbrados(quincena_clave: str):
                 "",  # D2 IMPORTE
                 "",  # D3 CLAVE
                 "",  # D3 IMPORTE
-                "",  # ORIGEN RECURO
-                "",  # MONTO DEL RECURSO
-                "",  # CODIGO POSTAL FISCAL
+                "IP",  # ORIGEN RECURSO
+                "100",  # MONTO DEL RECURSO
+                nomina.persona.codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
             ]
         )
 

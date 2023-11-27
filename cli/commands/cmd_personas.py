@@ -1,9 +1,12 @@
 """
 CLI Personas
 """
+import csv
 import os
+import re
 import sys
 from datetime import datetime
+from pathlib import Path
 
 import click
 import requests
@@ -20,6 +23,8 @@ RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL")
 RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY")
 TIMEOUT = 12
 
+PERSONAS_CSV = "seed/personas.csv"
+
 app = create_app()
 app.app_context().push()
 database.app = app
@@ -31,8 +36,81 @@ def cli():
 
 
 @click.command()
+def actualizar():
+    """Actualizar las Personas en su CP en base a su RFC a partir de un archivo CSV"""
+    ruta = Path(PERSONAS_CSV)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+    click.echo("Actualizar Personas...")
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Leer el archivo CSV
+    contador = 0
+    with open(ruta, newline="", encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Consultar la persona
+            persona = Persona.query.filter_by(rfc=row["rfc"]).first()
+
+            # Si no existe, saltar
+            if persona is None:
+                click.echo(f"  AVISO: {row['rfc']} no encontrado")
+                continue
+
+            # Bandera si hubo cambios
+            hay_cambios = False
+
+            # Validar el CP
+            codigo_postal_fiscal = None
+            if "cp" in row and row["cp"] != "":
+                try:
+                    codigo_postal_fiscal = int(row["cp"])
+                except ValueError:
+                    click.echo(f"  AVISO: {row['rfc']} tiene un CP incorrecto: {row['cp']}")
+                if persona.codigo_postal_fiscal != codigo_postal_fiscal:
+                    persona.codigo_postal_fiscal = codigo_postal_fiscal
+                    hay_cambios = True
+
+            # Validar el numero de seguridad social
+            seguridad_social = None
+            if "seguridad_social" in row and row["seguridad_social"] != "":
+                if re.match(r"^\d{1,24}$", row["seguridad_social"]):
+                    seguridad_social = row["seguridad_social"]
+                    if persona.seguridad_social != seguridad_social:
+                        persona.seguridad_social = seguridad_social
+                        hay_cambios = True
+                else:
+                    click.echo(f"  AVISO: {row['rfc']} tiene un NSS incorrecto: {row['seguridad_social']}")
+
+            # Si hubo cambios, agregar a la sesión e incrementar el contador
+            if hay_cambios:
+                sesion.add(persona)
+                contador += 1
+                if contador % 100 == 0:
+                    click.echo(f"  Van {contador}...")
+
+    # Si no hubo cambios, mostrar mensaje y terminar
+    if contador == 0:
+        click.echo("  AVISO: No hubo cambios.")
+        sys.exit(0)
+
+    # Guardar cambios
+    sesion.commit()
+    sesion.close()
+
+    # Mensaje de termino
+    click.echo(f"Personas: {contador} actualizadas.")
+
+
+@click.command()
 def sincronizar():
-    """Sincronizar las Personas con la información de RRHH Personal"""
+    """Sincronizar las Personas consultando la API de RRHH Personal"""
     click.echo("Sincronizando Personas...")
 
     # Validar que se haya definido RRHH_PERSONAL_URL
@@ -139,4 +217,5 @@ def sincronizar():
     click.echo(f"Personas: {contador} sincronizados.")
 
 
+cli.add_command(actualizar)
 cli.add_command(sincronizar)

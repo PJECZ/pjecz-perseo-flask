@@ -28,6 +28,8 @@ class Persona(database.Model, UniversalMixin):
     ingreso_gobierno_fecha = Column(Date)
     ingreso_pj_fecha = Column(Date)
     nacimiento_fecha = Column(Date)
+    codigo_postal_fiscal = Column(Integer)
+    seguridad_social = Column(String(24))
 
     # Hijos
     cuentas = relationship("Cuenta", back_populates="persona")
