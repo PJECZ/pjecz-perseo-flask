@@ -11,6 +11,7 @@ import click
 import xlrd
 from openpyxl import Workbook
 
+from lib.fechas import quincena_to_fecha
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
@@ -768,8 +769,238 @@ def generar_dispersiones_pensionados(quincena_clave: str):
     click.echo(f"Generar dispersiones pensionados: {contador} filas en {nombre_archivo}")
 
 
+@click.command()
+@click.argument("quincena_clave", type=str)
+def generar_timbrados(quincena_clave: str):
+    """Generar archivo XLSX con los timbrados de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, entonces se termina
+    if quincena is None:
+        click.echo(f"ERROR: Quincena {quincena_clave} no existe.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena.estado != "ABIERTA":
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena.estatus != "A":
+        click.echo(f"ERROR: Quincena {quincena_clave} esta eliminada.")
+        sys.exit(1)
+
+    # Determinar las fechas inicial y final de la quincena
+    quincena_fecha_inicial = quincena_to_fecha(quincena_clave, dame_ultimo_dia=False)
+    quincena_fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+
+    # Consultar las nominas de la quincena, solo tipo SALARIO
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+
+    # Si no hay nominas, entonces se termina
+    if len(nominas) == 0:
+        click.echo(f"AVISO: No hay nominas de tipo SALARIO en la quincena {quincena_clave}.")
+        sys.exit(0)
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "CONSECUTIVO",
+            "NUMERO DE EMPLEADO",
+            "APELLIDO PRIMERO",
+            "APELLIDO SEGUNDO",
+            "NOMBRES",
+            "RFC",
+            "CURP",
+            "NO DE SEGURIDAD SOCIAL",
+            "FECHA DE INGRESO",
+            "CLAVE TIPO NOMINA",
+            "SINDICALIZADO",
+            "CLAVE BANCO SAT",
+            "NUMERO DE CUENTA",
+            "PLANTA",
+            "SALARIO DIARIO",
+            "SALARIO INTEGRADO",
+            "FECHA INICIAL PERIODO",
+            "FECHA FINAL PERIODO",
+            "FECHA DE PAGO",
+            "DIAS TRABAJADOS",
+            "RFC DEL PATRON",
+            "CLASE RIESGO PUESTO SAT",
+            "TIPO CONTRATO SAT",
+            "JORNADA SAT",
+            "TIPO REGIMEN SAT",
+            "ANIO",
+            "MES",
+            "PERIODO NOM",
+            "CLAVE COMPANIA",
+            "RFC COMPANIA",
+            "NOMBRE COMPANIA",
+            "CP DE LA COMPANIA",
+            "REGIMEN FISCAL",
+            "ESTADO SAT",
+            "CLAVE PLANTA U OFICINA",
+            "PLANTA U OFICINA",
+            "CLAVE CENTRO COSTOS",
+            "CENTRO COSTOS",
+            "FORMA DE PAGO",
+            "CLAVE DEPARTAMENTO",
+            "NOMBRE DEPARTAMENTO",
+            "NOMBRE PUESTO",
+            "P1 CLAVE",
+            "P1 IMPORTE",
+            "P2 CLAVE",
+            "P2 IMPORTE",
+            "P3 CLAVE",
+            "P3 IMPORTE",
+            "D1 CLAVE",
+            "D1 IMPORTE",
+            "D2 CLAVE",
+            "D2 IMPORTE",
+            "D3 CLAVE",
+            "D3 IMPORTE",
+            "ORIGEN RECURO",
+            "MONTO DEL RECURSO",
+            "CODIGO POSTAL FISCAL",
+        ]
+    )
+
+    # Bucle para crear cada fila del archivo XLSX
+    contador = 0
+    personas_sin_cuentas = []
+    personas_sin_fechas_de_ingreso = []
+    for nomina in nominas:
+        # Incrementar contador
+        contador += 1
+
+        # Consultar las cuentas de la persona
+        cuentas = nomina.persona.cuentas
+
+        # De las cuentas hay que sacar la que no tenga la clave 9, porque esa clave es la de DESPENSA
+        su_cuenta = None
+        for cuenta in cuentas:
+            if cuenta.banco.clave != "9" and cuenta.estatus == "A":
+                su_cuenta = cuenta
+                break
+
+        # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if su_cuenta is None:
+            personas_sin_cuentas.append(nomina.persona)
+            continue
+
+        # Si NO tiene fecha de ingreso, se agrega a la lista de personas_sin_fechas_de_ingreso y se salta
+        if nomina.persona.ingreso_pj_fecha is None:
+            personas_sin_fechas_de_ingreso.append(nomina.persona)
+            continue
+
+        # Agregar la fila
+        hoja.append(
+            [
+                contador,  # CONSECUTIVO
+                nomina.persona.num_empleado,  # NUMERO DE EMPLEADO
+                nomina.persona.apellido_primero,  # APELLIDO PRIMERO
+                nomina.persona.apellido_segundo,  # APELLIDO SEGUNDO
+                nomina.persona.nombres,  # NOMBRES
+                nomina.persona.rfc,  # RFC
+                nomina.persona.curp,  # CURP
+                "",  # NO DE SEGURIDAD SOCIAL
+                nomina.persona.ingreso_pj_fecha,  # FECHA DE INGRESO
+                "O",  # CLAVE TIPO NOMINA ordinarias
+                "SI" if nomina.persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
+                su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
+                su_cuenta.num_cuenta,  # NUMERO DE CUENTA
+                "",  # PLANTA es vacio
+                "",  # SALARIO DIARIO
+                "",  # SALARIO INTEGRADO
+                quincena_fecha_inicial,  # FECHA INICIAL PERIODO
+                quincena_fecha_final,  # FECHA FINAL PERIODO
+                "",  # FECHA DE PAGO
+                "",  # DIAS TRABAJADOS
+                "",  # RFC DEL PATRON
+                "",  # CLASE RIESGO PUESTO SAT
+                "",  # TIPO CONTRATO SAT
+                "",  # JORNADA SAT
+                "",  # TIPO REGIMEN SAT
+                "",  # ANIO
+                "",  # MES
+                "",  # PERIODO NOM
+                "",  # CLAVE COMPANIA
+                "",  # RFC COMPANIA
+                "",  # NOMBRE COMPANIA
+                "",  # CP DE LA COMPANIA
+                "",  # REGIMEN FISCAL
+                "",  # ESTADO SAT
+                "",  # CLAVE PLANTA U OFICINA
+                "",  # PLANTA U OFICINA
+                "",  # CLAVE CENTRO COSTOS
+                "",  # CENTRO COSTOS
+                "",  # FORMA DE PAGO
+                "",  # CLAVE DEPARTAMENTO
+                "",  # NOMBRE DEPARTAMENTO
+                "",  # NOMBRE PUESTO
+                "",  # P1 CLAVE
+                "",  # P1 IMPORTE
+                "",  # P2 CLAVE
+                "",  # P2 IMPORTE
+                "",  # P3 CLAVE
+                "",  # P3 IMPORTE
+                "",  # D1 CLAVE
+                "",  # D1 IMPORTE
+                "",  # D2 CLAVE
+                "",  # D2 IMPORTE
+                "",  # D3 CLAVE
+                "",  # D3 IMPORTE
+                "",  # ORIGEN RECURO
+                "",  # MONTO DEL RECURSO
+                "",  # CODIGO POSTAL FISCAL
+            ]
+        )
+
+        # Mostrar contador
+        if contador % 100 == 0:
+            click.echo(f"  Van {contador}...")
+
+    # Determinar el nombre del archivo XLSX, juntando 'timbrados' con la quincena y la fecha como YYYY-MM-DD HHMMSS
+    nombre_archivo = f"timbrados_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo)
+
+    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    if len(personas_sin_cuentas) > 0:
+        click.echo("AVISO: Hubo personas sin cuentas:")
+        for persona in personas_sin_cuentas:
+            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+
+    # Si hubo personas sin fecha de ingreso, entonces mostrarlas en pantalla
+    if len(personas_sin_fechas_de_ingreso) > 0:
+        click.echo("AVISO: Hubo personas sin fecha de ingreso:")
+        for persona in personas_sin_fechas_de_ingreso:
+            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+
+    # Mensaje termino
+    click.echo(f"Generar timbrados: XXXX filas en {nombre_archivo}")
+
+
 cli.add_command(alimentar)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)
 cli.add_command(generar_dispersiones_pensionados)
+cli.add_command(generar_timbrados)
