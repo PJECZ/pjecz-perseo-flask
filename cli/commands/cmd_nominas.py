@@ -31,6 +31,7 @@ from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+BONOS_FILENAME_XLS = "Bonos.XLS"
 
 app = create_app()
 app.app_context().push()
@@ -218,6 +219,103 @@ def alimentar(quincena_clave: str):
 
     # Mensaje termino
     click.echo(click.style(f"  Nominas:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+def alimentar_apoyos_anuales(quincena_clave: str):
+    """Alimentar apoyos anuales"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, BONOS_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo(f"ERROR: Quincena {quincena_clave} esta sido eliminada.")
+        sys.exit(1)
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Iniciar contadores
+    contador = 0
+    personas_inexistentes = []
+
+    # Bucle por cada fila
+    click.echo("Alimentando Apoyos: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        rfc = hoja.cell_value(fila, 1)
+        centro_trabajo_clave = hoja.cell_value(fila, 2)
+        plaza_clave = hoja.cell_value(fila, 3)
+        # puesto = hoja.cell_value(fila, 4)
+        percepcion = float(hoja.cell_value(fila, 5))
+        deduccion = float(hoja.cell_value(fila, 6))
+        impte = float(hoja.cell_value(fila, 7))
+        fecha_pago = hoja.cell_value(fila, 8)
+
+        # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
+        persona = Persona.query.filter_by(rfc=rfc).first()
+        if persona is None:
+            personas_inexistentes.append(rfc)
+            continue
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Cerrar la sesion para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Si hubo personas_inexistentes, mostrar contador
+    if len(personas_inexistentes) > 0:
+        click.echo(click.style("  Personas inexistentes:", fg="yellow"))
+        for rfc in personas_inexistentes:
+            click.echo(click.style(f"  {rfc}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Apoyos anuales:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()
@@ -999,6 +1097,7 @@ def generar_timbrados(quincena_clave: str):
 
 
 cli.add_command(alimentar)
+cli.add_command(alimentar_apoyos_anuales)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)

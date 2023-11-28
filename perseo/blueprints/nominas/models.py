@@ -1,7 +1,7 @@
 """
 Nominas, modelos
 """
-from sqlalchemy import Column, Enum, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Column, Date, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -12,8 +12,9 @@ class Nomina(database.Model, UniversalMixin):
     """Nomina"""
 
     TIPOS = {
-        "SALARIO": "SALARIO",
+        "APOYO ANUAL": "APOYO ANUAL",
         "DESPENSA": "DESPENSA",
+        "SALARIO": "SALARIO",
     }
 
     # Nombre de la tabla
@@ -33,11 +34,12 @@ class Nomina(database.Model, UniversalMixin):
     quincena = relationship("Quincena", back_populates="nominas")
 
     # Columnas
+    tipo = Column(Enum(*TIPOS, name="nominas_tipos"), nullable=False)
     percepcion = Column(Numeric(precision=24, scale=4), nullable=False)
     deduccion = Column(Numeric(precision=24, scale=4), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
-    tipo = Column(Enum(*TIPOS, name="nominas_tipos"), nullable=False)
     num_cheque = Column(String(24), nullable=False, default="", server_default="")
+    fecha_pago = Column(Date(), nullable=False)
 
     def __repr__(self):
         """Representación"""
