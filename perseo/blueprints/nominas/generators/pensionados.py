@@ -21,7 +21,6 @@ from perseo.blueprints.nominas.generators.common import (
     database,
 )
 from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 
 

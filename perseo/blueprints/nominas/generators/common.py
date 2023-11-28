@@ -1,5 +1,5 @@
 """
-Nominas, comunes
+Nominas, comunes para los generadores
 """
 import logging
 import re

@@ -1,27 +1,15 @@
 """
 Nominas, tareas en el fondo
 """
-import logging
-
 from lib.exceptions import MyAnyError
 from lib.tasks import set_task_error, set_task_progress
 from perseo.blueprints.bancos.tasks import reiniciar_consecutivos_generados
+from perseo.blueprints.nominas.generators.common import bitacora
 from perseo.blueprints.nominas.generators.dispersiones_pensionados import crear_dispersiones_pensionados
 from perseo.blueprints.nominas.generators.monederos import crear_monederos
 from perseo.blueprints.nominas.generators.nominas import crear_nominas
 from perseo.blueprints.nominas.generators.pensionados import crear_pensionados
 from perseo.blueprints.nominas.generators.timbrados import crear_timbrados
-
-GCS_BASE_DIRECTORY = "reports/nominas"
-LOCAL_BASE_DIRECTORY = "reports/nominas"
-TIMEZONE = "America/Mexico_City"
-
-bitacora = logging.getLogger(__name__)
-bitacora.setLevel(logging.INFO)
-formato = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
-empunadura = logging.FileHandler("nominas.log")
-empunadura.setFormatter(formato)
-bitacora.addHandler(empunadura)
 
 
 def generar_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
