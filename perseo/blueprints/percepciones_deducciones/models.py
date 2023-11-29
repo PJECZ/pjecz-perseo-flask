@@ -11,12 +11,6 @@ from perseo.extensions import database
 class PercepcionDeduccion(database.Model, UniversalMixin):
     """PercepcionDeduccion"""
 
-    TIPOS = {
-        "APOYO ANUAL": "APOYO ANUAL",
-        "DESPENSA": "DESPENSA",
-        "SALARIO": "SALARIO",
-    }
-
     # Nombre de la tabla
     __tablename__ = "percepciones_deducciones"
 
@@ -36,7 +30,6 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
     quincena = relationship("Quincena", back_populates="percepciones_deducciones")
 
     # Columnas
-    tipo = Column(Enum(*TIPOS, name="percepciones_deducciones_tipos"), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
 
     def __repr__(self):

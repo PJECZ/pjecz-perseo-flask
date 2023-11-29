@@ -92,13 +92,13 @@ def alimentar_bancarias(quincena: str):
         # Revisar si el banco existe
         banco = Banco.query.filter_by(clave=bco_admdor).first()
         if banco is None:
-            bancos_que_no_existen.append(f"  No existe el banco {bco_admdor}")
+            bancos_que_no_existen.append(bco_admdor)
             continue
 
         # Revisar si la persona existe
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
-            personas_que_no_existen.append(f"  No existe la persona con RFC '{rfc}'")
+            personas_que_no_existen.append(rfc)
             continue
 
         # Bucle por las cuentas de la persona
@@ -144,18 +144,18 @@ def alimentar_bancarias(quincena: str):
     sesion.commit()
     sesion.close()
 
-    # Si hubo bancos que no existen, se muestra el mensaje
+    # Si hubo bancos que no existen, se muestran
     if len(bancos_que_no_existen) > 0:
-        for mensaje in bancos_que_no_existen:
-            click.echo(click.style(mensaje, fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(bancos_que_no_existen)} Bancos que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {' ,'.join(bancos_que_no_existen)}", fg="yellow"))
 
-    # Si hubo personas que no existen, se muestra el mensaje
+    # Si hubo personas que no existen, se muestran
     if len(personas_que_no_existen) > 0:
-        for mensaje in personas_que_no_existen:
-            click.echo(click.style(mensaje, fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_que_no_existen)} Personas que no existen:", fg="yellow"))
+        # click.echo(click.style(f"  {' ,'.join(personas_que_no_existen)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Cuentas bancarias: {contador} insertadas.", fg="green"))
+    click.echo(click.style(f"  Alimentar Cuentas Bancarias: {contador} insertadas.", fg="green"))
 
 
 @click.command()
@@ -218,7 +218,7 @@ def alimentar_monederos(quincena: str):
         # Revisar si la persona existe
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
-            personas_que_no_existen.append(f"  No existe la persona con RFC '{rfc}'")
+            personas_que_no_existen.append(rfc)
             continue
 
         # Consultar las cuentas de la persona, con el banco 9
@@ -264,21 +264,17 @@ def alimentar_monederos(quincena: str):
     sesion.commit()
     sesion.close()
 
-    # Si hubo numeros de tarjeta invalidos, se muestra el mensaje
+    # Si hubo numeros de tarjeta invalidos, se muestra el contador
     if contador_num_tarjeta_invalido > 0:
-        click.echo(
-            click.style(
-                f"  Hubo {contador_num_tarjeta_invalido} numeros de tarjeta invalidos que se llenaron con ceros.", fg="yellow"
-            )
-        )
+        click.echo(click.style(f"  Hubo {contador_num_tarjeta_invalido} No. Cuenta invalidos.", fg="yellow"))
 
-    # Si hubo personas que no existen, se muestra el mensaje
+    # Si hubo personas que no existen, se muestran
     if len(personas_que_no_existen) > 0:
-        for mensaje in personas_que_no_existen:
-            click.echo(click.style(mensaje, fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_que_no_existen)} Personas que no existen:", fg="yellow"))
+        # click.echo(click.style(f"  {' ,'.join(personas_que_no_existen)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Monederos: {contador_nuevas} insertados y {contador_bajas} eliminados.", fg="green"))
+    click.echo(click.style(f"  Alimentar Monederos: {contador_nuevas} insertados y {contador_bajas} eliminados.", fg="green"))
 
 
 @click.command()
@@ -332,14 +328,14 @@ def agregar_cuentas_faltantes():
 
     # Si no hubo que agregar cuentas, se termina
     if contador == 0:
-        click.echo("AVISO: No se agregaron cuentas.")
+        click.echo(click.style("  No hubo que agregar Cuentas.", fg="yellow"))
         sys.exit(0)
 
     # Actualizar
     sesion.commit()
 
     # Mensaje termino
-    click.echo(f"Agregar cuentas faltantes: {contador} cuentas en SANTANDER con ochos")
+    click.echo(click.style(f"  Agregar Cuentas Faltantes: {contador} cuentas en SANTANDER con ochos", fg="green"))
 
 
 cli.add_command(alimentar_bancarias)

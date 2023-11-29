@@ -249,22 +249,23 @@ def alimentar(quincena_clave: str):
 
     # Si hubo conceptos_no_existentes, mostrarlos
     if len(conceptos_no_existentes) > 0:
-        click.echo(click.style(f"  AVISO: Conceptos NO existentes: {','.join(conceptos_no_existentes)}", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(conceptos_no_existentes)} Conceptos que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(conceptos_no_existentes)}", fg="yellow"))
 
     # Si hubo centros_trabajos_insertados_contador, mostrar contador
     if centros_trabajos_insertados_contador > 0:
-        click.echo(click.style(f"  Centros de Trabajo: {centros_trabajos_insertados_contador} insertados", fg="green"))
+        click.echo(click.style(f"  Se insertaron {centros_trabajos_insertados_contador} Centros de Trabajo", fg="green"))
 
     # Si hubo personas_sin_puestos, mostrar contador
     if personas_insertadas_contador > 0:
-        click.echo(click.style(f"  Personas: {personas_insertadas_contador} insertadas", fg="green"))
+        click.echo(click.style(f"  Se insertaron {personas_insertadas_contador} Personas", fg="green"))
 
     # Si hubo personas_sin_puestos, mostrar contador
     if plazas_insertadas_contador > 0:
-        click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
+        click.echo(click.style(f"  Se insertaron {plazas_insertadas_contador} Plazas", fg="green"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Percepciones-Deducciones: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar P-D: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 cli.add_command(alimentar)

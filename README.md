@@ -173,14 +173,6 @@ then
     export PYTHONPATH=$(pwd)
     echo "   PYTHONPATH: ${PYTHONPATH}"
     echo
-    echo "-- Arrancar Flask"
-    alias arrancar="flask run --port=5000"
-    echo "   arrancar = flask run --port=5000"
-    echo
-    echo "-- Dejar corriendo RQ Worker para las tareas en el fondo"
-    alias fondear="rq worker ${TASK_QUEUE}"
-    echo "   fondear = rq worker ${TASK_QUEUE}"
-    echo
     if [ -f cli/app.py ]
     then
         echo "-- Ejecutar el CLI"
@@ -200,8 +192,8 @@ then
         echo
         echo "-- 2) Recargar archivos de explotacion"
         function recargar() {
-            export CLAVE=$1
             export CLI="python3 ${PWD}/cli/app.py"
+            export CLAVE=$1
             $CLI percepciones_deducciones alimentar $CLAVE
             $CLI nominas alimentar $CLAVE
             $CLI cuentas alimentar-bancarias $CLAVE
@@ -213,10 +205,10 @@ then
         export -f recargar
         echo "   recargar <QUINCENA>"
         echo
-        echo "-- Generar cada producto"
+        echo "-- Generar archivos XLSX de nominas, monederos, pensionados y dispersiones pensionados"
         function generar() {
-            export CLAVE=$1
             export CLI="python3 ${PWD}/cli/app.py"
+            export CLAVE=$1
             $CLI bancos reiniciar-consecutivos-generados
             $CLI nominas generar-nominas $CLAVE
             $CLI nominas generar-monederos $CLAVE
@@ -227,6 +219,12 @@ then
         echo "   generar <QUINCENA>"
         echo
     fi
+    echo "-- Arrancar Flask o RQ Worker"
+    alias arrancar="flask run --port=5012"
+    alias fondear="rq worker ${TASK_QUEUE}"
+    echo "   arrancar = flask run --port=5012"
+    echo "   fondear = rq worker ${TASK_QUEUE}"
+    echo
 fi
 ```
 

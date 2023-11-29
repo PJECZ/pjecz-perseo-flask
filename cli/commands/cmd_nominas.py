@@ -159,7 +159,7 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
         # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se omite
         puesto = Puesto.query.filter_by(clave=puesto_clave).first()
         if puesto is None:
-            personas_sin_puestos.append(puesto_clave)
+            personas_sin_puestos.append(rfc)
             continue
 
         # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
@@ -260,28 +260,28 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo centros_trabajos_insertados, mostrar contador
     if centros_trabajos_insertados_contador > 0:
-        click.echo(click.style(f"  Centros de Trabajo: {centros_trabajos_insertados_contador} insertados", fg="green"))
+        click.echo(click.style(f"  Se insertaron {centros_trabajos_insertados_contador} Centros de Trabajo", fg="green"))
 
     # Si hubo personas insertadas, mostrar contador
     if personas_insertadas_contador > 0:
-        click.echo(click.style(f"  Personas: {personas_insertadas_contador} insertadas", fg="green"))
+        click.echo(click.style(f"  Se insertaron {personas_insertadas_contador} Personas", fg="green"))
 
     # Si hubo plazas insertadas, mostrar contador
     if plazas_insertadas_contador > 0:
-        click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
+        click.echo(click.style(f"  Se insertaron {plazas_insertadas_contador} Plazas", fg="green"))
 
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} personas sin puestos:", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos:", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} personas sin tabulador:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Nominas:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()
@@ -389,12 +389,11 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo personas_inexistentes, mostrar contador
     if len(personas_inexistentes) > 0:
-        click.echo(click.style("  Personas inexistentes:", fg="yellow"))
-        for rfc in personas_inexistentes:
-            click.echo(click.style(f"  {rfc}", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        # click.echo(click.style(f"  {' ,'.join(personas_inexistentes)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Apoyos anuales:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar Apoyos Anuales:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()
@@ -473,7 +472,7 @@ def generar_nominas(quincena_clave: str):
 
         # Si no tiene cuentas, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if len(cuentas) == 0:
-            personas_sin_cuentas.append(nomina.persona)
+            personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
         # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
@@ -485,7 +484,7 @@ def generar_nominas(quincena_clave: str):
 
         # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if su_cuenta is None:
-            personas_sin_cuentas.append(nomina.persona)
+            personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
         # Tomar el banco de la cuenta de la persona
@@ -531,12 +530,11 @@ def generar_nominas(quincena_clave: str):
 
     # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
     if len(personas_sin_cuentas) > 0:
-        click.echo("AVISO: Hubo personas sin cuentas:")
-        for persona in personas_sin_cuentas:
-            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"Generar nominas: {contador} filas en {nombre_archivo}")
+    click.echo(f"  Generar Nominas: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -665,12 +663,11 @@ def generar_monederos(quincena_clave: str):
 
     # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
     if len(personas_sin_cuentas) > 0:
-        click.echo("AVISO: Hubo personas sin cuentas:")
-        for persona in personas_sin_cuentas:
-            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"Generar monederos: {contador} filas en {nombre_archivo}")
+    click.echo(f"  Generar Monederos: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -749,7 +746,7 @@ def generar_pensionados(quincena_clave: str):
 
         # Si no tiene cuentas, entonces se le crea una cuenta con el banco 10
         if len(cuentas) == 0:
-            personas_sin_cuentas.append(nomina.persona)
+            personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
         # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
@@ -761,7 +758,7 @@ def generar_pensionados(quincena_clave: str):
 
         # Si no tiene cuenta bancaria, entonces se le crea una cuenta con el banco 10
         if su_cuenta is None:
-            personas_sin_cuentas.append(nomina.persona)
+            personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
         # Tomar el banco de la cuenta de la persona
@@ -807,12 +804,11 @@ def generar_pensionados(quincena_clave: str):
 
     # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
     if len(personas_sin_cuentas) > 0:
-        click.echo("AVISO: Hubo personas sin cuentas:")
-        for persona in personas_sin_cuentas:
-            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"Generar pensionados: {contador} filas en {nombre_archivo}")
+    click.echo(f"  Generar Pensionados: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -938,12 +934,11 @@ def generar_dispersiones_pensionados(quincena_clave: str):
 
     # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
     if len(personas_sin_cuentas) > 0:
-        click.echo("AVISO: Hubo personas sin cuentas:")
-        for persona in personas_sin_cuentas:
-            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"Generar dispersiones pensionados: {contador} filas en {nombre_archivo}")
+    click.echo(f"  Generar Dispersiones Pensionados: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -1078,12 +1073,12 @@ def generar_timbrados(quincena_clave: str):
 
         # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if su_cuenta is None:
-            personas_sin_cuentas.append(nomina.persona)
+            personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
         # Si NO tiene fecha de ingreso, se agrega a la lista de personas_sin_fechas_de_ingreso y se salta
         if nomina.persona.ingreso_pj_fecha is None:
-            personas_sin_fechas_de_ingreso.append(nomina.persona)
+            personas_sin_fechas_de_ingreso.append(nomina.persona.rfc)
             continue
 
         # Agregar la fila
@@ -1161,18 +1156,16 @@ def generar_timbrados(quincena_clave: str):
 
     # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
     if len(personas_sin_cuentas) > 0:
-        click.echo("AVISO: Hubo personas sin cuentas:")
-        for persona in personas_sin_cuentas:
-            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Si hubo personas sin fecha de ingreso, entonces mostrarlas en pantalla
     if len(personas_sin_fechas_de_ingreso) > 0:
-        click.echo("AVISO: Hubo personas sin fecha de ingreso:")
-        for persona in personas_sin_fechas_de_ingreso:
-            click.echo(f"  {persona.rfc}, {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_fechas_de_ingreso)} Personas sin fecha de ingreso:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_fechas_de_ingreso)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"Generar timbrados: XXXX filas en {nombre_archivo}")
+    click.echo(f"  Generar Timbrados: XXXX filas en {nombre_archivo}")
 
 
 cli.add_command(alimentar)
