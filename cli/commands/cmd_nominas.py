@@ -34,6 +34,10 @@ APOYOS_FILENAME_XLS = "Apoyos.XLS"
 BONOS_FILENAME_XLS = "Bonos.XLS"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 
+PATRON_RFC = "PJE901211TI9"
+COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
+COMPANIA_RFC = PATRON_RFC
+COMPANIA_CP = "25000"
 
 app = create_app()
 app.app_context().push()
@@ -1003,12 +1007,19 @@ def generar_dispersiones_pensionados(quincena_clave: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def generar_timbrados(quincena_clave: str):
+@click.argument("tipo", type=str)
+def generar_timbrados(quincena_clave: str, tipo: str):
     """Generar archivo XLSX con los timbrados de una quincena"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Validar tipo
+    tipo = safe_string(tipo)
+    if tipo not in ["SALARIO", "APOYO ANUAL"]:
+        click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
@@ -1036,11 +1047,11 @@ def generar_timbrados(quincena_clave: str):
     quincena_fecha_inicial = quincena_to_fecha(quincena_clave, dame_ultimo_dia=False)
     quincena_fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
 
-    # Consultar las nominas de la quincena, solo tipo APOYO ANUAL, juntar con personas para ordenar por RFC
+    # Consultar las nominas de la quincena, del tipo dado, juntar con personas para ordenar por RFC
     nominas = (
         Nomina.query.join(Persona)
         .filter(Nomina.quincena_id == quincena.id)
-        .filter(Nomina.tipo == "APOYO ANUAL")
+        .filter(Nomina.tipo == tipo)
         .filter(Nomina.estatus == "A")
         .order_by(Persona.rfc)
         .all()
@@ -1048,7 +1059,7 @@ def generar_timbrados(quincena_clave: str):
 
     # Si no hay nominas, entonces se termina
     if len(nominas) == 0:
-        click.echo(f"AVISO: No hay nominas de tipo APOYO ANUAL en la quincena {quincena_clave}.")
+        click.echo(f"AVISO: No hay nominas de tipo {tipo} en la quincena {quincena_clave}.")
         sys.exit(0)
 
     # Iniciar el archivo XLSX
@@ -1159,7 +1170,7 @@ def generar_timbrados(quincena_clave: str):
                 nomina.persona.curp,  # CURP
                 nomina.persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
                 nomina.persona.ingreso_pj_fecha,  # FECHA DE INGRESO
-                "E",  # CLAVE TIPO NOMINA ordinarias es O, extraordinarias es E
+                "O" if tipo == "SALARIO" else "E",  # CLAVE TIPO NOMINA ordinarias es O, extraordinarias es E
                 "SI" if nomina.persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
                 su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
                 su_cuenta.num_cuenta,  # NUMERO DE CUENTA
@@ -1169,8 +1180,8 @@ def generar_timbrados(quincena_clave: str):
                 datetime(year=2023, month=1, day=1).date(),  # FECHA INICIAL PERIODO quincena_fecha_inicial
                 datetime(year=2023, month=12, day=31).date(),  # FECHA FINAL PERIODO quincena_fecha_final
                 nomina.fecha_pago,  # FECHA DE PAGO
-                "1",  # DIAS TRABAJADOS cuando es anual se pone 1
-                "PJE901211TI9",  # RFC DEL PATRON
+                "15" if tipo == "SALARIO" else "1",  # DIAS TRABAJADOS cuando es anual se pone 1
+                PATRON_RFC,  # RFC DEL PATRON
                 "1",  # CLASE RIESGO PUESTO es 1
                 "01",  # TIPO CONTRATO SAT
                 "08",  # JORNADA SAT
@@ -1179,16 +1190,16 @@ def generar_timbrados(quincena_clave: str):
                 nomina.fecha_pago.month,  # MES
                 quincena.clave[-2:],  # PERIODO NOM los dos ultimos digitos de la clave de la quincena
                 "",  # CLAVE COMPANIA nulo
-                "PJE901211TI9",  # RFC COMPANIA
-                "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA",  # NOMBRE COMPANIA
-                "25000",  # CP DE LA COMPANIA
+                COMPANIA_RFC,  # RFC COMPANIA
+                COMPANIA_NOMBRE,  # NOMBRE COMPANIA
+                COMPANIA_CP,  # CP DE LA COMPANIA
                 "603",  # REGIMEN FISCAL solo la clave 603 PERSONAS MORALES CON FINES NO LUCRATIVOS
                 "COA",  # ESTADO SAT
                 "",  # CLAVE PLANTA U OFICINA nulo
                 "",  # PLANTA U OFICINA nulo
                 "",  # CLAVE CENTRO COSTOS nulo
                 "",  # CENTRO COSTOS nulo
-                "99",  # FORMA DE PAGO para la ayuda es 99 y para los salarios es 04
+                "04" if tipo == "SALARIO" else "99",  # FORMA DE PAGO para la ayuda es 99 y para los salarios es 04
                 nomina.centro_trabajo.clave,  # CLAVE DEPARTAMENTO
                 nomina.centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
                 nomina.persona.tabulador.puesto.clave,  # NOMBRE PUESTO por lo pronto es la clave del puesto

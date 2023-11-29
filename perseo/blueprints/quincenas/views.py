@@ -46,7 +46,7 @@ def datatable_json():
         except ValueError:
             pass
     # Ordenar y paginar
-    registros = consulta.order_by(Quincena.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Quincena.clave.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
