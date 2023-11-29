@@ -161,7 +161,7 @@ def generar(quincena_clave: str):
     # Si hubo personas sin cuentas, se muestran
     if len(personas_sin_cuentas) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
-        click.echo(click.style(f"  {' ,'.join(personas_sin_cuentas)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(f"  Generar Beneficiarios Quincenas: {contador} filas en {nombre_archivo}")

@@ -29,8 +29,11 @@ from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
-NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+
+APOYOS_FILENAME_XLS = "Apoyos.XLS"
 BONOS_FILENAME_XLS = "Bonos.XLS"
+NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+
 
 app = create_app()
 app.app_context().push()
@@ -318,7 +321,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
         sys.exit(1)
 
     # Validar si existe el archivo
-    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, BONOS_FILENAME_XLS)
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, APOYOS_FILENAME_XLS)
     if not ruta.exists():
         click.echo(f"ERROR: {str(ruta)} no se encontró.")
         sys.exit(1)
@@ -353,27 +356,69 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Iniciar contadores
     contador = 0
+    centros_trabajos_inexistentes = []
+    nominas_existentes = []
     personas_inexistentes = []
-    personas_sin_puestos = []
-    personas_sin_tabulador = []
+    plazas_inexistentes = []
 
     # Bucle por cada fila
     click.echo("Alimentando Apoyos: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
-        rfc = hoja.cell_value(fila, 1)
-        centro_trabajo_clave = hoja.cell_value(fila, 2)
-        plaza_clave = hoja.cell_value(fila, 3)
-        # puesto = hoja.cell_value(fila, 4)
-        percepcion = float(hoja.cell_value(fila, 5))
-        deduccion = float(hoja.cell_value(fila, 6))
-        impte = float(hoja.cell_value(fila, 7))
+        rfc = hoja.cell_value(fila, 0).strip().upper()
+        centro_trabajo_clave = hoja.cell_value(fila, 1).strip().upper()
+        plaza_clave = hoja.cell_value(fila, 2).strip().upper()
+        # puesto = hoja.cell_value(fila, 3)
+        percepcion = float(hoja.cell_value(fila, 4))
+        deduccion = float(hoja.cell_value(fila, 5))
+        impte = float(hoja.cell_value(fila, 6))
+        # fecha_pago es la columna 7
+        desde = hoja.cell_value(fila, 8)
+        hasta = hoja.cell_value(fila, 9)
 
         # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
             personas_inexistentes.append(rfc)
             continue
+
+        # Consultar el Centro de Trabajo, si no existe se agrega a la lista de centros_trabajos_inexistentes y se salta
+        centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+        if centro_trabajo is None:
+            centros_trabajos_inexistentes.append(centro_trabajo_clave)
+            continue
+
+        # Consultar la Plaza, si no existe se agrega a la lista de plazas_inexistentes y se salta
+        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+        if plaza is None:
+            plazas_inexistentes.append(plaza_clave)
+            continue
+
+        # Revisar que en nominas no exista una nomina con la misma persona, quincena y tipo APOYO ANUAL, si existe se omite
+        nominas_posibles = (
+            Nomina.query.filter_by(persona_id=persona.id)
+            .filter_by(quincena_id=quincena.id)
+            .filter_by(tipo="APOYO ANUAL")
+            .filter_by(estatus="A")
+            .all()
+        )
+        if len(nominas_posibles) > 0:
+            nominas_existentes.append(rfc)
+            continue
+
+        # Alimentar nomina
+        nomina = Nomina(
+            centro_trabajo=centro_trabajo,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            percepcion=percepcion,
+            deduccion=deduccion,
+            importe=impte,
+            tipo="APOYO ANUAL",
+            fecha_pago=fecha_pago,
+        )
+        sesion.add(nomina)
 
         # Incrementar contador
         contador += 1
@@ -387,10 +432,25 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
     sesion.commit()
     sesion.close()
 
+    # Si hubo centros_trabajos_inexistentes, mostrarlos
+    if len(centros_trabajos_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
+
+    # Si hubo nominas_existentes, mostrarlos
+    if len(nominas_existentes) > 0:
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
+
+    # Si hubo plazas_inexistentes, mostrarlos
+    if len(plazas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(plazas_inexistentes)}", fg="yellow"))
+
     # Si hubo personas_inexistentes, mostrar contador
     if len(personas_inexistentes) > 0:
         click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
-        # click.echo(click.style(f"  {' ,'.join(personas_inexistentes)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Apoyos Anuales:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
