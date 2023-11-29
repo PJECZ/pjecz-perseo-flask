@@ -1036,12 +1036,19 @@ def generar_timbrados(quincena_clave: str):
     quincena_fecha_inicial = quincena_to_fecha(quincena_clave, dame_ultimo_dia=False)
     quincena_fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
 
-    # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    # Consultar las nominas de la quincena, solo tipo APOYO ANUAL, juntar con personas para ordenar por RFC
+    nominas = (
+        Nomina.query.join(Persona)
+        .filter(Nomina.quincena_id == quincena.id)
+        .filter(Nomina.tipo == "APOYO ANUAL")
+        .filter(Nomina.estatus == "A")
+        .order_by(Persona.rfc)
+        .all()
+    )
 
     # Si no hay nominas, entonces se termina
     if len(nominas) == 0:
-        click.echo(f"AVISO: No hay nominas de tipo SALARIO en la quincena {quincena_clave}.")
+        click.echo(f"AVISO: No hay nominas de tipo APOYO ANUAL en la quincena {quincena_clave}.")
         sys.exit(0)
 
     # Iniciar el archivo XLSX
@@ -1095,18 +1102,8 @@ def generar_timbrados(quincena_clave: str):
             "CLAVE DEPARTAMENTO",
             "NOMBRE DEPARTAMENTO",
             "NOMBRE PUESTO",
-            "P1 CLAVE",
-            "P1 IMPORTE",
-            "P2 CLAVE",
-            "P2 IMPORTE",
-            "P3 CLAVE",
-            "P3 IMPORTE",
-            "D1 CLAVE",
-            "D1 IMPORTE",
-            "D2 CLAVE",
-            "D2 IMPORTE",
-            "D3 CLAVE",
-            "D3 IMPORTE",
+            "PAZ",  # Clave del concepto de la Percepcion de Apoyo Anual
+            "DAZ",  # Clave del concepto de la Deduccion de Apoyo Anual
             "ORIGEN RECURSO",
             "MONTO DEL RECURSO",
             "CODIGO POSTAL FISCAL",
@@ -1116,7 +1113,7 @@ def generar_timbrados(quincena_clave: str):
     # Bucle para crear cada fila del archivo XLSX
     contador = 0
     personas_sin_cuentas = []
-    personas_sin_fechas_de_ingreso = []
+    # personas_sin_fechas_de_ingreso = []
     for nomina in nominas:
         # Incrementar contador
         contador += 1
@@ -1136,10 +1133,19 @@ def generar_timbrados(quincena_clave: str):
             personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
+        # Tomar el banco de la cuenta de la persona
+        su_banco = su_cuenta.banco
+
+        # Incrementer el consecutivo_generado del banco
+        su_banco.consecutivo_generado += 1
+
+        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
+        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
+
         # Si NO tiene fecha de ingreso, se agrega a la lista de personas_sin_fechas_de_ingreso y se salta
-        if nomina.persona.ingreso_pj_fecha is None:
-            personas_sin_fechas_de_ingreso.append(nomina.persona.rfc)
-            continue
+        # if nomina.persona.ingreso_pj_fecha is None:
+        #     personas_sin_fechas_de_ingreso.append(nomina.persona.rfc)
+        #     continue
 
         # Agregar la fila
         hoja.append(
@@ -1153,60 +1159,57 @@ def generar_timbrados(quincena_clave: str):
                 nomina.persona.curp,  # CURP
                 nomina.persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
                 nomina.persona.ingreso_pj_fecha,  # FECHA DE INGRESO
-                "O",  # CLAVE TIPO NOMINA ordinarias
+                "E",  # CLAVE TIPO NOMINA ordinarias es O, extraordinarias es E
                 "SI" if nomina.persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
                 su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
                 su_cuenta.num_cuenta,  # NUMERO DE CUENTA
                 "",  # PLANTA nula
                 nomina.persona.tabulador.salario_diario,  # SALARIO DIARIO
                 nomina.persona.tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
-                quincena_fecha_inicial,  # FECHA INICIAL PERIODO
-                quincena_fecha_final,  # FECHA FINAL PERIODO
-                "",  # FECHA DE PAGO
-                "",  # DIAS TRABAJADOS
+                datetime(year=2023, month=1, day=1).date(),  # FECHA INICIAL PERIODO quincena_fecha_inicial
+                datetime(year=2023, month=12, day=31).date(),  # FECHA FINAL PERIODO quincena_fecha_final
+                nomina.fecha_pago,  # FECHA DE PAGO
+                "1",  # DIAS TRABAJADOS cuando es anual se pone 1
                 "PJE901211TI9",  # RFC DEL PATRON
-                "",  # CLASE RIESGO PUESTO SAT nulo
+                "1",  # CLASE RIESGO PUESTO es 1
                 "01",  # TIPO CONTRATO SAT
                 "08",  # JORNADA SAT
                 "02",  # TIPO REGIMEN SAT
-                "",  # ANIO
-                "",  # MES
-                "99 OTRA PERIODICIDAD",  # PERIODO NOM
+                nomina.fecha_pago.year,  # ANIO
+                nomina.fecha_pago.month,  # MES
+                quincena.clave[-2:],  # PERIODO NOM los dos ultimos digitos de la clave de la quincena
                 "",  # CLAVE COMPANIA nulo
                 "PJE901211TI9",  # RFC COMPANIA
                 "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA",  # NOMBRE COMPANIA
                 "25000",  # CP DE LA COMPANIA
-                "603 PERSONAS MORALES CON FINES NO LUCRATIVOS",  # REGIMEN FISCAL
-                "05 COA",  # ESTADO SAT
+                "603",  # REGIMEN FISCAL solo la clave 603 PERSONAS MORALES CON FINES NO LUCRATIVOS
+                "COA",  # ESTADO SAT
                 "",  # CLAVE PLANTA U OFICINA nulo
                 "",  # PLANTA U OFICINA nulo
                 "",  # CLAVE CENTRO COSTOS nulo
                 "",  # CENTRO COSTOS nulo
-                "04",  # FORMA DE PAGO
+                "99",  # FORMA DE PAGO para la ayuda es 99 y para los salarios es 04
                 nomina.centro_trabajo.clave,  # CLAVE DEPARTAMENTO
                 nomina.centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
-                "",  # NOMBRE PUESTO
-                "",  # P1 CLAVE
-                "",  # P1 IMPORTE
-                "",  # P2 CLAVE
-                "",  # P2 IMPORTE
-                "",  # P3 CLAVE
-                "",  # P3 IMPORTE
-                "",  # D1 CLAVE
-                "",  # D1 IMPORTE
-                "",  # D2 CLAVE
-                "",  # D2 IMPORTE
-                "",  # D3 CLAVE
-                "",  # D3 IMPORTE
+                nomina.persona.tabulador.puesto.clave,  # NOMBRE PUESTO por lo pronto es la clave del puesto
+                nomina.percepcion,  # PAZ Percepcion de Apoyo Anual
+                nomina.deduccion,  # DAZ Deduccion de Apoyo Anual
                 "IP",  # ORIGEN RECURSO
                 "100",  # MONTO DEL RECURSO
                 nomina.persona.codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
             ]
         )
 
+        # Actualizar el registro de la nominas con el numero de cheque
+        nomina.num_cheque = num_cheque
+        sesion.add(nomina)
+
         # Mostrar contador
         if contador % 100 == 0:
             click.echo(f"  Van {contador}...")
+
+    # Actualizar los consecutivos de cada banco
+    sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'timbrados' con la quincena y la fecha como YYYY-MM-DD HHMMSS
     nombre_archivo = f"timbrados_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
@@ -1220,12 +1223,12 @@ def generar_timbrados(quincena_clave: str):
         click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Si hubo personas sin fecha de ingreso, entonces mostrarlas en pantalla
-    if len(personas_sin_fechas_de_ingreso) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_fechas_de_ingreso)} Personas sin fecha de ingreso:", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_fechas_de_ingreso)}", fg="yellow"))
+    # if len(personas_sin_fechas_de_ingreso) > 0:
+    #     click.echo(click.style(f"  Hubo {len(personas_sin_fechas_de_ingreso)} Personas sin fecha de ingreso:", fg="yellow"))
+    #     click.echo(click.style(f"  {', '.join(personas_sin_fechas_de_ingreso)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"  Generar Timbrados: XXXX filas en {nombre_archivo}")
+    click.echo(f"  Generar Timbrados: {contador} filas en {nombre_archivo}")
 
 
 cli.add_command(alimentar)
