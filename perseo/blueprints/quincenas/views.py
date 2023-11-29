@@ -244,7 +244,10 @@ def recover(quincena_id):
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def close():
     """Lanzar tarea en el fondo para cerrar las quincenas pasadas, menos la ultima"""
-    current_user.launch_task(comando="quincenas.tasks.cerrar", mensaje="Lanzando cerrar quincenas...")
+    current_user.launch_task(
+        comando="quincenas.tasks.lanzar_cerrar",
+        mensaje="Lanzando cerrar quincenas...",
+    )
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     return redirect(url_for("quincenas.list_active"))
 
@@ -273,7 +276,7 @@ def generate_nominas(quincena_id):
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.generar_nominas",
+        comando="nominas.tasks.lanzar_generar_nominas",
         mensaje="Lanzando nominas.tasks.generar_nominas...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -307,7 +310,7 @@ def generate_monederos(quincena_id):
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.generar_monederos",
+        comando="nominas.tasks.lanzar_generar_monederos",
         mensaje="Lanzando nominas.tasks.generar_monederos...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -341,7 +344,7 @@ def generate_pensionados(quincena_id):
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.generar_pensionados",
+        comando="nominas.tasks.lanzar_generar_pensionados",
         mensaje="Lanzando nominas.tasks.generar_pensionados...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -375,7 +378,7 @@ def generar_dispersiones_pensionados(quincena_id):
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.generar_dispersiones_pensionados",
+        comando="nominas.tasks.lanzar_generar_dispersiones_pensionados",
         mensaje="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -399,10 +402,10 @@ def generar_todos(quincena_id):
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.generar_todos",
+        comando="nominas.tasks.lanzar_generar_todos",
         mensaje="Lanzando nominas.tasks.generar_todos...",
         quincena_clave=quincena.clave,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     # Redireccionar al listado de productos activos
     return redirect(url_for("quincenas.list_active"))

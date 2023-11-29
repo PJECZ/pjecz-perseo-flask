@@ -71,7 +71,7 @@ def datatable_json():
             Persona.apellido_segundo.contains(safe_string(request.form["persona_apellido_segundo"], save_enie=True))
         )
     # Ordenar y paginar
-    registros = consulta.order_by(Nomina.id).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Nomina.id.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []

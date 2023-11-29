@@ -71,16 +71,19 @@ def reiniciar_consecutivos_generados():
         # Si son diferentes
         if banco.consecutivo_generado != banco.consecutivo:
             # Recordar el valor anterior
-            anterior = banco.consecutivo_generado
+            valor_anterior = banco.consecutivo_generado
+
+            # Recordar el valor nuevo
+            valor_nuevo = banco.consecutivo
 
             # Poner el valor de consecutivo generado con el de consecutivo
-            banco.consecutivo_generado = banco.consecutivo
+            banco.consecutivo_generado = valor_nuevo
 
             # Guardar el banco
             sesion.add(banco)
 
             # Mostrar en pantalla el cambio
-            click.echo(f"  {banco.nombre} cambia de {anterior} a {banco.consecutivo_generado}")
+            click.echo(f"  {banco.nombre} cambia de {valor_anterior} a {valor_nuevo}")
 
             # Incrementar el contador
             contador += 1

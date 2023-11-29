@@ -25,7 +25,7 @@ class Tarea(database.Model, UniversalMixin):
     usuario = relationship("Usuario", back_populates="tareas")
 
     # Columnas
-    comando = Column(String(48), nullable=False, index=True)
+    comando = Column(String(256), nullable=False, index=True)
     mensaje = Column(String(1024), default="", server_default="")
     ha_terminado = Column(Boolean, nullable=False, default=False)
 

@@ -12,7 +12,7 @@ from perseo.blueprints.nominas.generators.pensionados import crear_pensionados
 from perseo.blueprints.nominas.generators.timbrados import crear_timbrados
 
 
-def generar_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
+def lanzar_generar_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -33,7 +33,7 @@ def generar_nominas(quincena_clave: str, quincena_producto_id: int) -> str:
     return mensaje_termino
 
 
-def generar_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
+def lanzar_generar_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -54,7 +54,7 @@ def generar_monederos(quincena_clave: str, quincena_producto_id: int) -> str:
     return mensaje_termino
 
 
-def generar_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
+def lanzar_generar_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -75,7 +75,7 @@ def generar_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     return mensaje_termino
 
 
-def generar_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
+def lanzar_generar_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -96,7 +96,7 @@ def generar_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: 
     return mensaje_termino
 
 
-def generar_timbrados(quincena_clave: str, quincena_producto_id: int) -> str:
+def lanzar_generar_timbrados(quincena_clave: str, quincena_producto_id: int) -> str:
     """Tarea en el fondo para crear un archivo XLSX con los timbrados de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -117,7 +117,7 @@ def generar_timbrados(quincena_clave: str, quincena_producto_id: int) -> str:
     return mensaje_termino
 
 
-def generar_todos(quincena_clave: str) -> str:
+def lanzar_generar_todos(quincena_clave: str) -> str:
     """Ejecutar todas las tareas en el fondo"""
 
     # Iniciar la tarea en el fondo
