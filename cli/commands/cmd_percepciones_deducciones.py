@@ -8,9 +8,9 @@ from pathlib import Path
 
 import click
 import xlrd
-from dotenv import load_dotenv
 
-from lib.safe_string import QUINCENA_REGEXP, safe_string
+from lib.fechas import quincena_to_fecha, quinquenio_count
+from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
@@ -20,7 +20,9 @@ from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccio
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.productos.models import Producto
+from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.quincenas.models import Quincena
+from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
@@ -43,6 +45,13 @@ def alimentar(quincena_clave: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Definir la fecha_final en base a la clave de la quincena
+    try:
+        fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+    except ValueError:
         click.echo("ERROR: Quincena inválida")
         sys.exit(1)
 
@@ -95,6 +104,8 @@ def alimentar(quincena_clave: str):
     contador = 0
     centros_trabajos_insertados_contador = 0
     personas_insertadas_contador = 0
+    personas_sin_puestos = []
+    personas_sin_tabulador = []
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
@@ -108,23 +119,56 @@ def alimentar(quincena_clave: str):
         modelo = int(hoja.cell_value(fila, 236))
         num_empleado = int(hoja.cell_value(fila, 240))
 
+        # Tomar las columnas necesarias para el timbrado
+        puesto_clave = safe_clave(hoja.cell_value(fila, 20))
+        nivel = int(hoja.cell_value(fila, 9))
+        quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
+
+        # Si el modelo es 2, entonces es Sindicalizado y se calculan los quinquenios
+        quinquenios = 0
+        if modelo == 2:
+            # Calcular la cantidad de quinquenios
+            fecha_ingreso = quincena_to_fecha(quincena_ingreso, dame_ultimo_dia=False)
+            quinquenios = quinquenio_count(fecha_ingreso, fecha_final)
+
         # Separar nombre_completo, en apellido_primero, apellido_segundo y nombres
         separado = safe_string(nombre_completo, save_enie=True).split(" ")
         apellido_primero = separado[0]
         apellido_segundo = separado[1]
         nombres = " ".join(separado[2:])
 
-        # Revisar si el Centro de Trabajo existe, de lo contrario insertarlo
+        # Consultar el Centro de Trabajo, si no existe se agrega
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
             centros_trabajos_insertados_contador += 1
 
+        # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se omite
+        puesto = Puesto.query.filter_by(clave=puesto_clave).first()
+        if puesto is None:
+            personas_sin_puestos.append(puesto_clave)
+            continue
+
+        # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
+        tabulador = (
+            Tabulador.query.filter_by(puesto_id=puesto.id)
+            .filter_by(modelo=modelo)
+            .filter_by(nivel=nivel)
+            .filter_by(quinquenio=quinquenios)
+            .first()
+        )
+
+        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se omite
+        if tabulador is None:
+            personas_sin_tabulador.append(rfc)
+            continue
+
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
             persona = Persona(
+                tabulador_id=tabulador.id,
                 rfc=rfc,
                 nombres=nombres,
                 apellido_primero=apellido_primero,
@@ -135,7 +179,10 @@ def alimentar(quincena_clave: str):
             sesion.add(persona)
             personas_insertadas_contador += 1
 
-        # TODO: Si la persona existe, revisar si hubo cambios en sus datos, si los hubo, actualizarlos
+        # TODO: Con la persona...
+        # 1. revisar si hubo cambios en sus datos,
+        # 2. revisar si cambio de tabulador, tal vez revisando la quincena anterior
+        # Si hay cambios, actualizar la persona, tabulador y puesto
 
         # Revisar si la Plaza existe, de lo contrario insertarla
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
@@ -200,15 +247,23 @@ def alimentar(quincena_clave: str):
     sesion.commit()
     sesion.close()
 
-    # Mensaje termino
+    # Si hubo conceptos_no_existentes, mostrarlos
     if len(conceptos_no_existentes) > 0:
         click.echo(click.style(f"  AVISO: Conceptos NO existentes: {','.join(conceptos_no_existentes)}", fg="yellow"))
+
+    # Si hubo centros_trabajos_insertados_contador, mostrar contador
     if centros_trabajos_insertados_contador > 0:
         click.echo(click.style(f"  Centros de Trabajo: {centros_trabajos_insertados_contador} insertados", fg="green"))
+
+    # Si hubo personas_sin_puestos, mostrar contador
     if personas_insertadas_contador > 0:
         click.echo(click.style(f"  Personas: {personas_insertadas_contador} insertadas", fg="green"))
+
+    # Si hubo personas_sin_puestos, mostrar contador
     if plazas_insertadas_contador > 0:
         click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
+
+    # Mensaje termino
     click.echo(click.style(f"  Percepciones-Deducciones: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 

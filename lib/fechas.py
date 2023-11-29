@@ -6,7 +6,6 @@ import math
 import re
 from datetime import date
 
-
 QUINCENA_REGEXP = r"^\d{6}$"
 
 
@@ -43,7 +42,7 @@ def quincena_to_fecha(quincena_clave: str, dame_ultimo_dia: bool = False) -> dat
 
     # Validar año de la quincena
     anio = int(quincena_clave[:-2])
-    if anio < 2000 or anio > date.today().year:
+    if anio < 1950 or anio > date.today().year:
         raise ValueError("Quincena (año) fuera de rango")
 
     # Validar número de quincena

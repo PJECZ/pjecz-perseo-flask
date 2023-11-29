@@ -11,22 +11,21 @@ import click
 import xlrd
 from openpyxl import Workbook
 
-from lib.fechas import quincena_to_fecha
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
+from lib.fechas import quincena_to_fecha, quinquenio_count
+from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
-from perseo.blueprints.beneficiarios.models import Beneficiario
-from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
-from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.productos.models import Producto
+from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.quincenas.models import Quincena
+from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
@@ -45,12 +44,27 @@ def cli():
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def alimentar(quincena_clave: str):
+@click.argument("fecha_pago_str", type=str)
+def alimentar(quincena_clave: str, fecha_pago_str: str):
     """Alimentar nominas"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Definir la fecha_final en base a la clave de la quincena
+    try:
+        fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+    except ValueError:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Validar fecha_pago
+    try:
+        fecha_pago = datetime.strptime(fecha_pago_str, "%Y-%m-%d")
+    except ValueError:
+        click.echo("ERROR: Fecha de pago inválida")
         sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
@@ -99,6 +113,8 @@ def alimentar(quincena_clave: str):
     contador = 0
     centros_trabajos_insertados_contador = 0
     personas_insertadas_contador = 0
+    personas_sin_puestos = []
+    personas_sin_tabulador = []
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
@@ -115,23 +131,56 @@ def alimentar(quincena_clave: str):
         modelo = int(hoja.cell_value(fila, 236))
         num_empleado = int(hoja.cell_value(fila, 240))
 
+        # Tomar las columnas necesarias para el timbrado
+        puesto_clave = safe_clave(hoja.cell_value(fila, 20))
+        nivel = int(hoja.cell_value(fila, 9))
+        quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
+
+        # Si el modelo es 2, entonces es Sindicalizado y se calculan los quinquenios
+        quinquenios = 0
+        if modelo == 2:
+            # Calcular la cantidad de quinquenios
+            fecha_ingreso = quincena_to_fecha(quincena_ingreso, dame_ultimo_dia=False)
+            quinquenios = quinquenio_count(fecha_ingreso, fecha_final)
+
         # Separar nombre_completo, en apellido_primero, apellido_segundo y nombres
         separado = safe_string(nombre_completo, save_enie=True).split(" ")
         apellido_primero = separado[0]
         apellido_segundo = separado[1]
         nombres = " ".join(separado[2:])
 
-        # Revisar si el Centro de Trabajo existe, de lo contrario insertarlo
+        # Consultar el Centro de Trabajo, si no existe se agrega
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
             centros_trabajos_insertados_contador += 1
 
+        # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se omite
+        puesto = Puesto.query.filter_by(clave=puesto_clave).first()
+        if puesto is None:
+            personas_sin_puestos.append(puesto_clave)
+            continue
+
+        # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
+        tabulador = (
+            Tabulador.query.filter_by(puesto_id=puesto.id)
+            .filter_by(modelo=modelo)
+            .filter_by(nivel=nivel)
+            .filter_by(quinquenio=quinquenios)
+            .first()
+        )
+
+        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se omite
+        if tabulador is None:
+            personas_sin_tabulador.append(rfc)
+            continue
+
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
             persona = Persona(
+                tabulador_id=tabulador.id,
                 rfc=rfc,
                 nombres=nombres,
                 apellido_primero=apellido_primero,
@@ -142,7 +191,10 @@ def alimentar(quincena_clave: str):
             sesion.add(persona)
             personas_insertadas_contador += 1
 
-        # TODO: Si la persona existe, revisar si hubo cambios en sus datos, si los hubo, actualizarlos
+        # TODO: Con la persona...
+        # 1. revisar si hubo cambios en sus datos,
+        # 2. revisar si cambio de tabulador, tal vez revisando la quincena anterior
+        # Si hay cambios, actualizar la persona, tabulador y puesto
 
         # Revisar si la Plaza existe, de lo contrario insertarla
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
@@ -190,6 +242,7 @@ def alimentar(quincena_clave: str):
             deduccion=deduccion,
             importe=impte,
             tipo=nomina_tipo,
+            fecha_pago=fecha_pago,
         )
         sesion.add(nomina)
 
@@ -217,18 +270,43 @@ def alimentar(quincena_clave: str):
     if plazas_insertadas_contador > 0:
         click.echo(click.style(f"  Plazas: {plazas_insertadas_contador} insertadas", fg="green"))
 
+    # Si hubo personas_sin_puestos, mostrarlas en pantalla
+    if len(personas_sin_puestos) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} personas sin puestos:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
+
+    # Si hubo personas_sin_tabulador, mostrarlas en pantalla
+    if len(personas_sin_tabulador) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} personas sin tabulador:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+
     # Mensaje termino
     click.echo(click.style(f"  Nominas:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def alimentar_apoyos_anuales(quincena_clave: str):
+@click.argument("fecha_pago_str", type=str)
+def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
     """Alimentar apoyos anuales"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Definir la fecha_final en base a la clave de la quincena
+    try:
+        fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+    except ValueError:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Validar fecha_pago
+    try:
+        fecha_pago = datetime.strptime(fecha_pago_str, "%Y-%m-%d")
+    except ValueError:
+        click.echo("ERROR: Fecha de pago inválida")
         sys.exit(1)
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
@@ -276,6 +354,8 @@ def alimentar_apoyos_anuales(quincena_clave: str):
     # Iniciar contadores
     contador = 0
     personas_inexistentes = []
+    personas_sin_puestos = []
+    personas_sin_tabulador = []
 
     # Bucle por cada fila
     click.echo("Alimentando Apoyos: ", nl=False)
@@ -288,7 +368,6 @@ def alimentar_apoyos_anuales(quincena_clave: str):
         percepcion = float(hoja.cell_value(fila, 5))
         deduccion = float(hoja.cell_value(fila, 6))
         impte = float(hoja.cell_value(fila, 7))
-        fecha_pago = hoja.cell_value(fila, 8)
 
         # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -1024,8 +1103,8 @@ def generar_timbrados(quincena_clave: str):
                 su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
                 su_cuenta.num_cuenta,  # NUMERO DE CUENTA
                 "",  # PLANTA nula
-                "",  # SALARIO DIARIO
-                "",  # SALARIO INTEGRADO
+                nomina.persona.tabulador.salario_diario,  # SALARIO DIARIO
+                nomina.persona.tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
                 quincena_fecha_inicial,  # FECHA INICIAL PERIODO
                 quincena_fecha_final,  # FECHA FINAL PERIODO
                 "",  # FECHA DE PAGO

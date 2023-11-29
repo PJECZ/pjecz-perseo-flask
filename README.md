@@ -193,6 +193,7 @@ then
             $CLI db reiniciar
             $CLI conceptos alimentar
             $CLI bancos alimentar
+            $CLI tabuladores alimentar
         }
         export -f reiniciar
         echo "   reiniciar"

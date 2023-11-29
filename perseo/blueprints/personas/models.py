@@ -1,7 +1,7 @@
 """
 Personas, modelos
 """
-from sqlalchemy import Column, Date, Integer, String
+from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -16,6 +16,10 @@ class Persona(database.Model, UniversalMixin):
 
     # Clave primaria
     id = Column(Integer, primary_key=True)
+
+    # Clave foránea
+    tabulador_id = Column(Integer, ForeignKey("tabuladores.id"), index=True, nullable=False)
+    tabulador = relationship("Tabulador", back_populates="personas")
 
     # Columnas
     rfc = Column(String(13), nullable=False, unique=True)
@@ -35,6 +39,7 @@ class Persona(database.Model, UniversalMixin):
     cuentas = relationship("Cuenta", back_populates="persona")
     nominas = relationship("Nomina", back_populates="persona")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona")
+    # puestos_historiales = relationship("PuestoHistorial", back_populates="persona")
 
     @property
     def nombre_completo(self):
