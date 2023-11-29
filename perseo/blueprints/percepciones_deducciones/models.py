@@ -1,7 +1,7 @@
 """
 Percepciones Deducciones, modelos
 """
-from sqlalchemy import Column, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Column, Enum, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin

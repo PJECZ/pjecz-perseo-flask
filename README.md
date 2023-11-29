@@ -173,60 +173,61 @@ then
     export PYTHONPATH=$(pwd)
     echo "   PYTHONPATH: ${PYTHONPATH}"
     echo
-    echo "-- Arrancar Flask"
-    alias arrancar="flask run --port=5000"
-    echo "   arrancar = flask run --port=5000"
-    echo
-    echo "-- Dejar corriendo RQ Worker para las tareas en el fondo"
-    alias fondear="rq worker ${TASK_QUEUE}"
-    echo "   fondear = rq worker ${TASK_QUEUE}"
-    echo
     if [ -f cli/app.py ]
     then
-        echo "-- Ejecutar el CLI"
+        echo "-- CLI Ejecutar el CLI"
         alias cli="python3 ${PWD}/cli/app.py"
         echo "   cli --help"
         echo
-        echo "-- 1) Reiniciar la base de datos"
+        echo "-- CLI Reiniciar la base de datos"
         function reiniciar() {
-            export CLI="python3 ${PWD}/cli/app.py"
-            $CLI db reiniciar
-            $CLI conceptos alimentar
-            $CLI bancos alimentar
+            CLI="python3 ${PWD}/cli/app.py"
+            $CLI db reiniciar \
+            && $CLI conceptos alimentar \
+            && $CLI bancos alimentar \
+            && $CLI tabuladores alimentar
         }
         export -f reiniciar
         echo "   reiniciar"
         echo
-        echo "-- 2) Recargar archivos de explotacion"
+        echo "-- CLI Recargar archivos de explotacion"
         function recargar() {
-            export CLAVE=$1
-            export CLI="python3 ${PWD}/cli/app.py"
-            $CLI percepciones_deducciones alimentar $CLAVE
-            $CLI nominas alimentar $CLAVE
-            $CLI cuentas alimentar-bancarias $CLAVE
-            $CLI cuentas alimentar-monederos $CLAVE
-            $CLI beneficiarios alimentar $CLAVE
-            #$CLI centros_trabajos sincronizar
-            #$CLI personas sincronizar
+            CLI="python3 ${PWD}/cli/app.py"
+            CLAVE=$1
+            HOY=$(date +%Y-%m-%d)
+            $CLI percepciones_deducciones alimentar $CLAVE \
+            && $CLI nominas alimentar $CLAVE $HOY \
+            && $CLI cuentas alimentar-bancarias $CLAVE \
+            && $CLI cuentas alimentar-monederos $CLAVE \
+            && $CLI beneficiarios alimentar $CLAVE
         }
         export -f recargar
         echo "   recargar <QUINCENA>"
         echo
-        echo "-- Generar cada producto"
+        echo "-- CLI Consultar a la API de RRHH"
+        echo "   cli centros_trabajos sincronizar"
+        echo "   cli personas sincronizar"
+        echo
+        echo "-- CLI Generar archivos XLSX de nominas, monederos, pensionados y dispersiones pensionados"
         function generar() {
-            export CLAVE=$1
-            export CLI="python3 ${PWD}/cli/app.py"
-            $CLI bancos reiniciar-consecutivos-generados
-            $CLI nominas generar-nominas $CLAVE
-            $CLI nominas generar-monederos $CLAVE
-            $CLI nominas generar-pensionados $CLAVE
-            $CLI nominas generar-dispersiones-pensionados $CLAVE
+            CLI="python3 ${PWD}/cli/app.py"
+            CLAVE=$1
+            $CLI bancos reiniciar-consecutivos-generados \
+            && $CLI nominas generar-nominas $CLAVE \
+            && $CLI nominas generar-monederos $CLAVE \
+            && $CLI nominas generar-pensionados $CLAVE \
+            && $CLI nominas generar-dispersiones-pensionados $CLAVE
         }
         export -f generar
         echo "   generar <QUINCENA>"
         echo
     fi
-fi
+    echo "-- Arrancar Flask o RQ Worker"
+    alias arrancar="flask run --port=5012"
+    alias fondear="rq worker ${TASK_QUEUE}"
+    echo "   arrancar = flask run --port=5012"
+    echo "   fondear = rq worker ${TASK_QUEUE}"
+    echo
 ```
 
 ## Cargar las variables de entorno y el entorno virtual
@@ -257,6 +258,12 @@ Con los archivos de explotacion en el directorio `EXPLOTACION_BASE_DIR` puede re
 
 ```bash
 recargar 202320
+```
+
+Para recargar todo el año 2023
+
+```bash
+for ((i = 202301 ; i < 202322 ; i++ )); do recargar "$i"; done
 ```
 
 ## Generar cada producto

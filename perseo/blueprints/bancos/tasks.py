@@ -60,7 +60,7 @@ def reiniciar_consecutivos_generados():
     sesion.commit()
 
     # Mensaje de termino
-    bancos_actualizados_str = ", ".join([b.nombre for b in bancos_actualizados])
+    bancos_actualizados_str = ", ".join(bancos_actualizados)
     mensaje = f"Reiniciados los consecutivos generados: {bancos_actualizados_str}"
     set_task_progress(100, mensaje)
     bitacora.info(mensaje)

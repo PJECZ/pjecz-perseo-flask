@@ -102,7 +102,7 @@ def generar(quincena_clave: str):
 
         # Si no tiene cuentas, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if len(cuentas) == 0:
-            personas_sin_cuentas.append(bq.persona)
+            personas_sin_cuentas.append(bq.persona.rfc)
             continue
 
         # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
@@ -114,7 +114,7 @@ def generar(quincena_clave: str):
 
         # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if su_cuenta is None:
-            personas_sin_cuentas.append(bq.persona)
+            personas_sin_cuentas.append(bq.persona.rfc)
             continue
 
         # Tomar el banco de la cuenta de la persona
@@ -158,14 +158,13 @@ def generar(quincena_clave: str):
     # Guardar el archivo XLSX
     libro.save(nombre_archivo)
 
-    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    # Si hubo personas sin cuentas, se muestran
     if len(personas_sin_cuentas) > 0:
-        click.echo("AVISO: Hubo personas sin cuentas:")
-        for persona in personas_sin_cuentas:
-            click.echo(f"- {persona.rfc} {persona.nombre_completo}")
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(f"Beneficiarios quincenas: {contador} filas en {nombre_archivo}")
+    click.echo(f"  Generar Beneficiarios Quincenas: {contador} filas en {nombre_archivo}")
 
 
 cli.add_command(generar)
