@@ -175,11 +175,11 @@ then
     echo
     if [ -f cli/app.py ]
     then
-        echo "-- CLI Ejecutar el CLI"
+        echo "-- Ejecutar el CLI"
         alias cli="python3 ${PWD}/cli/app.py"
         echo "   cli --help"
         echo
-        echo "-- CLI Reiniciar la base de datos"
+        echo "-- Reiniciar la base de datos"
         function reiniciar() {
             CLI="python3 ${PWD}/cli/app.py"
             $CLI db reiniciar \
@@ -190,7 +190,7 @@ then
         export -f reiniciar
         echo "   reiniciar"
         echo
-        echo "-- CLI Recargar archivos de explotacion"
+        echo "-- Recargar archivos de explotacion"
         function recargar() {
             CLI="python3 ${PWD}/cli/app.py"
             CLAVE=$1
@@ -204,11 +204,15 @@ then
         export -f recargar
         echo "   recargar <QUINCENA>"
         echo
-        echo "-- CLI Consultar a la API de RRHH"
+        echo "-- Consultar a la API de RRHH"
         echo "   cli centros_trabajos sincronizar"
         echo "   cli personas sincronizar"
         echo
-        echo "-- CLI Generar archivos XLSX de nominas, monederos, pensionados y dispersiones pensionados"
+        echo "-- Eliminar o recuperar Conceptos segun no/si se usen"
+        echo "   cli conceptos eliminar-recuperar"
+        echo "   cli conceptos eliminar-recuperar --quincena-clave 202320"
+        echo
+        echo "-- Generar archivos XLSX de nominas, monederos, pensionados y dispersiones pensionados"
         function generar() {
             CLI="python3 ${PWD}/cli/app.py"
             CLAVE=$1
