@@ -231,9 +231,9 @@ def reiniciar_consecutivos_generados():
     """Lanzar tarea en el fondo para reiniciar los consecutivos generados de cada banco con el consecutivo"""
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.reiniciar_consecutivos_generados",
-        mensaje="Lanzando reiniciar_consecutivos_generados...",
+        comando="bancos.tasks.lanzar_reiniciar_consecutivos_generados",
+        mensaje="Lanzando Reiniciar Consecutivos Generados...",
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     # Redireccionar al listado de productos activos
     return redirect(url_for("bancos.list_active"))
