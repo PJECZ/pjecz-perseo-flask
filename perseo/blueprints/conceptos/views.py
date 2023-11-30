@@ -138,7 +138,7 @@ def edit(concepto_id):
         # Si es valido actualizar
         if es_valido:
             concepto.clave = clave
-            concepto.descripcion = safe_string(form.descripcion.data)
+            concepto.descripcion = safe_string(form.descripcion.data, save_enie=True)
             concepto.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),

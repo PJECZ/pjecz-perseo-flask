@@ -138,7 +138,7 @@ def edit(plaza_id):
         # Si es valido actualizar
         if es_valido:
             plaza.clave = clave
-            plaza.descripcion = safe_string(form.descripcion.data)
+            plaza.descripcion = safe_string(form.descripcion.data, save_enie=True)
             plaza.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),

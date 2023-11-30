@@ -166,7 +166,7 @@ def edit(banco_id):
                 flash("La clave para dispersiones de pensionados ya está en uso. Debe de ser única.", "warning")
         # Si es valido actualizar
         if es_valido:
-            banco.nombre = safe_string(form.nombre.data)
+            banco.nombre = safe_string(form.nombre.data, save_enie=True)
             banco.clave = safe_string(form.clave.data)
             banco.clave_dispersion_pensionados = safe_string(form.clave_dispersion_pensionados.data)
             banco.consecutivo = form.consecutivo.data

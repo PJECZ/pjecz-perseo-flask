@@ -138,7 +138,7 @@ def edit(centro_trabajo_id):
         # Si es valido actualizar
         if es_valido:
             centro_trabajo.clave = clave
-            centro_trabajo.descripcion = safe_string(form.descripcion.data)
+            centro_trabajo.descripcion = safe_string(form.descripcion.data, save_enie=True)
             centro_trabajo.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),

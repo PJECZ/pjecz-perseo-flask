@@ -134,7 +134,7 @@ def edit(producto_id):
         # Si es valido actualizar
         if es_valido:
             producto.clave = clave
-            producto.descripcion = safe_string(form.descripcion.data)
+            producto.descripcion = safe_string(form.descripcion.data, save_enie=True)
             producto.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
