@@ -352,6 +352,24 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
         sesion.add(quincena)
         sesion.commit()
 
+    # Consultar el concepto con clave PAZ que es APOYO ANUAL, si no se encuentra, error
+    concepto_paz = Concepto.query.filter_by(clave="PAZ").first()
+    if concepto_paz is None:
+        click.echo("ERROR: No existe el concepto con clave PAZ")
+        sys.exit(1)
+
+    # Consultar el concepto con clave DAZ que es ISR DE APOYO DE FIN DE AÑO, si no se encuentra, error
+    concepto_daz = Concepto.query.filter_by(clave="DAZ").first()
+    if concepto_daz is None:
+        click.echo("ERROR: No existe el concepto con clave DAZ")
+        sys.exit(1)
+
+    # Consultar el concepto con clave D62 que es PENSION ALIMENTICIA, si no se encuentra, error
+    concepto_d62 = Concepto.query.filter_by(clave="D62").first()
+    if concepto_d62 is None:
+        click.echo("ERROR: No existe el concepto con clave D62")
+        sys.exit(1)
+
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
 
@@ -377,8 +395,12 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
         deduccion = float(hoja.cell_value(fila, 5))
         impte = float(hoja.cell_value(fila, 6))
         # fecha_pago es la columna 7
-        desde = hoja.cell_value(fila, 8)
-        hasta = hoja.cell_value(fila, 9)
+        # desde = hoja.cell_value(fila, 8)
+        # hasta = hoja.cell_value(fila, 9)
+        try:
+            impte_concepto_d62 = float(hoja.cell_value(fila, 10))
+        except ValueError:
+            impte_concepto_d62 = 0.0
 
         # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -410,7 +432,44 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             nominas_existentes.append(rfc)
             continue
 
-        # Alimentar nomina
+        # Alimentar percepcion en PercepcionDeduccion, con concepto PAZ
+        percepcion_deduccion_paz = PercepcionDeduccion(
+            centro_trabajo=centro_trabajo,
+            concepto=concepto_paz,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            importe=percepcion,
+        )
+        sesion.add(percepcion_deduccion_paz)
+
+        # Alimentar deduccion en PercepcionDeduccion, con concepto DAZ
+        percepcion_deduccion_daz = PercepcionDeduccion(
+            centro_trabajo=centro_trabajo,
+            concepto=concepto_daz,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            importe=deduccion,
+        )
+        sesion.add(percepcion_deduccion_daz)
+
+        # Si tiene concepto_d62, alimentar registro en PercepcionDeduccion
+        if impte_concepto_d62 > 0:
+            percepcion_deduccion_d62 = PercepcionDeduccion(
+                centro_trabajo=centro_trabajo,
+                concepto=concepto_d62,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                importe=impte_concepto_d62,
+            )
+            sesion.add(percepcion_deduccion_d62)
+
+            # Sumar a deduccion el impte_concepto_d62
+            deduccion += impte_concepto_d62
+
+        # Alimentar registro en Nomina
         nomina = Nomina(
             centro_trabajo=centro_trabajo,
             persona=persona,
@@ -1051,12 +1110,26 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     if tipo == "SALARIO":
         # Consultar los conceptos activos
         conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
-        conceptos_dict = {concepto.clave: concepto for concepto in conceptos}
+        # Inicializar el diccionario de conceptos
+        conceptos_dict = {}
+        # Ordenar las claves, primero las que empiezan con P
+        for concepto in conceptos:
+            if concepto.clave.startswith("P"):
+                conceptos_dict[concepto.clave] = concepto
+        # Ordenar las claves, primero las que empiezan con P
+        for concepto in conceptos:
+            if concepto.clave.startswith("D"):
+                conceptos_dict[concepto.clave] = concepto
+        # Al final agregar las claves que no empiezan con P o D
+        for concepto in conceptos:
+            if not concepto.clave.startswith("P") and not concepto.clave.startswith("D"):
+                conceptos_dict[concepto.clave] = concepto
     elif tipo == "APOYO ANUAL":
         # Si el tipo es APOYO ANUAL armar un diccionario con PAZ y DAZ como None
         conceptos_dict = {
             "PAZ": None,  # Percepcion de Apoyo Anual
-            "DAZ": None,  # Deduccion de Apoyo Anual
+            "DAZ": None,  # Deduccion ISR Apoyo Anual
+            "D62": None,  # Deduccion Pension Alimenticia
         }
 
     # Consultar las Nominas activas de la quincena, del tipo dado, juntar con personas para ordenar por RFC
@@ -1223,8 +1296,8 @@ def generar_timbrados(quincena_clave: str, tipo: str):
         ]
 
         # Fila parte 2
+        fila_parte_2 = []
         if tipo == "SALARIO":
-            fila_parte_2 = []
             # Bucle por los conceptos
             for _, concepto in conceptos_dict.items():
                 # Consultar la P-D de la quincena, la persona y el concepto
@@ -1239,10 +1312,33 @@ def generar_timbrados(quincena_clave: str, tipo: str):
                 else:
                     fila_parte_2.append(0)
         elif tipo == "APOYO ANUAL":
-            fila_parte_2 = [
-                nomina.percepcion,  # PAZ Percepcion de Apoyo Anual
-                nomina.deduccion,  # DAZ Deduccion de Apoyo Anual
-            ]
+            # Consultar la PercepcionDeduccion con concepto PAZ
+            percepcion_deduccion_paz = (
+                PercepcionDeduccion.query.join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona.id)
+                .filter(Concepto.clave == "PAZ")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_paz.importe if percepcion_deduccion_paz is not None else 0)
+            # Consultar la PercepcionDeduccion con concepto DAZ
+            percepcion_deduccion_daz = (
+                PercepcionDeduccion.query.join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona.id)
+                .filter(Concepto.clave == "DAZ")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_daz.importe if percepcion_deduccion_daz is not None else 0)
+            # Consultar la PercepcionDeduccion con concepto D62
+            percepcion_deduccion_d62 = (
+                PercepcionDeduccion.query.join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona.id)
+                .filter(Concepto.clave == "D62")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_d62.importe if percepcion_deduccion_d62 is not None else 0)
 
         # Fila parte 3
         fila_parte_3 = [

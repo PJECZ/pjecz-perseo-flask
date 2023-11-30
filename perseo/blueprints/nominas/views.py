@@ -92,7 +92,7 @@ def datatable_json():
                 "deduccion": resultado.deduccion,
                 "importe": resultado.importe,
                 "num_cheque": resultado.num_cheque,
-                "fecha_pago": resultado.fecha_pago,
+                "fecha_pago": resultado.fecha_pago.strftime("%Y-%m-%d"),
             }
         )
     # Entregar JSON
