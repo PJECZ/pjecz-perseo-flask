@@ -97,6 +97,10 @@ def eliminar_recuperar(quincena_clave: str):
     conceptos_eliminados = []
     conceptos_recuperados = []
     for concepto in conceptos:
+        # Se salta si tiene clave PAZ, DAZ y D62 porque se usan en el apoyo anual
+        if concepto.clave in ["PAZ", "DAZ", "D62"]:
+            continue
+
         # Consultar las Percepciones-Deducciones que usen el concepto en turno
         percepciones_deducciones = PercepcionDeduccion.query.filter_by(concepto_id=concepto.id)
 
