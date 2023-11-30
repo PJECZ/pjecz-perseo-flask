@@ -28,6 +28,10 @@
         {{ detail.label_value('CURP', persona.curp) }}
         {{ detail.label_value('No. empleado', persona.num_empleado) }}
         {{ detail.label_value('Modelo', persona.modelo) }}
+        {{ detail.label_value('Fecha de ingreso gobierno', persona.ingreso_gobierno_fecha) }}
+        {{ detail.label_value('Fecha de ingreso P.J.', persona.ingreso_pj_fecha) }}
+        {{ detail.label_value('Fecha de nacimiento', persona.nacimiento_fecha) }}
+        {{ detail.label_value('Código Postal fiscal', persona.codigo_postal_fiscal) }}
         {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
     <!-- Cuentas de la persona -->

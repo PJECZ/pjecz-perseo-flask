@@ -1,7 +1,7 @@
 """
 Tabuladores, modelos
 """
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -21,12 +21,13 @@ class Tabulador(database.Model, UniversalMixin):
     puesto_id = Column(Integer, ForeignKey("puestos.id"), index=True, nullable=False)
     puesto = relationship("Puesto", back_populates="tabuladores")
 
-    # Columnas que hacen una combinación única
+    # Columnas que junto con el puesto hacen una combinación única
     modelo = Column(Integer, nullable=False)
     nivel = Column(Integer, nullable=False)
     quinquenio = Column(Integer, nullable=False)
 
     # Columnas independientes
+    fecha = Column(Date(), nullable=False)
     sueldo_base = Column(Numeric(precision=24, scale=4), nullable=False)
     incentivo = Column(Numeric(precision=24, scale=4), nullable=False)
     monedero = Column(Numeric(precision=24, scale=4), nullable=False)
@@ -43,7 +44,6 @@ class Tabulador(database.Model, UniversalMixin):
     prima_vacacional_mensual_adicional = Column(Numeric(precision=24, scale=4), nullable=False)
     total_percepciones_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
     salario_diario_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
-    fecha = Column(Date(), nullable=False)
 
     # Hijos
     personas = relationship("Persona", back_populates="tabulador")

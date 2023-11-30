@@ -19,10 +19,12 @@
             {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
             {% call f.form_group(form.centro_trabajo_clave, readonly=true) %}{% endcall %}
             {% call f.form_group(form.plaza_clave, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.tipo) %}{% endcall %}
             {% call f.form_group(form.percepcion) %}{% endcall %}
             {% call f.form_group(form.deduccion) %}{% endcall %}
             {% call f.form_group(form.importe) %}{% endcall %}
-            {% call f.form_group(form.tipo) %}{% endcall %}
+            {% call f.form_group(form.num_cheque) %}{% endcall %}
+            {% call f.form_group(form.fecha_pago) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}

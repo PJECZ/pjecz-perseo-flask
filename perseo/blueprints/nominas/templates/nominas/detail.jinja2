@@ -44,11 +44,12 @@
         {% else %}
             {{ detail.label_value('Plaza', plaza_texto) }}
         {% endif %}
+        {{ detail.label_value('Tipo', nomina.tipo) }}
         {{ detail.label_value('Percepción', nomina.percepcion) }}
         {{ detail.label_value('Deducción', nomina.deduccion) }}
         {{ detail.label_value('Importe', nomina.importe) }}
         {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
-        {{ detail.label_value('Tipo', nomina.tipo) }}
+        {{ detail.label_value('Fecha de pago', moment(nomina.fecha_pago).format('DD MMM YYYY')) }}
         {{ detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
 {% endblock %}

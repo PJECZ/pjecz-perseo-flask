@@ -1,0 +1,35 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Puesto {{ puesto.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Puesto ' + puesto.clave) %}
+        {{ topbar.button_previous('Puestos', url_for('puestos.list_active')) }}
+        {# if current_user.can_edit('PUESTOS') %}
+            {{ topbar.button_edit('Editar', url_for('puestos.edit', puesto_id=puesto.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('PUESTOS') %}
+            {% if puesto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('puestos.delete', puesto_id=puesto.id)) }}{% endif %}
+            {% if puesto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('puestos.recover', puesto_id=puesto.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=puesto.estatus) %}
+        {{ detail.label_value_big('Clave', puesto.clave) }}
+        {{ detail.label_value('Descripción', puesto.descripcion) }}
+        {{ detail.label_value('Creado', moment(puesto.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('PUESTOS') %}
+        {% if puesto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + puesto.clave + '?') }}{% endif %}
+        {% if puesto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + puesto.clave + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

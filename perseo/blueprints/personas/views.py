@@ -68,6 +68,7 @@ def datatable_json():
                 "curp": resultado.curp,
                 "num_empleado": resultado.num_empleado,
                 "modelo": resultado.modelo,
+                "codigo_postal_fiscal": resultado.codigo_postal_fiscal,
             }
         )
     # Entregar JSON
@@ -107,7 +108,7 @@ def detail(persona_id):
 @personas.route("/personas/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
-    """Nuevo Persona"""
+    """Nueva Persona"""
     form = PersonaForm()
     if form.validate_on_submit():
         es_valido = True
@@ -139,6 +140,13 @@ def new():
                 apellido_primero=safe_string(form.apellido_primero.data, save_enie=True),
                 apellido_segundo=safe_string(form.apellido_segundo.data, save_enie=True),
                 curp=curp,
+                num_empleado=form.num_empleado.data,
+                modelo=form.modelo.data,
+                ingreso_gobierno_fecha=form.ingreso_gobierno_fecha.data,
+                ingreso_pj_fecha=form.ingreso_pj_fecha.data,
+                nacimiento_fecha=form.nacimiento_fecha.data,
+                codigo_postal_fiscal=form.codigo_postal_fiscal.data,
+                seguridad_social=form.seguridad_social.data,
             )
             persona.save()
             bitacora = Bitacora(
@@ -192,6 +200,13 @@ def edit(persona_id):
             persona.apellido_primero = safe_string(form.apellido_primero.data, save_enie=True)
             persona.apellido_segundo = safe_string(form.apellido_segundo.data, save_enie=True)
             persona.curp = curp
+            persona.num_empleado = form.num_empleado.data
+            persona.modelo = form.modelo.data
+            persona.ingreso_gobierno_fecha = form.ingreso_gobierno_fecha.data
+            persona.ingreso_pj_fecha = form.ingreso_pj_fecha.data
+            persona.nacimiento_fecha = form.nacimiento_fecha.data
+            persona.codigo_postal_fiscal = form.codigo_postal_fiscal.data
+            persona.seguridad_social = form.seguridad_social.data
             persona.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -207,6 +222,13 @@ def edit(persona_id):
     form.apellido_primero.data = persona.apellido_primero
     form.apellido_segundo.data = persona.apellido_segundo
     form.curp.data = persona.curp
+    form.num_empleado.data = persona.num_empleado
+    form.modelo.data = persona.modelo
+    form.ingreso_gobierno_fecha.data = persona.ingreso_gobierno_fecha
+    form.ingreso_pj_fecha.data = persona.ingreso_pj_fecha
+    form.nacimiento_fecha.data = persona.nacimiento_fecha
+    form.codigo_postal_fiscal.data = persona.codigo_postal_fiscal
+    form.seguridad_social.data = persona.seguridad_social
     return render_template("personas/edit.jinja2", form=form, persona=persona)
 
 

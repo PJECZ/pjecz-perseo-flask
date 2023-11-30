@@ -1,0 +1,58 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Tabulador ID {{ tabulador.id }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Tabulador ID ' + tabulador.id | string) %}
+        {{ topbar.button_previous('Tabuladores', url_for('tabuladores.list_active')) }}
+        {# if current_user.can_edit('TABULADORES') %}
+            {{ topbar.button_edit('Editar', url_for('tabuladores.edit', tabulador_id=tabulador.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('TABULADORES') %}
+            {% if tabulador.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('tabuladores.delete', tabulador_id=tabulador.id)) }}{% endif %}
+            {% if tabulador.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('tabuladores.recover', tabulador_id=tabulador.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=tabulador.estatus) %}
+        {{ detail.label_value_big('ID', tabulador.id) }}
+        {# Columnas que hacen una combinacion unica #}
+        {{ detail.label_value('Puesto', tabulador.puesto.clave) }}
+        {{ detail.label_value('Modelo', tabulador.modelo) }}
+        {{ detail.label_value('Nivel', tabulador.nivel) }}
+        {{ detail.label_value('Quinquenio', tabulador.quinquenio) }}
+        {# Columnas independientes #}
+        {{ detail.label_value('Fecha inicial', tabulador.fecha) }}
+        {{ detail.label_value('Sueldo base', tabulador.sueldo_base) }}
+        {{ detail.label_value('Incentivo', tabulador.incentivo) }}
+        {{ detail.label_value('Monedero', tabulador.monedero) }}
+        {{ detail.label_value('Recreación Cultura Deporte', tabulador.rec_cul_dep) }}
+        {{ detail.label_value('Sobresueldo', tabulador.sobresueldo) }}
+        {{ detail.label_value('Recreación Cultura Deporte gravado', tabulador.rec_dep_cul_gravado) }}
+        {{ detail.label_value('Recreación Cultura Deporte excento', tabulador.rec_dep_cul_excento) }}
+        {{ detail.label_value('Ayuda Transporte', tabulador.ayuda_transp) }}
+        {{ detail.label_value('Quinquenio', tabulador.monto_quinquenio) }}
+        {{ detail.label_value('Total Percepciones', tabulador.total_percepciones) }}
+        {{ detail.label_value('Salario Diario', tabulador.salario_diario) }}
+        {{ detail.label_value('Prima Vacacional mensual', tabulador.prima_vacacional_mensual) }}
+        {{ detail.label_value('Aguinaldo mensual', tabulador.aguinaldo_mensual) }}
+        {{ detail.label_value('Prima Vacacional adicional', tabulador.prima_vacacional_mensual_adicional) }}
+        {{ detail.label_value('Total Percepciones integrado', tabulador.total_percepciones_integrado) }}
+        {{ detail.label_value('Salario Diario integrado', tabulador.salario_diario_integrado) }}
+        {# Creado #}
+        {{ detail.label_value('Creado', moment(tabulador.creado, local=True).format('DD MMM YYYY')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('TABULADORES') %}
+        {% if tabulador.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + tabulador.id | string + '?') }}{% endif %}
+        {% if tabulador.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + tabulador.id | string + '?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

@@ -87,11 +87,12 @@ def datatable_json():
                 "persona_nombre_completo": resultado.persona.nombre_completo,
                 "centro_trabajo_clave": resultado.centro_trabajo.clave,
                 "plaza_clave": resultado.plaza.clave,
+                "tipo": resultado.tipo,
                 "percepcion": resultado.percepcion,
                 "deduccion": resultado.deduccion,
                 "importe": resultado.importe,
-                "tipo": resultado.tipo,
                 "num_cheque": resultado.num_cheque,
+                "fecha_pago": resultado.fecha_pago,
             }
         )
     # Entregar JSON
@@ -135,10 +136,12 @@ def edit(nomina_id):
     nomina = Nomina.query.get_or_404(nomina_id)
     form = NominaEditForm()
     if form.validate_on_submit():
-        nomina.percepcion = safe_string(form.percepcion.data)
-        nomina.deduccion = safe_string(form.deduccion.data)
-        nomina.importe = safe_string(form.importe.data)
+        nomina.percepcion = form.percepcion.data
+        nomina.deduccion = form.deduccion.data
+        nomina.importe = form.importe.data
         nomina.tipo = safe_string(form.tipo.data)
+        nomina.num_cheque = safe_string(form.num_cheque.data)
+        nomina.fecha_pago = form.fecha_pago.data
         nomina.save()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -154,10 +157,12 @@ def edit(nomina_id):
     form.persona_nombre_completo.data = nomina.persona.nombre_completo  # Solo lectura
     form.centro_trabajo_clave.data = nomina.centro_trabajo.clave  # Solo lectura
     form.plaza_clave.data = nomina.plaza.clave  # Solo lectura
+    form.tipo.data = nomina.tipo
     form.percepcion.data = nomina.percepcion
     form.deduccion.data = nomina.deduccion
     form.importe.data = nomina.importe
-    form.tipo.data = nomina.tipo
+    form.num_cheque.data = nomina.num_cheque
+    form.fecha_pago.data = nomina.fecha_pago
     return render_template("nominas/edit.jinja2", form=form, nomina=nomina)
 
 
