@@ -38,8 +38,8 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
-    # if "persona_id" in request.form:
-    #     consulta = consulta.filter_by(persona_id=request.form["persona_id"])
+    if "puesto_id" in request.form:
+        consulta = consulta.filter_by(puesto_id=request.form["puesto_id"])
     # Luego filtrar por columnas de otras tablas
     # if "persona_rfc" in request.form:
     #     consulta = consulta.join(Persona)
@@ -53,9 +53,19 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "nombre": resultado.nombre,
+                    "id": resultado.id,
                     "url": url_for("tabuladores.detail", tabulador_id=resultado.id),
                 },
+                "puesto": {
+                    "clave": resultado.puesto.clave,
+                    "url": url_for("puestos.detail", puesto_id=resultado.puesto_id),
+                },
+                "modelo": resultado.modelo,
+                "nivel": resultado.nivel,
+                "quinquenio": resultado.quinquenio,
+                "fecha": resultado.fecha.strftime("%Y-%m-%d"),
+                "sueldo_base": resultado.sueldo_base,
+                "monedero": resultado.monedero,
             }
         )
     # Entregar JSON
