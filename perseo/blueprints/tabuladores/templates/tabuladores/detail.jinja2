@@ -68,13 +68,20 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
     <!-- Personas en el Tabulador -->
-    {{ detail.config_datatable() }}
     {% if current_user.can_view('PERSONAS') %}
         <script>
-            configDataTable['ajax']['url'] = '/personas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'tabulador_id': {{ tabulador.id}} };
-            configDataTable['columns'] = [
+            // DataTable Personas
+            let configDTPersonas = constructorDataTable.config();
+            configDTPersonas['ajax']['url'] = '/personas/datatable_json';
+            configDTPersonas['ajax']['data'] = { 'estatus': "A", 'tabulador_id': {{ tabulador.id}} };
+            configDTPersonas['columns'] = [
                 { data: 'detalle' },
                 { data: 'nombres' },
                 { data: 'apellido_primero' },
@@ -83,7 +90,7 @@
                 { data: 'codigo_postal_fiscal' },
                 { data: 'modelo' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTPersonas['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -92,7 +99,7 @@
                     }
                 }
             ];
-            $('#personas_datatable').DataTable(configDataTable);
+            $('#personas_datatable').DataTable(configDTPersonas);
         </script>
     {% endif %}
     <!-- Modales -->

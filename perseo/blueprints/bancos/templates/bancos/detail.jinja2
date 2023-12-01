@@ -135,10 +135,10 @@
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
+    <!-- Cuentas de las Persona -->
     {% if current_user.can_view('CUENTAS') %}
-        <!-- Cuentas de las Persona -->
         <script>
-            // DataTable Cuentas de las Personas
+            // DataTable Cuentas
             let configDTCuentas = constructorDataTable.config();
             configDTCuentas['ajax']['url'] = '/cuentas/datatable_json';
             configDTCuentas['ajax']['data'] = { 'estatus': "A", 'banco_id': {{ banco.id }} };
@@ -157,7 +157,7 @@
                     }
                 }
             ];
-            // Filtros Cuentas de las Personas
+            // Filtros Cuentas
             const filtrosPersonas = new FiltrosDataTable('#cuentas_datatable', configDTCuentas);
             filtrosPersonas.agregarInput('filtroPersonaRFC', 'persona_rfc');
             filtrosPersonas.agregarInput('filtroPersonaNombres', 'persona_nombres');
@@ -166,8 +166,8 @@
             filtrosPersonas.precargar();
         </script>
     {% endif %}
+    <!-- Cuentas de los Beneficiarios -->
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
-        <!-- Cuentas de los Beneficiarios -->
         <script>
             // DataTable Cuentas de los Beneficiarios
             let configDTBeneficiariosCuentas = constructorDataTable.config();

@@ -209,15 +209,14 @@
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Nominas -->
+    <!-- Nominas en la Quincena-->
     {% if current_user.can_view('NOMINAS') %}
-        <!-- Nominas de la Quincena -->
         <script>
             // DataTable Nominas
-            let configDataTable = constructorDataTable.config();
-            configDataTable['ajax']['url'] = '/nominas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'quincena_id': {{ quincena.id }} };
-            configDataTable['columns'] = [
+            let configDTNominas = constructorDataTable.config();
+            configDTNominas['ajax']['url'] = '/nominas/datatable_json';
+            configDTNominas['ajax']['data'] = { 'estatus': "A", 'quincena_id': {{ quincena.id }} };
+            configDTNominas['columns'] = [
                 { data: 'detalle' },
                 { data: 'persona_rfc' },
                 { data: 'persona_nombre_completo' },
@@ -227,7 +226,7 @@
                 { data: 'tipo' },
                 { data: 'num_cheque' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTNominas['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -242,7 +241,7 @@
                 }
             ];
             // Filtros Nominas
-            const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDataTable);
+            const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
             filtrosNominas.agregarInput('filtroPersonaRFC', 'persona_rfc');
             filtrosNominas.agregarInput('filtroPersonaNombres', 'persona_nombres');
             filtrosNominas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');

@@ -63,6 +63,24 @@
     <!-- Nominas de la persona -->
     {% if current_user.can_view('NOMINAS') %}
         {% call detail.card('Nominas') %}
+            <!-- Filtros Nominas -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena">
+                                <label for="filtroQuincena">Quincena</label>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Nominas -->
             <table id="nominas_datatable" class="table display nowrap" style="width:100%">
                 <thead>
                     <tr>
@@ -78,23 +96,69 @@
             </table>
         {% endcall %}
     {% endif %}
+    <!-- Percepciones-Deducciones de la persona -->
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+        {% call detail.card('Percepciones-Deducciones') %}
+        <!-- Filtros Percepciones-Deducciones -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPercepcionesDeducciones.buscar(); return false;">
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena" style="text-transform: uppercase;">
+                            <label for="filtroQuincena">Quincena</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroConceptoClave" type="text" class="form-control" aria-label="Concepto" style="text-transform: uppercase;">
+                            <label for="filtroConceptoClave">Concepto</label>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPercepcionesDeducciones.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPercepcionesDeducciones.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+            <!-- DataTable Percepciones-Deducciones -->
+            <table id="percepciones_deducciones_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>Centro de trabajo</th>
+                        <th>Concepto</th>
+                        <th>Plaza</th>
+                        <th style="text-align:right">Importe</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ detail.config_datatable() }}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
     <!-- Cuentas de la persona -->
     {% if current_user.can_view('CUENTAS') %}
         <script>
-            const constructorDataTableCuentas = new ConfigDataTable( '{{ csrf_token() }}' );
-            let configDataTableCuentas = constructorDataTableCuentas.config();
-            configDataTableCuentas['ajax']['url'] = '/cuentas/datatable_json';
-            configDataTableCuentas['ajax']['data'] = { estatus: 'A', persona_id: {{ persona.id }} };
-            configDataTableCuentas['columns'] = [
+            // DataTable Cuentas
+            let configDTCuentas = constructorDataTable.config();
+            configDTCuentas['ajax']['url'] = '/cuentas/datatable_json';
+            configDTCuentas['ajax']['data'] = { estatus: 'A', persona_id: {{ persona.id }} };
+            configDTCuentas['columns'] = [
                 { data: 'detalle' },
                 { data: 'banco_nombre' },
                 { data: 'num_cuenta' }
             ];
-            configDataTableCuentas['columnDefs'] = [
+            configDTCuentas['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -103,15 +167,17 @@
                     }
                 }
             ];
-            $('#cuentas_datatable').DataTable(configDataTableCuentas);
+            $('#cuentas_datatable').DataTable(configDTCuentas);
         </script>
     {% endif %}
     <!-- Nominas de la persona -->
     {% if current_user.can_view('NOMINAS') %}
         <script>
-            configDataTable['ajax']['url'] = '/nominas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
-            configDataTable['columns'] = [
+            // DataTable Nominas
+            let configDTNominas = constructorDataTable.config();
+            configDTNominas['ajax']['url'] = '/nominas/datatable_json';
+            configDTNominas['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
+            configDTNominas['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
                 { data: 'percepcion' },
@@ -120,7 +186,7 @@
                 { data: 'tipo' },
                 { data: 'num_cheque' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTNominas['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -134,7 +200,45 @@
                     className: "dt-body-right",
                 }
             ];
-            $('#nominas_datatable').DataTable(configDataTable);
+            // Filtros Nominas
+            const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
+            filtrosNominas.agregarInput('filtroQuincena', 'quincena_clave');
+            filtrosNominas.precargar();
+        </script>
+    {% endif %}
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+        <script>
+            // DataTable Percepciones-Deducciones
+            let configDTPercepcionesDeducciones = constructorDataTable.config();
+            configDTPercepcionesDeducciones['ajax']['url'] = '/percepciones_deducciones/datatable_json';
+            configDTPercepcionesDeducciones['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
+            configDTPercepcionesDeducciones['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena_clave' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'concepto_clave' },
+                { data: 'plaza_clave' },
+                { data: 'importe' }
+            ];
+            configDTPercepcionesDeducciones['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 5, // importe
+                    render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            // Filtros Percepciones-Deducciones
+            const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPercepcionesDeducciones);
+            filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
+            filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
+            filtrosPercepcionesDeducciones.precargar();
         </script>
     {% endif %}
     <!-- Modales -->

@@ -44,13 +44,20 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- DataTables Tabuladores -->
-    {{ detail.config_datatable() }}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Tabuladores en el Puesto -->
     {% if current_user.can_view('TABULADORES') %}
         <script>
-            configDataTable['ajax']['url'] = '/tabuladores/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'puesto_id': {{ puesto.id}} };
-            configDataTable['columns'] = [
+            // DataTable Tabuladores
+            let configDTTabuladores = constructorDataTable.config();
+            configDTTabuladores['ajax']['url'] = '/tabuladores/datatable_json';
+            configDTTabuladores['ajax']['data'] = { 'estatus': "A", 'puesto_id': {{ puesto.id}} };
+            configDTTabuladores['columns'] = [
                 { data: 'detalle' },
                 { data: 'modelo' },
                 { data: 'nivel' },
@@ -59,7 +66,7 @@
                 { data: 'sueldo_base' },
                 { data: 'monedero' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTTabuladores['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -73,7 +80,7 @@
                     className: "dt-body-right",
                 }
             ];
-            $('#tabuladores_datatable').DataTable(configDataTable);
+            $('#tabuladores_datatable').DataTable(configDTTabuladores);
         </script>
     {% endif %}
     <!-- Modales -->

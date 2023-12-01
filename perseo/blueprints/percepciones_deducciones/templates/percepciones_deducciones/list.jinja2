@@ -15,7 +15,7 @@
 
 {% block content %}
     {% call list.card() %}
-        <!-- Filtros percepciones-deducciones -->
+        <!-- Filtros Percepciones-Deducciones -->
         <div class="row">
             <div class="col">
                 <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPercepcionesDeducciones.buscar(); return false;">
@@ -44,7 +44,7 @@
                 </form>
             </div>
         </div>
-        <!-- Datatable percepciones-deducciones -->
+        <!-- Datatable Percepciones-Deducciones -->
         <table id="percepciones_deducciones_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
@@ -66,7 +66,7 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // DataTable percepciones-deducciones
+        // DataTable Percepciones-Deducciones
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/percepciones_deducciones/datatable_json';
@@ -95,7 +95,7 @@
                 className: "dt-body-right",
             }
         ];
-        // Filtros percepciones-deducciones
+        // Filtros Percepciones-Deducciones
         const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDataTable);
         filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
         filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
