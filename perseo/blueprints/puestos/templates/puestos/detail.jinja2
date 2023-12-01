@@ -24,12 +24,63 @@
         {{ detail.label_value('Descripción', puesto.descripcion) }}
         {{ detail.label_value('Creado', moment(puesto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    {% if current_user.can_view('TABULADORES') %}
+        {% call detail.card('Tabuladores') %}
+            <table id="tabuladores_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Modelo</th>
+                        <th>Nivel</th>
+                        <th>Quinquenio</th>
+                        <th>Fecha</th>
+                        <th style="text-align:right">Sueldo Base</th>
+                        <th style="text-align:right">Monedero</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- DataTables Tabuladores -->
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('TABULADORES') %}
+        <script>
+            configDataTable['ajax']['url'] = '/tabuladores/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'puesto_id': {{ puesto.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'modelo' },
+                { data: 'nivel' },
+                { data: 'quinquenio' },
+                { data: 'fecha' },
+                { data: 'sueldo_base' },
+                { data: 'monedero' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: [5, 6], // sueldo_base, monedero
+                    render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            $('#tabuladores_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+    <!-- Modales -->
     {% if current_user.can_admin('PUESTOS') %}
         {% if puesto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + puesto.clave + '?') }}{% endif %}
         {% if puesto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + puesto.clave + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment -->
     {{ detail.moment_js(moment) }}
 {% endblock %}

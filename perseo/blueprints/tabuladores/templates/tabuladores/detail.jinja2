@@ -19,10 +19,11 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle del Tabulador -->
     {% call detail.card(estatus=tabulador.estatus) %}
         {{ detail.label_value_big('ID', tabulador.id) }}
         {# Columnas que hacen una combinacion unica #}
-        {{ detail.label_value('Puesto', tabulador.puesto.clave) }}
+        {{ detail.label_value('Puesto', tabulador.puesto.clave, url_for('puestos.detail', puesto_id=tabulador.puesto_id)) }}
         {{ detail.label_value('Modelo', tabulador.modelo) }}
         {{ detail.label_value('Nivel', tabulador.nivel) }}
         {{ detail.label_value('Quinquenio', tabulador.quinquenio) }}
@@ -32,27 +33,74 @@
         {{ detail.label_value('Incentivo', tabulador.incentivo) }}
         {{ detail.label_value('Monedero', tabulador.monedero) }}
         {{ detail.label_value('Recreación Cultura Deporte', tabulador.rec_cul_dep) }}
-        {{ detail.label_value('Sobresueldo', tabulador.sobresueldo) }}
-        {{ detail.label_value('Recreación Cultura Deporte gravado', tabulador.rec_dep_cul_gravado) }}
-        {{ detail.label_value('Recreación Cultura Deporte excento', tabulador.rec_dep_cul_excento) }}
-        {{ detail.label_value('Ayuda Transporte', tabulador.ayuda_transp) }}
-        {{ detail.label_value('Quinquenio', tabulador.monto_quinquenio) }}
-        {{ detail.label_value('Total Percepciones', tabulador.total_percepciones) }}
-        {{ detail.label_value('Salario Diario', tabulador.salario_diario) }}
-        {{ detail.label_value('Prima Vacacional mensual', tabulador.prima_vacacional_mensual) }}
-        {{ detail.label_value('Aguinaldo mensual', tabulador.aguinaldo_mensual) }}
-        {{ detail.label_value('Prima Vacacional adicional', tabulador.prima_vacacional_mensual_adicional) }}
-        {{ detail.label_value('Total Percepciones integrado', tabulador.total_percepciones_integrado) }}
-        {{ detail.label_value('Salario Diario integrado', tabulador.salario_diario_integrado) }}
+        {{ detail.label_value_currency('Sobresueldo', tabulador.sobresueldo) }}
+        {{ detail.label_value_currency('Recreación Cultura Deporte gravado', tabulador.rec_dep_cul_gravado) }}
+        {{ detail.label_value_currency('Recreación Cultura Deporte excento', tabulador.rec_dep_cul_excento) }}
+        {{ detail.label_value_currency('Ayuda Transporte', tabulador.ayuda_transp) }}
+        {{ detail.label_value_currency('Quinquenio', tabulador.monto_quinquenio) }}
+        {{ detail.label_value_currency('Total Percepciones', tabulador.total_percepciones) }}
+        {{ detail.label_value_currency('Salario Diario', tabulador.salario_diario) }}
+        {{ detail.label_value_currency('Prima Vacacional mensual', tabulador.prima_vacacional_mensual) }}
+        {{ detail.label_value_currency('Aguinaldo mensual', tabulador.aguinaldo_mensual) }}
+        {{ detail.label_value_currency('Prima Vacacional adicional', tabulador.prima_vacacional_mensual_adicional) }}
+        {{ detail.label_value_currency('Total Percepciones integrado', tabulador.total_percepciones_integrado) }}
+        {{ detail.label_value_currency('Salario Diario integrado', tabulador.salario_diario_integrado) }}
         {# Creado #}
         {{ detail.label_value('Creado', moment(tabulador.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Personas en el Tabulador -->
+    {% if current_user.can_view('PERSONAS') %}
+        {% call detail.card('Personas en el tabulador') %}
+            <table id="personas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>RFC</th>
+                        <th>Nombre</th>
+                        <th>Apellido primero</th>
+                        <th>Apellido segundo</th>
+                        <th>CURP</th>
+                        <th>C.P. fiscal</th>
+                        <th>Modelo</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Personas en el Tabulador -->
+    {{ detail.config_datatable() }}
+    {% if current_user.can_view('PERSONAS') %}
+        <script>
+            configDataTable['ajax']['url'] = '/personas/datatable_json';
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'tabulador_id': {{ tabulador.id}} };
+            configDataTable['columns'] = [
+                { data: 'detalle' },
+                { data: 'nombres' },
+                { data: 'apellido_primero' },
+                { data: 'apellido_segundo' },
+                { data: 'curp' },
+                { data: 'codigo_postal_fiscal' },
+                { data: 'modelo' }
+            ];
+            configDataTable['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.rfc + '</a>';
+                    }
+                }
+            ];
+            $('#personas_datatable').DataTable(configDataTable);
+        </script>
+    {% endif %}
+    <!-- Modales -->
     {% if current_user.can_admin('TABULADORES') %}
         {% if tabulador.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + tabulador.id | string + '?') }}{% endif %}
         {% if tabulador.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + tabulador.id | string + '?') }}{% endif %}
     {% endif %}
+    <!-- Momento -->
     {{ detail.moment_js(moment) }}
 {% endblock %}
