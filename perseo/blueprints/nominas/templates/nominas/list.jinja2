@@ -56,7 +56,7 @@
                 </form>
             </div>
         </div>
-        <!-- Datatable Nominas -->
+        <!-- DataTable Nominas -->
         <table id="nominas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
@@ -80,7 +80,7 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // Datatable Nominas
+        // DataTable Nominas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/nominas/datatable_json';

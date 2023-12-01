@@ -27,8 +27,7 @@
         {{ detail.label_value('Apellido segundo', persona.apellido_segundo) }}
         {{ detail.label_value('CURP', persona.curp) }}
         {{ detail.label_value('No. empleado', persona.num_empleado) }}
-        {% set tabulador_str = persona.tabulador.id | string + ' - '  %}
-        {% set tabulador_str = tabulador_str + 'Puesto ' + persona.tabulador.puesto.clave + ', ' %}
+        {% set tabulador_str = 'Puesto ' + persona.tabulador.puesto.clave + ', ' %}
         {% set tabulador_str = tabulador_str + 'Modelo ' + persona.tabulador.modelo | string + ', ' %}
         {% set tabulador_str = tabulador_str + 'Nivel ' + persona.tabulador.nivel | string + ', ' %}
         {% set tabulador_str = tabulador_str + 'Quinquenio ' + persona.tabulador.quinquenio | string %}

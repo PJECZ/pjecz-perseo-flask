@@ -21,12 +21,11 @@
 {% block content %}
     <!-- Detalle del Tabulador -->
     {% call detail.card(estatus=tabulador.estatus) %}
-        {{ detail.label_value_big('ID', tabulador.id) }}
         {# Columnas que hacen una combinacion unica #}
-        {{ detail.label_value('Puesto', tabulador.puesto.clave + ' - ' + tabulador.puesto.descripcion, url_for('puestos.detail', puesto_id=tabulador.puesto_id)) }}
-        {{ detail.label_value('Modelo', tabulador.modelo) }}
-        {{ detail.label_value('Nivel', tabulador.nivel) }}
-        {{ detail.label_value('Quinquenio', tabulador.quinquenio) }}
+        {{ detail.label_value_big('Puesto', tabulador.puesto.clave + ' - ' + tabulador.puesto.descripcion, url_for('puestos.detail', puesto_id=tabulador.puesto_id)) }}
+        {{ detail.label_value_big('Modelo', tabulador.modelo) }}
+        {{ detail.label_value_big('Nivel', tabulador.nivel) }}
+        {{ detail.label_value_big('Quinquenio', tabulador.quinquenio) }}
         {# Columnas independientes #}
         {{ detail.label_value('Fecha inicial', tabulador.fecha) }}
         {{ detail.label_value_currency('Sueldo base', tabulador.sueldo_base) }}

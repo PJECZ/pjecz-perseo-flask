@@ -75,7 +75,7 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // Datatable Cuentas de los Beneficiarios
+        // DataTable Cuentas de los Beneficiarios
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';

@@ -57,7 +57,7 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // Datatable centros de trabajo
+        // DataTable centros de trabajo
         const constructorDataTable = new ConfigDataTable( "{{ csrf_token() }}" );
         let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/centros_trabajos/datatable_json';

@@ -22,7 +22,7 @@
     {% call detail.card(estatus=percepcion_deduccion.estatus) %}
         {{ detail.label_value_big('ID', percepcion_deduccion.id) }}
         {% if current_user.can_view("QUINCENAS") %}
-            {{ detail.label_value('Quincena', percepcion_deduccion.quincena.clave, quincena_id=percepcion_deduccion.quincena_id) }}
+            {{ detail.label_value('Quincena', percepcion_deduccion.quincena.clave, url_for('quincenas.detail', quincena_id=percepcion_deduccion.quincena_id)) }}
         {% else %}
             {{ detail.label_value('Quincena', percepcion_deduccion.quincena.clave) }}
         {% endif %}
