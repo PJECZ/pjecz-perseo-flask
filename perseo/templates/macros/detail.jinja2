@@ -49,9 +49,9 @@
             </div>
             <div class="col-md-9 font-monospace">
                 {% if link %}
-                <strong><a href="{{ link }}" class="currency">{{ value }}</a></strong>
+                <pre class="currency"><a href="{{ link }}">{{ value }}</a></pre>
                 {% else %}
-                <strong class="currency">{{ value }}</strong>
+                <pre class="currency">{{ value }}</pre>
                 {% endif %}
             </div>
         </div>
