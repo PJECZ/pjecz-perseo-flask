@@ -17,13 +17,8 @@ import click
 
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
 from perseo.app import create_app
-from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.conceptos_productos.models import ConceptoProducto
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
-from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.plazas.models import Plaza
-from perseo.blueprints.productos.models import Producto
 from perseo.blueprints.quincenas.models import Quincena
 
 CONCEPTOS_CSV = "seed/conceptos.csv"
@@ -38,34 +33,69 @@ def cli():
 
 
 @click.command()
-def alimentar():
+@click.option("--conceptos-csv", default=CONCEPTOS_CSV, help="Archivo CSV con los datos de los Conceptos")
+def alimentar(conceptos_csv: str):
     """Alimentar conceptos"""
-    ruta = Path(CONCEPTOS_CSV)
+
+    # Validar archivo
+    ruta = Path(conceptos_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
         sys.exit(1)
     if not ruta.is_file():
         click.echo(f"ERROR: {ruta.name} no es un archivo.")
         sys.exit(1)
-    click.echo("Alimentando Conceptos...")
-    contador = 0
+
+    # Inicializar contadores y mensajes
+    contador_insertados = 0
+    contador_actualizados = 0
+    errores = []
+
+    # Leer el archivo CSV
+    click.echo("Alimentando Conceptos: ", nl=False)
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            # Validar
             try:
                 clave = safe_clave(f"{row['P_D']}{row['Concepto']}")
                 descripcion = safe_string(row["Descripcion"], save_enie=True)
+                if descripcion == "":
+                    raise ValueError("Descripcion vacía")
             except ValueError as error:
-                click.echo(f"  {error}")
+                errores.append(f"{row['P_D']}{row['Concepto']}: {error}")
+                click.echo("E", nl=False)
                 continue
-            Concepto(
-                clave=clave,
-                descripcion=descripcion,
-            ).save()
-            contador += 1
-            if contador % 100 == 0:
-                click.echo(f"  Van {contador}...")
-    click.echo(f"Conceptos terminado: {contador} conceptos alimentados.")
+
+            # Revisar si ya existe
+            concepto = Concepto.query.filter_by(clave=clave).first()
+
+            # Si NO existe, se agrega
+            if concepto is None:
+                Concepto(
+                    clave=clave,
+                    descripcion=descripcion,
+                ).save()
+                contador_insertados += 1
+                click.echo(".", nl=False)
+            else:
+                # Si cambia la descripcion, se actualiza
+                if concepto.descripcion != descripcion:
+                    concepto.descripcion = descripcion
+                    concepto.save()
+                    contador_actualizados += 1
+                    click.echo("u", nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si hubo errores, mostrarlos
+    if len(errores) > 0:
+        click.echo(click.style(f"  Hubo {len(errores)} errores:", fg="red"))
+        click.echo(click.style(f"  {', '.join(errores)}", fg="red"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Conceptos: {contador_insertados} insertados, {contador_actualizados} actualizados.", fg="green"))
 
 
 @click.command()

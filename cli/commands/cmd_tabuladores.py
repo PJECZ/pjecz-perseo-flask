@@ -25,17 +25,25 @@ def cli():
 
 
 @click.command()
-def alimentar():
+@click.option("--tabuladores-csv", default=TABULADORES_CSV, help="Archivo CSV con los datos de los Tabuladores")
+def alimentar(tabuladores_csv: str):
     """Alimentar tabuladores"""
-    ruta = Path(TABULADORES_CSV)
+
+    # Validar archivo
+    ruta = Path(tabuladores_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
         sys.exit(1)
     if not ruta.is_file():
         click.echo(f"ERROR: {ruta.name} no es un archivo.")
         sys.exit(1)
-    click.echo("Alimentando Tabuladores...")
+
+    # Inicializar contadores y mensajes
     contador = 0
+    errores = []
+
+    # Leer el archivo CSV
+    click.echo("Alimentando Tabuladores: ", nl=False)
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -143,6 +151,7 @@ def alimentar():
                     descripcion="NO DEFINIDO",
                 ).save()
             # TODO: Antes de insertar el tabulador, validar que la clave de puesto, modelo, nivel y quinquenio no se repitan
+            # TODO: Insertar o actualizar el tabulador
             # Insertar tabulador
             tabulador = Tabulador(
                 puesto_id=puesto.id,
@@ -169,7 +178,10 @@ def alimentar():
             )
             tabulador.save()
             contador += 1
-    click.echo(f"  {contador} registros alimentados.")
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Mensaje termino
+    click.echo(f"  Tabuladores: {contador} alimentados.")
 
 
 cli.add_command(alimentar)

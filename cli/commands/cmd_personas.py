@@ -36,22 +36,28 @@ def cli():
 
 
 @click.command()
-def actualizar():
-    """Actualizar las Personas en su CP en base a su RFC a partir de un archivo CSV"""
-    ruta = Path(PERSONAS_CSV)
+@click.option("--personas-csv", default=PERSONAS_CSV, help="Archivo CSV con los datos de las Personas")
+def actualizar(personas_csv: str):
+    """Actualizar los CP y/o CURP de las Personas en base a su RFC a partir de un archivo CSV"""
+
+    # Validar archivo
+    ruta = Path(personas_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
         sys.exit(1)
     if not ruta.is_file():
         click.echo(f"ERROR: {ruta.name} no es un archivo.")
         sys.exit(1)
-    click.echo("Actualizar Personas...")
 
     # Iniciar sesión con la base de datos para que la alimentación sea rápida
     sesion = database.session
 
-    # Leer el archivo CSV
+    # Inicializar contadores y mensajes
     contador = 0
+    errores = []
+
+    # Leer el archivo CSV
+    click.echo("Actualizar Personas: ", nl=False)
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -60,7 +66,6 @@ def actualizar():
 
             # Si no existe, saltar
             if persona is None:
-                click.echo(f"  AVISO: {row['rfc']} no encontrado")
                 continue
 
             # Bandera si hubo cambios
@@ -72,7 +77,7 @@ def actualizar():
                 try:
                     codigo_postal_fiscal = int(row["cp"])
                 except ValueError:
-                    click.echo(f"  AVISO: {row['rfc']} tiene un CP incorrecto: {row['cp']}")
+                    errores.append(f"{row['rfc']}: CP inválido: {row['cp']}")
                 if persona.codigo_postal_fiscal != codigo_postal_fiscal:
                     persona.codigo_postal_fiscal = codigo_postal_fiscal
                     hay_cambios = True
@@ -86,14 +91,13 @@ def actualizar():
                         persona.seguridad_social = seguridad_social
                         hay_cambios = True
                 else:
-                    click.echo(f"  AVISO: {row['rfc']} tiene un NSS incorrecto: {row['seguridad_social']}")
+                    errores.append(f"{row['rfc']}: NSS inválido: {row['seguridad_social']}")
 
             # Si hubo cambios, agregar a la sesión e incrementar el contador
             if hay_cambios:
                 sesion.add(persona)
                 contador += 1
-                if contador % 100 == 0:
-                    click.echo(f"  Van {contador}...")
+                click.echo(click.style(".", fg="cyan"), nl=False)
 
     # Si no hubo cambios, mostrar mensaje y terminar
     if contador == 0:
@@ -104,8 +108,13 @@ def actualizar():
     sesion.commit()
     sesion.close()
 
+    # Si hubo errores, mostrarlos
+    if len(errores) > 0:
+        click.echo(click.style(f"  Hubo {len(errores)} errores:", fg="red"))
+        click.echo(click.style(f"  {', '.join(errores)}", fg="red"))
+
     # Mensaje de termino
-    click.echo(f"Personas: {contador} actualizadas.")
+    click.echo(f"  Personas: {contador} actualizadas.")
 
 
 @click.command()
@@ -188,19 +197,19 @@ def sincronizar():
             click.echo(f"  AVISO: La persona {persona.rfc}, tiene una Fecha de ingreso a PJ incorrecta. {e}")
 
         # Actualizar si hay cambios
-        actualizar = False
+        se_va_a_actualizar = False
         if curp != "" and persona.curp != curp:
-            actualizar = True
+            se_va_a_actualizar = True
             persona.curp = curp
         if fecha_ingreso_gobierno is not None and fecha_ingreso_gobierno != persona.ingreso_gobierno_fecha:
-            actualizar = True
+            se_va_a_actualizar = True
             persona.ingreso_gobierno_fecha = fecha_ingreso_gobierno
         if fecha_ingreso_pj is not None and fecha_ingreso_pj != persona.ingreso_pj_fecha:
-            actualizar = True
+            se_va_a_actualizar = True
             persona.ingreso_pj_fecha = fecha_ingreso_pj
 
         # Añadir cambios e incrementar el contador
-        if actualizar:
+        if se_va_a_actualizar:
             # click.echo(f"  Persona con cambios: {persona}")
             sesion.add(persona)
             contador += 1
