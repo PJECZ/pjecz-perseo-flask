@@ -40,6 +40,24 @@
     {% endif %}
 {%- endmacro -%}
 
+{# Detail currency #}
+{%- macro label_value_currency(label, value, link='') -%}
+    {% if value != None and value != '' and value != 0 %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-9 font-monospace">
+                {% if link %}
+                <strong><a href="{{ link }}" class="currency">{{ value }}</a></strong>
+                {% else %}
+                <strong class="currency">{{ value }}</strong>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
 {# Detail link to new tab #}
 {%- macro label_value_new_tab(label, value, link) -%}
     {% if value != None and value != '' %}

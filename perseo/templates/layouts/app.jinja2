@@ -40,3 +40,8 @@
         </div>
     </div>
 {% endblock %}
+
+{% block template_javascript %}
+    <!-- Currency formatter -->
+    <script src="{{ url_for('static', filename='js/currency-formatter.js') }}"></script>
+{% endblock %}

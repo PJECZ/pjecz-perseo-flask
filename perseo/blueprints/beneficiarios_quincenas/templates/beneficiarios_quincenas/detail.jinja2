@@ -32,7 +32,7 @@
         {% else %}
             {{ detail.label_value('Beneficiario', beneficiario_texto) }}
         {% endif %}
-        {{ detail.label_value('Importe', beneficiario_quincena.importe) }}
+        {{ detail.label_value_currency('Importe', beneficiario_quincena.importe) }}
         {{ detail.label_value('No. de Cheque', beneficiario_quincena.num_cheque) }}
         {{ detail.label_value('Creado', moment(beneficiario_quincena.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}

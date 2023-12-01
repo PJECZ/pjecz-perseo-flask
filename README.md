@@ -227,11 +227,12 @@ then
         echo
     fi
     echo "-- Arrancar Flask o RQ Worker"
-    alias arrancar="flask run --port=5012"
+    alias arrancar="flask run --port=5000"
     alias fondear="rq worker ${TASK_QUEUE}"
-    echo "   arrancar = flask run --port=5012"
+    echo "   arrancar = flask run --port=5000"
     echo "   fondear = rq worker ${TASK_QUEUE}"
     echo
+fi
 ```
 
 ## Cargar las variables de entorno y el entorno virtual
