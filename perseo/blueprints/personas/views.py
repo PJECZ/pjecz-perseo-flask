@@ -50,6 +50,8 @@ def datatable_json():
         consulta = consulta.filter(Persona.apellido_primero.contains(safe_string(request.form["apellido_primero"])))
     if "apellido_segundo" in request.form:
         consulta = consulta.filter(Persona.apellido_segundo.contains(safe_string(request.form["apellido_segundo"])))
+    if "tabulador_id" in request.form:
+        consulta = consulta.filter_by(tabulador_id=request.form["tabulador_id"])
     # Ordenar y paginar
     registros = consulta.order_by(Persona.rfc).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -61,6 +63,10 @@ def datatable_json():
                 "detalle": {
                     "rfc": resultado.rfc,
                     "url": url_for("personas.detail", persona_id=resultado.id),
+                },
+                "tabulador": {
+                    "id": resultado.tabulador.id,
+                    "url": url_for("tabuladores.detail", tabulador_id=resultado.tabulador_id),
                 },
                 "nombres": resultado.nombres,
                 "apellido_primero": resultado.apellido_primero,

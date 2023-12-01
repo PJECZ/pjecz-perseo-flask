@@ -23,7 +23,7 @@
     {% call detail.card(estatus=tabulador.estatus) %}
         {{ detail.label_value_big('ID', tabulador.id) }}
         {# Columnas que hacen una combinacion unica #}
-        {{ detail.label_value('Puesto', tabulador.puesto.clave, url_for('puestos.detail', puesto_id=tabulador.puesto_id)) }}
+        {{ detail.label_value('Puesto', tabulador.puesto.clave + ' - ' + tabulador.puesto.descripcion, url_for('puestos.detail', puesto_id=tabulador.puesto_id)) }}
         {{ detail.label_value('Modelo', tabulador.modelo) }}
         {{ detail.label_value('Nivel', tabulador.nivel) }}
         {{ detail.label_value('Quinquenio', tabulador.quinquenio) }}
