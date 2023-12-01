@@ -39,6 +39,10 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "clave" in request.form:
+        consulta = consulta.filter(Banco.clave.contains(safe_clave(request.form["clave"])))
+    if "nombre" in request.form:
+        consulta = consulta.filter(Banco.nombre.contains(safe_string(request.form["nombre"])))
     # Ordenar y paginar
     registros = consulta.order_by(Banco.nombre).offset(start).limit(rows_per_page).all()
     total = consulta.count()

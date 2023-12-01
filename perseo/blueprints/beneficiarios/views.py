@@ -40,10 +40,7 @@ def datatable_json():
     else:
         consulta = consulta.filter_by(estatus="A")
     if "rfc" in request.form:
-        try:
-            consulta = consulta.filter(Beneficiario.rfc.contains(safe_rfc(request.form["rfc"], search_fragment=True)))
-        except ValueError:
-            pass
+        consulta = consulta.filter(Beneficiario.rfc.contains(safe_rfc(request.form["rfc"], search_fragment=True)))
     if "nombres" in request.form:
         consulta = consulta.filter(Beneficiario.nombres.contains(safe_string(request.form["nombres"])))
     if "apellido_primero" in request.form:

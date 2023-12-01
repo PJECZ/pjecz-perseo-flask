@@ -82,7 +82,7 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // Datatable Beneficiarios Quincenas
+        // DataTable Beneficiarios Quincenas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/beneficiarios_quincenas/datatable_json';

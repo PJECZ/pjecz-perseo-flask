@@ -203,16 +203,20 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Nominas -->
+    <!-- Constructor de DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Nominas -->
     {% if current_user.can_view('NOMINAS') %}
+        <!-- Nominas de la Quincena -->
         <script>
-            // Datatable Nominas
-            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            // DataTable Nominas
             let configDataTable = constructorDataTable.config();
             configDataTable['ajax']['url'] = '/nominas/datatable_json';
-            configDataTable['ajax']['data'] = { estatus: 'A', quincena: '{{ quincena.clave }}' };
+            configDataTable['ajax']['data'] = { 'estatus': "A", 'quincena_id': {{ quincena.id }} };
             configDataTable['columns'] = [
                 { data: 'detalle' },
                 { data: 'persona_rfc' },

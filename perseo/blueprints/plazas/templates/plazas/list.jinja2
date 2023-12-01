@@ -18,7 +18,7 @@
 
 {% block content %}
     {% call list.card() %}
-        <!-- Filtros plazas -->
+        <!-- Filtros Plazas -->
         <div class="row">
             <div class="col">
                 <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPlazas.buscar(); return false;">
@@ -41,7 +41,7 @@
                 </form>
             </div>
         </div>
-        <!-- Datatable plazas -->
+        <!-- DataTable Plazas -->
         <table id="plazas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
@@ -57,7 +57,7 @@
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
-        // Datatable plazas
+        // DataTable Plazas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDataTable = constructorDataTable.config();
         configDataTable['ajax']['url'] = '/plazas/datatable_json';
@@ -75,7 +75,7 @@
                 }
             }
         ];
-        // Filtros plazas
+        // Filtros Plazas
         const filtrosPlazas = new FiltrosDataTable('#plazas_datatable', configDataTable);
         filtrosPlazas.agregarInput('filtroClave', 'clave');
         filtrosPlazas.agregarInput('filtroDescripcion', 'descripcion');

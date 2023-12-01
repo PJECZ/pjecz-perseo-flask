@@ -27,6 +27,15 @@
         {{ detail.label_value('Apellido segundo', persona.apellido_segundo) }}
         {{ detail.label_value('CURP', persona.curp) }}
         {{ detail.label_value('No. empleado', persona.num_empleado) }}
+        {% set tabulador_str = 'Puesto ' + persona.tabulador.puesto.clave + ', ' %}
+        {% set tabulador_str = tabulador_str + 'Modelo ' + persona.tabulador.modelo | string + ', ' %}
+        {% set tabulador_str = tabulador_str + 'Nivel ' + persona.tabulador.nivel | string + ', ' %}
+        {% set tabulador_str = tabulador_str + 'Quinquenio ' + persona.tabulador.quinquenio | string %}
+        {% if current_user.can_view('TABULADORES') %}
+            {{ detail.label_value('Tabulador', tabulador_str, url_for('tabuladores.detail', tabulador_id=persona.tabulador.id)) }}
+        {% else %}
+            {{ detail.label_value('Tabulador', tabulador_str) }}
+        {% endif %}
         {{ detail.label_value('Modelo', persona.modelo) }}
         {{ detail.label_value('Fecha de ingreso gobierno', persona.ingreso_gobierno_fecha) }}
         {{ detail.label_value('Fecha de ingreso P.J.', persona.ingreso_pj_fecha) }}

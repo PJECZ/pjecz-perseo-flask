@@ -28,8 +28,8 @@
         {{ detail.label_value('Consecutivo temporal', banco.consecutivo_generado) }}
         {{ detail.label_value('Creado', moment(banco.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
-    <!-- Cuentas de las Personas -->
     {% if current_user.can_view('CUENTAS') %}
+        <!-- Cuentas de las Personas -->
         {% call detail.card('Cuentas de las Personas') %}
             <div class="row">
                 <div class="col">
@@ -77,8 +77,8 @@
             </table>
         {% endcall %}
     {% endif %}
-    <!-- Cuentas de los Beneficiarios -->
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
+        <!-- Cuentas de los Beneficiarios -->
         {% call detail.card('Cuentas de los Beneficiarios') %}
             <div class="row">
                 <div class="col">
@@ -129,70 +129,74 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Constructor de DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
-    <!-- Constructor de Datatables -->
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Cuentas de las Personas -->
-    <script>
-        // Datatable Cuentas de las Personas
-        let configDTCuentas = constructorDataTable.config();
-        configDTCuentas['ajax']['url'] = '/cuentas/datatable_json';
-        configDTCuentas['ajax']['data'] = { 'estatus': "A", 'banco_id': {{ banco.id}} };
-        configDTCuentas['columns'] = [
-            { data: 'detalle' },
-            { data: 'persona_rfc' },
-            { data: 'persona_nombre_completo' },
-            { data: 'num_cuenta' }
-        ];
-        configDTCuentas['columnDefs'] = [
-            {
-                targets: 0, // detalle
-                data: null,
-                render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.id + '</a>';
+    {% if current_user.can_view('CUENTAS') %}
+        <!-- Cuentas de las Persona -->
+        <script>
+            // DataTable Cuentas de las Personas
+            let configDTCuentas = constructorDataTable.config();
+            configDTCuentas['ajax']['url'] = '/cuentas/datatable_json';
+            configDTCuentas['ajax']['data'] = { 'estatus': "A", 'banco_id': {{ banco.id }} };
+            configDTCuentas['columns'] = [
+                { data: 'detalle' },
+                { data: 'persona_rfc' },
+                { data: 'persona_nombre_completo' },
+                { data: 'num_cuenta' }
+            ];
+            configDTCuentas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
                 }
-            }
-        ];
-        // Filtros Cuentas de las Personas
-        const filtrosPersonas = new FiltrosDataTable('#cuentas_datatable', configDTCuentas);
-        filtrosPersonas.agregarInput('filtroPersonaRFC', 'persona_rfc');
-        filtrosPersonas.agregarInput('filtroPersonaNombres', 'persona_nombres');
-        filtrosPersonas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');
-        filtrosPersonas.agregarInput('filtroPersonaApellidoSegundo', 'persona_apellido_segundo');
-        filtrosPersonas.precargar();
-    </script>
-    <!-- Cuentas de los Beneficiarios -->
-    <script>
-        // Datatable Cuentas de los Beneficiarios
-        let configDTBeneficiariosCuentas = constructorDataTable.config();
-        configDTBeneficiariosCuentas['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
-        configDTBeneficiariosCuentas['ajax']['data'] = { 'estatus': "A", 'banco_id': {{ banco.id}} };
-        configDTBeneficiariosCuentas['columns'] = [
-            { data: 'detalle' },
-            { data: 'beneficiario_rfc' },
-            { data: 'beneficiario_nombre_completo' },
-            { data: 'num_cuenta' }
-        ];
-        configDTBeneficiariosCuentas['columnDefs'] = [
-            {
-                targets: 0, // detalle
-                data: null,
-                render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.id + '</a>';
+            ];
+            // Filtros Cuentas de las Personas
+            const filtrosPersonas = new FiltrosDataTable('#cuentas_datatable', configDTCuentas);
+            filtrosPersonas.agregarInput('filtroPersonaRFC', 'persona_rfc');
+            filtrosPersonas.agregarInput('filtroPersonaNombres', 'persona_nombres');
+            filtrosPersonas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');
+            filtrosPersonas.agregarInput('filtroPersonaApellidoSegundo', 'persona_apellido_segundo');
+            filtrosPersonas.precargar();
+        </script>
+    {% endif %}
+    {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
+        <!-- Cuentas de los Beneficiarios -->
+        <script>
+            // DataTable Cuentas de los Beneficiarios
+            let configDTBeneficiariosCuentas = constructorDataTable.config();
+            configDTBeneficiariosCuentas['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
+            configDTBeneficiariosCuentas['ajax']['data'] = { 'estatus': "A", 'banco_id': {{ banco.id}} };
+            configDTBeneficiariosCuentas['columns'] = [
+                { data: 'detalle' },
+                { data: 'beneficiario_rfc' },
+                { data: 'beneficiario_nombre_completo' },
+                { data: 'num_cuenta' }
+            ];
+            configDTBeneficiariosCuentas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
                 }
-            }
-        ];
-        // Filtros Cuentas de los Beneficiarios
-        const filtrosBeneficiarios = new FiltrosDataTable('#beneficiarios_cuentas_datatable', configDTBeneficiariosCuentas);
-        filtrosBeneficiarios.agregarInput('filtroBeneficiarioRFC', 'beneficiario_rfc');
-        filtrosBeneficiarios.agregarInput('filtroBeneficiarioNombres', 'beneficiario_nombres');
-        filtrosBeneficiarios.agregarInput('filtroBeneficiarioApellidoPrimero', 'beneficiario_apellido_primero');
-        filtrosBeneficiarios.agregarInput('filtroBeneficiarioApellidoSegundo', 'beneficiario_apellido_segundo');
-        filtrosBeneficiarios.precargar();
-    </script>
+            ];
+            // Filtros Cuentas de los Beneficiarios
+            const filtrosBeneficiarios = new FiltrosDataTable('#beneficiarios_cuentas_datatable', configDTBeneficiariosCuentas);
+            filtrosBeneficiarios.agregarInput('filtroBeneficiarioRFC', 'beneficiario_rfc');
+            filtrosBeneficiarios.agregarInput('filtroBeneficiarioNombres', 'beneficiario_nombres');
+            filtrosBeneficiarios.agregarInput('filtroBeneficiarioApellidoPrimero', 'beneficiario_apellido_primero');
+            filtrosBeneficiarios.agregarInput('filtroBeneficiarioApellidoSegundo', 'beneficiario_apellido_segundo');
+            filtrosBeneficiarios.precargar();
+        </script>
+    {% endif %}
     <!-- Modales -->
     {% if current_user.can_admin('BANCOS') %}
         {% if banco.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + banco.clave + '?') }}{% endif %}
