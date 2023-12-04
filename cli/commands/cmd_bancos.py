@@ -26,6 +26,8 @@ def cli():
 @click.command()
 def alimentar():
     """Alimentar bancos"""
+
+    # Validar archivo CSV
     ruta = Path(BANCOS_CSV)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
@@ -33,29 +35,68 @@ def alimentar():
     if not ruta.is_file():
         click.echo(f"ERROR: {ruta.name} no es un archivo.")
         sys.exit(1)
-    click.echo("Alimentando Bancos...")
-    contador = 0
+
+    # Inicializar contadores y mensajes
+    contador_insertados = 0
+    contador_actualizados = 0
+    errores = []
+
+    # Leer el archivo CSV
+    click.echo("Alimentando Bancos: ", nl=False)
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
+            # Validar
             try:
                 clave = row["clave"]
                 nombre = safe_string(row["nombre"])
+                if nombre == "":
+                    raise ValueError("nombre vacio")
                 clave_dispersion_pensionados = row["clave_dispersion_pensionados"]
+                if clave_dispersion_pensionados == "":
+                    raise ValueError("clave_dispersion_pensionados vacio")
             except ValueError as error:
-                click.echo(f"  {error}")
+                errores.append(f"  {row['clave']}: {error}")
+                click.echo("E", nl=False)
                 continue
-            Banco(
-                clave=clave,
-                clave_dispersion_pensionados=clave_dispersion_pensionados,
-                nombre=nombre,
-                consecutivo=0,
-                consecutivo_generado=0,
-            ).save()
-            contador += 1
-            if contador % 100 == 0:
-                click.echo(f"  Van {contador}...")
-    click.echo(f"Bancos terminado: {contador} bancos alimentados.")
+
+            # Revisar si ya existe
+            banco = Banco.query.filter_by(clave=clave).first()
+
+            # Si no existe, se agrega
+            if banco is None:
+                Banco(
+                    clave=clave,
+                    clave_dispersion_pensionados=clave_dispersion_pensionados,
+                    nombre=nombre,
+                    consecutivo=0,
+                    consecutivo_generado=0,
+                ).save()
+                contador_insertados += 1
+                click.echo(".", nl=False)
+            elif banco.nombre != nombre or banco.clave_dispersion_pensionados != clave_dispersion_pensionados:
+                # Si cambio el nombre o la clave de dispersion de pensionados, se actualiza
+                banco.nombre = nombre
+                banco.clave_dispersion_pensionados = clave_dispersion_pensionados
+                banco.save()
+                contador_actualizados += 1
+                click.echo("u", nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si hubo errores, mostrarlos
+    if len(errores) > 0:
+        click.echo(click.style(f"  Hubo {len(errores)} errores:", fg="red"))
+        click.echo(click.style(f"  {', '.join(errores)}", fg="red"))
+
+    # Si hubo bancos insertados, mostrar contador
+    if contador_insertados > 0:
+        click.echo(click.style(f"  Bancos: {contador_insertados} insertados.", fg="green"))
+
+    # Si hubo bancos actualizados, mostrar contador
+    if contador_actualizados > 0:
+        click.echo(click.style(f"  Bancos: {contador_actualizados} actualizados.", fg="green"))
 
 
 @click.command()

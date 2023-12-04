@@ -37,7 +37,7 @@ def cli():
 def alimentar(conceptos_csv: str):
     """Alimentar conceptos"""
 
-    # Validar archivo
+    # Validar archivo CSV
     ruta = Path(conceptos_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
@@ -63,7 +63,7 @@ def alimentar(conceptos_csv: str):
                 if descripcion == "":
                     raise ValueError("Descripcion vacía")
             except ValueError as error:
-                errores.append(f"{row['P_D']}{row['Concepto']}: {error}")
+                errores.append(f"  {row['P_D']}{row['Concepto']}: {error}")
                 click.echo("E", nl=False)
                 continue
 
@@ -78,13 +78,12 @@ def alimentar(conceptos_csv: str):
                 ).save()
                 contador_insertados += 1
                 click.echo(".", nl=False)
-            else:
+            elif concepto.descripcion != descripcion:
                 # Si cambia la descripcion, se actualiza
-                if concepto.descripcion != descripcion:
-                    concepto.descripcion = descripcion
-                    concepto.save()
-                    contador_actualizados += 1
-                    click.echo("u", nl=False)
+                concepto.descripcion = descripcion
+                concepto.save()
+                contador_actualizados += 1
+                click.echo("u", nl=False)
 
     # Poner avance de linea
     click.echo("")
@@ -94,8 +93,13 @@ def alimentar(conceptos_csv: str):
         click.echo(click.style(f"  Hubo {len(errores)} errores:", fg="red"))
         click.echo(click.style(f"  {', '.join(errores)}", fg="red"))
 
-    # Mensaje termino
-    click.echo(click.style(f"  Conceptos: {contador_insertados} insertados, {contador_actualizados} actualizados.", fg="green"))
+    # Si hubo contador_insertados, mostrar contador
+    if contador_insertados > 0:
+        click.echo(click.style(f"  Conceptos: {contador_insertados} insertados.", fg="green"))
+
+    # Si hubo contador_actualizados, mostrar contador
+    if contador_actualizados > 0:
+        click.echo(click.style(f"  Conceptos: {contador_actualizados} actualizados.", fg="green"))
 
 
 @click.command()

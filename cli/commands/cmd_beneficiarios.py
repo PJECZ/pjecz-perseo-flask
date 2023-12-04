@@ -40,7 +40,7 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
         click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
-    # Validar archivo
+    # Validar archivo CSV
     ruta = Path(beneficiarios_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
@@ -88,9 +88,10 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
                 rfc = safe_rfc(row["RFC"])
             except ValueError as error:
                 personas_errores.append(f"{row['RFC']}: {error}")
+                click.echo("E", nl=False)
                 continue
 
-            # Revistar si ya existe el beneficiario
+            # Revistar si ya existe
             beneficiario = Beneficiario.query.filter_by(rfc=rfc).first()
 
             # Si no existe, se agrega
@@ -143,7 +144,7 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
 
             # Incrementar contador
             contador_quincenas_insertadas += 1
-            click.echo(click.style(".", fg="cyan"), nl=False)
+            click.echo(".", nl=False)
 
     # Poner avance de linea
     click.echo("")
@@ -162,16 +163,17 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
         click.echo(click.style(f"  Hubo {len(bancos_errores)} errores:", fg="red"))
         click.echo(click.style(f"  {', '.join(bancos_errores)}", fg="red"))
 
-    # Si hubo beneficiarios insertados, se muestra la cantidad
+    # Si hubo beneficiarios insertados, mostrar contador
     if contador_beneficiarios_insertados > 0:
         click.echo(click.style(f"  Beneficiarios: {contador_beneficiarios_insertados} insertados.", fg="green"))
 
-    # Si hubo beneficiarios actualizados, se muestra la cantidad
+    # Si hubo beneficiarios actualizados, mostrar contador
     if contador_beneficiarios_actualizados > 0:
         click.echo(click.style(f"  Beneficiarios: {contador_beneficiarios_actualizados} actualizados.", fg="green"))
 
-    # Mensaje de termino
-    click.echo(click.style(f"  Beneficiarios: {contador_quincenas_insertadas} quincenas insertadas.", fg="green"))
+    # Si hubo quincenas insertadas, mostrar contador
+    if contador_quincenas_insertadas > 0:
+        click.echo(click.style(f"  Beneficiarios: {contador_quincenas_insertadas} quincenas insertadas.", fg="green"))
 
 
 cli.add_command(alimentar)
