@@ -9,7 +9,7 @@ from pathlib import Path
 
 import click
 import xlrd
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from lib.fechas import quincena_to_fecha, quinquenio_count
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
@@ -33,6 +33,7 @@ EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
 APOYOS_FILENAME_XLS = "Apoyos.XLS"
 BONOS_FILENAME_XLS = "Bonos.XLS"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+SERICA_FILENAME_XLSX = "SERICA.xlsx"
 
 PATRON_RFC = "PJE901211TI9"
 COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
@@ -517,6 +518,107 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Apoyos Anuales:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+@click.option("--serica-xlsx", default=SERICA_FILENAME_XLSX, help="Archivo XLSX con los datos")
+@click.option("--output-txt", default="SERICA.txt", help="Archivo TXT de salida")
+def generar_issste(quincena_clave, serica_xlsx, output_txt):
+    """Generar archivo XLSX con los datos para el ISSSTE"""
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, serica_xlsx)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Abrir el archivo XLSX con openpyxl para leer sus datos
+    workbook = load_workbook(filename=ruta, read_only=True, data_only=True)
+
+    # Elegir la region DETALLE
+    detalle = workbook["DETALLE"]
+
+    # Crear archivo TXT con los datos de la fila
+    click.echo("Generando ISSSTE: ", nl=False)
+    with open(output_txt, "w", encoding="ascii") as f:
+        # Bucle por las filas
+        for row in detalle.iter_rows(min_row=5, max_col=81, max_row=3000):
+            # Juntar todas las celdas de la fila en una lista
+            # fila = [str(celda.value).strip() for celda in row]
+            fila = [str(celda.value).strip() for celda in row]
+
+            # Si el primer elemento de la fila es vacio, se rompe el ciclo
+            if fila[0] == "" or fila[0] is None or fila[0] == "None":
+                break
+
+            # Asegurarse de que cada valor sea un string ascii
+            for i, valor in enumerate(fila):
+                # Si el valor es "0", cambiarlo por "", de lo contrario, convertirlo a ascii
+                if valor == "0":
+                    fila[i] = ""
+                else:
+                    fila[i] = valor.encode("ascii", "ignore").decode("ascii")
+
+            # Escribir la fila en el archivo TXT y agregar un salto de linea
+            f.write("|".join(fila) + "\r")
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Mensaje termino
+    click.echo(click.style(f"  Generar ISSSTE: {output_txt} generado.", fg="green"))
+
+    # fila.append(detalle["B5"].value)  # Tipo
+    # fila.append(detalle["B6"].value)  # NSS
+    # fila.append(detalle["B7"].value)  # Nombre
+    # fila.append(detalle["B8"].value)  # Ap. Paterno
+    # fila.append(detalle["B9"].value)  # Ap. Materno
+    # fila.append(detalle["B10"].value)  # R.F.C.
+    # fila.append(detalle["B11"].value)  # C.U.R.P.
+    # SEXO
+    # Pagaduría
+    # Num. Empleado
+    # Num. Recibo
+    # Régimen
+    # T. Contrato
+    # Percepciones
+    # Deducciones
+    # 11301
+    # Concepto
+    # Importe
+    # 12201
+    # Concepto
+    # Importe
+    # 12301
+    # Concepto
+    # Importe
+    # 13101
+    # Concepto
+    # Importe
+    # 13102
+    # Concepto
+    # Importe
+    # 13401
+    # Concepto
+    # Importe
+    # 13402
+    # Concepto
+    # Importe
+    # 13407
+    # Concepto
+    # Importe
+    # 13408
+    # Concepto
+    # Importe
+    # 13411
+    # Concepto
+    # Importe
+    # 15403	Concepto	Importe	15402	Concepto	Importe	Otras Percepciones	Concepto	Importe	Despensa	Concepto	Importe	Otras Deducciones	Concepto	Importe	P.P.	Concepto	Importe	C.A.	Concepto	Importe	S.M.	Concepto	Importe	FOVISSSTE	Concepto	Importe	P.A.	Concepto	Importe	Faltas	Concepto	Importe	Retardos	Concepto	Importe
 
 
 @click.command()
@@ -1386,6 +1488,7 @@ def generar_timbrados(quincena_clave: str, tipo: str):
 
 cli.add_command(alimentar)
 cli.add_command(alimentar_apoyos_anuales)
+cli.add_command(generar_issste)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
 cli.add_command(generar_pensionados)
