@@ -24,11 +24,12 @@ def cli():
 
 
 @click.command()
-def alimentar():
+@click.option("--bancos-csv", default=BANCOS_CSV, help="Archivo CSV con los datos")
+def alimentar(bancos_csv: str):
     """Alimentar bancos"""
 
     # Validar archivo CSV
-    ruta = Path(BANCOS_CSV)
+    ruta = Path(bancos_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
         sys.exit(1)

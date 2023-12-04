@@ -54,6 +54,7 @@
                     <th>Nombre completo</th>
                     <th>Centro de trabajo</th>
                     <th>Concepto</th>
+                    <th>Concepto descripción</th>
                     <th>Plaza</th>
                     <th style="text-align:right">Importe</th>
                 </tr>
@@ -78,6 +79,7 @@
             { data: 'persona_nombre_completo' },
             { data: 'centro_trabajo_clave' },
             { data: 'concepto_clave' },
+            { data: 'concepto_descripcion' },
             { data: 'plaza_clave' },
             { data: 'importe' }
         ];
@@ -90,7 +92,16 @@
                 }
             },
             {
-                targets: 7, // importe
+                targets: [3, 6], // nombre y concepto_descripcion
+                render: function(data, type, row, meta) {
+                    if (data.length < 24) {
+                        return data;
+                    }
+                    return '<span title="' + data + '">' + data.substring(0, 24) + '...</span>';
+                }
+            },
+            {
+                targets: 8, // importe
                 render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
                 className: "dt-body-right",
             }
