@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from lib.safe_string import QUINCENA_REGEXP, safe_string
+from lib.safe_string import QUINCENA_REGEXP, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.beneficiarios.models import Beneficiario
@@ -31,7 +31,8 @@ def cli():
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def alimentar(quincena_clave: str):
+@click.option("--beneficiarios-csv", default=BENEFICIARIOS_CSV, help="Archivo CSV con los datos de los Beneficiarios")
+def alimentar(quincena_clave: str, beneficiarios_csv: str):
     """Alimentar Beneficiarios"""
 
     # Validar quincena
@@ -39,8 +40,8 @@ def alimentar(quincena_clave: str):
         click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
-    # Validar archivo
-    ruta = Path(BENEFICIARIOS_CSV)
+    # Validar archivo CSV
+    ruta = Path(beneficiarios_csv)
     if not ruta.exists():
         click.echo(f"ERROR: {ruta.name} no se encontró.")
         sys.exit(1)
@@ -70,10 +71,12 @@ def alimentar(quincena_clave: str):
         sesion.add(quincena)
         sesion.commit()
 
-    # Inicializar contadores
+    # Inicializar contadores y mensajes
     contador_beneficiarios_insertados = 0
     contador_beneficiarios_actualizados = 0
     contador_quincenas_insertadas = 0
+    personas_errores = []
+    bancos_errores = []
 
     # Leer el archivo CSV
     click.echo("Alimentando Beneficiarios: ", nl=False)
@@ -82,15 +85,17 @@ def alimentar(quincena_clave: str):
         for row in reader:
             # Validar RFC
             try:
-                rfc = safe_string(row["RFC"])  # TODO: Debe ser safe_rfc
+                rfc = safe_rfc(row["RFC"])
             except ValueError as error:
-                click.echo(str(error))
+                personas_errores.append(f"{row['RFC']}: {error}")
+                click.echo("E", nl=False)
                 continue
 
-            # Revistar si ya existe el beneficiario
+            # Revistar si ya existe
             beneficiario = Beneficiario.query.filter_by(rfc=rfc).first()
+
+            # Si no existe, se agrega
             if beneficiario is None:
-                # Agregar beneficiario
                 beneficiario = Beneficiario(
                     rfc=rfc,
                     nombres=safe_string(row["NOMBRES"], save_enie=True),
@@ -100,8 +105,9 @@ def alimentar(quincena_clave: str):
                 )
                 sesion.add(beneficiario)
                 contador_beneficiarios_insertados += 1
+                click.echo(".", nl=False)
             else:
-                # Si cambio nombres, apellido_primero o apellido_segundo, se actualizan
+                # Si cambio nombres, apellido_primero o apellido_segundo, se actualiza
                 if (
                     beneficiario.nombres != safe_string(row["NOMBRES"], save_enie=True)
                     or beneficiario.apellido_primero != safe_string(row["APELLIDO PRIMERO"], save_enie=True)
@@ -112,11 +118,12 @@ def alimentar(quincena_clave: str):
                     beneficiario.apellido_segundo = safe_string(row["APELLIDO SEGUNDO"], save_enie=True)
                     sesion.add(beneficiario)
                     contador_beneficiarios_actualizados += 1
+                    click.echo("u", nl=False)
 
             # Consultar banco
             banco = Banco.query.filter_by(clave=row["BANCO"]).first()
             if banco is None:
-                click.echo(f"AVISO: Clave de banco {row['BANCO']} no se encontró.")
+                bancos_errores.append(f"{row['BANCO']}: No existe")
                 continue
 
             # Agregar cuenta al beneficiario
@@ -137,8 +144,7 @@ def alimentar(quincena_clave: str):
 
             # Incrementar contador
             contador_quincenas_insertadas += 1
-            if contador_quincenas_insertadas % 100 == 0:
-                click.echo(click.style(".", fg="cyan"), nl=False)
+            click.echo(".", nl=False)
 
     # Poner avance de linea
     click.echo("")
@@ -147,16 +153,27 @@ def alimentar(quincena_clave: str):
     sesion.commit()
     sesion.close()
 
-    # Si hubo beneficiarios insertados, se muestra la cantidad
+    # Si hubo personas_errores, mostrarlos
+    if len(personas_errores) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_errores)} errores:", fg="red"))
+        click.echo(click.style(f"  {', '.join(personas_errores)}", fg="red"))
+
+    # Si hubo bancos_errores, mostrarlos
+    if len(bancos_errores) > 0:
+        click.echo(click.style(f"  Hubo {len(bancos_errores)} errores:", fg="red"))
+        click.echo(click.style(f"  {', '.join(bancos_errores)}", fg="red"))
+
+    # Si hubo beneficiarios insertados, mostrar contador
     if contador_beneficiarios_insertados > 0:
         click.echo(click.style(f"  Beneficiarios: {contador_beneficiarios_insertados} insertados.", fg="green"))
 
-    # Si hubo beneficiarios actualizados, se muestra la cantidad
+    # Si hubo beneficiarios actualizados, mostrar contador
     if contador_beneficiarios_actualizados > 0:
         click.echo(click.style(f"  Beneficiarios: {contador_beneficiarios_actualizados} actualizados.", fg="green"))
 
-    # Mensaje de termino
-    click.echo(click.style(f"  Beneficiarios: {contador_quincenas_insertadas} quincenas insertadas.", fg="green"))
+    # Si hubo quincenas insertadas, mostrar contador
+    if contador_quincenas_insertadas > 0:
+        click.echo(click.style(f"  Beneficiarios: {contador_quincenas_insertadas} quincenas insertadas.", fg="green"))
 
 
 cli.add_command(alimentar)

@@ -340,3 +340,4 @@ def agregar_cuentas_faltantes():
 
 cli.add_command(alimentar_bancarias)
 cli.add_command(alimentar_monederos)
+cli.add_command(agregar_cuentas_faltantes)
