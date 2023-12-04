@@ -82,6 +82,7 @@ def datatable_json():
                 "persona_nombre_completo": resultado.persona.nombre_completo,
                 "centro_trabajo_clave": resultado.centro_trabajo.clave,
                 "concepto_clave": resultado.concepto.clave,
+                "concepto_descripcion": resultado.concepto.descripcion,
                 "plaza_clave": resultado.plaza.clave,
                 "quincena_clave": resultado.quincena.clave,
                 "importe": resultado.importe,

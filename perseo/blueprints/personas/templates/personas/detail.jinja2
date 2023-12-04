@@ -86,10 +86,10 @@
                     <tr>
                         <th>ID</th>
                         <th>Quincena</th>
+                        <th>Tipo</th>
                         <th style="text-align:right">Percepcion</th>
                         <th style="text-align:right">Deduccion</th>
                         <th style="text-align:right">Importe</th>
-                        <th>Tipo</th>
                         <th>No. Cheque</th>
                     </tr>
                 </thead>
@@ -129,8 +129,9 @@
                         <th>ID</th>
                         <th>Quincena</th>
                         <th>Centro de trabajo</th>
-                        <th>Concepto</th>
                         <th>Plaza</th>
+                        <th>Concepto</th>
+                        <th>Concepto descripción</th>
                         <th style="text-align:right">Importe</th>
                     </tr>
                 </thead>
@@ -180,10 +181,10 @@
             configDTNominas['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
+                { data: 'tipo' },
                 { data: 'percepcion' },
                 { data: 'deduccion' },
                 { data: 'importe' },
-                { data: 'tipo' },
                 { data: 'num_cheque' }
             ];
             configDTNominas['columnDefs'] = [
@@ -195,7 +196,7 @@
                     }
                 },
                 {
-                    targets: [2, 3, 4], // percepcion, deduccion, importe
+                    targets: [3, 4, 5], // percepcion, deduccion, importe
                     render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
                     className: "dt-body-right",
                 }
@@ -215,9 +216,10 @@
             configDTPercepcionesDeducciones['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
+                { data: 'plaza_clave' },
                 { data: 'centro_trabajo_clave' },
                 { data: 'concepto_clave' },
-                { data: 'plaza_clave' },
+                { data: 'concepto_descripcion' },
                 { data: 'importe' }
             ];
             configDTPercepcionesDeducciones['columnDefs'] = [
@@ -229,7 +231,16 @@
                     }
                 },
                 {
-                    targets: 5, // importe
+                    targets: 5, // concepto_descripcion
+                    render: function(data, type, row, meta) {
+                        if (data.length < 24) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 24) + '...</span>';
+                    }
+                },
+                {
+                    targets: 6, // importe
                     render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
                     className: "dt-body-right",
                 }
