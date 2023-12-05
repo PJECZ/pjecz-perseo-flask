@@ -100,6 +100,9 @@ def alimentar(quincena_clave: str):
     # Iniciar listado de conceptos que no existen
     conceptos_no_existentes = []
 
+    # Definir el tabulador generico al que se van a relacionar los puestos que no tengan su tabulador
+    tabulador_generico = Tabulador.query.get(1)
+
     # Iniciar contadores
     contador = 0
     centros_trabajos_insertados_contador = 0
@@ -159,10 +162,10 @@ def alimentar(quincena_clave: str):
             .first()
         )
 
-        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se omite
+        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se le asigna tabulador_generico
         if tabulador is None:
             personas_sin_tabulador.append(rfc)
-            continue
+            tabulador = tabulador_generico
 
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -247,20 +250,20 @@ def alimentar(quincena_clave: str):
     sesion.commit()
     sesion.close()
 
-    # Si hubo conceptos_no_existentes, mostrarlos
+    # Si hubo conceptos no existentes, mostrarlos
     if len(conceptos_no_existentes) > 0:
         click.echo(click.style(f"  Hubo {len(conceptos_no_existentes)} Conceptos que no existen:", fg="yellow"))
         click.echo(click.style(f"  {','.join(conceptos_no_existentes)}", fg="yellow"))
 
-    # Si hubo centros_trabajos_insertados_contador, mostrar contador
+    # Si hubo centros trabajos insertados, mostrar contador
     if centros_trabajos_insertados_contador > 0:
         click.echo(click.style(f"  Se insertaron {centros_trabajos_insertados_contador} Centros de Trabajo", fg="green"))
 
-    # Si hubo personas_sin_puestos, mostrar contador
+    # Si hubo personas insertadas, mostrar contador
     if personas_insertadas_contador > 0:
         click.echo(click.style(f"  Se insertaron {personas_insertadas_contador} Personas", fg="green"))
 
-    # Si hubo personas_sin_puestos, mostrar contador
+    # Si hubo plazas insertadas, mostrar contador
     if plazas_insertadas_contador > 0:
         click.echo(click.style(f"  Se insertaron {plazas_insertadas_contador} Plazas", fg="green"))
 

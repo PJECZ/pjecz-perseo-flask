@@ -30,6 +30,7 @@ from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
 
+AGUINALDOS_FILENAME_XLS = "Aguinaldos.XLS"
 APOYOS_FILENAME_XLS = "Apoyos.XLS"
 BONOS_FILENAME_XLS = "Bonos.XLS"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
@@ -117,6 +118,12 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Obtener la primera hoja
     hoja = libro.sheet_by_index(0)
 
+    # Definir el puesto generico al que se van a relacionar las personas que no tengan su puesto
+    puesto_generico = Puesto.query.get(1)
+
+    # Definir el tabulador generico al que se van a relacionar los puestos que no tengan su tabulador
+    tabulador_generico = Tabulador.query.get(1)
+
     # Iniciar contadores
     contador = 0
     centros_trabajos_insertados_contador = 0
@@ -164,25 +171,27 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             sesion.add(centro_trabajo)
             centros_trabajos_insertados_contador += 1
 
-        # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se omite
+        # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se le asigna el puesto_generico
         puesto = Puesto.query.filter_by(clave=puesto_clave).first()
         if puesto is None:
             personas_sin_puestos.append(rfc)
-            continue
+            puesto = puesto_generico
 
         # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
-        tabulador = (
-            Tabulador.query.filter_by(puesto_id=puesto.id)
-            .filter_by(modelo=modelo)
-            .filter_by(nivel=nivel)
-            .filter_by(quinquenio=quinquenios)
-            .first()
-        )
+        tabulador = None
+        if puesto.id != 1:
+            tabulador = (
+                Tabulador.query.filter_by(puesto_id=puesto.id)
+                .filter_by(modelo=modelo)
+                .filter_by(nivel=nivel)
+                .filter_by(quinquenio=quinquenios)
+                .first()
+            )
 
-        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se omite
+        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se le asigna tabulador_generico
         if tabulador is None:
             personas_sin_tabulador.append(rfc)
-            continue
+            tabulador = tabulador_generico
 
         # Revisar si la Persona existe, de lo contrario insertarlo
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -280,16 +289,186 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos. Usan el generico.", fg="yellow"))
         # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador:", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador. Usan el generico.", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+@click.argument("fecha_pago_str", type=str)
+def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
+    """Alimentar aguinaldos"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Definir la fecha_final en base a la clave de la quincena
+    # Va a tomar el año de la quincena, el mes 12 y el dia 31
+    try:
+        fecha = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+        fecha_final = datetime(fecha.year, 12, 31)
+    except ValueError:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Validar fecha_pago
+    try:
+        fecha_pago = datetime.strptime(fecha_pago_str, "%Y-%m-%d")
+    except ValueError:
+        click.echo("ERROR: Fecha de pago inválida")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, AGUINALDOS_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo(f"ERROR: Quincena {quincena_clave} esta sido eliminada.")
+        sys.exit(1)
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Iniciar contadores
+    contador = 0
+    centros_trabajos_inexistentes = []
+    nominas_existentes = []
+    personas_inexistentes = []
+    plazas_insertadas_contador = 0
+
+    # Bucle por cada fila
+    click.echo("Alimentando Aguinaldos: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        centro_trabajo_clave = hoja.cell_value(fila, 1)
+        rfc = hoja.cell_value(fila, 2)
+        # nombre_completo = hoja.cell_value(fila, 3)
+        plaza_clave = hoja.cell_value(fila, 8)
+        percepcion = int(hoja.cell_value(fila, 12)) / 100.0
+        deduccion = int(hoja.cell_value(fila, 13)) / 100.0
+        impte = int(hoja.cell_value(fila, 14)) / 100.0
+        # modelo = int(hoja.cell_value(fila, 236))
+        # num_empleado = int(hoja.cell_value(fila, 240))
+
+        # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
+        persona = Persona.query.filter_by(rfc=rfc).first()
+        if persona is None:
+            personas_inexistentes.append(rfc)
+            continue
+
+        # Consultar el Centro de Trabajo, si no existe se agrega a la lista de centros_trabajos_inexistentes y se salta
+        centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+        if centro_trabajo is None:
+            centros_trabajos_inexistentes.append(centro_trabajo_clave)
+            continue
+
+        # Revisar si la Plaza existe, de lo contrario insertarla
+        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+        if plaza is None:
+            plaza = Plaza(clave=plaza_clave, descripcion="ND")
+            sesion.add(plaza)
+            plazas_insertadas_contador += 1
+
+        # Revisar que en nominas no exista una nomina con la misma persona, quincena y tipo AGUINALDO, si existe se omite
+        # nominas_posibles = (
+        #     Nomina.query.filter_by(persona_id=persona.id)
+        #     .filter_by(quincena_id=quincena.id)
+        #     .filter_by(tipo="AGUINALDO")
+        #     .filter_by(estatus="A")
+        #     .all()
+        # )
+        # if len(nominas_posibles) > 0:
+        #     nominas_existentes.append(rfc)
+        #     continue
+
+        # Alimentar registro en Nomina
+        nomina = Nomina(
+            centro_trabajo=centro_trabajo,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            percepcion=percepcion,
+            deduccion=deduccion,
+            importe=impte,
+            tipo="AGUINALDO",
+            fecha_pago=fecha_pago,
+        )
+        sesion.add(nomina)
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Cerrar la sesion para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Si hubo centros trabajos inexistentes, mostrarlos
+    if len(centros_trabajos_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
+
+    # Si hubo plazas insertadas, mostrar contador
+    if plazas_insertadas_contador > 0:
+        click.echo(click.style(f"  Se insertaron {plazas_insertadas_contador} Plazas", fg="green"))
+
+    # Si hubo personas inexistentes, mostrar contador
+    if len(personas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
+
+    # Si hubo nominas existentes, mostrarlos
+    if len(nominas_existentes) > 0:
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Aguinaldos que ya existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Alimentar Aguinaldos: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()
@@ -501,11 +680,6 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
         click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
 
-    # Si hubo nominas_existentes, mostrarlos
-    if len(nominas_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen:", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
-
     # Si hubo plazas_inexistentes, mostrarlos
     if len(plazas_inexistentes) > 0:
         click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen:", fg="yellow"))
@@ -516,8 +690,154 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
         click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
 
+    # Si hubo nominas_existentes, mostrarlos
+    if len(nominas_existentes) > 0:
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
+
     # Mensaje termino
-    click.echo(click.style(f"  Alimentar Apoyos Anuales:  {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar Apoyos Anuales: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+def generar_aguinaldos(quincena_clave: str):
+    """Generar archivo XLSX con los aguinaldos"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, entonces se termina
+    if quincena is None:
+        click.echo(f"ERROR: Quincena {quincena_clave} no existe.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena.estado != "ABIERTA":
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena.estatus != "A":
+        click.echo(f"ERROR: Quincena {quincena_clave} esta eliminada.")
+        sys.exit(1)
+
+    # Consultar las nominas de la quincena, solo tipo AGUINALDO
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="AGUINALDO").filter_by(estatus="A").all()
+
+    # Si no hay nominas, entonces se termina
+    if len(nominas) == 0:
+        click.echo(f"AVISO: No hay nominas de tipo SALARIO en la quincena {quincena_clave}.")
+        sys.exit(0)
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "QUINCENA",
+            "CENTRO DE TRABAJO",
+            "RFC",
+            "NOMBRE COMPLETO",
+            "NUMERO DE EMPLEADO",
+            "MODELO",
+            "PLAZA",
+            "NOMBRE DEL BANCO",
+            "BANCO ADMINISTRADOR",
+            "NUMERO DE CUENTA",
+            "MONTO A DEPOSITAR",
+            "NO DE CHEQUE",
+        ]
+    )
+
+    # Bucle para crear cada fila del archivo XLSX
+    contador = 0
+    personas_sin_cuentas = []
+    for nomina in nominas:
+        # Si el modelo de la persona es 3, se omite
+        if nomina.persona.modelo == 3:
+            continue
+
+        # Tomar las cuentas de la persona
+        cuentas = nomina.persona.cuentas
+
+        # Si no tiene cuentas, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if len(cuentas) == 0:
+            personas_sin_cuentas.append(nomina.persona.rfc)
+            continue
+
+        # Tomar la cuenta de la persona que no tenga la clave 9, porque esa clave es la de DESPENSA
+        su_cuenta = None
+        for cuenta in cuentas:
+            if cuenta.banco.clave != "9" and cuenta.estatus == "A":
+                su_cuenta = cuenta
+                break
+
+        # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
+        if su_cuenta is None:
+            personas_sin_cuentas.append(nomina.persona.rfc)
+            continue
+
+        # Tomar el banco de la cuenta de la persona
+        su_banco = su_cuenta.banco
+
+        # Incrementer el consecutivo_generado del banco
+        su_banco.consecutivo_generado += 1
+
+        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
+        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
+
+        # Agregar la fila
+        hoja.append(
+            [
+                nomina.quincena.clave,
+                nomina.centro_trabajo.clave,
+                nomina.persona.rfc,
+                nomina.persona.nombre_completo,
+                nomina.persona.num_empleado,
+                nomina.persona.modelo,
+                nomina.plaza.clave,
+                su_banco.nombre,
+                su_banco.clave,
+                su_cuenta.num_cuenta,
+                nomina.importe,
+                num_cheque,
+            ]
+        )
+
+        # Incrementar contador
+        contador += 1
+        if contador % 100 == 0:
+            click.echo(f"  Van {contador}...")
+
+    # Actualizar los consecutivos de cada banco
+    sesion.commit()
+
+    # Determinar el nombre del archivo XLSX, juntando 'aguinaldos' con la quincena y la fecha como YYYY-MM-DD HHMMSS
+    nombre_archivo = f"aguinaldos_{quincena_clave}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo)
+
+    # Si hubo personas sin cuentas, entonces mostrarlas en pantalla
+    if len(personas_sin_cuentas) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(f"  Generar Aguinaldos: {contador} filas en {nombre_archivo}")
 
 
 @click.command()
@@ -572,53 +892,6 @@ def generar_issste(quincena_clave, serica_xlsx, output_txt):
 
     # Mensaje termino
     click.echo(click.style(f"  Generar ISSSTE: {output_txt} generado.", fg="green"))
-
-    # fila.append(detalle["B5"].value)  # Tipo
-    # fila.append(detalle["B6"].value)  # NSS
-    # fila.append(detalle["B7"].value)  # Nombre
-    # fila.append(detalle["B8"].value)  # Ap. Paterno
-    # fila.append(detalle["B9"].value)  # Ap. Materno
-    # fila.append(detalle["B10"].value)  # R.F.C.
-    # fila.append(detalle["B11"].value)  # C.U.R.P.
-    # SEXO
-    # Pagaduría
-    # Num. Empleado
-    # Num. Recibo
-    # Régimen
-    # T. Contrato
-    # Percepciones
-    # Deducciones
-    # 11301
-    # Concepto
-    # Importe
-    # 12201
-    # Concepto
-    # Importe
-    # 12301
-    # Concepto
-    # Importe
-    # 13101
-    # Concepto
-    # Importe
-    # 13102
-    # Concepto
-    # Importe
-    # 13401
-    # Concepto
-    # Importe
-    # 13402
-    # Concepto
-    # Importe
-    # 13407
-    # Concepto
-    # Importe
-    # 13408
-    # Concepto
-    # Importe
-    # 13411
-    # Concepto
-    # Importe
-    # 15403	Concepto	Importe	15402	Concepto	Importe	Otras Percepciones	Concepto	Importe	Despensa	Concepto	Importe	Otras Deducciones	Concepto	Importe	P.P.	Concepto	Importe	C.A.	Concepto	Importe	S.M.	Concepto	Importe	FOVISSSTE	Concepto	Importe	P.A.	Concepto	Importe	Faltas	Concepto	Importe	Retardos	Concepto	Importe
 
 
 @click.command()
@@ -1487,6 +1760,7 @@ def generar_timbrados(quincena_clave: str, tipo: str):
 
 
 cli.add_command(alimentar)
+cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
 cli.add_command(generar_issste)
 cli.add_command(generar_nominas)
