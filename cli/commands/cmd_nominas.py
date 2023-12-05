@@ -12,7 +12,7 @@ import xlrd
 from openpyxl import Workbook, load_workbook
 
 from lib.fechas import quincena_to_fecha, quinquenio_count
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
+from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
@@ -59,14 +59,14 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("ERROR: Quincena inválida")
+        click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
     # Definir la fecha_final en base a la clave de la quincena
     try:
         fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
     except ValueError:
-        click.echo("ERROR: Quincena inválida")
+        click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
     # Validar fecha_pago
@@ -143,8 +143,20 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
         percepcion = int(hoja.cell_value(fila, 12)) / 100.0
         deduccion = int(hoja.cell_value(fila, 13)) / 100.0
         impte = int(hoja.cell_value(fila, 14)) / 100.0
+        desde_s = str(int(hoja.cell_value(fila, 16)))
+        hasta_s = str(int(hoja.cell_value(fila, 17)))
         modelo = int(hoja.cell_value(fila, 236))
         num_empleado = int(hoja.cell_value(fila, 240))
+
+        # Validar desde y hasta
+        try:
+            desde_clave = safe_quincena(desde_s)
+            desde = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+            hasta_clave = safe_quincena(hasta_s)
+            hasta = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+        except ValueError:
+            click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
+            sys.exit(1)
 
         # Tomar las columnas necesarias para el timbrado
         puesto_clave = safe_clave(hoja.cell_value(fila, 20))
@@ -255,6 +267,10 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             persona=persona,
             plaza=plaza,
             quincena=quincena,
+            desde=desde,
+            desde_clave=desde_clave,
+            hasta=hasta,
+            hasta_clave=hasta_clave,
             percepcion=percepcion,
             deduccion=deduccion,
             importe=impte,
@@ -309,7 +325,7 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("ERROR: Quincena inválida")
+        click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
     # Definir la fecha_final en base a la clave de la quincena
@@ -318,7 +334,7 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
         fecha = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
         fecha_final = datetime(fecha.year, 12, 31)
     except ValueError:
-        click.echo("ERROR: Quincena inválida")
+        click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
     # Validar fecha_pago
@@ -388,8 +404,20 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
         percepcion = int(hoja.cell_value(fila, 12)) / 100.0
         deduccion = int(hoja.cell_value(fila, 13)) / 100.0
         impte = int(hoja.cell_value(fila, 14)) / 100.0
+        desde_s = str(int(hoja.cell_value(fila, 16)))
+        hasta_s = str(int(hoja.cell_value(fila, 17)))
         # modelo = int(hoja.cell_value(fila, 236))
         # num_empleado = int(hoja.cell_value(fila, 240))
+
+        # Validar desde y hasta
+        try:
+            desde_clave = safe_quincena(desde_s)
+            desde = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+            hasta_clave = safe_quincena(hasta_s)
+            hasta = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+        except ValueError:
+            click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
+            sys.exit(1)
 
         # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -428,6 +456,10 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
             persona=persona,
             plaza=plaza,
             quincena=quincena,
+            desde=desde,
+            desde_clave=desde_clave,
+            hasta=hasta,
+            hasta_clave=hasta_clave,
             percepcion=percepcion,
             deduccion=deduccion,
             importe=impte,
@@ -479,14 +511,14 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("ERROR: Quincena inválida")
+        click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
     # Definir la fecha_final en base a la clave de la quincena
     try:
         fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
     except ValueError:
-        click.echo("ERROR: Quincena inválida")
+        click.echo("ERROR: Quincena inválida.")
         sys.exit(1)
 
     # Validar fecha_pago
@@ -575,8 +607,20 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
         deduccion = float(hoja.cell_value(fila, 5))
         impte = float(hoja.cell_value(fila, 6))
         # fecha_pago es la columna 7
-        # desde = hoja.cell_value(fila, 8)
-        # hasta = hoja.cell_value(fila, 9)
+        desde_s = str(int(hoja.cell_value(fila, 8)))
+        hasta_s = str(int(hoja.cell_value(fila, 9)))
+
+        # Validar desde y hasta
+        try:
+            desde_clave = safe_quincena(desde_s)
+            desde = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+            hasta_clave = safe_quincena(hasta_s)
+            hasta = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+        except ValueError:
+            click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
+            sys.exit(1)
+
+        # Validar importe del concepto D62, si no esta presente sera cero
         try:
             impte_concepto_d62 = float(hoja.cell_value(fila, 10))
         except ValueError:
@@ -655,6 +699,10 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             persona=persona,
             plaza=plaza,
             quincena=quincena,
+            desde=desde,
+            desde_clave=desde_clave,
+            hasta=hasta,
+            hasta_clave=hasta_clave,
             percepcion=percepcion,
             deduccion=deduccion,
             importe=impte,

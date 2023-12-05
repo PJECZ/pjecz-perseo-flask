@@ -146,12 +146,12 @@ def alimentar_bancarias(quincena: str):
 
     # Si hubo bancos que no existen, se muestran
     if len(bancos_que_no_existen) > 0:
-        click.echo(click.style(f"  Hubo {len(bancos_que_no_existen)} Bancos que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(bancos_que_no_existen)} Bancos que NO existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(bancos_que_no_existen)}", fg="yellow"))
 
     # Si hubo personas que no existen, se muestran
     if len(personas_que_no_existen) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_que_no_existen)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_que_no_existen)} Personas que NO existen. Se omiten:", fg="yellow"))
         # click.echo(click.style(f"  {', '.join(personas_que_no_existen)}", fg="yellow"))
 
     # Mensaje termino
@@ -266,11 +266,11 @@ def alimentar_monederos(quincena: str):
 
     # Si hubo numeros de tarjeta invalidos, se muestra el contador
     if contador_num_tarjeta_invalido > 0:
-        click.echo(click.style(f"  Hubo {contador_num_tarjeta_invalido} No. Cuenta invalidos.", fg="yellow"))
+        click.echo(click.style(f"  Fallaron {contador_num_tarjeta_invalido} mun_cuenta. Se llenaron con ceros.", fg="yellow"))
 
     # Si hubo personas que no existen, se muestran
     if len(personas_que_no_existen) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_que_no_existen)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_que_no_existen)} Personas que NO existen. Se omiten:", fg="yellow"))
         # click.echo(click.style(f"  {', '.join(personas_que_no_existen)}", fg="yellow"))
 
     # Mensaje termino
