@@ -64,12 +64,16 @@
                     <th>Quincena</th>
                     <th>RFC</th>
                     <th>Nombre completo</th>
+                    <th>Centro de T.</th>
+                    <th>Plaza</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
                     <th>Tipo</th>
-                    <th style="text-align:right">Percepcion</th>
-                    <th style="text-align:right">Deduccion</th>
+                    <th style="text-align:right">Percepción</th>
+                    <th style="text-align:right">Deducción</th>
                     <th style="text-align:right">Importe</th>
                     <th>No. Cheque</th>
-                    <th>Fecha de pago</th>
+                    <th>F. de Pago</th>
                 </tr>
             </thead>
         </table>
@@ -90,6 +94,10 @@
             { data: 'quincena_clave' },
             { data: 'persona_rfc' },
             { data: 'persona_nombre_completo' },
+            { data: 'centro_trabajo_clave' },
+            { data: 'plaza_clave' },
+            { data: 'desde_clave' },
+            { data: 'hasta_clave' },
             { data: 'tipo' },
             { data: 'percepcion' },
             { data: 'deduccion' },
@@ -106,8 +114,26 @@
                 }
             },
             {
-                targets: [5, 6, 7], // percepcion, deduccion, importe
-                render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                targets: 3, // persona_nombre_completo
+                render: function(data, type, row, meta) {
+                    if (data.length < 12) {
+                        return data;
+                    }
+                    return '<span title="' + data + '">' + data.substring(0, 12) + '...</span>';
+                }
+            },
+            {
+                targets: 8, // tipo
+                render: function(data, type, row, meta) {
+                    if (data.length < 4) {
+                        return data;
+                    }
+                    return '<span title="' + data + '">' + data.substring(0, 4) + '...</span>';
+                }
+            },
+            {
+                targets: [9, 10, 11], // percepcion, deduccion, importe
+                render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
                 className: "dt-body-right",
             }
         ];

@@ -12,6 +12,7 @@ class Nomina(database.Model, UniversalMixin):
     """Nomina"""
 
     TIPOS = {
+        "AGUINALDO": "AGUINALDO",
         "APOYO ANUAL": "APOYO ANUAL",
         "DESPENSA": "DESPENSA",
         "SALARIO": "SALARIO",
@@ -35,6 +36,10 @@ class Nomina(database.Model, UniversalMixin):
 
     # Columnas
     tipo = Column(Enum(*TIPOS, name="nominas_tipos"), nullable=False)
+    desde = Column(Date(), nullable=False)
+    desde_clave = Column(String(6), nullable=False)
+    hasta = Column(Date(), nullable=False)
+    hasta_clave = Column(String(6), nullable=False)
     percepcion = Column(Numeric(precision=24, scale=4), nullable=False)
     deduccion = Column(Numeric(precision=24, scale=4), nullable=False)
     importe = Column(Numeric(precision=24, scale=4), nullable=False)

@@ -30,8 +30,11 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
+    # Consultar las nominas de la quincena, solo tipo AGUINALDO
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="AGUINALDO").filter_by(estatus="A").all()
+
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    # nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Si no hay nominas, provocar error y salir
     if len(nominas) == 0:

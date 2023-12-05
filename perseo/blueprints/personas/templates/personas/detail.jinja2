@@ -86,11 +86,16 @@
                     <tr>
                         <th>ID</th>
                         <th>Quincena</th>
+                        <th>Centro de T.</th>
+                        <th>Plaza</th>
+                        <th>Desde</th>
+                        <th>Hasta</th>
                         <th>Tipo</th>
                         <th style="text-align:right">Percepcion</th>
                         <th style="text-align:right">Deduccion</th>
                         <th style="text-align:right">Importe</th>
                         <th>No. Cheque</th>
+                        <th>F. de Pago</th>
                     </tr>
                 </thead>
             </table>
@@ -181,11 +186,16 @@
             configDTNominas['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'desde_clave' },
+                { data: 'hasta_clave' },
                 { data: 'tipo' },
                 { data: 'percepcion' },
                 { data: 'deduccion' },
                 { data: 'importe' },
-                { data: 'num_cheque' }
+                { data: 'num_cheque' },
+                { data: 'fecha_pago' }
             ];
             configDTNominas['columnDefs'] = [
                 {
@@ -196,7 +206,7 @@
                     }
                 },
                 {
-                    targets: [3, 4, 5], // percepcion, deduccion, importe
+                    targets: [7, 8, 9], // percepcion, deduccion, importe
                     render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
                     className: "dt-body-right",
                 }
