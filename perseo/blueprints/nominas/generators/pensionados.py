@@ -33,8 +33,11 @@ def crear_pensionados(quincena_clave: str, quincena_producto_id: int, fijar_num_
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
+    # Consultar las nominas de la quincena, solo tipo AGUINALDO
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="AGUINALDO").filter_by(estatus="A").all()
+
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    # nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
     # Si no hay nominas, provocar error y salir
     if len(nominas) == 0:
