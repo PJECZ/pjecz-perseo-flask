@@ -44,6 +44,8 @@
         {% else %}
             {{ detail.label_value('Plaza', plaza_texto) }}
         {% endif %}
+        {{ detail.label_value('Desde', nomina.desde_clave) }}
+        {{ detail.label_value('Hasta', nomina.hasta_clave) }}
         {{ detail.label_value('Tipo', nomina.tipo) }}
         {{ detail.label_value_currency('Percepción', nomina.percepcion) }}
         {{ detail.label_value_currency('Deducción', nomina.deduccion) }}

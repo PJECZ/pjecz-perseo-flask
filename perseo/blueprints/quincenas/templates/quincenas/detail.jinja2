@@ -172,11 +172,16 @@
                         <th>ID</th>
                         <th>RFC</th>
                         <th>Nombre completo</th>
-                        <th style="text-align:right">Percepcion</th>
-                        <th style="text-align:right">Deduccion</th>
-                        <th style="text-align:right">Importe</th>
+                        <th>Centro de T.</th>
+                        <th>Plaza</th>
+                        <th>Desde</th>
+                        <th>Hasta</th>
                         <th>Tipo</th>
+                        <th style="text-align:right">Percepción</th>
+                        <th style="text-align:right">Deducción</th>
+                        <th style="text-align:right">Importe</th>
                         <th>No. Cheque</th>
+                        <th>F. de Pago</th>
                     </tr>
                 </thead>
             </table>
@@ -202,11 +207,16 @@
                 { data: 'detalle' },
                 { data: 'persona_rfc' },
                 { data: 'persona_nombre_completo' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'desde_clave' },
+                { data: 'hasta_clave' },
+                { data: 'tipo' },
                 { data: 'percepcion' },
                 { data: 'deduccion' },
                 { data: 'importe' },
-                { data: 'tipo' },
-                { data: 'num_cheque' }
+                { data: 'num_cheque' },
+                { data: 'fecha_pago' }
             ];
             configDTNominas['columnDefs'] = [
                 {
@@ -217,8 +227,26 @@
                     }
                 },
                 {
-                    targets: [3, 4, 5], // percepcion, deduccion, importe
-                    render: $.fn.dataTable.render.number( ',', '.', 4, '$\t' ),
+                    targets: 2, // persona_nombre_completo
+                    render: function(data, type, row, meta) {
+                        if (data.length < 12) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 12) + '...</span>';
+                    }
+                },
+                {
+                    targets: 7, // tipo
+                    render: function(data, type, row, meta) {
+                        if (data.length < 4) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 4) + '...</span>';
+                    }
+                },
+                {
+                    targets: [8, 9, 10], // percepcion, deduccion, importe
+                    render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
                     className: "dt-body-right",
                 }
             ];

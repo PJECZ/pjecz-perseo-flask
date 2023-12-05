@@ -94,6 +94,8 @@ def datatable_json():
                 "centro_trabajo_clave": resultado.centro_trabajo.clave,
                 "plaza_clave": resultado.plaza.clave,
                 "tipo": resultado.tipo,
+                "desde_clave": resultado.desde_clave,
+                "hasta_clave": resultado.hasta_clave,
                 "percepcion": resultado.percepcion,
                 "deduccion": resultado.deduccion,
                 "importe": resultado.importe,
