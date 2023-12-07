@@ -84,14 +84,14 @@ def actualizar(personas_csv: str):
 
             # Validar el numero de seguridad social
             seguridad_social = None
-            if "seguridad_social" in row and row["seguridad_social"] != "":
+            if ("seguridad_social" in row and row["seguridad_social"] != "") or ("nss" in row and row["nss"] != ""):
                 if re.match(r"^\d{1,24}$", row["seguridad_social"]):
                     seguridad_social = row["seguridad_social"]
-                    if persona.seguridad_social != seguridad_social:
-                        persona.seguridad_social = seguridad_social
-                        hay_cambios = True
                 else:
                     errores.append(f"{row['rfc']}: NSS inválido: {row['seguridad_social']}")
+                if persona.seguridad_social != seguridad_social:
+                    persona.seguridad_social = seguridad_social
+                    hay_cambios = True
 
             # Si hubo cambios, agregar a la sesión e incrementar el contador
             if hay_cambios:
