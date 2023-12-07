@@ -43,7 +43,13 @@
                             <label for="filtroPersonaApellidoSegundo">Segundo apellido</label>
                         </div>
                     </div>
-                    <div class="col-4 text-end">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroNumCuenta" type="text" class="form-control" aria-label="No. Cuenta" style="text-transform: uppercase;">
+                            <label for="filtroNumCuenta">No. de Cuenta</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
                         <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosCuentas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
                         <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosCuentas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                     </div>
@@ -96,6 +102,7 @@
         filtrosCuentas.agregarInput('filtroPersonaNombres', 'persona_nombres');
         filtrosCuentas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');
         filtrosCuentas.agregarInput('filtroPersonaApellidoSegundo', 'persona_apellido_segundo');
+        filtrosCuentas.agregarInput('filtroNumCuenta', 'num_cuenta');
         filtrosCuentas.precargar();
     </script>
 {% endblock %}
