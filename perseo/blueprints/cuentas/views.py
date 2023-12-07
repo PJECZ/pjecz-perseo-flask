@@ -45,6 +45,8 @@ def datatable_json():
         consulta = consulta.filter_by(banco_id=request.form["banco_id"])
     if "persona_id" in request.form:
         consulta = consulta.filter_by(persona_id=request.form["persona_id"])
+    if "num_cuenta" in request.form:
+        consulta = consulta.filter(Cuenta.num_cuenta.contains(safe_string(request.form["num_cuenta"])))
     # Luego filtrar por columnas de otras tablas
     if (
         "persona_rfc" in request.form

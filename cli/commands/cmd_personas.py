@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 
 from lib.safe_string import safe_curp, safe_rfc
 from perseo.app import create_app
+from perseo.blueprints.nominas.models import Nomina
+from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
 from perseo.extensions import database
 
@@ -115,6 +117,101 @@ def actualizar(personas_csv: str):
 
     # Mensaje de termino
     click.echo(f"  Personas: {contador} actualizadas.")
+
+
+@click.command()
+@click.argument("rfc-origen", type=str)
+@click.argument("rfc-destino", type=str)
+@click.option("--eliminar", is_flag=True, help="Eliminar el RFC de origen")
+def migrar_eliminar_rfc(rfc_origen: str, rfc_destino: str, eliminar: bool):
+    """Migrar las nominas y las percepciones_deducciones de una persona a otra y eliminar la persona de origen"""
+
+    # Validar el RFC de origen
+    try:
+        rfc_origen = safe_rfc(rfc_origen)
+    except ValueError:
+        click.echo(f"ERROR: RFC de origen inválido: {rfc_origen}")
+        sys.exit(1)
+
+    # Validar el RFC de destino
+    try:
+        rfc_destino = safe_rfc(rfc_destino)
+    except ValueError:
+        click.echo(f"ERROR: RFC de destino inválido: {rfc_destino}")
+        sys.exit(1)
+
+    # Consultar a la persona con el RFC de origen
+    persona_origen = Persona.query.filter_by(rfc=rfc_origen).first()
+    if persona_origen is None:
+        click.echo(f"ERROR: RFC de origen no encontrado: {rfc_origen}")
+        sys.exit(1)
+    if persona_origen.estatus != "A":
+        click.echo(f"ERROR: RFC de origen no activo: {rfc_origen}")
+        sys.exit(1)
+
+    # Consultar a la persona con el RFC de destino
+    persona_destino = Persona.query.filter_by(rfc=rfc_destino).first()
+    if persona_destino is None:
+        click.echo(f"ERROR: RFC de destino no encontrado: {rfc_destino}")
+        sys.exit(1)
+    if persona_destino.estatus != "A":
+        click.echo(f"ERROR: RFC de destino no activo: {rfc_destino}")
+        sys.exit(1)
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Actualizar las percepciones_deducciones de la persona de origen con la persona de destino
+    click.echo(f"Actualizando las percepciones_deducciones de {rfc_origen} a {rfc_destino}...")
+    contador_percepciones_deducciones_actualizados = 0
+    for percepcion_deduccion in PercepcionDeduccion.query.filter_by(persona_id=persona_origen.id).all():
+        percepcion_deduccion.persona_id = persona_destino.id
+        sesion.add(percepcion_deduccion)
+        contador_percepciones_deducciones_actualizados += 1
+
+    # Actualizar las nominas de la persona de origen con la persona de destino
+    click.echo(f"Actualizando las nominas de {rfc_origen} a {rfc_destino}...")
+    contador_nominas_actualizados = 0
+    for nomina in Nomina.query.filter_by(persona_id=persona_origen.id).all():
+        nomina.persona_id = persona_destino.id
+        sesion.add(nomina)
+        contador_nominas_actualizados += 1
+
+    # Eliminar las cuentas de la persona de origen
+    click.echo(f"Eliminando las cuentas de {rfc_origen}...")
+    contador_cuentas_eliminadas = 0
+    for cuenta in persona_origen.cuentas:
+        cuenta.estatus = "B"
+        sesion.add(cuenta)
+        contador_cuentas_eliminadas += 1
+
+    # Eliminar la persona de origen
+    if eliminar:
+        persona_origen.estatus = "B"
+        sesion.add(persona_origen)
+
+    # Guardar cambios
+    sesion.commit()
+    sesion.close()
+
+    # Si hubo actulizaciones en percepciones_deducciones, mostrar mensaje
+    if contador_percepciones_deducciones_actualizados > 0:
+        click.echo(f"Percepciones/Deducciones: {contador_percepciones_deducciones_actualizados} actualizados.")
+
+    # Si hubo actulizaciones en nominas, mostrar mensaje
+    if contador_nominas_actualizados > 0:
+        click.echo(f"Nominas: {contador_nominas_actualizados} actualizadas.")
+
+    # Si hubo eliminaciones en cuentas, mostrar mensaje
+    if contador_cuentas_eliminadas > 0:
+        click.echo(f"Cuentas: {contador_cuentas_eliminadas} eliminadas.")
+
+    # Si se elimino la persona de origen, mostrar mensaje
+    if eliminar:
+        click.echo(f"Persona {rfc_origen} eliminada.")
+
+    # Mensaje de termino
+    click.echo(f"Ya se migró {rfc_origen} a {rfc_destino}.")
 
 
 @click.command()
@@ -227,4 +324,5 @@ def sincronizar():
 
 
 cli.add_command(actualizar)
+cli.add_command(migrar_eliminar_rfc)
 cli.add_command(sincronizar)
