@@ -40,7 +40,7 @@ def cli():
 @click.command()
 @click.option("--personas-csv", default=PERSONAS_CSV, help="Archivo CSV con los datos de las Personas")
 def actualizar(personas_csv: str):
-    """Actualizar los CP y/o CURP de las Personas en base a su RFC a partir de un archivo CSV"""
+    """Actualizar los CP, CURP y/o NSS de las Personas en base a su RFC a partir de un archivo CSV"""
 
     # Validar archivo
     ruta = Path(personas_csv)
@@ -84,11 +84,22 @@ def actualizar(personas_csv: str):
                     persona.codigo_postal_fiscal = codigo_postal_fiscal
                     hay_cambios = True
 
+            # Validar la CURP
+            curp = None
+            if "curp" in row and row["curp"] != "":
+                try:
+                    curp = safe_curp(row["curp"])
+                except ValueError:
+                    errores.append(f"{row['rfc']}: CURP inválido: {row['curp']}")
+                if persona.curp != curp:
+                    persona.curp = curp
+                    hay_cambios = True
+
             # Validar el numero de seguridad social
             seguridad_social = None
-            if ("seguridad_social" in row and row["seguridad_social"] != "") or ("nss" in row and row["nss"] != ""):
-                if re.match(r"^\d{1,24}$", row["seguridad_social"]):
-                    seguridad_social = row["seguridad_social"]
+            if "nss" in row and row["nss"] != "":
+                if re.match(r"^\d{1,24}$", row["nss"]):
+                    seguridad_social = row["nss"]
                 else:
                     errores.append(f"{row['rfc']}: NSS inválido: {row['seguridad_social']}")
                 if persona.seguridad_social != seguridad_social:
@@ -99,7 +110,10 @@ def actualizar(personas_csv: str):
             if hay_cambios:
                 sesion.add(persona)
                 contador += 1
-                click.echo(click.style(".", fg="cyan"), nl=False)
+                click.echo(click.style("u", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
 
     # Si no hubo cambios, mostrar mensaje y terminar
     if contador == 0:
