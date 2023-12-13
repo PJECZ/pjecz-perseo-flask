@@ -1812,7 +1812,7 @@ def generar_timbrados(quincena_clave: str, tipo: str):
         fila_parte_3 = [
             "IP",  # ORIGEN RECURSO
             "100",  # MONTO DEL RECURSO
-            nomina.persona.codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
+            str(nomina.persona.codigo_postal_fiscal).zfill(5),  # CODIGO POSTAL FISCAL
         ]
 
         # Agregar la fila
