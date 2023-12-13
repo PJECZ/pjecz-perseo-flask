@@ -749,7 +749,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-@click.option("--tipo", type=click.Choice(["SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL"]), default="")
+@click.option("--tipo", type=click.Choice(["", "SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL"]), default="")
 def eliminar(quincena_clave: str, tipo: str):
     """Eliminar nominas"""
 
