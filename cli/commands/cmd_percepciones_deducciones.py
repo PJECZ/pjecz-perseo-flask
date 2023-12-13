@@ -271,4 +271,42 @@ def alimentar(quincena_clave: str):
     click.echo(click.style(f"  Alimentar P-D: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
 
 
+@click.command()
+@click.argument("quincena_clave", type=str)
+def eliminar(quincena_clave: str):
+    """Eliminar percepciones-deducciones"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo(f"ERROR: Quincena {quincena_clave} esta sido eliminada.")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Eliminar los registros de percepciones-deducciones que tengan esa quincena
+    contador = PercepcionDeduccion.query.filter_by(quincena_id=quincena.id).delete()
+
+    # Cerrar la sesion para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Mensaje termino
+    click.echo(click.style(f"  Eliminar P-D: {contador} eliminadas en la quincena {quincena_clave}.", fg="green"))
+
+
 cli.add_command(alimentar)
+cli.add_command(eliminar)
