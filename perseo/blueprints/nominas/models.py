@@ -35,7 +35,7 @@ class Nomina(database.Model, UniversalMixin):
     quincena = relationship("Quincena", back_populates="nominas")
 
     # Columnas
-    tipo = Column(Enum(*TIPOS, name="nominas_tipos"), nullable=False)
+    tipo = Column(Enum(*TIPOS, name="nominas_tipos"), nullable=False, index=True)
     desde = Column(Date(), nullable=False)
     desde_clave = Column(String(6), nullable=False)
     hasta = Column(Date(), nullable=False)

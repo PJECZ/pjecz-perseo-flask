@@ -15,6 +15,7 @@ from perseo.blueprints.quincenas.forms import QuincenaForm
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.blueprints.usuarios.decorators import permission_required
+from perseo.extensions import socketio
 
 MODULO = "QUINCENAS"
 
@@ -242,14 +243,21 @@ def recover(quincena_id):
 
 @quincenas.route("/quincenas/cerrar")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
-def close():
-    """Lanzar tarea en el fondo para cerrar las quincenas pasadas, menos la ultima"""
+def close_all():
+    """Lanzar tarea en el fondo para cerrar TODAS las quincenas con estado ABIERTA"""
     current_user.launch_task(
         comando="quincenas.tasks.lanzar_cerrar",
         mensaje="Lanzando cerrar quincenas...",
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo para cerrar TODAS las quincenas con estado ABIERTA.", "info")
     return redirect(url_for("quincenas.list_active"))
+
+
+@socketio.on("cerrar_quincenas", namespace="/quincenas")
+def close_all_finished(result):
+    """Enviar el resultado de la tarea en el fondo para cerrar todas las quincenas"""
+    send = {"message": result}
+    socketio.emit("cerrar_quincenas_finished", send, namespace="/quincenas")
 
 
 @quincenas.route("/quincenas/generar_nominas/<int:quincena_id>")

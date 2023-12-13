@@ -84,6 +84,7 @@ def datatable_json():
                 "concepto_clave": resultado.concepto.clave,
                 "concepto_descripcion": resultado.concepto.descripcion,
                 "plaza_clave": resultado.plaza.clave,
+                "tipo": resultado.tipo,
                 "quincena_clave": resultado.quincena.clave,
                 "importe": resultado.importe,
             }

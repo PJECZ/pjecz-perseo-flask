@@ -11,6 +11,12 @@ from perseo.extensions import database
 class Persona(database.Model, UniversalMixin):
     """Persona"""
 
+    MODELOS = {
+        1: "CONFIANZA",
+        2: "SINDICALIZADO",
+        3: "JUBILADO",
+    }
+
     # Nombre de la tabla
     __tablename__ = "personas"
 
@@ -28,12 +34,17 @@ class Persona(database.Model, UniversalMixin):
     apellido_segundo = Column(String(256), nullable=False, default="", server_default="")
     curp = Column(String(18), nullable=False, default="", server_default="")
     num_empleado = Column(Integer)
-    modelo = Column(Integer, nullable=False, index=True)  # 1: Confianza, 2: Sindicalizado, 3: Jubilado, 4: Beneficiario
     ingreso_gobierno_fecha = Column(Date)
     ingreso_pj_fecha = Column(Date)
     nacimiento_fecha = Column(Date)
     codigo_postal_fiscal = Column(Integer)
     seguridad_social = Column(String(24))
+
+    # Columna modelo en Persona
+    # 1: Confianza
+    # 2: Sindicalizado
+    # 3: Jubilado
+    modelo = Column(Integer, nullable=False, index=True)  # 1: Confianza, 2: Sindicalizado, 3: Jubilado, 4: Beneficiario
 
     # Hijos
     cuentas = relationship("Cuenta", back_populates="persona")
