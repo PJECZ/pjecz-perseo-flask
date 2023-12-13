@@ -15,7 +15,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('quincenas.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_admin('QUINCENAS') %}
-            {{ modals.button_modal('Cerrar Quincenas', url_for('quincenas.close'), 'Close', 'mdi:stop', "¿Está seguro de cerrar todas las quincenas abiertas?") }}
+            {{ modals.button_modal('Cerrar Quincenas', url_for('quincenas.close_all'), 'Close', 'mdi:stop', "¿Está seguro de cerrar TODAS las quincenas abiertas porque los consecutivos de los bancos se van a cambiar?") }}
         {% endif %}
         {% if current_user.can_insert('QUINCENAS') %}
             {{ topbar.button_new('Nueva Quincena', url_for('quincenas.new')) }}
@@ -24,6 +24,13 @@
 {% endblock %}
 
 {% block content %}
+    {# Card que muestra el resultado de la tarea en el fondo #}
+    <div id="taskResult" class="card bg-light mb-3">
+        <div class="card-header">Cerrar Quincenas</div>
+        <div id="taskResultMessage" class="card-body">
+            This is some text within a card body.
+        </div>
+    </div>
     {% call list.card() %}
         <table id="quincenas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
@@ -37,7 +44,18 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Modificar el texto del mensaje cuando se cierran las quincenas -->
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('cerrar_quincenas', function(msg) {
+            console.log(msg);
+            $('#taskResultMessage').html(msg.data);
+            $('#taskResult').show();
+        });
+    </script>
+    <!-- Cerrar Quincenas -->
     {{ modals.custom_javascript('Cerrar Quincenas', '', 'Close') }}
+    <!-- Datatable -->
     {{ list.config_datatable() }}
     <script>
         configDataTable['ajax']['url'] = '/quincenas/datatable_json';
