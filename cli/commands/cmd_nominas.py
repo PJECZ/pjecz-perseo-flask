@@ -1808,11 +1808,16 @@ def generar_timbrados(quincena_clave: str, tipo: str):
             )
             fila_parte_2.append(percepcion_deduccion_d62.importe if percepcion_deduccion_d62 is not None else 0)
 
+        # Si el codigo postal fiscal es cero, entonces se usa 00000
+        codigo_postal_fiscal = "00000"
+        if nomina.persona.codigo_postal_fiscal:
+            codigo_postal_fiscal = str(nomina.persona.codigo_postal_fiscal).zfill(5)
+
         # Fila parte 3
         fila_parte_3 = [
             "IP",  # ORIGEN RECURSO
             "100",  # MONTO DEL RECURSO
-            str(nomina.persona.codigo_postal_fiscal).zfill(5),  # CODIGO POSTAL FISCAL
+            codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
         ]
 
         # Agregar la fila
