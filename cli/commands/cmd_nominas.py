@@ -749,7 +749,8 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def eliminar(quincena_clave: str):
+@click.option("--tipo", type=click.Choice(["SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL"]), default="")
+def eliminar(quincena_clave: str, tipo: str):
     """Eliminar nominas"""
 
     # Validar quincena
@@ -773,8 +774,15 @@ def eliminar(quincena_clave: str):
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
+    # Iniciar el comando sqlalchemy
+    comando = Nomina.query.filter_by(quincena_id=quincena.id)
+
+    # Si se especifico el tipo, se agrega al comando
+    if tipo != "":
+        comando = comando.filter_by(tipo=tipo)
+
     # Eliminar los registros de la tabla nominas que tengan esa quincena
-    contador = Nomina.query.filter_by(quincena_id=quincena.id).delete()
+    contador = comando.delete()
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
