@@ -6,21 +6,22 @@ from flask_login import current_user
 
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
-from perseo.extensions import socketio
+
+# from perseo.extensions import socketio
 
 sistemas = Blueprint("sistemas", __name__, template_folder="templates")
 
 
-@socketio.on("connect")
-def socketio_connect():
-    """SocketIO Conexión"""
-    print("Cliente conectado")
+# @socketio.on("connect")
+# def socketio_connect():
+#     """SocketIO Conexión"""
+#     print("Root: client connected")
 
 
-@socketio.on("test")
-def socketio_test(data):
-    """SocketIO Conexión"""
-    print("Datos recibidos: " + str(data))
+# @socketio.on("message")
+# def handle_message(message):
+#     """SocketIO Mensaje"""
+#     print("Root: received message: " + message)
 
 
 @sistemas.route("/")

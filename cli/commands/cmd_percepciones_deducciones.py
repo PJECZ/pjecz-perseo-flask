@@ -40,13 +40,18 @@ def cli():
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def alimentar(quincena_clave: str):
+@click.option("--tipo", type=click.Choice(["", "SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL"]), default="")
+def alimentar(quincena_clave: str, tipo: str):
     """Alimentar percepciones-deducciones"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("ERROR: Quincena inválida")
         sys.exit(1)
+
+    # Si no de especifica el tipo, se alimentan con el tipo SALARIO
+    if tipo == "":
+        tipo = "SALARIO"
 
     # Definir la fecha_final en base a la clave de la quincena
     try:
@@ -197,11 +202,11 @@ def alimentar(quincena_clave: str):
         # Buscar percepciones y deducciones
         col_num = 26
         while True:
-            # Tomar el tipo, primero
-            tipo = safe_string(hoja.cell_value(fila, col_num))
+            # Tomar 'P' o 'D', primero
+            p_o_d = safe_string(hoja.cell_value(fila, col_num))
 
-            # Si el tipo es un texto vacio, se rompe el ciclo
-            if tipo == "":
+            # Si 'P' o 'D' es un texto vacio, se rompe el ciclo
+            if p_o_d == "":
                 break
 
             # Tomar las cinco columnas
@@ -212,13 +217,12 @@ def alimentar(quincena_clave: str):
                 impt = 0.0
 
             # Revisar si el Concepto existe, de lo contrario SE OMITE
-            concepto_clave = f"{tipo}{conc}"
+            concepto_clave = f"{p_o_d}{conc}"
             concepto = Concepto.query.filter_by(clave=concepto_clave).first()
             if concepto is None and concepto_clave not in conceptos_no_existentes:
                 conceptos_no_existentes.append(concepto_clave)
                 concepto = Concepto(clave=concepto_clave, descripcion="DESCONOCIDO")
                 sesion.add(concepto)
-                # click.echo(f"  Concepto {concepto_clave} insertado")
 
             # Alimentar percepcion-deduccion
             percepcion_deduccion = PercepcionDeduccion(
@@ -228,6 +232,7 @@ def alimentar(quincena_clave: str):
                 plaza=plaza,
                 quincena=quincena,
                 importe=impt,
+                tipo=tipo,
             )
             sesion.add(percepcion_deduccion)
 
