@@ -1,9 +1,12 @@
 """
 CLI Quincenas
 """
+import os
 import sys
 
 import click
+import requests
+from dotenv import load_dotenv
 
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
@@ -13,6 +16,9 @@ from perseo.extensions import database
 app = create_app()
 app.app_context().push()
 database.app = app
+
+load_dotenv()
+HOST = os.getenv("HOST", "http://localhost:5000")
 
 
 @click.group()
@@ -73,4 +79,34 @@ def cerrar():
     click.echo(f"Quincenas terminado: {contador} cambios en quincenas, {bancos_actualizados_contador} cambios en bancos.")
 
 
+@click.command()
+def test_close_all():
+    """Probar enviar una peticion para cerrar todas las quincenas"""
+
+    # Definir el payload
+    data = {
+        "success": True,
+        "message": "Tarea finalizada",
+    }
+
+    # Enviar el payload
+    url = f"{HOST}/quincenas_eventos/cerrar_todas_json"
+    click.echo(f"Enviando a {url}")
+    try:
+        response = requests.get(url, json=data, timeout=12, verify=False)
+    except requests.exceptions.ConnectionError:
+        click.echo(f"{url} ERROR: No hubo respuesta al solicitar persona")
+        sys.exit(1)
+    except requests.exceptions.HTTPError as error:
+        click.echo(f"{url} ERROR: Status Code al solicitar persona: " + str(error))
+        sys.exit(1)
+    except requests.exceptions.RequestException:
+        click.echo(f"{url} ERROR: Inesperado al solicitar persona")
+        sys.exit(1)
+
+    # Mensaje termino
+    click.echo(response.text)
+
+
 cli.add_command(cerrar)
+cli.add_command(test_close_all)

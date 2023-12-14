@@ -24,12 +24,10 @@
 {% endblock %}
 
 {% block content %}
-    {# Card que muestra el resultado de la tarea en el fondo #}
-    <div id="taskResult" class="card bg-light mb-3">
+    {# Resultado de la tarea en el fondo #}
+    <div id="taskResult" class="card bg-light mb-3" style="display: none;">
         <div class="card-header">Cerrar Quincenas</div>
-        <div id="taskResultMessage" class="card-body">
-            This is some text within a card body.
-        </div>
+        <div id="taskResultMessage" class="card-body"></div>
     </div>
     {% call list.card() %}
         <table id="quincenas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
@@ -44,14 +42,19 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Modificar el texto del mensaje cuando se cierran las quincenas -->
+    <!-- Socket.io sobre quincenas -->
     <script>
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
-        socket.on('cerrar_quincenas', function(msg) {
-            console.log(msg);
-            $('#taskResultMessage').html(msg.data);
-            $('#taskResult').show();
-        });
+        socket.send('Message from quincenas');
+        // Send message to quincenas after 5 seconds
+        setTimeout(function() {
+            const socket_quincenas = io();
+            socket_quincenas.emit('quincenas', 'New message from quincenas');
+        }, 5000);
+        //socket_quincenas.on('quincenas', function(data) {
+            // console.log('Recibido: ' + data.message);
+            // $('#taskResult').show();
+            // $('#taskResultMessage').html(data.message);
+        //});
     </script>
     <!-- Cerrar Quincenas -->
     {{ modals.custom_javascript('Cerrar Quincenas', '', 'Close') }}

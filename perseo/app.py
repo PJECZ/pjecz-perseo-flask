@@ -26,8 +26,7 @@ from perseo.blueprints.personas.views import personas
 from perseo.blueprints.plazas.views import plazas
 from perseo.blueprints.productos.views import productos
 from perseo.blueprints.puestos.views import puestos
-
-# from perseo.blueprints.puestos_historiales.views import puestos_historiales
+from perseo.blueprints.quincenas.events import quincenas as quincenas_events
 from perseo.blueprints.quincenas.views import quincenas
 from perseo.blueprints.quincenas_productos.views import quincenas_productos
 from perseo.blueprints.roles.views import roles
@@ -73,8 +72,8 @@ def create_app():
     app.register_blueprint(plazas)
     app.register_blueprint(productos)
     app.register_blueprint(puestos)
-    # app.register_blueprint(puestos_historiales)
     app.register_blueprint(quincenas)
+    app.register_blueprint(quincenas_events)
     app.register_blueprint(quincenas_productos)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)

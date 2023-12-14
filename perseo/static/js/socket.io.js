@@ -1,5 +1,6 @@
 // Socket.IO
-var socket = io();
-socket.on("connect", function () {
-  socket.emit("test", { data: "I'm connected!" });
+const socket = io();
+socket.on("connect", function (data) {
+  console.log("Connected to the server!");
 });
+socket.send("Hello!");
