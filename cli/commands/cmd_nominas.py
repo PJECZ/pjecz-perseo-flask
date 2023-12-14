@@ -306,12 +306,12 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos. Usan el generico.", fg="yellow"))
-        # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador. Usan el generico.", fg="yellow"))
-        # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
