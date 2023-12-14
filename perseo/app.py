@@ -26,7 +26,6 @@ from perseo.blueprints.personas.views import personas
 from perseo.blueprints.plazas.views import plazas
 from perseo.blueprints.productos.views import productos
 from perseo.blueprints.puestos.views import puestos
-from perseo.blueprints.quincenas.events import quincenas as quincenas_events
 from perseo.blueprints.quincenas.views import quincenas
 from perseo.blueprints.quincenas_productos.views import quincenas_productos
 from perseo.blueprints.roles.views import roles
@@ -36,7 +35,7 @@ from perseo.blueprints.tareas.views import tareas
 from perseo.blueprints.usuarios.models import Usuario
 from perseo.blueprints.usuarios.views import usuarios
 from perseo.blueprints.usuarios_roles.views import usuarios_roles
-from perseo.extensions import csrf, database, login_manager, moment, socketio
+from perseo.extensions import csrf, database, login_manager, moment
 
 
 def create_app():
@@ -73,7 +72,6 @@ def create_app():
     app.register_blueprint(productos)
     app.register_blueprint(puestos)
     app.register_blueprint(quincenas)
-    app.register_blueprint(quincenas_events)
     app.register_blueprint(quincenas_productos)
     app.register_blueprint(roles)
     app.register_blueprint(sistemas)
@@ -98,7 +96,7 @@ def extensions(app):
     database.init_app(app)
     login_manager.init_app(app)
     moment.init_app(app)
-    socketio.init_app(app)
+    # socketio.init_app(app)
 
 
 def authentication(user_model):

@@ -25,10 +25,10 @@
 
 {% block content %}
     {# Resultado de la tarea en el fondo #}
-    <div id="taskResult" class="card bg-light mb-3" style="display: none;">
+    <!-- div id="taskResult" class="card bg-light mb-3" style="display: none;">
         <div class="card-header">Cerrar Quincenas</div>
         <div id="taskResultMessage" class="card-body"></div>
-    </div>
+    </div -->
     {% call list.card() %}
         <table id="quincenas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
@@ -43,7 +43,7 @@
 
 {% block custom_javascript %}
     <!-- Socket.io sobre quincenas -->
-    <script>
+    <!-- script>
         // Test root socket
         socket.send('Message from quincenas');
         // Connect to quincenas
@@ -57,7 +57,7 @@
             // $('#taskResult').show();
             // $('#taskResultMessage').html(data.message);
         });
-    </script>
+    </script -->
     <!-- Cerrar Quincenas -->
     {{ modals.custom_javascript('Cerrar Quincenas', '', 'Close') }}
     <!-- Datatable -->
