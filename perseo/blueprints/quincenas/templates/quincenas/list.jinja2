@@ -44,17 +44,19 @@
 {% block custom_javascript %}
     <!-- Socket.io sobre quincenas -->
     <script>
+        // Test root socket
         socket.send('Message from quincenas');
+        // Connect to quincenas
+        const socket_quincenas = io();
         // Send message to quincenas after 5 seconds
         setTimeout(function() {
-            const socket_quincenas = io();
-            socket_quincenas.emit('quincenas', 'New message from quincenas');
+            socket_quincenas.emit('quincenas', { success: true, message: 'NEW Message from quincenas'});
         }, 5000);
-        //socket_quincenas.on('quincenas', function(data) {
-            // console.log('Recibido: ' + data.message);
+        socket_quincenas.on('quincenas', function(data) {
+            console.log('Recibido: ' + data.message);
             // $('#taskResult').show();
             // $('#taskResultMessage').html(data.message);
-        //});
+        });
     </script>
     <!-- Cerrar Quincenas -->
     {{ modals.custom_javascript('Cerrar Quincenas', '', 'Close') }}

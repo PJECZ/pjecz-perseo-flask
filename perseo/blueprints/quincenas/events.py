@@ -12,7 +12,9 @@ quincenas = Blueprint("quincenas_eventos", __name__, url_prefix="/quincenas_even
 @socketio.on("quincenas")
 def handle_close_all(data):
     """Transmitir los datos de la tarea en el fondo para cerrar todas las quincenas"""
-    print("Quincenas: ", data)
+    # Convertir data a JSON
+    data = data.json()
+    print("Quincenas: ", data.message)
 
 
 @quincenas.route("/cerrar_todas_json", methods=["GET", "POST"])
