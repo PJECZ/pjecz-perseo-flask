@@ -16,20 +16,28 @@
 {% endblock %}
 
 {% block content %}
-    {% call detail.card(estatus=quincena_producto.estatus) %}
-        {{ detail.label_value('ID', quincena_producto.id) }}
+    {% if quincena_producto.es_satisfactorio %}
+        {% set border_class='border-success' %}
+        {% set text_class='text-success' %}
+    {% else %}
+        {% set border_class='border-danger' %}
+        {% set text_class='text-danger' %}
+    {% endif %}
+    {% call detail.card(estatus=quincena_producto.estatus, border_class=border_class, text_class=text_class) %}
         {% if current_user.can_view("QUINCENAS") %}
-            {{ detail.label_value('Quincena', quincena_producto.quincena.clave, url_for('quincenas.detail', quincena_id=quincena_producto.quincena_id)) }}
+            {{ detail.label_value_big('Quincena', quincena_producto.quincena.clave, url_for('quincenas.detail', quincena_id=quincena_producto.quincena_id)) }}
         {% else %}
-            {{ detail.label_value('Quincena', quincena_producto.quincena.clave) }}
+            {{ detail.label_value_big('Quincena', quincena_producto.quincena.clave) }}
         {% endif %}
         {{ detail.label_value('Fuente', quincena_producto.fuente) }}
-        {{ detail.label_value('Mensajes', quincena_producto.mensajes) }}
         {{ detail.label_value('Creado', moment(quincena_producto.creado, local=True).format('DD MMM YYYY')) }}
-        <a type="button" class="w-100 btn btn-lg btn-success my-2" href="{{ quincena_producto.url }}" target="_blank">
-            <span class="iconify" data-icon="mdi:file-download" style="font-size: 2.0em; margin-right: 4px;"></span>
-            {{ quincena_producto.archivo }}
-        </a>
+        {{ detail.label_value_pre('Mensajes', quincena_producto.mensajes) }}
+        {% if quincena_producto.archivo %}
+            <a type="button" class="w-100 btn btn-lg btn-success my-2" href="{{ quincena_producto.url }}" target="_blank">
+                <span class="iconify" data-icon="mdi:file-download" style="font-size: 2.0em; margin-right: 4px;"></span>
+                {{ quincena_producto.archivo }}
+            </a>
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

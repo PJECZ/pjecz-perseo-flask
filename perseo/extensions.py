@@ -7,11 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
 from passlib.context import CryptContext
 
-# from flask_socketio import SocketIO
-
 csrf = CSRFProtect()
 database = SQLAlchemy()
 login_manager = LoginManager()
 moment = Moment()
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "des_crypt"], deprecated="auto")
-# socketio = SocketIO()

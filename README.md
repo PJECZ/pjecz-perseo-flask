@@ -190,40 +190,34 @@ then
         export -f reiniciar
         echo "   reiniciar"
         echo
-        echo "-- Recargar archivos de explotacion"
-        function recargar() {
+        echo "-- Alimentar archivos de explotacion"
+        function alimentar() {
             CLI="python3 ${PWD}/cli/app.py"
             CLAVE=$1
-            HOY=$(date +%Y-%m-%d)
-            $CLI percepciones_deducciones alimentar $CLAVE \
-            && $CLI nominas alimentar $CLAVE $HOY \
+            FECHA_DE_PAGO=$2
+            $CLI nominas alimentar $CLAVE $FECHA_DE_PAGO \
+            && $CLI percepciones_deducciones alimentar $CLAVE \
             && $CLI cuentas alimentar-bancarias $CLAVE \
             && $CLI cuentas alimentar-monederos $CLAVE \
             && $CLI beneficiarios alimentar $CLAVE
         }
-        export -f recargar
-        echo "   recargar <QUINCENA>"
+        export -f alimentar
+        echo "   alimentar <Quincena YYYYMM> <Fecha de pago YYYY-MM-DD>"
         echo
-        echo "-- Consultar a la API de RRHH"
+        echo "-- Alimentar Apoyos y Aguinaldos de 2023"
+        echo "   cli nominas alimentar-apoyos-anuales 202322 2023-11-17"
+        echo "   cli nominas alimentar-aguinaldos 202324 2023-12-05"
+        echo
+        echo "-- Sincronizar datos con la API de RRHH Personal"
         echo "   cli centros_trabajos sincronizar"
         echo "   cli personas sincronizar"
+        echo
+        echo "-- Migrar y eliminar RFCs erroneos"
+        echo "   cli personas migrar-eliminar-rfc --eliminar <RFCEquivocado> <RFCCorrecto>"
         echo
         echo "-- Eliminar o recuperar Conceptos segun no/si se usen"
         echo "   cli conceptos eliminar-recuperar"
         echo "   cli conceptos eliminar-recuperar --quincena-clave 202320"
-        echo
-        echo "-- Generar archivos XLSX de nominas, monederos, pensionados y dispersiones pensionados"
-        function generar() {
-            CLI="python3 ${PWD}/cli/app.py"
-            CLAVE=$1
-            $CLI bancos reiniciar-consecutivos-generados \
-            && $CLI nominas generar-nominas $CLAVE \
-            && $CLI nominas generar-monederos $CLAVE \
-            && $CLI nominas generar-pensionados $CLAVE \
-            && $CLI nominas generar-dispersiones-pensionados $CLAVE
-        }
-        export -f generar
-        echo "   generar <QUINCENA>"
         echo
     fi
     echo "-- Arrancar Flask o RQ Worker"
