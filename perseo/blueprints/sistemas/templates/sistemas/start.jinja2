@@ -20,57 +20,117 @@
             <p class="lead text-center">No hay una última quincena</p>
         {% endif %}
     {% endcall %}
-    {# Descargar los productos de la quincena #}
+    {# Descargar los productos de la ultima quincena #}
     <div class="row mb-2">
         <div class="col-md-3">
-            {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas') %}
-                {% if quincena_producto_nominas %}
+            {% if quincena_producto_nominas %}
+                {% if quincena_producto_nominas.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas', border_class=border_class, text_class=text_class) %}
                     <ul>
+                        {% if quincena_producto_nominas.mensajes %}
+                            {% set list = quincena_producto_nominas.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
                         <li>{{ moment(quincena_producto_nominas.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
-                    {{ detail.button_md('Descargar XLSX', quincena_producto_nominas.url, 'mdi:download', '_blank') }}
-                {% else %}
+                    {% if quincena_producto_nominas.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_nominas.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas') %}
                     <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            {% endcall %}
+                {% endcall %}
+            {% endif %}
         </div>
         <div class="col-md-3">
-            {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos') %}
-                {% if quincena_producto_monederos %}
+            {% if quincena_producto_monederos %}
+                {% if quincena_producto_monederos.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos', border_class=border_class, text_class=text_class) %}
                     <ul>
+                        {% if quincena_producto_monederos.mensajes %}
+                            {% set list = quincena_producto_monederos.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
                         <li>{{ moment(quincena_producto_monederos.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
-                    {{ detail.button_md('Descargar XLSX', quincena_producto_monederos.url, 'mdi:download', '_blank') }}
-                {% else %}
+                    {% if quincena_producto_monederos.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_monederos.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos') %}
                     <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            {% endcall %}
+                {% endcall %}
+            {% endif %}
         </div>
         <div class="col-md-3">
-            {% call detail.card(title='Pensionados') %}
-                {% if quincena_producto_pensionados %}
+            {% if quincena_producto_pensionados %}
+                {% if quincena_producto_pensionados.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados', border_class=border_class, text_class=text_class) %}
                     <ul>
+                        {% if quincena_producto_pensionados.mensajes %}
+                            {% set list = quincena_producto_pensionados.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
                         <li>{{ moment(quincena_producto_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
-                    {{ detail.button_md('Descargar XLSX', quincena_producto_pensionados.url, 'mdi:download', '_blank') }}
-                {% else %}
+                    {% if quincena_producto_pensionados.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_pensionados.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados') %}
                     <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            {% endcall %}
+                {% endcall %}
+            {% endif %}
         </div>
     </div>
     <div class="row mb-2">
         <div class="col-md-3">
-            {% call detail.card(title='Dispersiones Pensionados') %}
-                {% if quincena_producto_dispersiones_pensionados %}
+            {% if quincena_producto_dispersiones_pensionados %}
+                {% if quincena_producto_dispersiones_pensionados.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados', border_class=border_class, text_class=text_class) %}
                     <ul>
+                        {% if quincena_producto_dispersiones_pensionados.mensajes %}
+                            {% set list = quincena_producto_dispersiones_pensionados.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
                         <li>{{ moment(quincena_producto_dispersiones_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
-                    {{ detail.button_md('Descargar XLSX', quincena_producto_dispersiones_pensionados.url, 'mdi:download', '_blank') }}
-                {% else %}
+                    {% if quincena_producto_dispersiones_pensionados.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_dispersiones_pensionados.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados') %}
                     <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            {% endcall %}
+                {% endcall %}
+            {% endif %}
         </div>
     </div>
 {% endblock %}
