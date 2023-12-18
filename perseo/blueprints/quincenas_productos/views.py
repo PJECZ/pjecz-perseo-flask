@@ -104,3 +104,39 @@ def detail(quincena_producto_id):
     """Detalle de un Quincena Producto"""
     quincena_producto = QuincenaProducto.query.get_or_404(quincena_producto_id)
     return render_template("quincenas_productos/detail.jinja2", quincena_producto=quincena_producto)
+
+
+@quincenas_productos.route("/quincenas_productos/eliminar/<int:quincena_producto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(quincena_producto_id):
+    """Eliminar Quincena Producto"""
+    quincena_producto = QuincenaProducto.query.get_or_404(quincena_producto_id)
+    if quincena_producto.estatus == "A":
+        quincena_producto.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Quincena Producto {quincena_producto.archivo}"),
+            url=url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena_producto.quincena_id))
+
+
+@quincenas_productos.route("/quincenas_productos/recuperar/<int:quincena_producto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(quincena_producto_id):
+    """Recuperar Quincena Producto"""
+    quincena_producto = QuincenaProducto.query.get_or_404(quincena_producto_id)
+    if quincena_producto.estatus == "B":
+        quincena_producto.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Quincena Producto {quincena_producto.archivo}"),
+            url=url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("quincenas.detail", quincena_id=quincena_producto.quincena_id))

@@ -8,7 +8,7 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyNotExistsError
+from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError
 from lib.storage import GoogleCloudStorage
 from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.cuentas.models import Cuenta
@@ -119,7 +119,26 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
 
     # Si contador es cero, entregar mensaje de aviso y terminar
     if contador == 0:
-        return "AVISO: No hubo registros para generar dispersiones pensionados. Tarea terminada sin generar archivo."
+        # Actualizar quincena_producto
+        mensajes = ["No hubo registros para generar dispersiones pensionados.", "No se genero el archivo."]
+        if quincena_producto_id == 0:
+            quincena_producto = QuincenaProducto(
+                quincena=quincena,
+                archivo="",
+                es_satisfactorio=False,
+                fuente="DISPERSIONES PENSIONADOS",
+                mensajes="\n".join(mensajes),
+                url="",
+            )
+        else:
+            quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
+            quincena_producto.archivo = ""
+            quincena_producto.es_satisfactorio = False
+            quincena_producto.mensajes = "\n".join(mensajes)
+            quincena_producto.url = ""
+        quincena_producto.save()
+        # Terminar con error
+        raise MyEmptyError()
 
     # Determinar la fecha y tiempo actual en la zona horaria de Mexico
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
@@ -164,16 +183,24 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
     if len(personas_sin_cuentas) > 0:
         mensajes.append(f"AVISO: Hubo {len(personas_sin_cuentas)} personas sin cuentas:")
         mensajes += [f"- {p.rfc} {p.nombre_completo}" for p in personas_sin_cuentas]
+
+    # Si hubo mensajes, entonces no es satifactorio
+    es_satisfactorio = True
     if len(mensajes) > 0:
+        es_satisfactorio = False
         for m in mensajes:
             bitacora.warning(m)
+
+    # Agregar el ultimo mensaje con la cantidad de filas en el archivo XLSX
+    mensaje_termino = f"Se generaron {contador} filas"
+    mensajes.append(mensaje_termino)
 
     # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
     if quincena_producto_id == 0:
         quincena_producto = QuincenaProducto(
             quincena=quincena,
             archivo=nombre_archivo_xlsx,
-            es_satisfactorio=(len(mensajes) == 0),
+            es_satisfactorio=es_satisfactorio,
             fuente="DISPERSIONES PENSIONADOS",
             mensajes="\n".join(mensajes),
             url=gcs_public_path,
@@ -182,11 +209,11 @@ def crear_dispersiones_pensionados(quincena_clave: str, quincena_producto_id: in
         # Si quincena_producto_id es diferente de cero, actualizar el registro
         quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
         quincena_producto.archivo = nombre_archivo_xlsx
-        quincena_producto.es_satisfactorio = len(mensajes) == 0
+        quincena_producto.es_satisfactorio = es_satisfactorio
         quincena_producto.fuente = "DISPERSIONES PENSIONADOS"
         quincena_producto.mensajes = "\n".join(mensajes)
         quincena_producto.url = gcs_public_path
     quincena_producto.save()
 
     # Entregar mensaje de termino
-    return f"Crear dispersiones pensionados: {contador} filas en {nombre_archivo_xlsx}"
+    return f"Crear dispersiones pensionados: {mensaje_termino}"

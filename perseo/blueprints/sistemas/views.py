@@ -7,21 +7,7 @@ from flask_login import current_user
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 
-# from perseo.extensions import socketio
-
 sistemas = Blueprint("sistemas", __name__, template_folder="templates")
-
-
-# @socketio.on("connect")
-# def socketio_connect():
-#     """SocketIO Conexión"""
-#     print("Root: client connected")
-
-
-# @socketio.on("message")
-# def handle_message(message):
-#     """SocketIO Mensaje"""
-#     print("Root: received message: " + message)
 
 
 @sistemas.route("/")
@@ -30,7 +16,7 @@ def start():
     # Si el usuario está autenticado
     if current_user.is_authenticated:
         # Consultar la ultima quincena
-        quincena = Quincena.query.order_by(Quincena.id.desc()).first()
+        quincena = Quincena.query.order_by(Quincena.clave.desc()).first()
 
         # Inicializar variables
         quincena_producto_nominas = None

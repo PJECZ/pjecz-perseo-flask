@@ -13,62 +13,126 @@
     {# Detalle de la ultima quincena #}
     {% call detail.card(title='Última quincena') %}
         {% if quincena %}
-        {{ detail.label_value_big('Quincena', quincena.clave, url_for('quincenas.detail', quincena_id=quincena.id)) }}
-        {{ detail.label_value('Estado', quincena.estado) }}
-        {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
+            {{ detail.label_value_big('Quincena', quincena.clave, url_for('quincenas.detail', quincena_id=quincena.id)) }}
+            {{ detail.label_value('Estado', quincena.estado) }}
+            {{ detail.label_value('Creado', moment(quincena.creado, local=True).format('DD MMM YYYY')) }}
         {% else %}
-        <p class="lead text-center">No hay una última quincena</p>
+            <p class="lead text-center">No hay una última quincena</p>
         {% endif %}
     {% endcall %}
-    {# Vinculos para descargar los productos de la ultima quincena #}
-    {% call detail.card(title='Descargar últimos productos') %}
-        <div class="row">
-            <div class="col-md-3">
-                <h4 class="text-center">Nominas</h4>
-                {% if quincena_producto_nominas %}
-                <a href="{{ quincena_producto_nominas.url }}" class="btn btn-success btn-block w-100" target="_blank">
-                    <span class="iconify" data-icon="mdi:cash-fast" style="font-size: 2.4em; margin-right: 4px;"></span>
-                    {{ moment(quincena_producto_nominas.creado, local=True).format('DD MMM YYYY hh:mm') }}
-                </a>
+    {# Descargar los productos de la ultima quincena #}
+    <div class="row mb-2">
+        <div class="col-md-3">
+            {% if quincena_producto_nominas %}
+                {% if quincena_producto_nominas.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
                 {% else %}
-                <p class="lead text-center">No hay archivo</p>
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
                 {% endif %}
-            </div>
-            <div class="col-md-3">
-                <h4 class="text-center">Monederos</h4>
-                {% if quincena_producto_monederos %}
-                <a href="{{ quincena_producto_monederos.url }}" class="btn btn-success btn-block w-100" target="_blank">
-                    <span class="iconify" data-icon="mdi:cart" style="font-size: 2.4em; margin-right: 4px;"></span>
-                    {{ moment(quincena_producto_monederos.creado, local=True).format('DD MMM YYYY hh:mm') }}
-                </a>
-                {% else %}
-                <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            </div>
-            <div class="col-md-3">
-                <h4 class="text-center">Pensionados</h4>
-                {% if quincena_producto_pensionados %}
-                <a href="{{ quincena_producto_pensionados.url }}" class="btn btn-success btn-block w-100" target="_blank">
-                    <span class="iconify" data-icon="mdi:human-female-boy" style="font-size: 2.4em; margin-right: 4px;"></span>
-                    {{ moment(quincena_producto_pensionados.creado, local=True).format('DD MMM YYYY hh:mm') }}
-                </a>
-                {% else %}
-                <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            </div>
-            <div class="col-md-3">
-                <h4 class="text-center">Dispersiones Pensionados</h4>
-                {% if quincena_producto_dispersiones_pensionados %}
-                <a href="{{ quincena_producto_dispersiones_pensionados.url }}" class="btn btn-success btn-block w-100" target="_blank">
-                    <span class="iconify" data-icon="mdi:human-wheelchair" style="font-size: 2.4em; margin-right: 4px;"></span>
-                    {{ moment(quincena_producto_dispersiones_pensionados.creado, local=True).format('DD MMM YYYY hh:mm') }}
-                </a>
-                {% else %}
-                <p class="lead text-center">No hay archivo</p>
-                {% endif %}
-            </div>
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas', border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_nominas.mensajes %}
+                            {% set list = quincena_producto_nominas.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_nominas.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_nominas.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_nominas.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas') %}
+                    <p class="lead text-center">No hay archivo</p>
+                {% endcall %}
+            {% endif %}
         </div>
-    {% endcall %}
+        <div class="col-md-3">
+            {% if quincena_producto_monederos %}
+                {% if quincena_producto_monederos.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos', border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_monederos.mensajes %}
+                            {% set list = quincena_producto_monederos.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_monederos.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_monederos.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_monederos.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos') %}
+                    <p class="lead text-center">No hay archivo</p>
+                {% endcall %}
+            {% endif %}
+        </div>
+        <div class="col-md-3">
+            {% if quincena_producto_pensionados %}
+                {% if quincena_producto_pensionados.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados', border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_pensionados.mensajes %}
+                            {% set list = quincena_producto_pensionados.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_pensionados.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_pensionados.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados') %}
+                    <p class="lead text-center">No hay archivo</p>
+                {% endcall %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-md-3">
+            {% if quincena_producto_dispersiones_pensionados %}
+                {% if quincena_producto_dispersiones_pensionados.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados', border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_dispersiones_pensionados.mensajes %}
+                            {% set list = quincena_producto_dispersiones_pensionados.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_dispersiones_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_dispersiones_pensionados.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_dispersiones_pensionados.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados') %}
+                    <p class="lead text-center">No hay archivo</p>
+                {% endcall %}
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
 
 {% block custom_javascript %}
