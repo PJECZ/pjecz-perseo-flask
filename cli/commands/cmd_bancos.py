@@ -101,8 +101,8 @@ def alimentar(bancos_csv: str):
 
 
 @click.command()
-def reiniciar_consecutivos_generados():
-    """Reiniciar los consecutivos generados de cada banco con el consecutivo"""
+def reiniciar_consecutivos_temp():
+    """Reiniciar los consecutivos temporales"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
@@ -132,15 +132,15 @@ def reiniciar_consecutivos_generados():
 
     # Si no hubo cambios
     if contador == 0:
-        click.echo("AVISO: No hubo necesidad de reiniciar ningun consecutivo_generado.")
+        click.echo("AVISO: No hubo necesidad de reiniciar ningun consecutivo temporal.")
         sys.exit(0)
 
     # Actualizar los consecutivos_generados de cada banco
     sesion.commit()
 
     # Mensaje de termino
-    click.echo(f"Reiniciar los consecutivos generados terminado: {contador} reiniciados.")
+    click.echo(f"Reiniciar los consecutivos temporales terminado: {contador} reiniciados.")
 
 
 cli.add_command(alimentar)
-cli.add_command(reiniciar_consecutivos_generados)
+cli.add_command(reiniciar_consecutivos_temp)

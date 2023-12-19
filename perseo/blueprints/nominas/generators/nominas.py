@@ -8,24 +8,34 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError
+from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError, MyNotValidParamError
 from lib.storage import GoogleCloudStorage
-from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.generators.common import (
     GCS_BASE_DIRECTORY,
     LOCAL_BASE_DIRECTORY,
     TIMEZONE,
+    actualizar_quincena_producto,
     bitacora,
     consultar_validar_quincena,
     database,
 )
 from perseo.blueprints.nominas.models import Nomina
+from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 
 
-def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheque=False) -> str:
+def crear_nominas(
+    quincena_clave: str,
+    quincena_producto_id: int,
+    fijar_num_cheque: bool = False,
+    tipo: str = "SALARIO",
+) -> str:
     """Crear archivo XLSX con las nominas de una quincena"""
+
+    # Validar el tipo
+    if tipo not in ["SALARIO", "AGUINALDO"]:
+        raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
@@ -33,15 +43,21 @@ def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheq
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
-    # Consultar las nominas de la quincena, solo tipo AGUINALDO
-    # nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="AGUINALDO").filter_by(estatus="A").all()
+    # Consultar las nominas de la quincena
+    nominas = (
+        Nomina.query.join(Persona)
+        .filter(Nomina.quincena_id == quincena.id)
+        .filter(Nomina.tipo == tipo)
+        .filter(Nomina.estatus == "A")
+        .order_by(Persona.rfc)
+        .all()
+    )
 
-    # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
-
-    # Si no hay nominas, provocar error y salir
+    # Si no hay registros, provocar error
     if len(nominas) == 0:
-        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
+        mensaje = f"No hay registros en nominas de tipo {tipo}"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, "NOMINAS", [mensaje])
+        raise MyNotExistsError(mensaje)
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -145,29 +161,9 @@ def crear_nominas(quincena_clave: str, quincena_producto_id: int, fijar_num_cheq
         # Incrementar contador
         contador += 1
 
-    # Si contador es cero, entregar mensaje de aviso y terminar
+    # Si el contador es cero, provocar error y salir
     if contador == 0:
-        # Actualizar quincena_producto
-        mensajes = ["No hubo registros para generar nominas.", "No se genero el archivo."]
-        if quincena_producto_id == 0:
-            quincena_producto = QuincenaProducto(
-                quincena=quincena,
-                archivo="",
-                es_satisfactorio=False,
-                fuente="NOMINAS",
-                mensajes="\n".join(mensajes),
-                url="",
-            )
-        else:
-            # Si quincena_producto_id es diferente de cero, actualizar el registro
-            quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-            quincena_producto.archivo = ""
-            quincena_producto.es_satisfactorio = False
-            quincena_producto.mensajes = "\n".join(mensajes)
-            quincena_producto.url = ""
-        quincena_producto.save()
-        # Terminar con error
-        raise MyEmptyError()
+        raise MyEmptyError("No hubo filas que agregar al archivo XLSX")
 
     # Actualizar los consecutivos de cada banco
     sesion.commit()

@@ -8,14 +8,13 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError
+from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError, MyNotValidParamError
 from lib.storage import GoogleCloudStorage
-from perseo.blueprints.bancos.models import Banco
-from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.generators.common import (
     GCS_BASE_DIRECTORY,
     LOCAL_BASE_DIRECTORY,
     TIMEZONE,
+    actualizar_quincena_producto,
     bitacora,
     consultar_validar_quincena,
     database,
@@ -24,8 +23,17 @@ from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 
 
-def crear_pensionados(quincena_clave: str, quincena_producto_id: int, fijar_num_cheque=False) -> str:
+def crear_pensionados(
+    quincena_clave: str,
+    quincena_producto_id: int,
+    fijar_num_cheque=False,
+    tipo: str = "SALARIO",
+) -> str:
     """Crear archivo XLSX con los pensionados de una quincena"""
+
+    # Validar el tipo
+    if tipo not in ["SALARIO", "AGUINALDO"]:
+        raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
@@ -39,9 +47,11 @@ def crear_pensionados(quincena_clave: str, quincena_producto_id: int, fijar_num_
     # Consultar las nominas de la quincena, solo tipo SALARIO
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
 
-    # Si no hay nominas, provocar error y salir
+    # Si no hay registros, provocar error
     if len(nominas) == 0:
-        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
+        mensaje = f"No hay registros en nominas de tipo {tipo}"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, "NOMINAS", [mensaje])
+        raise MyNotExistsError(mensaje)
 
     # Iniciar el archivo XLSX
     libro = Workbook()

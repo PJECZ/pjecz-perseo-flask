@@ -11,11 +11,11 @@ from config.settings import get_settings
 from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError
 from lib.storage import GoogleCloudStorage
 from perseo.blueprints.bancos.models import Banco
-from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.generators.common import (
     GCS_BASE_DIRECTORY,
     LOCAL_BASE_DIRECTORY,
     TIMEZONE,
+    actualizar_quincena_producto,
     bitacora,
     consultar_validar_quincena,
     database,
@@ -46,9 +46,11 @@ def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_ch
     # Consultar las nominas de la quincena solo tipo DESPENSA
     nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
 
-    # Si no hay nominas, provocar error y salir
+    # Si no hay registros, provocar error
     if len(nominas) == 0:
-        raise MyNotExistsError(f"No hay nominas de tipo SALARIO en la quincena {quincena_clave}")
+        mensaje = "No hay registros en nominas de tipo DESPENSA"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, "MONEDEROS", [mensaje])
+        raise MyNotExistsError(mensaje)
 
     # Iniciar el archivo XLSX
     libro = Workbook()

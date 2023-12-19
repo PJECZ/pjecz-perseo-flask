@@ -12,10 +12,12 @@ class QuincenaProducto(database.Model, UniversalMixin):
     """QuincenaProducto"""
 
     FUENTES = {
-        "NOMINAS": "NOMINAS",
-        "MONEDEROS": "MONEDEROS",
-        "PENSIONADOS": "PENSIONADOS",
         "DISPERSIONES PENSIONADOS": "DISPERSIONES PENSIONADOS",
+        "MONEDEROS": "MONEDEROS",
+        "NOMINAS": "NOMINAS",
+        "PENSIONADOS": "PENSIONADOS",
+        "TIMBRADOS APOYOS ANUALES": "TIMBRADOS APOYOS ANUALES",
+        "TIMBRADOS SALARIOS": "TIMBRADOS SALARIOS",
     }
 
     # Nombre de la tabla

@@ -114,6 +114,13 @@ def detail(quincena_id):
         .first()
     )
 
+    # Consultar el ultimo producto de quincenas con fuente TIMBRADOS SALARIOS
+    quincena_producto_timbrados_salarios = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS SALARIOS", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
     # Consultar el ultimo producto de quincenas con fuente DISPERSIONES PENSIONADOS
     quincena_producto_dispersiones_pensionados = (
         QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="DISPERSIONES PENSIONADOS", estatus="A")
@@ -128,6 +135,7 @@ def detail(quincena_id):
         quincena_producto_nominas=quincena_producto_nominas,
         quincena_producto_monederos=quincena_producto_monederos,
         quincena_producto_pensionados=quincena_producto_pensionados,
+        quincena_producto_timbrados_salarios=quincena_producto_timbrados_salarios,
         quincena_producto_dispersiones_pensionados=quincena_producto_dispersiones_pensionados,
     )
 
@@ -248,7 +256,7 @@ def close_all():
         comando="quincenas.tasks.lanzar_cerrar",
         mensaje="Lanzando cerrar quincenas...",
     )
-    flash("Se ha lanzado la tarea en el fondo para cerrar TODAS las quincenas con estado ABIERTA.", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     return redirect(url_for("quincenas.list_active"))
 
 
@@ -264,20 +272,22 @@ def generate_nominas(quincena_id):
     if quincena.estado != "ABIERTA":
         flash("Quincena no abierta", "warning")
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Definir mensaje de inicio
+    mensaje = f"Crear un archivo XLSX con las nominas de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
         quincena=quincena,
         archivo="",
         es_satisfactorio=False,
         fuente="NOMINAS",
-        mensajes="Lanzando nominas.tasks.generar_nominas...",
+        mensajes=mensaje,
         url="",
     )
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_nominas",
-        mensaje="Lanzando nominas.tasks.generar_nominas...",
+        mensaje=mensaje,
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
@@ -298,20 +308,22 @@ def generate_monederos(quincena_id):
     if quincena.estado != "ABIERTA":
         flash("Quincena no abierta", "warning")
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Definir mensaje de inicio
+    mensaje = f"Crear un archivo XLSX con los monederos de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
         quincena=quincena,
         archivo="",
         es_satisfactorio=False,
         fuente="MONEDEROS",
-        mensajes="Lanzando nominas.tasks.generar_monederos...",
+        mensajes=mensaje,
         url="",
     )
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_monederos",
-        mensaje="Lanzando nominas.tasks.generar_monederos...",
+        mensaje=mensaje,
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
@@ -332,20 +344,22 @@ def generate_pensionados(quincena_id):
     if quincena.estado != "ABIERTA":
         flash("Quincena no abierta", "warning")
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Definir mensaje de inicio
+    mensaje = f"Crear un archivo XLSX con los pensionados de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
         quincena=quincena,
         archivo="",
         es_satisfactorio=False,
         fuente="PENSIONADOS",
-        mensajes="Lanzando nominas.tasks.generar_pensionados...",
+        mensajes=mensaje,
         url="",
     )
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_pensionados",
-        mensaje="Lanzando nominas.tasks.generar_pensionados...",
+        mensaje=mensaje,
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
@@ -356,8 +370,44 @@ def generate_pensionados(quincena_id):
 
 @quincenas.route("/quincenas/generar_dispersiones_pensionados/<int:quincena_id>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
-def generar_dispersiones_pensionados(quincena_id):
+def generate_dispersiones_pensionados(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Definir mensaje de inicio
+    mensaje = f"Crear un archivo XLSX con las dispersiones pensionados de {quincena.clave}..."
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="DISPERSIONES PENSIONADOS",
+        mensajes=mensaje,
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.lanzar_generar_dispersiones_pensionados",
+        mensaje=mensaje,
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_timbrados/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_timbrados(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados de una quincena"""
     # Consultar y validar la quincena
     quincena = Quincena.query.get_or_404(quincena_id)
     if quincena.estatus != "A":
@@ -371,15 +421,15 @@ def generar_dispersiones_pensionados(quincena_id):
         quincena=quincena,
         archivo="",
         es_satisfactorio=False,
-        fuente="DISPERSIONES PENSIONADOS",
-        mensajes="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
+        fuente="TIMBRADOS",
+        mensajes="Lanzando nominas.tasks.lanzar_generar_timbrados...",
         url="",
     )
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.lanzar_generar_dispersiones_pensionados",
-        mensaje="Lanzando nominas.tasks.generar_dispersiones_pensionados...",
+        comando="nominas.tasks.lanzar_generar_timbrados",
+        mensaje=f"Crear un archivo XLSX con los timbrados de {quincena.clave}...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
@@ -390,7 +440,7 @@ def generar_dispersiones_pensionados(quincena_id):
 
 @quincenas.route("/quincenas/generar_todos/<int:quincena_id>")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
-def generar_todos(quincena_id):
+def generate_todos(quincena_id):
     """Lanzar tarea en el fondo para crear todos los archivo XLSX de una quincena"""
     # Consultar y validar la quincena
     quincena = Quincena.query.get_or_404(quincena_id)
@@ -403,7 +453,7 @@ def generar_todos(quincena_id):
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_todos",
-        mensaje="Lanzando nominas.tasks.generar_todos...",
+        mensaje=f"Crear todos los archivo XLSX de {quincena.clave}...",
         quincena_clave=quincena.clave,
     )
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")

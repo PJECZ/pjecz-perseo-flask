@@ -1549,9 +1549,6 @@ def generar_timbrados(quincena_clave: str, tipo: str):
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
-
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
@@ -1574,12 +1571,13 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     quincena_fecha_inicial = quincena_to_fecha(quincena_clave, dame_ultimo_dia=False)
     quincena_fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
 
+    # Inicializar el diccionario de conceptos
+    conceptos_dict = {}
+
     # Si el tipo es SALARIO armar un diccionario con las percepciones y deducciones de Conceptos activos
     if tipo == "SALARIO":
         # Consultar los conceptos activos
         conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
-        # Inicializar el diccionario de conceptos
-        conceptos_dict = {}
         # Ordenar las claves, primero las que empiezan con P
         for concepto in conceptos:
             if concepto.clave.startswith("P"):
@@ -1680,14 +1678,12 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     # Agregar la fila con las cabeceras de las columnas
     hoja.append(encabezados_parte_1 + encabezados_parte_2 + encabezados_parte_3)
 
-    # Bucle para crear cada fila del archivo XLSX
+    # Inicializar el contador
     contador = 0
     personas_sin_cuentas = []
-    # personas_sin_fechas_de_ingreso = []
-    for nomina in nominas:
-        # Incrementar contador
-        contador += 1
 
+    # Bucle para crear cada fila del archivo XLSX
+    for nomina in nominas:
         # Consultar las cuentas de la persona
         cuentas = nomina.persona.cuentas
 
@@ -1703,19 +1699,8 @@ def generar_timbrados(quincena_clave: str, tipo: str):
             personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
-        # Tomar el banco de la cuenta de la persona
-        su_banco = su_cuenta.banco
-
-        # Incrementer el consecutivo_generado del banco
-        su_banco.consecutivo_generado += 1
-
-        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
-        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
-
-        # Si NO tiene fecha de ingreso, se agrega a la lista de personas_sin_fechas_de_ingreso y se salta
-        # if nomina.persona.ingreso_pj_fecha is None:
-        #     personas_sin_fechas_de_ingreso.append(nomina.persona.rfc)
-        #     continue
+        # Incrementar contador
+        contador += 1
 
         # Fila parte 1
         fila_parte_1 = [
@@ -1826,16 +1811,9 @@ def generar_timbrados(quincena_clave: str, tipo: str):
         # Agregar la fila
         hoja.append(fila_parte_1 + fila_parte_2 + fila_parte_3)
 
-        # Actualizar el registro de la nominas con el numero de cheque
-        nomina.num_cheque = num_cheque
-        sesion.add(nomina)
-
         # Mostrar contador
         if contador % 100 == 0:
             click.echo(f"  Van {contador}...")
-
-    # Actualizar los consecutivos de cada banco
-    sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'timbrados' con la quincena y la fecha como YYYY-MM-DD HHMMSS
     if tipo == "SALARIO":
@@ -1850,11 +1828,6 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     if len(personas_sin_cuentas) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
-
-    # Si hubo personas sin fecha de ingreso, entonces mostrarlas en pantalla
-    # if len(personas_sin_fechas_de_ingreso) > 0:
-    #     click.echo(click.style(f"  Hubo {len(personas_sin_fechas_de_ingreso)} Personas sin fecha de ingreso:", fg="yellow"))
-    #     click.echo(click.style(f"  {', '.join(personas_sin_fechas_de_ingreso)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(f"  Generar Timbrados: {contador} filas en {nombre_archivo}")
