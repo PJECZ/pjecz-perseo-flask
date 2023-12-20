@@ -306,12 +306,12 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos. Usan el generico.", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador. Usan el generico.", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
@@ -482,7 +482,7 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo centros trabajos inexistentes, mostrarlos
     if len(centros_trabajos_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} C. de T. que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
 
     # Si hubo plazas insertadas, mostrar contador
@@ -491,12 +491,12 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo personas inexistentes, mostrar contador
     if len(personas_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
 
     # Si hubo nominas existentes, mostrarlos
     if len(nominas_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Aguinaldos que ya existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Aguinaldos que ya existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
 
     # Mensaje termino
@@ -664,6 +664,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             plaza=plaza,
             quincena=quincena,
             importe=percepcion,
+            tipo="APOYO ANUAL",
         )
         sesion.add(percepcion_deduccion_paz)
 
@@ -675,6 +676,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             plaza=plaza,
             quincena=quincena,
             importe=deduccion,
+            tipo="APOYO ANUAL",
         )
         sesion.add(percepcion_deduccion_daz)
 
@@ -687,6 +689,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
                 plaza=plaza,
                 quincena=quincena,
                 importe=impte_concepto_d62,
+                tipo="APOYO ANUAL",
             )
             sesion.add(percepcion_deduccion_d62)
 
@@ -725,22 +728,22 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo centros_trabajos_inexistentes, mostrarlos
     if len(centros_trabajos_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} C. de T. que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
 
     # Si hubo plazas_inexistentes, mostrarlos
     if len(plazas_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(plazas_inexistentes)}", fg="yellow"))
 
     # Si hubo personas_inexistentes, mostrar contador
     if len(personas_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
 
     # Si hubo nominas_existentes, mostrarlos
     if len(nominas_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
 
     # Mensaje termino

@@ -32,7 +32,7 @@ class QuincenaProducto(database.Model, UniversalMixin):
     # Columnas
     archivo = Column(String(256), nullable=False)
     es_satisfactorio = Column(Boolean, nullable=False)
-    fuente = Column(Enum(*FUENTES, name="quincenas_productos_fuentes"), nullable=False)
+    fuente = Column(Enum(*FUENTES, name="quincenas_productos_fuentes"), index=True, nullable=False)
     mensajes = Column(Text)
     url = Column(String(512), nullable=False)
 
