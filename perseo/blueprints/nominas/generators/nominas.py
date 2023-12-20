@@ -8,7 +8,7 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError, MyNotValidParamError
+from lib.exceptions import MyAnyError, MyEmptyError, MyNotValidParamError
 from lib.storage import GoogleCloudStorage
 from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.generators.common import (
@@ -22,7 +22,8 @@ from perseo.blueprints.nominas.generators.common import (
 )
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.quincenas_productos.models import QuincenaProducto
+
+FUENTE = "NOMINAS"
 
 
 def crear_nominas(
@@ -56,8 +57,8 @@ def crear_nominas(
     # Si no hay registros, provocar error
     if len(nominas) == 0:
         mensaje = f"No hay registros en nominas de tipo {tipo}"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, "NOMINAS", [mensaje])
-        raise MyNotExistsError(mensaje)
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -161,9 +162,11 @@ def crear_nominas(
         # Incrementar contador
         contador += 1
 
-    # Si el contador es cero, provocar error y salir
+    # Si el contador es cero, provocar error
     if contador == 0:
-        raise MyEmptyError("No hubo filas que agregar al archivo XLSX")
+        mensaje = "No hubo filas que agregar al archivo XLSX"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Actualizar los consecutivos de cada banco
     sesion.commit()
@@ -205,6 +208,8 @@ def crear_nominas(
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
+                mensaje = str(error)
+                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
                 raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
@@ -229,25 +234,16 @@ def crear_nominas(
         mensajes.append(f"AVISO: Hubo {len(cuentas_duplicadas)} cuentas duplicadas:")
         mensajes += cuentas_duplicadas
 
-    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
-    if quincena_producto_id == 0:
-        quincena_producto = QuincenaProducto(
-            quincena=quincena,
-            archivo=nombre_archivo_xlsx,
-            es_satisfactorio=es_satisfactorio,
-            fuente="NOMINAS",
-            mensajes="\n".join(mensajes),
-            url=gcs_public_path,
-        )
-    else:
-        # Si quincena_producto_id es diferente de cero, actualizar el registro
-        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-        quincena_producto.archivo = nombre_archivo_xlsx
-        quincena_producto.es_satisfactorio = es_satisfactorio
-        quincena_producto.fuente = "NOMINAS"
-        quincena_producto.mensajes = "\n".join(mensajes)
-        quincena_producto.url = gcs_public_path
-    quincena_producto.save()
+    # Actualizar quincena_producto
+    actualizar_quincena_producto(
+        quincena_producto_id=quincena_producto_id,
+        quincena_id=quincena.id,
+        fuente=FUENTE,
+        mensajes=mensajes,
+        archivo=nombre_archivo_xlsx,
+        url=gcs_public_path,
+        es_satisfactorio=es_satisfactorio,
+    )
 
     # Entregar mensaje de termino
     return f"Crear nominas: {mensaje_termino}"

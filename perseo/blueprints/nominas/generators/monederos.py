@@ -21,10 +21,16 @@ from perseo.blueprints.nominas.generators.common import (
     database,
 )
 from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.quincenas_productos.models import QuincenaProducto
+from perseo.blueprints.personas.models import Persona
+
+FUENTE = "MONEDEROS"
 
 
-def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_cheque=False) -> str:
+def crear_monederos(
+    quincena_clave: str,
+    quincena_producto_id: int,
+    fijar_num_cheque=False,
+) -> str:
     """Crear archivo XLSX con los monederos de una quincena"""
 
     # Consultar y validar quincena
@@ -44,12 +50,19 @@ def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_ch
     banco.consecutivo_generado = banco.consecutivo
 
     # Consultar las nominas de la quincena solo tipo DESPENSA
-    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="DESPENSA").filter_by(estatus="A").all()
+    nominas = (
+        Nomina.query.join(Persona)
+        .filter(Nomina.quincena_id == quincena.id)
+        .filter(Nomina.tipo == "DESPENSA")
+        .filter(Nomina.estatus == "A")
+        .order_by(Persona.rfc)
+        .all()
+    )
 
     # Si no hay registros, provocar error
     if len(nominas) == 0:
         mensaje = "No hay registros en nominas de tipo DESPENSA"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, "MONEDEROS", [mensaje])
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
         raise MyNotExistsError(mensaje)
 
     # Iniciar el archivo XLSX
@@ -122,29 +135,11 @@ def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_ch
         # Incrementar contador
         contador += 1
 
-    # Si contador es cero, entregar mensaje de aviso y terminar
+    # Si contador es cero, provocar error
     if contador == 0:
-        # Actualizar quincena_producto
-        mensajes = ["No hubo registros para generar monederos.", "No se genero el archivo."]
-        if quincena_producto_id == 0:
-            quincena_producto = QuincenaProducto(
-                quincena=quincena,
-                archivo="",
-                es_satisfactorio=False,
-                fuente="MONEDEROS",
-                mensajes="\n".join(mensajes),
-                url="",
-            )
-        else:
-            # Si quincena_producto_id es diferente de cero, actualizar el registro
-            quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-            quincena_producto.archivo = ""
-            quincena_producto.es_satisfactorio = False
-            quincena_producto.mensajes = "\n".join(mensajes)
-            quincena_producto.url = ""
-        quincena_producto.save()
-        # Terminar con error
-        raise MyEmptyError()
+        mensaje = "No hubo filas que agregar al archivo XLSX"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Actualizar los consecutivo_generado de cada banco
     sesion.commit()
@@ -185,6 +180,8 @@ def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_ch
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
+                mensaje = str(error)
+                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
                 raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
@@ -204,25 +201,16 @@ def crear_monederos(quincena_clave: str, quincena_producto_id: int, fijar_num_ch
     mensaje_termino = f"Se generaron {contador} filas"
     mensajes.append(mensaje_termino)
 
-    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
-    if quincena_producto_id == 0:
-        quincena_producto = QuincenaProducto(
-            quincena=quincena,
-            archivo=nombre_archivo_xlsx,
-            es_satisfactorio=es_satisfactorio,
-            fuente="MONEDEROS",
-            mensajes="\n".join(mensajes),
-            url=gcs_public_path,
-        )
-    else:
-        # Si quincena_producto_id es diferente de cero, actualizar el registro
-        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-        quincena_producto.archivo = nombre_archivo_xlsx
-        quincena_producto.es_satisfactorio = es_satisfactorio
-        quincena_producto.fuente = "MONEDEROS"
-        quincena_producto.mensajes = "\n".join(mensajes)
-        quincena_producto.url = gcs_public_path
-    quincena_producto.save()
+    # Actualizar quincena_producto
+    actualizar_quincena_producto(
+        quincena_producto_id=quincena_producto_id,
+        quincena_id=quincena.id,
+        fuente=FUENTE,
+        mensajes=mensajes,
+        archivo=nombre_archivo_xlsx,
+        url=gcs_public_path,
+        es_satisfactorio=es_satisfactorio,
+    )
 
     # Entregar mensaje de termino
     return f"Crear monederos: {mensaje_termino}"

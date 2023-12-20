@@ -16,8 +16,7 @@ class QuincenaProducto(database.Model, UniversalMixin):
         "MONEDEROS": "MONEDEROS",
         "NOMINAS": "NOMINAS",
         "PENSIONADOS": "PENSIONADOS",
-        "TIMBRADOS APOYOS ANUALES": "TIMBRADOS APOYOS ANUALES",
-        "TIMBRADOS SALARIOS": "TIMBRADOS SALARIOS",
+        "TIMBRADOS": "TIMBRADOS",
     }
 
     # Nombre de la tabla

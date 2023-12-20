@@ -8,7 +8,7 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError, MyNotValidParamError
+from lib.exceptions import MyAnyError, MyEmptyError, MyNotValidParamError
 from lib.storage import GoogleCloudStorage
 from perseo.blueprints.nominas.generators.common import (
     GCS_BASE_DIRECTORY,
@@ -20,7 +20,10 @@ from perseo.blueprints.nominas.generators.common import (
     database,
 )
 from perseo.blueprints.nominas.models import Nomina
+from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
+
+FUENTE = "PENSIONADOS"
 
 
 def crear_pensionados(
@@ -41,17 +44,21 @@ def crear_pensionados(
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
-    # Consultar las nominas de la quincena, solo tipo AGUINALDO
-    # nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="AGUINALDO").filter_by(estatus="A").all()
-
     # Consultar las nominas de la quincena, solo tipo SALARIO
-    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo="SALARIO").filter_by(estatus="A").all()
+    nominas = (
+        Nomina.query.join(Persona)
+        .filter(Nomina.quincena_id == quincena.id)
+        .filter(Nomina.tipo == tipo)
+        .filter(Nomina.estatus == "A")
+        .order_by(Persona.rfc)
+        .all()
+    )
 
     # Si no hay registros, provocar error
     if len(nominas) == 0:
         mensaje = f"No hay registros en nominas de tipo {tipo}"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, "NOMINAS", [mensaje])
-        raise MyNotExistsError(mensaje)
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -140,29 +147,11 @@ def crear_pensionados(
         # Incrementar contador
         contador += 1
 
-    # Si contador es cero, entregar mensaje de aviso y terminar
+    # Si el contador es cero, provocar error
     if contador == 0:
-        # Actualizar quincena_producto
-        mensajes = ["No hubo registros para generar pensionados.", "No se genero el archivo."]
-        if quincena_producto_id == 0:
-            quincena_producto = QuincenaProducto(
-                quincena=quincena,
-                archivo="",
-                es_satisfactorio=False,
-                fuente="PENSIONADOS",
-                mensajes="\n".join(mensajes),
-                url="",
-            )
-        else:
-            # Si quincena_producto_id es diferente de cero, actualizar el registro
-            quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-            quincena_producto.archivo = ""
-            quincena_producto.es_satisfactorio = False
-            quincena_producto.mensajes = "\n".join(mensajes)
-            quincena_producto.url = ""
-        quincena_producto.save()
-        # Terminar con error
-        raise MyEmptyError(mensajes)
+        mensaje = "No hubo filas que agregar al archivo XLSX"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Actualizar los consecutivo_generado de cada banco
     sesion.commit()
@@ -203,6 +192,8 @@ def crear_pensionados(
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
+                mensaje = str(error)
+                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
                 raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
@@ -222,25 +213,16 @@ def crear_pensionados(
     mensaje_termino = f"Se generaron {contador} filas"
     mensajes.append(mensaje_termino)
 
-    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
-    if quincena_producto_id == 0:
-        quincena_producto = QuincenaProducto(
-            quincena=quincena,
-            archivo=nombre_archivo_xlsx,
-            es_satisfactorio=es_satisfactorio,
-            fuente="PENSIONADOS",
-            mensajes="\n".join(mensajes),
-            url=gcs_public_path,
-        )
-    else:
-        # Si quincena_producto_id es diferente de cero, actualizar el registro
-        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-        quincena_producto.archivo = nombre_archivo_xlsx
-        quincena_producto.es_satisfactorio = es_satisfactorio
-        quincena_producto.fuente = "PENSIONADOS"
-        quincena_producto.mensajes = "\n".join(mensajes)
-        quincena_producto.url = gcs_public_path
-    quincena_producto.save()
+    # Actualizar quincena_producto
+    actualizar_quincena_producto(
+        quincena_producto_id=quincena_producto_id,
+        quincena_id=quincena.id,
+        fuente=FUENTE,
+        mensajes=mensajes,
+        archivo=nombre_archivo_xlsx,
+        url=gcs_public_path,
+        es_satisfactorio=es_satisfactorio,
+    )
 
     # Entregar mensaje de termino
     return f"Crear pensionados: {mensaje_termino}"

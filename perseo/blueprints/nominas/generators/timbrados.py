@@ -8,7 +8,7 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyEmptyError, MyNotExistsError, MyNotValidParamError
+from lib.exceptions import MyAnyError, MyEmptyError, MyNotValidParamError
 from lib.storage import GoogleCloudStorage
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.nominas.generators.common import (
@@ -22,7 +22,8 @@ from perseo.blueprints.nominas.generators.common import (
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.quincenas_productos.models import QuincenaProducto
+
+FUENTE = "TIMBRADOS"
 
 PATRON_RFC = "PJE901211TI9"
 COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
@@ -78,7 +79,9 @@ def crear_timbrados(
 
     # Si no hay conceptos, provocar error y salir
     if len(conceptos_dict) == 0:
-        raise MyNotExistsError(f"No hay conceptos para el tipo {tipo}")
+        mensaje = f"No hay conceptos para el tipo {tipo}"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Consultar las Nominas activas de la quincena, del tipo dado, juntar con personas para ordenar por RFC
     nominas = (
@@ -93,8 +96,8 @@ def crear_timbrados(
     # Si no hay registros, provocar error
     if len(nominas) == 0:
         mensaje = f"No hay registros en nominas de tipo {tipo}"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
-        raise MyNotExistsError(mensaje)
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -294,9 +297,11 @@ def crear_timbrados(
         # Agregar la fila
         hoja.append(fila_parte_1 + fila_parte_2 + fila_parte_3)
 
-    # Si el contador es cero, provocar error y salir
+    # Si el contador es cero, provocar error
     if contador == 0:
-        raise MyEmptyError("No hubo filas que agregar al archivo XLSX")
+        mensaje = "No hubo filas que agregar al archivo XLSX"
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        raise MyEmptyError(mensaje)
 
     # Determinar la fecha y tiempo actual en la zona horaria de Mexico
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
@@ -339,6 +344,8 @@ def crear_timbrados(
                 gcs_public_path = gcstorage.upload(archivo.read())
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
+                mensaje = str(error)
+                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
                 raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
@@ -358,25 +365,16 @@ def crear_timbrados(
     mensaje_termino = f"Se generaron {contador} filas"
     mensajes.append(mensaje_termino)
 
-    # Si quincena_producto_id es cero, agregar un registro para conservar las rutas y mensajes
-    if quincena_producto_id == 0:
-        quincena_producto = QuincenaProducto(
-            quincena=quincena,
-            archivo=nombre_archivo_xlsx,
-            es_satisfactorio=es_satisfactorio,
-            fuente=fuente,
-            mensajes="\n".join(mensajes),
-            url=gcs_public_path,
-        )
-    else:
-        # Si quincena_producto_id es diferente de cero, actualizar el registro
-        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
-        quincena_producto.archivo = nombre_archivo_xlsx
-        quincena_producto.es_satisfactorio = es_satisfactorio
-        quincena_producto.fuente = fuente
-        quincena_producto.mensajes = "\n".join(mensajes)
-        quincena_producto.url = gcs_public_path
-    quincena_producto.save()
+    # Actualizar quincena_producto
+    actualizar_quincena_producto(
+        quincena_producto_id=quincena_producto_id,
+        quincena_id=quincena.id,
+        fuente=FUENTE,
+        mensajes=mensajes,
+        archivo=nombre_archivo_xlsx,
+        url=gcs_public_path,
+        es_satisfactorio=es_satisfactorio,
+    )
 
     # Entregar mensaje de termino
     return f"Crear timbrados: {mensaje_termino}"
