@@ -457,5 +457,5 @@ def generate_todos(quincena_id):
         quincena_clave=quincena.clave,
     )
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
-    # Redireccionar al listado de productos activos
-    return redirect(url_for("quincenas.list_active"))
+    # Redireccionar al detalle de la quincena
+    return redirect(url_for("quincenas.detail", quincena_id=quincena.id))

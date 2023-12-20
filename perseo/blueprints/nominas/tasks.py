@@ -127,15 +127,15 @@ def lanzar_generar_todos(quincena_clave: str) -> str:
     mensajes = []
     try:
         mensajes.append(msg := reiniciar_consecutivos_generados())
-        set_task_progress(20, msg)
+        set_task_progress(25, msg)
         mensajes.append(msg := crear_nominas(quincena_clave, 0, True))
-        set_task_progress(40, msg)
+        set_task_progress(50, msg)
         mensajes.append(msg := crear_monederos(quincena_clave, 0, True))
-        set_task_progress(60, msg)
+        set_task_progress(75, msg)
         mensajes.append(msg := crear_pensionados(quincena_clave, 0, True))
-        set_task_progress(80, msg)
-        mensajes.append(msg := crear_dispersiones_pensionados(quincena_clave, 0))
         set_task_progress(100, msg)
+        # mensajes.append(msg := crear_dispersiones_pensionados(quincena_clave, 0))
+        # set_task_progress(100, msg)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
