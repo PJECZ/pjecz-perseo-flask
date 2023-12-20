@@ -65,7 +65,7 @@ def crear_timbrados(
             if not concepto.clave.startswith("P") and not concepto.clave.startswith("D"):
                 conceptos_dict[concepto.clave] = concepto
         # Definir la fuente para quincena_producto
-        fuente = "TIMBRADOS SALARIOS"
+        fuente = "TIMBRADOS"
 
     # Si el tipo es APOYO ANUAL armar un diccionario con PAZ, DAZ y D62
     if tipo == "APOYO ANUAL":

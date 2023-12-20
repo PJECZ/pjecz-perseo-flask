@@ -114,9 +114,9 @@ def detail(quincena_id):
         .first()
     )
 
-    # Consultar el ultimo producto de quincenas con fuente TIMBRADOS SALARIOS
+    # Consultar el ultimo producto de quincenas con fuente TIMBRADOS
     quincena_producto_timbrados_salarios = (
-        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS SALARIOS", estatus="A")
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS", estatus="A")
         .order_by(QuincenaProducto.id.desc())
         .first()
     )
