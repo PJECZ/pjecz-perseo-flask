@@ -287,6 +287,11 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Poner avance de linea
     click.echo("")
 
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
@@ -389,7 +394,6 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
     # Iniciar contadores
     contador = 0
     centros_trabajos_inexistentes = []
-    nominas_existentes = []
     personas_inexistentes = []
     plazas_insertadas_contador = 0
 
@@ -438,18 +442,6 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
             sesion.add(plaza)
             plazas_insertadas_contador += 1
 
-        # Revisar que en nominas no exista una nomina con la misma persona, quincena y tipo AGUINALDO, si existe se omite
-        # nominas_posibles = (
-        #     Nomina.query.filter_by(persona_id=persona.id)
-        #     .filter_by(quincena_id=quincena.id)
-        #     .filter_by(tipo="AGUINALDO")
-        #     .filter_by(estatus="A")
-        #     .all()
-        # )
-        # if len(nominas_posibles) > 0:
-        #     nominas_existentes.append(rfc)
-        #     continue
-
         # Alimentar registro en Nomina
         nomina = Nomina(
             centro_trabajo=centro_trabajo,
@@ -476,9 +468,18 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
     # Poner avance de linea
     click.echo("")
 
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
+
+    # Actualizar la quincena para poner en verdadero el campo tiene_aguinaldos
+    quincena.tiene_aguinaldos = True
+    quincena.save()
 
     # Si hubo centros trabajos inexistentes, mostrarlos
     if len(centros_trabajos_inexistentes) > 0:
@@ -493,11 +494,6 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
     if len(personas_inexistentes) > 0:
         click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
-
-    # Si hubo nominas existentes, mostrarlos
-    if len(nominas_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Aguinaldos que ya existen. Se omiten:", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Aguinaldos: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
@@ -722,9 +718,18 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
     # Poner avance de linea
     click.echo("")
 
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
+
+    # Actualizar la quincena para poner en verdadero el campo tiene_apoyos_anuales
+    quincena.tiene_apoyos_anuales = True
+    quincena.save()
 
     # Si hubo centros_trabajos_inexistentes, mostrarlos
     if len(centros_trabajos_inexistentes) > 0:

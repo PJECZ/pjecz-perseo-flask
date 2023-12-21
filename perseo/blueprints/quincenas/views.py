@@ -58,6 +58,8 @@ def datatable_json():
                     "url": url_for("quincenas.detail", quincena_id=resultado.id),
                 },
                 "estado": resultado.estado,
+                "tiene_aguinaldos": resultado.tiene_aguinaldos,
+                "tiene_apoyos_anuales": resultado.tiene_apoyos_anuales,
             }
         )
     # Entregar JSON
@@ -121,6 +123,20 @@ def detail(quincena_id):
         .first()
     )
 
+    # Consultar el ultimo producto de quincenas con fuente TIMBRADOS AGUINALDOS
+    quincena_producto_timbrados_aguinaldos = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS AGUINALDOS", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
+    # Consultar el ultimo producto de quincenas con fuente TIMBRADOS APOYOS ANUALES
+    quincena_producto_timbrados_apoyos_anuales = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS APOYOS ANUALES", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
     # Consultar el ultimo producto de quincenas con fuente DISPERSIONES PENSIONADOS
     quincena_producto_dispersiones_pensionados = (
         QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="DISPERSIONES PENSIONADOS", estatus="A")
@@ -136,6 +152,8 @@ def detail(quincena_id):
         quincena_producto_monederos=quincena_producto_monederos,
         quincena_producto_pensionados=quincena_producto_pensionados,
         quincena_producto_timbrados_salarios=quincena_producto_timbrados_salarios,
+        quincena_producto_timbrados_aguinaldos=quincena_producto_timbrados_aguinaldos,
+        quincena_producto_timbrados_apoyos_anuales=quincena_producto_timbrados_apoyos_anuales,
         quincena_producto_dispersiones_pensionados=quincena_producto_dispersiones_pensionados,
     )
 
@@ -430,6 +448,80 @@ def generate_timbrados(quincena_id):
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_timbrados",
         mensaje=f"Crear un archivo XLSX con los timbrados de {quincena.clave}...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_timbrados_aguinaldos/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_timbrados_aguinaldos(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados aguinaldos de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.tiene_aguinaldos is False:
+        flash("Quincena no tiene aguinaldos", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="TIMBRADOS AGUINALDOS",
+        mensajes="Lanzando nominas.tasks.lanzar_generar_timbrados_aguinaldos...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.lanzar_generar_timbrados_aguinaldos",
+        mensaje=f"Crear un archivo XLSX con los timbrados aguinaldos de {quincena.clave}...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_timbrados_apoyos_anuales/<int:quincena_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def generate_timbrados_apoyos_anuales(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados apoyos anuales de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.tiene_apoyos_anuales is False:
+        flash("Quincena no tiene apoyos anuales", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="TIMBRADOS APOYOS ANUALES",
+        mensajes="Lanzando nominas.tasks.lanzar_generar_timbrados_apoyos_anaules...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.lanzar_generar_timbrados_apoyos_anaules",
+        mensaje=f"Crear un archivo XLSX con los timbrados apoyos anuales de {quincena.clave}...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )

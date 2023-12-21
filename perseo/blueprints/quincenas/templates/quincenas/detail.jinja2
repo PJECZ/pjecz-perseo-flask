@@ -25,20 +25,24 @@
             {% call detail.card(title='Detalle', estatus=quincena.estatus) %}
                 {{ detail.label_value('Quincena', quincena.clave) }}
                 {{ detail.label_value('Estado', quincena.estado) }}
+                {{ detail.label_value_boolean('Tiene aguinaldos', quincena.tiene_aguinaldos) }}
+                {{ detail.label_value_boolean('Tiene apoyos anuales', quincena.tiene_apoyos_anuales) }}
                 {{ detail.label_value('Creado', moment(quincena.creado).format('DD MMM YYYY')) }}
             {% endcall %}
         </div>
         <div class="col-md-6">
             {# Generar todos los archivos #}
-            {% call detail.card(title='Generar todos los archivos') %}
+            {% call detail.card(title='Generar archivos finales') %}
                 {% if quincena.estado == 'ABIERTA' %}
                     <ol>
-                        <li>Se reiniciarán los consecutivos temporales,</li>
-                        <li>Se crearán todos los XLSX en orden y </li>
-                        <li>Se conservarán los números de cheques.</li>
+                        <li>Se reiniciarán los consecutivos temporales</li>
+                        <li>Se generará Nóminas</li>
+                        <li>Se generará Monederos</li>
+                        <li>Se generará Pensionados</li>
+                        <li>Y se conservarán los números de cheques</li>
                     </ol>
                     {{ modals.button_modal_xl(
-                        'Generar Todos',
+                        'Generar archivos finales',
                         url_for('quincenas.generate_todos', quincena_id=quincena.id),
                         'GenerateTodos',
                         'mdi:file-multiple',
@@ -249,6 +253,94 @@
             {% endif %}
         </div>
         <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Aguinaldos' %}
+            {% if quincena_producto_timbrados_aguinaldos %}
+                {% if quincena_producto_timbrados_aguinaldos.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_timbrados_aguinaldos.mensajes %}
+                            {% set list = quincena_producto_timbrados_aguinaldos.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_timbrados_aguinaldos.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_timbrados_aguinaldos.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_aguinaldos.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                    {{ modals.button_modal_sm(
+                        label='Eliminar',
+                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_aguinaldos.id),
+                        id='DeleteTimbradosAguinaldos',
+                        icon='mdi:delete',
+                        message="¿Eliminar el archivo XLSX para timbrados aguinaldos?",
+                        color_class='btn-outline-danger')
+                    }}
+                {% endcall %}
+            {% else %}
+                {% if quincena.tiene_aguinaldos %}
+                    {% call detail.card(title=title) %}
+                        <p class="lead text-center">No hay archivo</p>
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_timbrados_aguinaldos', quincena_id=quincena.id),
+                            id='GenerateTimbradosAguinaldos',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para timbrados aguinaldos?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endcall %}
+                {% endif %}
+            {% endif %}
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Apoyos Anuales' %}
+            {% if quincena_producto_timbrados_apoyos_anuales %}
+                {% if quincena_producto_timbrados_apoyos_anuales.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_timbrados_apoyos_anuales.mensajes %}
+                            {% set list = quincena_producto_timbrados_apoyos_anuales.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_timbrados_apoyos_anuales.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_timbrados_apoyos_anuales.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_apoyos_anuales.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                    {{ modals.button_modal_sm(
+                        label='Eliminar',
+                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_apoyos_anuales.id),
+                        id='DeleteTimbradosApoyosAnuales',
+                        icon='mdi:delete',
+                        message="¿Eliminar el archivo XLSX para timbrados apoyos anuales?",
+                        color_class='btn-outline-danger')
+                    }}
+                {% endcall %}
+            {% else %}
+                {% if quincena.tiene_apoyos_anuales %}
+                    {% call detail.card(title=title) %}
+                        <p class="lead text-center">No hay archivo</p>
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_timbrados_apoyos_anuales', quincena_id=quincena.id),
+                            id='GenerateTimbradosApoyosAnuales',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para timbrados apoyos anuales?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endcall %}
+                {% endif %}
+            {% endif %}
         </div>
         <div class="col-md-3">
             {% set title = '<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados' %}
@@ -439,6 +531,10 @@
     {{ modals.custom_javascript('Eliminar Pensionados', '', 'DeletePensionados') }}
     {{ modals.custom_javascript('Generar Timbrados Salarios', '', 'GenerateTimbradosSalarios') }}
     {{ modals.custom_javascript('Eliminar Timbrados Salarios', '', 'DeleteTimbradosSalarios') }}
+    {{ modals.custom_javascript('Generar Timbrados Aguinaldos', '', 'GenerateTimbradosAguinaldos') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Aguinaldos', '', 'DeleteTimbradosAguinaldos') }}
+    {{ modals.custom_javascript('Generar Timbrados Apoyos Anuales', '', 'GenerateTimbradosApoyosAnuales') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Apoyos Anuales', '', 'DeleteTimbradosApoyosAnuales') }}
     {{ modals.custom_javascript('Generar Dispersiones Pensionados', '', 'GenerateDispersionesPensionados') }}
     {{ modals.custom_javascript('Eliminar Dispersiones Pensionados', '', 'DeleteDispersionesPensionados') }}
     {{ modals.custom_javascript('Generar Todos', '', 'GenerateTodos') }}

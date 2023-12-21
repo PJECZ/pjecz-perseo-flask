@@ -117,6 +117,56 @@ def lanzar_generar_timbrados(quincena_clave: str, quincena_producto_id: int) -> 
     return mensaje_termino
 
 
+def lanzar_generar_timbrados_aguinaldos(quincena_clave: str, quincena_producto_id: int) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con los timbrados aguinaldos de una quincena"""
+
+    # Iniciar la tarea en el fondo
+    set_task_progress(0, f"Generar archivo XLSX con los timbrados aguinaldos de {quincena_clave}...")
+
+    # Ejecutar el creador
+    try:
+        mensaje_termino = crear_timbrados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto_id,
+            tipo="AGUINALDO",
+        )
+    except MyAnyError as error:
+        mensaje_error = str(error)
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino)
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
+
+
+def lanzar_generar_timbrados_apoyos_anuales(quincena_clave: str, quincena_producto_id: int) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con los timbrados apoyos anuales de una quincena"""
+
+    # Iniciar la tarea en el fondo
+    set_task_progress(0, f"Generar archivo XLSX con los timbrados apoyos anuales de {quincena_clave}...")
+
+    # Ejecutar el creador
+    try:
+        mensaje_termino = crear_timbrados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto_id,
+            tipo="APOYO ANUAL",
+        )
+    except MyAnyError as error:
+        mensaje_error = str(error)
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino)
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
+
+
 def lanzar_generar_todos(quincena_clave: str) -> str:
     """Ejecutar todas las tareas en el fondo"""
 

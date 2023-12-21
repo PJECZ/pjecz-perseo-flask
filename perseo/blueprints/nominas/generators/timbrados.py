@@ -23,8 +23,6 @@ from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
 
-FUENTE = "TIMBRADOS"
-
 PATRON_RFC = "PJE901211TI9"
 COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
 COMPANIA_RFC = PATRON_RFC
@@ -38,18 +36,21 @@ def crear_timbrados(
 ) -> str:
     """Crear archivo XLSX con los timbrados de una quincena"""
 
-    # Validar el tipo
-    if tipo not in ["SALARIO", "AGUINALDO"]:
-        raise MyNotValidParamError(f"El tipo {tipo} no es valido")
-
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
+
+    # Validar el tipo
+    if tipo not in ["APOYO ANUAL", "AGUINALDO", "SALARIO"]:
+        raise MyNotValidParamError(f"El tipo {tipo} no es valido")
+
+    # Por defecto fuente es TIMBRADOS
+    fuente = "TIMBRADOS"
 
     # Inicializar el diccionario de conceptos
     conceptos_dict = {}
 
     # Si el tipo es SALARIO armar un diccionario con las percepciones y deducciones de Conceptos activos
-    if tipo == "SALARIO":
+    if tipo in ["AGUINALDO", "SALARIO"]:
         # Consultar los conceptos activos
         conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
         # Ordenar las claves, primero las que empiezan con P
@@ -64,8 +65,9 @@ def crear_timbrados(
         for concepto in conceptos:
             if not concepto.clave.startswith("P") and not concepto.clave.startswith("D"):
                 conceptos_dict[concepto.clave] = concepto
-        # Definir la fuente para quincena_producto
-        fuente = "TIMBRADOS"
+        # Si el tipo es AGUINALDO, entonces la fuente es TIMBRADOS AGUINALDOS
+        if tipo == "AGUINALDO":
+            fuente = "TIMBRADOS AGUINALDOS"
 
     # Si el tipo es APOYO ANUAL armar un diccionario con PAZ, DAZ y D62
     if tipo == "APOYO ANUAL":
@@ -80,7 +82,7 @@ def crear_timbrados(
     # Si no hay conceptos, provocar error y salir
     if len(conceptos_dict) == 0:
         mensaje = f"No hay conceptos para el tipo {tipo}"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
         raise MyEmptyError(mensaje)
 
     # Consultar las Nominas activas de la quincena, del tipo dado, juntar con personas para ordenar por RFC
@@ -96,7 +98,7 @@ def crear_timbrados(
     # Si no hay registros, provocar error
     if len(nominas) == 0:
         mensaje = f"No hay registros en nominas de tipo {tipo}"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
         raise MyEmptyError(mensaje)
 
     # Iniciar el archivo XLSX
@@ -300,7 +302,7 @@ def crear_timbrados(
     # Si el contador es cero, provocar error
     if contador == 0:
         mensaje = "No hubo filas que agregar al archivo XLSX"
-        actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+        actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
         raise MyEmptyError(mensaje)
 
     # Determinar la fecha y tiempo actual en la zona horaria de Mexico
@@ -345,7 +347,7 @@ def crear_timbrados(
                 bitacora.info("GCS: Depositado %s", gcs_public_path)
             except MyAnyError as error:
                 mensaje = str(error)
-                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+                actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
                 raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
@@ -369,7 +371,7 @@ def crear_timbrados(
     actualizar_quincena_producto(
         quincena_producto_id=quincena_producto_id,
         quincena_id=quincena.id,
-        fuente=FUENTE,
+        fuente=fuente,
         mensajes=mensajes,
         archivo=nombre_archivo_xlsx,
         url=gcs_public_path,
