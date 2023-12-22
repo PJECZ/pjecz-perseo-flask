@@ -75,7 +75,7 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
     contador_beneficiarios_insertados = 0
     contador_beneficiarios_actualizados = 0
     contador_quincenas_insertadas = 0
-    personas_errores = []
+    rfc_advertencias = []
     bancos_errores = []
 
     # Leer el archivo CSV
@@ -86,10 +86,9 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
             # Validar RFC
             try:
                 rfc = safe_rfc(row["RFC"])
-            except ValueError as error:
-                personas_errores.append(f"{row['RFC']}: {error}")
-                click.echo("E", nl=False)
-                continue
+            except ValueError:
+                rfc_advertencias.append(row["RFC"])
+                click.echo("!", nl=False)
 
             # Revistar si ya existe
             beneficiario = Beneficiario.query.filter_by(rfc=rfc).first()
@@ -154,13 +153,13 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
     sesion.close()
 
     # Si hubo personas_errores, mostrarlos
-    if len(personas_errores) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_errores)} errores:", fg="red"))
-        click.echo(click.style(f"  {', '.join(personas_errores)}", fg="red"))
+    if len(rfc_advertencias) > 0:
+        click.echo(click.style(f"  Hubo {len(rfc_advertencias)} advertencias en RFC. Aun asi se insertaron:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(rfc_advertencias)}", fg="yellow"))
 
     # Si hubo bancos_errores, mostrarlos
     if len(bancos_errores) > 0:
-        click.echo(click.style(f"  Hubo {len(bancos_errores)} errores:", fg="red"))
+        click.echo(click.style(f"  Hubo {len(bancos_errores)} errores. Se omiten:", fg="red"))
         click.echo(click.style(f"  {', '.join(bancos_errores)}", fg="red"))
 
     # Si hubo beneficiarios insertados, mostrar contador

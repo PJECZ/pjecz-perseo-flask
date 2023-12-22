@@ -1,7 +1,7 @@
 """
 Quincenas, modelos
 """
-from sqlalchemy import Column, Enum, Integer, String
+from sqlalchemy import Boolean, Column, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -25,6 +25,8 @@ class Quincena(database.Model, UniversalMixin):
     # Columnas
     clave = Column(String(6), unique=True, nullable=False)
     estado = Column(Enum(*ESTADOS, name="quincenas_estados"), nullable=False)
+    tiene_aguinaldos = Column(Boolean, nullable=False, default=False)
+    tiene_apoyos_anuales = Column(Boolean, nullable=False, default=False)
 
     # Hijos
     beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="quincena")

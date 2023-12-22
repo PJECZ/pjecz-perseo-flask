@@ -35,6 +35,8 @@
                 <tr>
                     <th>Quincena</th>
                     <th>Estado</th>
+                    <th>Aguinaldos</th>
+                    <th>Apoyos Anuales</th>
                 </tr>
             </thead>
         </table>
@@ -67,7 +69,9 @@
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: 'detalle' },
-            { data: 'estado' }
+            { data: 'estado' },
+            { data: 'tiene_aguinaldos' },
+            { data: 'tiene_apoyos_anuales' }
         ];
         configDataTable['columnDefs'] = [
             {
@@ -75,6 +79,17 @@
                 data: null,
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            },
+            {
+                targets: [2, 3], // tiene_aguinaldos, tiene_apoyos_anuales
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data) {
+                        return '<span class="iconify" data-icon="mdi:check">';
+                    } else {
+                        return '';
+                    }
                 }
             }
         ];

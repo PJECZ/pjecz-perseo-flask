@@ -210,6 +210,10 @@ def alimentar_monederos(quincena: str):
         rfc = str(hoja.cell_value(fila, 1)).strip().upper()
         num_tarjeta = str(hoja.cell_value(fila, 4)).strip()
 
+        # Si RFC es un string vacio, se salta
+        if rfc == "":
+            continue
+
         # Validar que el num_tarjeta sea de 16 digitos, de lo contrario, se pone en 16 ceros
         if re.match(r"^\d{16}$", num_tarjeta) is None:
             contador_num_tarjeta_invalido += 1

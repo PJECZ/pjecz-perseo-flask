@@ -287,6 +287,11 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Poner avance de linea
     click.echo("")
 
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
@@ -306,12 +311,12 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos. Usan el generico.", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador. Usan el generico.", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
@@ -389,7 +394,6 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
     # Iniciar contadores
     contador = 0
     centros_trabajos_inexistentes = []
-    nominas_existentes = []
     personas_inexistentes = []
     plazas_insertadas_contador = 0
 
@@ -438,18 +442,6 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
             sesion.add(plaza)
             plazas_insertadas_contador += 1
 
-        # Revisar que en nominas no exista una nomina con la misma persona, quincena y tipo AGUINALDO, si existe se omite
-        # nominas_posibles = (
-        #     Nomina.query.filter_by(persona_id=persona.id)
-        #     .filter_by(quincena_id=quincena.id)
-        #     .filter_by(tipo="AGUINALDO")
-        #     .filter_by(estatus="A")
-        #     .all()
-        # )
-        # if len(nominas_posibles) > 0:
-        #     nominas_existentes.append(rfc)
-        #     continue
-
         # Alimentar registro en Nomina
         nomina = Nomina(
             centro_trabajo=centro_trabajo,
@@ -476,13 +468,22 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
     # Poner avance de linea
     click.echo("")
 
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
+    # Actualizar la quincena para poner en verdadero el campo tiene_aguinaldos
+    quincena.tiene_aguinaldos = True
+    quincena.save()
+
     # Si hubo centros trabajos inexistentes, mostrarlos
     if len(centros_trabajos_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} C. de T. que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
 
     # Si hubo plazas insertadas, mostrar contador
@@ -491,13 +492,8 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo personas inexistentes, mostrar contador
     if len(personas_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
-
-    # Si hubo nominas existentes, mostrarlos
-    if len(nominas_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Aguinaldos que ya existen:", fg="yellow"))
-        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Aguinaldos: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
@@ -664,6 +660,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             plaza=plaza,
             quincena=quincena,
             importe=percepcion,
+            tipo="APOYO ANUAL",
         )
         sesion.add(percepcion_deduccion_paz)
 
@@ -675,6 +672,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             plaza=plaza,
             quincena=quincena,
             importe=deduccion,
+            tipo="APOYO ANUAL",
         )
         sesion.add(percepcion_deduccion_daz)
 
@@ -687,6 +685,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
                 plaza=plaza,
                 quincena=quincena,
                 importe=impte_concepto_d62,
+                tipo="APOYO ANUAL",
             )
             sesion.add(percepcion_deduccion_d62)
 
@@ -719,28 +718,37 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
     # Poner avance de linea
     click.echo("")
 
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
+    # Actualizar la quincena para poner en verdadero el campo tiene_apoyos_anuales
+    quincena.tiene_apoyos_anuales = True
+    quincena.save()
+
     # Si hubo centros_trabajos_inexistentes, mostrarlos
     if len(centros_trabajos_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} Centros de Trabajo que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} C. de T. que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
 
     # Si hubo plazas_inexistentes, mostrarlos
     if len(plazas_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(plazas_inexistentes)}", fg="yellow"))
 
     # Si hubo personas_inexistentes, mostrar contador
     if len(personas_inexistentes) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
 
     # Si hubo nominas_existentes, mostrarlos
     if len(nominas_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen:", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Apoyos Anuales que ya existen. Se omiten:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
 
     # Mensaje termino
@@ -1549,9 +1557,6 @@ def generar_timbrados(quincena_clave: str, tipo: str):
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
-
     # Consultar quincena
     quincena = Quincena.query.filter_by(clave=quincena_clave).first()
 
@@ -1574,12 +1579,13 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     quincena_fecha_inicial = quincena_to_fecha(quincena_clave, dame_ultimo_dia=False)
     quincena_fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
 
+    # Inicializar el diccionario de conceptos
+    conceptos_dict = {}
+
     # Si el tipo es SALARIO armar un diccionario con las percepciones y deducciones de Conceptos activos
     if tipo == "SALARIO":
         # Consultar los conceptos activos
         conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
-        # Inicializar el diccionario de conceptos
-        conceptos_dict = {}
         # Ordenar las claves, primero las que empiezan con P
         for concepto in conceptos:
             if concepto.clave.startswith("P"):
@@ -1680,14 +1686,12 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     # Agregar la fila con las cabeceras de las columnas
     hoja.append(encabezados_parte_1 + encabezados_parte_2 + encabezados_parte_3)
 
-    # Bucle para crear cada fila del archivo XLSX
+    # Inicializar el contador
     contador = 0
     personas_sin_cuentas = []
-    # personas_sin_fechas_de_ingreso = []
-    for nomina in nominas:
-        # Incrementar contador
-        contador += 1
 
+    # Bucle para crear cada fila del archivo XLSX
+    for nomina in nominas:
         # Consultar las cuentas de la persona
         cuentas = nomina.persona.cuentas
 
@@ -1703,19 +1707,8 @@ def generar_timbrados(quincena_clave: str, tipo: str):
             personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
-        # Tomar el banco de la cuenta de la persona
-        su_banco = su_cuenta.banco
-
-        # Incrementer el consecutivo_generado del banco
-        su_banco.consecutivo_generado += 1
-
-        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
-        num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
-
-        # Si NO tiene fecha de ingreso, se agrega a la lista de personas_sin_fechas_de_ingreso y se salta
-        # if nomina.persona.ingreso_pj_fecha is None:
-        #     personas_sin_fechas_de_ingreso.append(nomina.persona.rfc)
-        #     continue
+        # Incrementar contador
+        contador += 1
 
         # Fila parte 1
         fila_parte_1 = [
@@ -1826,16 +1819,9 @@ def generar_timbrados(quincena_clave: str, tipo: str):
         # Agregar la fila
         hoja.append(fila_parte_1 + fila_parte_2 + fila_parte_3)
 
-        # Actualizar el registro de la nominas con el numero de cheque
-        nomina.num_cheque = num_cheque
-        sesion.add(nomina)
-
         # Mostrar contador
         if contador % 100 == 0:
             click.echo(f"  Van {contador}...")
-
-    # Actualizar los consecutivos de cada banco
-    sesion.commit()
 
     # Determinar el nombre del archivo XLSX, juntando 'timbrados' con la quincena y la fecha como YYYY-MM-DD HHMMSS
     if tipo == "SALARIO":
@@ -1850,11 +1836,6 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     if len(personas_sin_cuentas) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_cuentas)} Personas sin cuentas:", fg="yellow"))
         click.echo(click.style(f"  {', '.join(personas_sin_cuentas)}", fg="yellow"))
-
-    # Si hubo personas sin fecha de ingreso, entonces mostrarlas en pantalla
-    # if len(personas_sin_fechas_de_ingreso) > 0:
-    #     click.echo(click.style(f"  Hubo {len(personas_sin_fechas_de_ingreso)} Personas sin fecha de ingreso:", fg="yellow"))
-    #     click.echo(click.style(f"  {', '.join(personas_sin_fechas_de_ingreso)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(f"  Generar Timbrados: {contador} filas en {nombre_archivo}")

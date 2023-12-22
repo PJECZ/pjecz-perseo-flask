@@ -25,21 +25,25 @@
             {% call detail.card(title='Detalle', estatus=quincena.estatus) %}
                 {{ detail.label_value('Quincena', quincena.clave) }}
                 {{ detail.label_value('Estado', quincena.estado) }}
+                {{ detail.label_value_boolean('Tiene aguinaldos', quincena.tiene_aguinaldos) }}
+                {{ detail.label_value_boolean('Tiene apoyos anuales', quincena.tiene_apoyos_anuales) }}
                 {{ detail.label_value('Creado', moment(quincena.creado).format('DD MMM YYYY')) }}
             {% endcall %}
         </div>
         <div class="col-md-6">
             {# Generar todos los archivos #}
-            {% call detail.card(title='Generar todos los archivos') %}
+            {% call detail.card(title='Generar archivos finales') %}
                 {% if quincena.estado == 'ABIERTA' %}
                     <ol>
-                        <li>Se reiniciarán los consecutivos temporales,</li>
-                        <li>Se crearán todos los XLSX en orden y </li>
-                        <li>Se conservarán los números de cheques.</li>
+                        <li>Se reiniciarán los consecutivos temporales</li>
+                        <li>Se generará Nóminas</li>
+                        <li>Se generará Monederos</li>
+                        <li>Se generará Pensionados</li>
+                        <li>Y se conservarán los números de cheques</li>
                     </ol>
                     {{ modals.button_modal_xl(
-                        'Generar Todos',
-                        url_for('quincenas.generar_todos', quincena_id=quincena.id),
+                        'Generar archivos finales',
+                        url_for('quincenas.generate_todos', quincena_id=quincena.id),
                         'GenerateTodos',
                         'mdi:file-multiple',
                         "Se reiniciarán los consecutivos temporales, se crearán todos los XLSX en orden y se conservarán los números de cheques. ¿Está seguro?")
@@ -53,6 +57,7 @@
     {# Descargar y generar los productos de la quincena #}
     <div class="row mb-2">
         <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas' %}
             {% if quincena_producto_nominas %}
                 {% if quincena_producto_nominas.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -61,7 +66,7 @@
                     {% set border_class='border-danger' %}
                     {% set text_class='text-danger' %}
                 {% endif %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas', border_class=border_class, text_class=text_class) %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
                     <ul>
                         {% if quincena_producto_nominas.mensajes %}
                             {% set list = quincena_producto_nominas.mensajes.split("\n") %}
@@ -74,7 +79,7 @@
                     {% endif %}
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
-                            label='Eliminar XLSX',
+                            label='Eliminar',
                             url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_nominas.id),
                             id='DeleteNominas',
                             icon='mdi:delete',
@@ -84,7 +89,7 @@
                     {% endif %}
                 {% endcall %}
             {% else %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas') %}
+                {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_md(
@@ -100,6 +105,7 @@
             {% endif %}
         </div>
         <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:cart"></span> Monederos' %}
             {% if quincena_producto_monederos %}
                 {% if quincena_producto_monederos.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -108,7 +114,7 @@
                     {% set border_class='border-danger' %}
                     {% set text_class='text-danger' %}
                 {% endif %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos', border_class=border_class, text_class=text_class) %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
                     <ul>
                         {% if quincena_producto_monederos.mensajes %}
                             {% set list = quincena_producto_monederos.mensajes.split("\n") %}
@@ -121,7 +127,7 @@
                     {% endif %}
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
-                            label='Eliminar XLSX',
+                            label='Eliminar',
                             url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_monederos.id),
                             id='DeleteMonederos',
                             icon='mdi:delete',
@@ -131,7 +137,7 @@
                     {% endif %}
                 {% endcall %}
             {% else %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:cart"></span> Monederos') %}
+                {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_md(
@@ -147,6 +153,7 @@
             {% endif %}
         </div>
         <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados' %}
             {% if quincena_producto_pensionados %}
                 {% if quincena_producto_pensionados.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -155,7 +162,7 @@
                     {% set border_class='border-danger' %}
                     {% set text_class='text-danger' %}
                 {% endif %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados', border_class=border_class, text_class=text_class) %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
                     <ul>
                         {% if quincena_producto_pensionados.mensajes %}
                             {% set list = quincena_producto_pensionados.mensajes.split("\n") %}
@@ -168,7 +175,7 @@
                     {% endif %}
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
-                            label='Eliminar XLSX',
+                            label='Eliminar',
                             url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_pensionados.id),
                             id='DeletePensionados',
                             icon='mdi:delete',
@@ -178,7 +185,7 @@
                     {% endif %}
                 {% endcall %}
             {% else %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados') %}
+                {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_md(
@@ -193,9 +200,150 @@
                 {% endcall %}
             {% endif %}
         </div>
+        <div class="col-md-3">
+            {% call detail.card(title='<span class="iconify" data-icon="mdi:folder"></span> Otros') %}
+                <p class="lead text-center">No hay archivo</p>
+            {% endcall %}
+        </div>
     </div>
+    {# Descargar y generar los dispersiones y timbrados de la quincena #}
     <div class="row mb-2">
         <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Salarios' %}
+            {% if quincena_producto_timbrados_salarios %}
+                {% if quincena_producto_timbrados_salarios.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_timbrados_salarios.mensajes %}
+                            {% set list = quincena_producto_timbrados_salarios.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_timbrados_salarios.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_timbrados_salarios.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_salarios.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                    {{ modals.button_modal_sm(
+                        label='Eliminar',
+                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_salarios.id),
+                        id='DeleteTimbradosSalarios',
+                        icon='mdi:delete',
+                        message="¿Eliminar el archivo XLSX para tmbrados salarios?",
+                        color_class='btn-outline-danger')
+                    }}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title=title) %}
+                    <p class="lead text-center">No hay archivo</p>
+                    {{ modals.button_modal_md(
+                        label='Generar XLSX',
+                        url=url_for('quincenas.generate_timbrados', quincena_id=quincena.id),
+                        id='GenerateTimbradosSalarios',
+                        icon='mdi:play',
+                        message="¿Generar un nuevo archivo XLSX para timbrados salarios?",
+                        color_class='btn-outline-success')
+                    }}
+                {% endcall %}
+            {% endif %}
+        </div>
+        <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Aguinaldos' %}
+            {% if quincena_producto_timbrados_aguinaldos %}
+                {% if quincena_producto_timbrados_aguinaldos.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_timbrados_aguinaldos.mensajes %}
+                            {% set list = quincena_producto_timbrados_aguinaldos.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_timbrados_aguinaldos.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_timbrados_aguinaldos.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_aguinaldos.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                    {{ modals.button_modal_sm(
+                        label='Eliminar',
+                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_aguinaldos.id),
+                        id='DeleteTimbradosAguinaldos',
+                        icon='mdi:delete',
+                        message="¿Eliminar el archivo XLSX para timbrados aguinaldos?",
+                        color_class='btn-outline-danger')
+                    }}
+                {% endcall %}
+            {% else %}
+                {% if quincena.tiene_aguinaldos %}
+                    {% call detail.card(title=title) %}
+                        <p class="lead text-center">No hay archivo</p>
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_timbrados_aguinaldos', quincena_id=quincena.id),
+                            id='GenerateTimbradosAguinaldos',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para timbrados aguinaldos?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endcall %}
+                {% endif %}
+            {% endif %}
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Apoyos Anuales' %}
+            {% if quincena_producto_timbrados_apoyos_anuales %}
+                {% if quincena_producto_timbrados_apoyos_anuales.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_timbrados_apoyos_anuales.mensajes %}
+                            {% set list = quincena_producto_timbrados_apoyos_anuales.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_timbrados_apoyos_anuales.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_timbrados_apoyos_anuales.url %}
+                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_apoyos_anuales.url, 'mdi:download', '_blank') }}
+                    {% endif %}
+                    {{ modals.button_modal_sm(
+                        label='Eliminar',
+                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_apoyos_anuales.id),
+                        id='DeleteTimbradosApoyosAnuales',
+                        icon='mdi:delete',
+                        message="¿Eliminar el archivo XLSX para timbrados apoyos anuales?",
+                        color_class='btn-outline-danger')
+                    }}
+                {% endcall %}
+            {% else %}
+                {% if quincena.tiene_apoyos_anuales %}
+                    {% call detail.card(title=title) %}
+                        <p class="lead text-center">No hay archivo</p>
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_timbrados_apoyos_anuales', quincena_id=quincena.id),
+                            id='GenerateTimbradosApoyosAnuales',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para timbrados apoyos anuales?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endcall %}
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados' %}
             {% if quincena_producto_dispersiones_pensionados %}
                 {% if quincena_producto_dispersiones_pensionados.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -204,7 +352,7 @@
                     {% set border_class='border-danger' %}
                     {% set text_class='text-danger' %}
                 {% endif %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados', border_class=border_class, text_class=text_class) %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
                     <ul>
                         {% if quincena_producto_dispersiones_pensionados.mensajes %}
                             {% set list = quincena_producto_dispersiones_pensionados.mensajes.split("\n") %}
@@ -215,32 +363,33 @@
                     {% if quincena_producto_dispersiones_pensionados.url %}
                         {{ detail.button_md('Descargar XLSX', quincena_producto_dispersiones_pensionados.url, 'mdi:download', '_blank') }}
                     {% endif %}
-                    {% if quincena.estado == 'ABIERTA' %}
-                        {{ modals.button_modal_sm(
-                            label='Eliminar XLSX',
-                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_dispersiones_pensionados.id),
-                            id='DeleteDispersionesPensionados',
-                            icon='mdi:delete',
-                            message="¿Eliminar el archivo XLSX para dispersiones pensionados?",
-                            color_class='btn-outline-danger')
-                        }}
-                    {% endif %}
+                    {{ modals.button_modal_sm(
+                        label='Eliminar',
+                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_dispersiones_pensionados.id),
+                        id='DeleteDispersionesPensionados',
+                        icon='mdi:delete',
+                        message="¿Eliminar el archivo XLSX para dispersiones pensionados?",
+                        color_class='btn-outline-danger')
+                    }}
                 {% endcall %}
             {% else %}
-                {% call detail.card(title='<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados') %}
+                {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
-                    {% if quincena.estado == 'ABIERTA' %}
-                        {{ modals.button_modal_md(
-                            label='Generar XLSX',
-                            url=url_for('quincenas.generar_dispersiones_pensionados', quincena_id=quincena.id),
-                            id='GenerateDispersionesPensionados',
-                            icon='mdi:play',
-                            message="¿Generar un nuevo archivo XLSX para dispersiones pensionados?",
-                            color_class='btn-outline-success')
-                        }}
-                    {% endif %}
+                    {{ modals.button_modal_md(
+                        label='Generar XLSX',
+                        url=url_for('quincenas.generate_dispersiones_pensionados', quincena_id=quincena.id),
+                        id='GenerateDispersionesPensionados',
+                        icon='mdi:play',
+                        message="¿Generar un nuevo archivo XLSX para dispersiones pensionados?",
+                        color_class='btn-outline-success')
+                    }}
                 {% endcall %}
             {% endif %}
+        </div>
+        <div class="col-md-3">
+            {% call detail.card(title='<span class="iconify" data-icon="mdi:folder"></span> Otros') %}
+                <p class="lead text-center">No hay archivo</p>
+            {% endcall %}
         </div>
     </div>
     {# Datatable con las nominas de la Quincena #}
@@ -374,14 +523,20 @@
         </script>
     {% endif %}
     <!-- Modales -->
-    {{ modals.custom_javascript('Generar XLSX Nóminas', '', 'GenerateNominas') }}
-    {{ modals.custom_javascript('Eliminar XLSX Nóminas', '', 'DeleteNominas') }}
-    {{ modals.custom_javascript('Generar XLSX Monederos', '', 'GenerateMonederos') }}
-    {{ modals.custom_javascript('Eliminar XLSX Monederos', '', 'DeleteMonederos') }}
-    {{ modals.custom_javascript('Generar XLSX Pensionados', '', 'GeneratePensionados') }}
-    {{ modals.custom_javascript('Eliminar XLSX Pensionados', '', 'DeletePensionados') }}
-    {{ modals.custom_javascript('Generar XLSX Dispersiones Pensionados', '', 'GenerateDispersionesPensionados') }}
-    {{ modals.custom_javascript('Eliminar XLSX Dispersiones Pensionados', '', 'DeleteDispersionesPensionados') }}
+    {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
+    {{ modals.custom_javascript('Eliminar Nóminas', '', 'DeleteNominas') }}
+    {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
+    {{ modals.custom_javascript('Eliminar Monederos', '', 'DeleteMonederos') }}
+    {{ modals.custom_javascript('Generar Pensionados', '', 'GeneratePensionados') }}
+    {{ modals.custom_javascript('Eliminar Pensionados', '', 'DeletePensionados') }}
+    {{ modals.custom_javascript('Generar Timbrados Salarios', '', 'GenerateTimbradosSalarios') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Salarios', '', 'DeleteTimbradosSalarios') }}
+    {{ modals.custom_javascript('Generar Timbrados Aguinaldos', '', 'GenerateTimbradosAguinaldos') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Aguinaldos', '', 'DeleteTimbradosAguinaldos') }}
+    {{ modals.custom_javascript('Generar Timbrados Apoyos Anuales', '', 'GenerateTimbradosApoyosAnuales') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Apoyos Anuales', '', 'DeleteTimbradosApoyosAnuales') }}
+    {{ modals.custom_javascript('Generar Dispersiones Pensionados', '', 'GenerateDispersionesPensionados') }}
+    {{ modals.custom_javascript('Eliminar Dispersiones Pensionados', '', 'DeleteDispersionesPensionados') }}
     {{ modals.custom_javascript('Generar Todos', '', 'GenerateTodos') }}
     {% if current_user.can_admin('QUINCENA') %}
         {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.clave + '?') }}{% endif %}

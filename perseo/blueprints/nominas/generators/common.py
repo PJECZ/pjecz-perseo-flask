@@ -8,6 +8,7 @@ from lib.exceptions import MyNotExistsError, MyNotValidParamError
 from lib.safe_string import QUINCENA_REGEXP
 from perseo.app import create_app
 from perseo.blueprints.quincenas.models import Quincena
+from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.extensions import database
 
 GCS_BASE_DIRECTORY = "reports/nominas"
@@ -50,3 +51,43 @@ def consultar_validar_quincena(quincena_clave: str) -> Quincena:
 
     # Entregar la quincena
     return quincena
+
+
+def actualizar_quincena_producto(
+    quincena_producto_id: int,
+    quincena_id: int,
+    fuente: str,
+    mensajes: list,
+    archivo: str = "",
+    url: str = "",
+    es_satisfactorio: bool = False,
+) -> QuincenaProducto:
+    """Actualizar la quincena_producto"""
+
+    # Validar fuente
+    if fuente not in QuincenaProducto.FUENTES:
+        raise MyNotValidParamError("Fuente inválida.")
+
+    # Si quincena_producto_id es cero
+    if quincena_producto_id == 0:
+        # Agregar un registro para conservar las rutas y mensajes
+        quincena_producto = QuincenaProducto(
+            quincena_id=quincena_id,
+            archivo=archivo,
+            es_satisfactorio=es_satisfactorio,
+            fuente=fuente,
+            mensajes="\n".join(mensajes),
+            url=url,
+        )
+    else:
+        # Si quincena_producto_id es diferente de cero, actualizar el registro
+        quincena_producto = QuincenaProducto.query.get(quincena_producto_id)
+        quincena_producto.archivo = archivo
+        quincena_producto.es_satisfactorio = es_satisfactorio
+        quincena_producto.fuente = fuente
+        quincena_producto.mensajes = "\n".join(mensajes)
+        quincena_producto.url = url
+    quincena_producto.save()
+
+    # Entregar la quincena_producto
+    return quincena_producto
