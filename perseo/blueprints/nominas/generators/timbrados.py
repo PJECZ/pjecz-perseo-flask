@@ -9,6 +9,7 @@ from openpyxl import Workbook
 
 from config.settings import get_settings
 from lib.exceptions import MyAnyError, MyEmptyError, MyNotValidParamError
+from lib.fechas import quincena_to_fecha
 from lib.storage import GoogleCloudStorage
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.nominas.generators.common import (
@@ -43,13 +44,25 @@ def crear_timbrados(
     if tipo not in ["APOYO ANUAL", "AGUINALDO", "SALARIO"]:
         raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
-    # Por defecto fuente es TIMBRADOS
+    # Por defecto fuente es TIMBRADOS para el tipo SALARIO
     fuente = "TIMBRADOS"
+    if tipo == "AGUINALDO":
+        fuente = "TIMBRADOS AGUINALDOS"
+    elif tipo == "APOYO ANUAL":
+        fuente = "TIMBRADOS APOYOS ANUALES"
 
     # Inicializar el diccionario de conceptos
     conceptos_dict = {}
 
-    # Si el tipo es SALARIO armar un diccionario con las percepciones y deducciones de Conceptos activos
+    # Determinar las fechas inicial y final de la quincena
+    if tipo == "SALARIO":
+        quincena_fecha_inicial = quincena_to_fecha(quincena_clave, dame_ultimo_dia=False)
+        quincena_fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+    else:
+        quincena_fecha_inicial = datetime(year=2023, month=1, day=1).date()
+        quincena_fecha_final = datetime(year=2023, month=12, day=31).date()
+
+    # Si el tipo es AGUINALDO o SALARIO armar un diccionario con las percepciones y deducciones de Conceptos activos
     if tipo in ["AGUINALDO", "SALARIO"]:
         # Consultar los conceptos activos
         conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
@@ -65,9 +78,6 @@ def crear_timbrados(
         for concepto in conceptos:
             if not concepto.clave.startswith("P") and not concepto.clave.startswith("D"):
                 conceptos_dict[concepto.clave] = concepto
-        # Si el tipo es AGUINALDO, entonces la fuente es TIMBRADOS AGUINALDOS
-        if tipo == "AGUINALDO":
-            fuente = "TIMBRADOS AGUINALDOS"
 
     # Si el tipo es APOYO ANUAL armar un diccionario con PAZ, DAZ y D62
     if tipo == "APOYO ANUAL":
@@ -76,8 +86,6 @@ def crear_timbrados(
             "DAZ": None,  # Deduccion ISR Apoyo Anual
             "D62": None,  # Deduccion Pension Alimenticia
         }
-        # Definir la fuente para quincena_producto
-        fuente = "TIMBRADOS APOYOS ANUALES"
 
     # Si no hay conceptos, provocar error y salir
     if len(conceptos_dict) == 0:
@@ -208,8 +216,8 @@ def crear_timbrados(
             "",  # PLANTA nula
             nomina.persona.tabulador.salario_diario,  # SALARIO DIARIO
             nomina.persona.tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
-            datetime(year=2023, month=1, day=1).date(),  # FECHA INICIAL PERIODO quincena_fecha_inicial
-            datetime(year=2023, month=12, day=31).date(),  # FECHA FINAL PERIODO quincena_fecha_final
+            quincena_fecha_inicial,  # FECHA INICIAL PERIODO
+            quincena_fecha_final,  # FECHA FINAL PERIODO
             nomina.fecha_pago,  # FECHA DE PAGO
             "15" if tipo == "SALARIO" else "1",  # DIAS TRABAJADOS cuando es anual se pone 1
             PATRON_RFC,  # RFC DEL PATRON
@@ -312,6 +320,9 @@ def crear_timbrados(
     if tipo == "SALARIO":
         nombre_archivo_xlsx = f"timbrados_salarios_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
         descripcion_archivo_xlsx = f"Timbrados salarios {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"
+    elif tipo == "AGUINALDO":
+        nombre_archivo_xlsx = f"timbrados_aguinaldos_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+        descripcion_archivo_xlsx = f"Timbrados aguinaldos {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"
     elif tipo == "APOYO ANUAL":
         nombre_archivo_xlsx = f"timbrados_apoyos_anuales_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
         descripcion_archivo_xlsx = f"Timbrados apoyos anuales {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"

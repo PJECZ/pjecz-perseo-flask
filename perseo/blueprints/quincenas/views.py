@@ -514,13 +514,13 @@ def generate_timbrados_apoyos_anuales(quincena_id):
         archivo="",
         es_satisfactorio=False,
         fuente="TIMBRADOS APOYOS ANUALES",
-        mensajes="Lanzando nominas.tasks.lanzar_generar_timbrados_apoyos_anaules...",
+        mensajes="Lanzando nominas.tasks.lanzar_generar_timbrados_apoyos_anuales...",
         url="",
     )
     quincena_producto.save()
     # Lanzar la tarea en el fondo
     current_user.launch_task(
-        comando="nominas.tasks.lanzar_generar_timbrados_apoyos_anaules",
+        comando="nominas.tasks.lanzar_generar_timbrados_apoyos_anuales",
         mensaje=f"Crear un archivo XLSX con los timbrados apoyos anuales de {quincena.clave}...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
