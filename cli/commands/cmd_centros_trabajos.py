@@ -1,14 +1,16 @@
 """
 CLI Centros de Trabajo
 """
+import csv
 import os
 import sys
+from pathlib import Path
 
 import click
 import requests
 from dotenv import load_dotenv
 
-from lib.safe_string import safe_string
+from lib.safe_string import safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.extensions import database
@@ -19,6 +21,8 @@ RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL")
 RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY")
 TIMEOUT = 12
 
+CENTROS_TRABAJOS_CSV = "seed/centros_trabajos.csv"
+
 app = create_app()
 app.app_context().push()
 database.app = app
@@ -27,6 +31,82 @@ database.app = app
 @click.group()
 def cli():
     """Centros de Trabajo"""
+
+
+@click.command()
+@click.option("--centros-trabajos-csv", default=CENTROS_TRABAJOS_CSV, help="Archivo CSV con los datos de los C.T.")
+def actualizar(centros_trabajos_csv: str):
+    """Actualizar los C.T. a partir de un archivo CSV"""
+
+    # Validar archivo
+    ruta = Path(centros_trabajos_csv)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Inicializar los contadores
+    agregados_contador = 0
+    actualizados_contador = 0
+
+    # Leer el archivo CSV
+    click.echo("Actualizar Personas: ", nl=False)
+    with open(ruta, newline="", encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Validar que tenga clave
+            if "clave" not in row:
+                click.echo("ERROR: No se encontro la columna 'clave' en el archivo CSV.")
+                sys.exit(1)
+            clave = safe_clave(row["clave"])
+
+            # Consultar el Centro de Trabajo
+            centro_trabajo = CentroTrabajo.query.filter_by(clave=clave).first()
+
+            # Si no existe, agregar
+            if centro_trabajo is None:
+                centro_trabajo = CentroTrabajo(
+                    clave=clave,
+                    descripcion=safe_string(row["descripcion"], save_enie=True),
+                )
+                centro_trabajo.save()
+                agregados_contador += 1
+                click.echo(click.style("u", fg="green"), nl=False)
+                continue
+
+            # Bandera si hubo cambios
+            hay_cambios = False
+
+            # Si la descripcion es diferente, actualizar
+            if "descripcion" in row:
+                descripcion = safe_string(row["descripcion"], save_enie=True)
+                if centro_trabajo.descripcion != descripcion:
+                    centro_trabajo.descripcion = row["descripcion"]
+                hay_cambios = True
+
+            # Si hubo cambios, agregar a la sesión e incrementar el contador
+            if hay_cambios:
+                centro_trabajo.save()
+                actualizados_contador += 1
+                click.echo(click.style("u", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si no hubo agregados o actualizados, mostrar mensaje y terminar
+    if agregados_contador == 0 and actualizados_contador == 0:
+        click.echo("  AVISO: No hubo cambios.")
+        sys.exit(0)
+
+    # Mensaje de termino
+    click.echo("  Centros de Trabajo: ", nl=False)
+    if agregados_contador > 0:
+        click.echo(f" {agregados_contador} agregados", nl=False)
+    if actualizados_contador > 0:
+        click.echo(f" {actualizados_contador} actualizados", nl=False)
+    click.echo("")
 
 
 @click.command()
@@ -97,4 +177,5 @@ def sincronizar():
     click.echo(f"Centros de Trabajo: {contador} sincronizados.")
 
 
+cli.add_command(actualizar)
 cli.add_command(sincronizar)
