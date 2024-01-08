@@ -10,13 +10,17 @@ from pathlib import Path
 
 import click
 import requests
+import xlrd
 from dotenv import load_dotenv
 
-from lib.safe_string import safe_curp, safe_rfc
+from lib.fechas import quincena_to_fecha
+from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_curp, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.puestos.models import Puesto
+from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
 load_dotenv()
@@ -26,6 +30,9 @@ RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY")
 TIMEOUT = 12
 
 PERSONAS_CSV = "seed/personas.csv"
+EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
+NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+EMPLEADOS_ALFABETICO_FILENAME_XLS = "EmpleadosAlfabetico.XLS"
 
 app = create_app()
 app.app_context().push()
@@ -131,6 +138,290 @@ def actualizar(personas_csv: str):
 
     # Mensaje de termino
     click.echo(f"  Personas: {contador} actualizadas.")
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+def actualizar_fechas_ingreso(quincena_clave: str):
+    """Actualizar las fechas de ingreso de las personas a partir de los archivos de explotacion de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, EMPLEADOS_ALFABETICO_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Inicializar los listados con las anomalias
+    personas_no_encontradas = []
+
+    # Inicializar contador de personas actualizadas
+    personas_actualizadas_contador = 0
+
+    # Bucle por cada fila
+    click.echo("Actualizando las fechas de ingreso de las Personas: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        rfc = hoja.cell_value(fila, 0)
+        quincena_ingreso_pj_fecha_str = str(int(hoja.cell_value(fila, 7)))
+        quincena_ingreso_gobierno_fecha_str = str(int(hoja.cell_value(fila, 8)))
+
+        # Convertir la quincena_ingreso_pj_fecha_str a fecha
+        try:
+            ingreso_pj_fecha = quincena_to_fecha(quincena_ingreso_pj_fecha_str)
+        except ValueError:
+            # ingreso_pj_fecha = None
+            click.echo(f"ERROR: {quincena_ingreso_pj_fecha_str} no es VALIDO.")
+            sys.exit(1)
+
+        # Convertir la quincena_entro_gob_str a fecha
+        try:
+            ingreso_gobierno_fecha = quincena_to_fecha(quincena_ingreso_gobierno_fecha_str)
+        except ValueError:
+            # ingreso_gobierno_fecha = None
+            click.echo(f"ERROR: {quincena_ingreso_gobierno_fecha_str} no es VALIDO.")
+            sys.exit(1)
+
+        # Consultar a la persona
+        persona = Persona.query.filter_by(rfc=rfc).first()
+
+        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        if persona is None:
+            personas_no_encontradas.append(rfc)
+            continue
+
+        # Inicializar la bandera de cambios
+        hay_cambios = False
+
+        # Si persona.ingreso_pj_fecha es diferente, actualizar
+        if persona.ingreso_pj_fecha != ingreso_pj_fecha:
+            persona.ingreso_pj_fecha = ingreso_pj_fecha
+            hay_cambios = True
+
+        # Si persona.ingreso_gobierno_fecha es diferente, actualizar
+        if persona.ingreso_gobierno_fecha != ingreso_gobierno_fecha:
+            persona.ingreso_gobierno_fecha = ingreso_gobierno_fecha
+            hay_cambios = True
+
+        # Si hay cambios, agregar a la sesion e incrementar el contador
+        if hay_cambios is True:
+            persona.save()
+            personas_actualizadas_contador += 1
+            click.echo(click.style(".", fg="green"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si hubo personas_no_encontradas, mostrarlas
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} personas que no se encontraron:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(personas_no_encontradas)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Actualizar fechas de ingreso de las personas: {personas_actualizadas_contador}", fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+def actualizar_tabuladores(quincena_clave: str):
+    """Actualizar los tabuladores de las personas a partir de los archivos de explotacion de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, NOMINAS_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    # sesion = database.session
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Inicializar los listados con las anomalias
+    personas_no_encontradas = []
+    puestos_claves_no_encontrados = []
+    tabuladores_no_encontrados = []
+
+    # Inicializar contador de personas actualizadas
+    personas_actualizadas_contador = 0
+
+    # Bucle por cada fila
+    click.echo("Actualizando Tabuladores de las Personas: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        rfc = hoja.cell_value(fila, 2)
+        nombre_completo = hoja.cell_value(fila, 3)
+        modelo = int(hoja.cell_value(fila, 236))
+        puesto_clave = safe_clave(hoja.cell_value(fila, 20))
+        nivel = int(hoja.cell_value(fila, 9))
+        quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
+
+        # Convertir la quincena_ingreso a fecha
+        # try:
+        #     quincena_ingreso_fecha = quincena_to_fecha(quincena_ingreso)
+        # except ValueError:
+        #     quincena_ingreso_fecha = None
+
+        # Consultar a la persona
+        persona = Persona.query.filter_by(rfc=rfc).first()
+
+        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        if persona is None:
+            personas_no_encontradas.append(rfc)
+            continue
+
+        # Si el modelo es 2, entonces en sindicalizado y se toman 4 caracteres del puesto
+        if modelo == 2:
+            puesto_clave = puesto_clave[:4]
+
+        # Consultar el puesto
+        puesto = Puesto.query.filter_by(clave=puesto_clave).first()
+
+        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        if puesto is None:
+            puestos_claves_no_encontrados.append(puesto_clave)
+            continue
+
+        # De inicio el quinquenio el que tiena la persona
+        quinquenios = persona.tabulador.quinquenio
+
+        # Inicializar la bandera para saltar esta fila si el concepto es PME
+        saltar = False
+
+        # Si el modelo es 2, entonces en sindicalizado y se busca el quinquenio
+        if modelo == 2:
+            # Peinar las columnas de los conceptos para encontrar PQ1, PQ2, PQ3, PQ4, PQ5, PQ6
+            col_num = 26
+            while True:
+                # La primer columna es 'P' o 'D'
+                p_o_d = safe_string(hoja.cell_value(fila, col_num))
+
+                # Si 'P' o 'D' es un texto vacio, se rompe el ciclo
+                if p_o_d == "":
+                    break
+
+                # Si NO es P, se salta
+                if p_o_d != "P":
+                    col_num += 6
+                    continue
+
+                # Tomar el concepto
+                conc = safe_string(hoja.cell_value(fila, col_num + 1))
+
+                # Si el comcepto es PME es monedero, deja de buscar porque aqui no hay quinquenios
+                if conc == "ME":
+                    saltar = True
+                    break
+
+                # Si el concepto no es PQ1, PQ2, PQ3, PQ4, PQ5, PQ6, se salta
+                if conc not in ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]:
+                    col_num += 6
+                    continue
+
+                # Tomar el tercer caracter del concepto y convertirlo a entero porque es la cantidad de quinquenios
+                quinquenios = int(conc[1])
+                break
+
+        # Si se va a saltar, saltar
+        if saltar is True:
+            continue
+
+        # Consultar el tabulador
+        tabulador = (
+            Tabulador.query.filter_by(puesto_id=puesto.id)
+            .filter_by(modelo=modelo)
+            .filter_by(nivel=nivel)
+            .filter_by(quinquenio=quinquenios)
+            .first()
+        )
+
+        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        if tabulador is None:
+            tabuladores_no_encontrados.append(f"Puesto: {puesto_clave} Modelo: {modelo} Nivel:{nivel} Quin:{quinquenios}")
+            continue
+
+        # Inicializar la bandera de cambios
+        hay_cambios = False
+
+        # Si el tabulador es diferente, actualizar
+        if int(persona.tabulador_id) != int(tabulador.id):
+            persona.tabulador_id = int(tabulador.id)
+            hay_cambios = True
+
+        # Si el quincena_ingreso_fecha es diferente, actualizar
+        # if persona.ingreso_pj_fecha != quincena_ingreso_fecha:
+        #     persona.ingreso_pj_fecha = quincena_ingreso_fecha
+        #     hay_cambios = True
+
+        # Si hay cambios, agregar a la sesion e incrementar el contador
+        if hay_cambios is True:
+            # sesion.add(persona)
+            persona.save()
+            personas_actualizadas_contador += 1
+            if modelo == 2:
+                click.echo(click.style(f"{quinquenios},", fg="green"), nl=False)
+            else:
+                click.echo(click.style(".", fg="blue"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Cerrar la sesion para que se guarden todos los datos en la base de datos
+    # sesion.commit()
+    # sesion.close()
+
+    # Si hubo personas_no_encontradas, mostrarlas
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} personas que no se encontraron:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(personas_no_encontradas)}", fg="yellow"))
+
+    # Si hubo puestos_claves_no_encontrados, mostrarlas
+    if len(puestos_claves_no_encontrados) > 0:
+        click.echo(click.style(f"  Hubo {len(puestos_claves_no_encontrados)} puestos que no se encontraron:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(puestos_claves_no_encontrados)}", fg="yellow"))
+
+    # Si hubo tabuladores_no_encontrados, mostrarlas
+    if len(tabuladores_no_encontrados) > 0:
+        click.echo(click.style(f"  Hubo {len(tabuladores_no_encontrados)} tabuladores que no se encontraron:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(tabuladores_no_encontrados)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Actualizar tabuladores de las personas: {personas_actualizadas_contador}", fg="green"))
 
 
 @click.command()
@@ -338,5 +629,7 @@ def sincronizar():
 
 
 cli.add_command(actualizar)
+cli.add_command(actualizar_tabuladores)
+cli.add_command(actualizar_fechas_ingreso)
 cli.add_command(migrar_eliminar_rfc)
 cli.add_command(sincronizar)
