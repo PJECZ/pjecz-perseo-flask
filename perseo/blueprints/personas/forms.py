@@ -3,7 +3,7 @@ Personas, formularios
 """
 from flask_wtf import FlaskForm
 from wtforms import DateField, IntegerField, RadioField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, Regexp
+from wtforms.validators import DataRequired, Length, NumberRange, Optional, Regexp
 
 from lib.safe_string import CURP_REGEXP, RFC_REGEXP
 
@@ -28,6 +28,6 @@ class PersonaForm(FlaskForm):
     ingreso_gobierno_fecha = DateField("Fecha de ingreso al Gobierno", validators=[Optional()])
     ingreso_pj_fecha = DateField("Fecha de ingreso al PJ", validators=[Optional()])
     nacimiento_fecha = DateField("Fecha de nacimiento", validators=[Optional()])
-    codigo_postal_fiscal = IntegerField("Código postal fiscal", validators=[Optional()])
+    codigo_postal_fiscal = IntegerField("Código postal fiscal", validators=[DataRequired(), NumberRange(0, 99999)], default=0)
     seguridad_social = StringField("Número de seguridad social", validators=[Optional(), Length(max=24)])
     guardar = SubmitField("Guardar")

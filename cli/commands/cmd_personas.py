@@ -225,7 +225,7 @@ def actualizar_fechas_ingreso(quincena_clave: str):
         if hay_cambios is True:
             persona.save()
             personas_actualizadas_contador += 1
-            click.echo(click.style(".", fg="green"), nl=False)
+            click.echo(click.style("u", fg="green"), nl=False)
 
     # Poner avance de linea
     click.echo("")
@@ -263,9 +263,6 @@ def actualizar_tabuladores(quincena_clave: str):
         click.echo(f"ERROR: {str(ruta)} no es un archivo.")
         sys.exit(1)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    # sesion = database.session
-
     # Abrir el archivo XLS con xlrd
     libro = xlrd.open_workbook(str(ruta))
 
@@ -285,17 +282,11 @@ def actualizar_tabuladores(quincena_clave: str):
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 2)
-        nombre_completo = hoja.cell_value(fila, 3)
+        # nombre_completo = hoja.cell_value(fila, 3)
         modelo = int(hoja.cell_value(fila, 236))
         puesto_clave = safe_clave(hoja.cell_value(fila, 20))
         nivel = int(hoja.cell_value(fila, 9))
-        quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
-
-        # Convertir la quincena_ingreso a fecha
-        # try:
-        #     quincena_ingreso_fecha = quincena_to_fecha(quincena_ingreso)
-        # except ValueError:
-        #     quincena_ingreso_fecha = None
+        # quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
 
         # Consultar a la persona
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -383,20 +374,15 @@ def actualizar_tabuladores(quincena_clave: str):
             persona.tabulador_id = int(tabulador.id)
             hay_cambios = True
 
-        # Si el quincena_ingreso_fecha es diferente, actualizar
-        # if persona.ingreso_pj_fecha != quincena_ingreso_fecha:
-        #     persona.ingreso_pj_fecha = quincena_ingreso_fecha
-        #     hay_cambios = True
-
         # Si hay cambios, agregar a la sesion e incrementar el contador
         if hay_cambios is True:
             # sesion.add(persona)
             persona.save()
             personas_actualizadas_contador += 1
             if modelo == 2:
-                click.echo(click.style(f"{quinquenios},", fg="green"), nl=False)
+                click.echo(click.style(quinquenios, fg="green"), nl=False)
             else:
-                click.echo(click.style(".", fg="blue"), nl=False)
+                click.echo(click.style("u", fg="green"), nl=False)
 
     # Poner avance de linea
     click.echo("")

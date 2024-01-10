@@ -46,7 +46,13 @@
                             <label for="filtroApellidoSegundo">Segundo apellido</label>
                         </div>
                     </div>
-                    <div class="col-4 text-end">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroCodigoPostalFiscal" type="text" class="form-control" aria-label="Codigo Postal fiscal">
+                            <label for="filtroCodigoPostalFiscal">C.P.</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
                         <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPersonas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
                         <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPersonas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                     </div>
@@ -103,6 +109,7 @@
         filtrosPersonas.agregarInput('filtroNombres', 'nombres');
         filtrosPersonas.agregarInput('filtroApellidoPrimero', 'apellido_primero');
         filtrosPersonas.agregarInput('filtroApellidoSegundo', 'apellido_segundo');
+        filtrosPersonas.agregarInput('filtroCodigoPostalFiscal', 'codigo_postal_fiscal');
         filtrosPersonas.precargar();
     </script>
 {% endblock %}

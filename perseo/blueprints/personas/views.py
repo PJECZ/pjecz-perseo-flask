@@ -49,6 +49,13 @@ def datatable_json():
         consulta = consulta.filter(Persona.apellido_segundo.contains(safe_string(request.form["apellido_segundo"])))
     if "tabulador_id" in request.form:
         consulta = consulta.filter_by(tabulador_id=request.form["tabulador_id"])
+    if "codigo_postal_fiscal" in request.form:
+        try:
+            codigo_postal_fiscal = int(request.form["codigo_postal_fiscal"])
+            if codigo_postal_fiscal >= 0:
+                consulta = consulta.filter_by(codigo_postal_fiscal=str(codigo_postal_fiscal).zfill(5))
+        except ValueError:
+            pass
     # Ordenar y paginar
     registros = consulta.order_by(Persona.rfc).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -71,7 +78,7 @@ def datatable_json():
                 "curp": resultado.curp,
                 "num_empleado": resultado.num_empleado,
                 "modelo": resultado.modelo,
-                "codigo_postal_fiscal": resultado.codigo_postal_fiscal,
+                "codigo_postal_fiscal": str(resultado.codigo_postal_fiscal).zfill(5),
             }
         )
     # Entregar JSON
