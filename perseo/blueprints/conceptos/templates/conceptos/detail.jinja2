@@ -22,6 +22,50 @@
         {{ detail.label_value('Descripción', concepto.descripcion) }}
         {{ detail.label_value('Creado', moment(concepto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Percepciones-Deducciones del concepto -->
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+        {% call detail.card('Percepciones-Deducciones') %}
+            <!-- Filtros Percepciones-Deducciones -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPercepcionesDeducciones.buscar(); return false;">
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena" style="text-transform: uppercase;">
+                                <label for="filtroQuincena">Quincena</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroPersonaRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                                <label for="filtroPersonaRFC">RFC</label>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPercepcionesDeducciones.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPercepcionesDeducciones.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Percepciones-Deducciones -->
+            <table id="percepciones_deducciones_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>RFC</th>
+                        <th>Nombre completo</th>
+                        <th>Centro de trabajo</th>
+                        <th>Plaza</th>
+                        <th>Tipo</th>
+                        <th style="text-align:right">Importe</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+    <!-- Productos del concepto -->
     {% if current_user.can_view('PRODUCTOS') %}
         {% call detail.card('Productos') %}
             <table id="conceptos_productos" class="table display nowrap" style="width:100%">
@@ -41,17 +85,79 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ detail.config_datatable() }}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Percepciones-Deducciones del concepto -->
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+        <script>
+            let configDTPerDed = constructorDataTable.config();
+            configDTPerDed['ajax']['url'] = '/percepciones_deducciones/datatable_json';
+            configDTPerDed['ajax']['data'] = { 'estatus': "A", 'concepto_id': {{ concepto.id}} };
+            configDTPerDed['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena_clave' },
+                { data: 'persona_rfc' },
+                { data: 'persona_nombre_completo' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'tipo' },
+                { data: 'importe' }
+            ];
+            configDTPerDed['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 3, // persona_nombre_completo
+                    render: function(data, type, row, meta) {
+                        if (data.length < 24) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 24) + '...</span>';
+                    }
+                },
+                {
+                    targets: 6, // tipo
+                    render: function(data, type, row, meta) {
+                        if (data.length < 4) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 4) + '...</span>';
+                    }
+                },
+                {
+                    targets: 7, // importe
+                    render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            // Filtros Percepciones-Deducciones
+            const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPerDed);
+            filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
+            filtrosPercepcionesDeducciones.agregarInput('filtroPersonaRFC', 'persona_rfc');
+            filtrosPercepcionesDeducciones.precargar();
+        </script>
+    {% endif %}
+    <!-- Productos del concepto -->
     {% if current_user.can_view('PRODUCTOS') %}
         <script>
-            configDataTable['ajax']['url'] = '/conceptos_productos/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'concepto_id': {{ concepto.id}} };
-            configDataTable['columns'] = [
+            let configDTProductos = constructorDataTable.config();
+            configDTProductos['ajax']['url'] = '/conceptos_productos/datatable_json';
+            configDTProductos['ajax']['data'] = { 'estatus': "A", 'concepto_id': {{ concepto.id}} };
+            configDTProductos['columns'] = [
                 { data: 'detalle' },
                 { data: 'producto' },
                 { data: 'producto_descripcion' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTProductos['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -67,12 +173,14 @@
                     }
                 }
             ];
-            $('#conceptos_productos').DataTable(configDataTable);
+            $('#conceptos_productos').DataTable(configDTProductos);
         </script>
     {% endif %}
+    <!-- Modales -->
     {% if current_user.can_admin('CONCEPTOS') %}
         {% if concepto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto.clave + '?') }}{% endif %}
         {% if concepto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto.clave + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment.js -->
     {{ detail.moment_js(moment) }}
 {% endblock %}

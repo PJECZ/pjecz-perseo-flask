@@ -105,8 +105,17 @@ def alimentar(quincena_clave: str, tipo: str):
     # Iniciar listado de conceptos que no existen
     conceptos_no_existentes = []
 
+    # Definir el puesto generico al que se van a relacionar las personas que no tengan su puesto
+    puesto_generico = Puesto.query.filter_by(clave="ND").first()
+    if puesto_generico is None:
+        click.echo("ERROR: Falta el puesto con clave ND.")
+        sys.exit(1)
+
     # Definir el tabulador generico al que se van a relacionar los puestos que no tengan su tabulador
-    tabulador_generico = Tabulador.query.get(1)
+    tabulador_generico = Tabulador.query.filter_by(puesto_id=puesto_generico.id).first()
+    if tabulador_generico is None:
+        click.echo("ERROR: Falta el tabulador del puesto con clave ND.")
+        sys.exit(1)
 
     # Iniciar contadores
     contador = 0
@@ -117,7 +126,7 @@ def alimentar(quincena_clave: str, tipo: str):
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando Percepciones Deducciones: ", nl=False)
+    click.echo(f"Alimentando Percepciones-Deducciones a la quincena {quincena.clave}: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)
@@ -150,13 +159,14 @@ def alimentar(quincena_clave: str, tipo: str):
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
+            sesion.commit()
             centros_trabajos_insertados_contador += 1
 
         # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se omite
         puesto = Puesto.query.filter_by(clave=puesto_clave).first()
         if puesto is None:
             personas_sin_puestos.append(puesto_clave)
-            continue
+            puesto = puesto_generico
 
         # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
         tabulador = (
@@ -185,21 +195,19 @@ def alimentar(quincena_clave: str, tipo: str):
                 num_empleado=num_empleado,
             )
             sesion.add(persona)
+            sesion.commit()
             personas_insertadas_contador += 1
-
-        # TODO: Con la persona...
-        # 1. revisar si hubo cambios en sus datos,
-        # 2. revisar si cambio de tabulador, tal vez revisando la quincena anterior
-        # Si hay cambios, actualizar la persona, tabulador y puesto
 
         # Revisar si la Plaza existe, de lo contrario insertarla
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
         if plaza is None:
             plaza = Plaza(clave=plaza_clave, descripcion="ND")
             sesion.add(plaza)
+            sesion.commit()
             plazas_insertadas_contador += 1
 
         # Buscar percepciones y deducciones
+        percepciones_deducciones_agregadas_contador = 0
         col_num = 26
         while True:
             # Tomar 'P' o 'D', primero
@@ -209,20 +217,23 @@ def alimentar(quincena_clave: str, tipo: str):
             if p_o_d == "":
                 break
 
-            # Tomar las cinco columnas
+            # Tomar los dos caracteres adicionales del concepto
             conc = safe_string(hoja.cell_value(fila, col_num + 1))
+
+            # Tomar el importe
             try:
                 impt = int(hoja.cell_value(fila, col_num + 3)) / 100.0
             except ValueError:
                 impt = 0.0
 
-            # Revisar si el Concepto existe, de lo contrario SE OMITE
+            # Revisar si el Concepto existe, de lo contrario se agrega
             concepto_clave = f"{p_o_d}{conc}"
             concepto = Concepto.query.filter_by(clave=concepto_clave).first()
             if concepto is None and concepto_clave not in conceptos_no_existentes:
                 conceptos_no_existentes.append(concepto_clave)
                 concepto = Concepto(clave=concepto_clave, descripcion="DESCONOCIDO")
                 sesion.add(concepto)
+                sesion.commit()
 
             # Alimentar percepcion-deduccion
             percepcion_deduccion = PercepcionDeduccion(
@@ -235,6 +246,7 @@ def alimentar(quincena_clave: str, tipo: str):
                 tipo=tipo,
             )
             sesion.add(percepcion_deduccion)
+            percepciones_deducciones_agregadas_contador += 1
 
             # Incrementar col_num en SEIS
             col_num += 6
@@ -243,10 +255,14 @@ def alimentar(quincena_clave: str, tipo: str):
             if col_num > 236:
                 break
 
-            # Incrementar contador
-            contador += 1
-            if contador % 100 == 0:
-                click.echo(click.style(".", fg="cyan"), nl=False)
+        # Incrementar contador
+        contador += 1
+
+        # Mostrar un cero en rojo si no se agregaron percepciones-deducciones
+        if percepciones_deducciones_agregadas_contador == 0:
+            click.echo(click.style("0", fg="yellow"), nl=False)
+        else:
+            click.echo(click.style(".", fg="cyan"), nl=False)
 
     # Poner avance de linea
     click.echo("")
@@ -254,11 +270,6 @@ def alimentar(quincena_clave: str, tipo: str):
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
-
-    # Si hubo conceptos no existentes, mostrarlos
-    if len(conceptos_no_existentes) > 0:
-        click.echo(click.style(f"  Hubo {len(conceptos_no_existentes)} Conceptos que no existen:", fg="yellow"))
-        click.echo(click.style(f"  {','.join(conceptos_no_existentes)}", fg="yellow"))
 
     # Si hubo centros trabajos insertados, mostrar contador
     if centros_trabajos_insertados_contador > 0:
@@ -272,8 +283,23 @@ def alimentar(quincena_clave: str, tipo: str):
     if plazas_insertadas_contador > 0:
         click.echo(click.style(f"  Se insertaron {plazas_insertadas_contador} Plazas", fg="green"))
 
+    # Si hubo conceptos no existentes, mostrarlos
+    if len(conceptos_no_existentes) > 0:
+        click.echo(click.style(f"  Hubo {len(conceptos_no_existentes)} Conceptos que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(conceptos_no_existentes)}", fg="yellow"))
+
+    # Si hubo personas sin puestos, mostrarlos
+    if personas_insertadas_contador > 0 and len(personas_sin_puestos) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin reconocer su Puesto:", fg="yellow"))
+        # click.echo(click.style(f"  {','.join(personas_sin_puestos)}", fg="yellow"))
+
+    # Si hubo personas_sin_tabulador, mostrarlas en pantalla
+    if personas_insertadas_contador > 0 and len(personas_sin_tabulador) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin reconocer su Tabulador.", fg="yellow"))
+        # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+
     # Mensaje termino
-    click.echo(click.style(f"  Alimentar P-D: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar Percepciones-Deducciones: {contador} insertadas.", fg="green"))
 
 
 @click.command()

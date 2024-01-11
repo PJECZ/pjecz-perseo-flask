@@ -72,8 +72,8 @@
                     <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
                         <div class="col-6">
                             <div class="form-floating">
-                                <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena">
-                                <label for="filtroQuincena">Quincena</label>
+                                <input id="filtroNominaQuincenaClave" type="text" class="form-control" aria-label="Quincena">
+                                <label for="filtroNominaQuincenaClave">Quincena</label>
                             </div>
                         </div>
                         <div class="col-6 text-end">
@@ -110,22 +110,22 @@
         <!-- Filtros Percepciones-Deducciones -->
         <div class="row">
             <div class="col">
-                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPercepcionesDeducciones.buscar(); return false;">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPD.buscar(); return false;">
                     <div class="col-4">
                         <div class="form-floating">
-                            <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena" style="text-transform: uppercase;">
-                            <label for="filtroQuincena">Quincena</label>
+                            <input id="filtroPDQuincenaClave" type="text" class="form-control" aria-label="Quincena" style="text-transform: uppercase;">
+                            <label for="filtroPDQuincenaClave">Quincena</label>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="form-floating">
-                            <input id="filtroConceptoClave" type="text" class="form-control" aria-label="Concepto" style="text-transform: uppercase;">
-                            <label for="filtroConceptoClave">Concepto</label>
+                            <input id="filtroPDConceptoClave" type="text" class="form-control" aria-label="Concepto" style="text-transform: uppercase;">
+                            <label for="filtroPDConceptoClave">Concepto</label>
                         </div>
                     </div>
                     <div class="col-4 text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPercepcionesDeducciones.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPercepcionesDeducciones.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPD.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPD.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -138,6 +138,7 @@
                         <th>Quincena</th>
                         <th>Centro de trabajo</th>
                         <th>Plaza</th>
+                        <th>Tipo</th>
                         <th>Concepto</th>
                         <th>Concepto descripción</th>
                         <th style="text-align:right">Importe</th>
@@ -216,26 +217,27 @@
             ];
             // Filtros Nominas
             const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
-            filtrosNominas.agregarInput('filtroQuincena', 'quincena_clave');
+            filtrosNominas.agregarInput('filtroNominaQuincenaClave', 'quincena_clave');
             filtrosNominas.precargar();
         </script>
     {% endif %}
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
         <script>
             // DataTable Percepciones-Deducciones
-            let configDTPercepcionesDeducciones = constructorDataTable.config();
-            configDTPercepcionesDeducciones['ajax']['url'] = '/percepciones_deducciones/datatable_json';
-            configDTPercepcionesDeducciones['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
-            configDTPercepcionesDeducciones['columns'] = [
+            let configDTPD = constructorDataTable.config();
+            configDTPD['ajax']['url'] = '/percepciones_deducciones/datatable_json';
+            configDTPD['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
+            configDTPD['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
-                { data: 'plaza_clave' },
                 { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'tipo' },
                 { data: 'concepto_clave' },
                 { data: 'concepto_descripcion' },
                 { data: 'importe' }
             ];
-            configDTPercepcionesDeducciones['columnDefs'] = [
+            configDTPD['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -244,7 +246,7 @@
                     }
                 },
                 {
-                    targets: 5, // concepto_descripcion
+                    targets: 6, // concepto_descripcion
                     render: function(data, type, row, meta) {
                         if (data.length < 24) {
                             return data;
@@ -253,16 +255,16 @@
                     }
                 },
                 {
-                    targets: 6, // importe
+                    targets: 7, // importe
                     render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
                     className: "dt-body-right",
                 }
             ];
             // Filtros Percepciones-Deducciones
-            const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPercepcionesDeducciones);
-            filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
-            filtrosPercepcionesDeducciones.agregarInput('filtroConceptoClave', 'concepto_clave');
-            filtrosPercepcionesDeducciones.precargar();
+            const filtrosPD = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPD);
+            filtrosPD.agregarInput('filtroPDQuincenaClave', 'quincena_clave');
+            filtrosPD.agregarInput('filtroPDConceptoClave', 'concepto_clave');
+            filtrosPD.precargar();
         </script>
     {% endif %}
     <!-- Modales -->

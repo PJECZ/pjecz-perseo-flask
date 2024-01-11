@@ -37,7 +37,7 @@ class Persona(database.Model, UniversalMixin):
     ingreso_gobierno_fecha = Column(Date)
     ingreso_pj_fecha = Column(Date)
     nacimiento_fecha = Column(Date)
-    codigo_postal_fiscal = Column(Integer)
+    codigo_postal_fiscal = Column(Integer, default=0)
     seguridad_social = Column(String(24))
 
     # Columna modelo en Persona
