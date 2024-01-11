@@ -594,17 +594,15 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
     plazas_inexistentes = []
 
     # Bucle por cada fila
-    click.echo("Alimentando Apoyos: ", nl=False)
+    click.echo("Alimentando Nominas de Apoyos Anuales: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 0).strip().upper()
         centro_trabajo_clave = hoja.cell_value(fila, 1).strip().upper()
         plaza_clave = hoja.cell_value(fila, 2).strip().upper()
-        # puesto = hoja.cell_value(fila, 3)
         percepcion = float(hoja.cell_value(fila, 4))
         deduccion = float(hoja.cell_value(fila, 5))
         impte = float(hoja.cell_value(fila, 6))
-        # fecha_pago es la columna 7
         desde_s = str(int(hoja.cell_value(fila, 8)))
         hasta_s = str(int(hoja.cell_value(fila, 9)))
 
@@ -618,26 +616,32 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
             sys.exit(1)
 
-        # Validar importe del concepto D62, si no esta presente sera cero
+        # Tomar el importe del concepto D62, si no esta presente sera cero
         try:
             impte_concepto_d62 = float(hoja.cell_value(fila, 10))
         except ValueError:
             impte_concepto_d62 = 0.0
 
-        # Consultar la persona, si no existe, se agrega a la lista de personas_inexistentes y se salta
+        # Consultar la persona
         persona = Persona.query.filter_by(rfc=rfc).first()
+
+        # Si NO existe, se agrega a la lista de personas_inexistentes y se salta
         if persona is None:
             personas_inexistentes.append(rfc)
             continue
 
-        # Consultar el Centro de Trabajo, si no existe se agrega a la lista de centros_trabajos_inexistentes y se salta
+        # Consultar el Centro de Trabajo
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+
+        # Si NO existe se agrega a la lista de centros_trabajos_inexistentes y se salta
         if centro_trabajo is None:
             centros_trabajos_inexistentes.append(centro_trabajo_clave)
             continue
 
-        # Consultar la Plaza, si no existe se agrega a la lista de plazas_inexistentes y se salta
+        # Consultar la Plaza
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+
+        # Si NO existe se agrega a la lista de plazas_inexistentes y se salta
         if plaza is None:
             plazas_inexistentes.append(plaza_clave)
             continue
@@ -755,51 +759,6 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Apoyos Anuales: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
-
-
-@click.command()
-@click.argument("quincena_clave", type=str)
-@click.option("--tipo", type=click.Choice(["", "SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL"]), default="")
-def eliminar(quincena_clave: str, tipo: str):
-    """Eliminar nominas"""
-
-    # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("ERROR: Quincena inválida.")
-        sys.exit(1)
-
-    # Consultar quincena
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
-
-    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
-    if quincena and quincena.estado != "ABIERTA":
-        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
-        sys.exit(1)
-
-    # Si existe la quincena, pero ha sido eliminada, entonces se termina
-    if quincena and quincena.estatus != "A":
-        click.echo(f"ERROR: Quincena {quincena_clave} esta sido eliminada.")
-        sys.exit(1)
-
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
-
-    # Iniciar el comando sqlalchemy
-    comando = Nomina.query.filter_by(quincena_id=quincena.id)
-
-    # Si se especifico el tipo, se agrega al comando
-    if tipo != "":
-        comando = comando.filter_by(tipo=tipo)
-
-    # Eliminar los registros de la tabla nominas que tengan esa quincena
-    contador = comando.delete()
-
-    # Cerrar la sesion para que se guarden todos los datos en la base de datos
-    sesion.commit()
-    sesion.close()
-
-    # Mensaje termino
-    click.echo(click.style(f"  Eliminar Nominas: {contador} eliminadas en la quincena {quincena_clave}.", fg="green"))
 
 
 @click.command()
@@ -1846,7 +1805,6 @@ def generar_timbrados(quincena_clave: str, tipo: str):
 cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
-cli.add_command(eliminar)
 cli.add_command(generar_issste)
 cli.add_command(generar_nominas)
 cli.add_command(generar_monederos)
