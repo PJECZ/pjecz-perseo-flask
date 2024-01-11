@@ -26,6 +26,8 @@ from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
+
+APOYOS_FILENAME_XLS = "Apoyos.XLS"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 
 app = create_app()
@@ -187,11 +189,6 @@ def alimentar(quincena_clave: str, tipo: str):
             sesion.add(persona)
             personas_insertadas_contador += 1
 
-        # TODO: Con la persona...
-        # 1. revisar si hubo cambios en sus datos,
-        # 2. revisar si cambio de tabulador, tal vez revisando la quincena anterior
-        # Si hay cambios, actualizar la persona, tabulador y puesto
-
         # Revisar si la Plaza existe, de lo contrario insertarla
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
         if plaza is None:
@@ -278,12 +275,29 @@ def alimentar(quincena_clave: str, tipo: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def eliminar(quincena_clave: str):
-    """Eliminar percepciones-deducciones"""
+def alimentar_apoyos_anuales(quincena_clave: str):
+    """Alimentar percepciones-deducciones para apoyos anuales"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, APOYOS_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
         sys.exit(1)
 
     # Consultar quincena
@@ -299,19 +313,184 @@ def eliminar(quincena_clave: str):
         click.echo(f"ERROR: Quincena {quincena_clave} esta sido eliminada.")
         sys.exit(1)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
 
-    # Eliminar los registros de percepciones-deducciones que tengan esa quincena
-    contador = PercepcionDeduccion.query.filter_by(quincena_id=quincena.id).delete()
+    # Consultar el concepto con clave PAZ que es APOYO ANUAL, si no se encuentra, error
+    concepto_paz = Concepto.query.filter_by(clave="PAZ").first()
+    if concepto_paz is None:
+        click.echo("ERROR: No existe el concepto con clave PAZ")
+        sys.exit(1)
+
+    # Consultar el concepto con clave DAZ que es ISR DE APOYO DE FIN DE AÑO, si no se encuentra, error
+    concepto_daz = Concepto.query.filter_by(clave="DAZ").first()
+    if concepto_daz is None:
+        click.echo("ERROR: No existe el concepto con clave DAZ")
+        sys.exit(1)
+
+    # Consultar el concepto con clave D62 que es PENSION ALIMENTICIA, si no se encuentra, error
+    concepto_d62 = Concepto.query.filter_by(clave="D62").first()
+    if concepto_d62 is None:
+        click.echo("ERROR: No existe el concepto con clave D62")
+        sys.exit(1)
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Iniciar contadores
+    contador = 0
+    centros_trabajos_inexistentes = []
+    nominas_inexistentes = []
+    personas_inexistentes = []
+    plazas_inexistentes = []
+
+    # Bucle por cada fila
+    click.echo("Alimentando Nominas de Apoyos Anuales: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        rfc = hoja.cell_value(fila, 0).strip().upper()
+        centro_trabajo_clave = hoja.cell_value(fila, 1).strip().upper()
+        plaza_clave = hoja.cell_value(fila, 2).strip().upper()
+        percepcion = float(hoja.cell_value(fila, 4))
+        deduccion = float(hoja.cell_value(fila, 5))
+        impte = float(hoja.cell_value(fila, 6))
+
+        # Tomar el importe del concepto D62, si no esta presente sera cero
+        try:
+            impte_concepto_d62 = float(hoja.cell_value(fila, 10))
+        except ValueError:
+            impte_concepto_d62 = 0.0
+
+        # Consultar la persona
+        persona = Persona.query.filter_by(rfc=rfc).first()
+
+        # Si NO existe, se agrega a la lista de personas_inexistentes y se salta
+        if persona is None:
+            personas_inexistentes.append(rfc)
+            continue
+
+        # Consultar el Centro de Trabajo
+        centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+
+        # Si NO existe se agrega a la lista de centros_trabajos_inexistentes y se salta
+        if centro_trabajo is None:
+            centros_trabajos_inexistentes.append(centro_trabajo_clave)
+            continue
+
+        # Consultar la Plaza
+        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+
+        # Si NO existe se agrega a la lista de plazas_inexistentes y se salta
+        if plaza is None:
+            plazas_inexistentes.append(plaza_clave)
+            continue
+
+        # Consultar la nomina de la quincena, de la persona y que sea de tipo APOYO ANUAL
+        nomina = (
+            Nomina.query.filter_by(persona_id=persona.id)
+            .filter_by(quincena_id=quincena.id)
+            .filter_by(tipo="APOYO ANUAL")
+            .filter_by(estatus="A")
+            .first()
+        )
+
+        # Si NO existe, se agrega a la lista de nominas_inexistentes y se salta
+        if nomina is None:
+            nominas_inexistentes.append(rfc)
+            continue
+
+        # Alimentar percepcion en PercepcionDeduccion, con concepto PAZ
+        percepcion_deduccion_paz = PercepcionDeduccion(
+            centro_trabajo=centro_trabajo,
+            concepto=concepto_paz,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            importe=percepcion,
+            tipo="APOYO ANUAL",
+        )
+        sesion.add(percepcion_deduccion_paz)
+
+        # Alimentar deduccion en PercepcionDeduccion, con concepto DAZ
+        percepcion_deduccion_daz = PercepcionDeduccion(
+            centro_trabajo=centro_trabajo,
+            concepto=concepto_daz,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            importe=deduccion,
+            tipo="APOYO ANUAL",
+        )
+        sesion.add(percepcion_deduccion_daz)
+
+        # Si tiene concepto_d62, alimentar registro en PercepcionDeduccion
+        if impte_concepto_d62 > 0:
+            percepcion_deduccion_d62 = PercepcionDeduccion(
+                centro_trabajo=centro_trabajo,
+                concepto=concepto_d62,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                importe=impte_concepto_d62,
+                tipo="APOYO ANUAL",
+            )
+            sesion.add(percepcion_deduccion_d62)
+
+            # Sumar a deduccion el impte_concepto_d62
+            deduccion += impte_concepto_d62
+
+        # Actualizar el registro en Nominas con percepcion, deducción e importe
+        if nomina.percepcion != percepcion or nomina.deduccion != deduccion or nomina.importe != impte:
+            nomina.percepcion = percepcion
+            nomina.deduccion = deduccion
+            nomina.importe = impte
+            sesion.add(nomina)
+
+        # Incrementar contador
+        contador += 1
+        click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
     sesion.close()
 
+    # Si hubo centros_trabajos_inexistentes, mostrarlos
+    if len(centros_trabajos_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} C. de T. que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
+
+    # Si hubo plazas_inexistentes, mostrarlos
+    if len(plazas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(plazas_inexistentes)}", fg="yellow"))
+
+    # Si hubo personas_inexistentes, mostrar contador
+    if len(personas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
+
+    # Si hubo nominas_inexistentes, mostrarlas
+    if len(nominas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(nominas_inexistentes)} Nominas de tipo APOYO ANUAL que no existen:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(nominas_inexistentes)}", fg="yellow"))
+
     # Mensaje termino
-    click.echo(click.style(f"  Eliminar P-D: {contador} eliminadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar P-D Apoyos Anuales: {contador} insertadas.", fg="green"))
 
 
 cli.add_command(alimentar)
-cli.add_command(eliminar)
+cli.add_command(alimentar_apoyos_anuales)
