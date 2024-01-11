@@ -55,7 +55,7 @@ def datatable_json():
     # Luego filtrar por columnas de otras tablas
     if "quincena_clave" in request.form:
         try:
-            quincena_clave = safe_quincena(request.form["quincena_clave"])
+            quincena_clave = request.form["quincena_clave"]
             consulta = consulta.join(Quincena)
             consulta = consulta.filter(Quincena.clave == quincena_clave)
         except ValueError:
