@@ -119,10 +119,16 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     hoja = libro.sheet_by_index(0)
 
     # Definir el puesto generico al que se van a relacionar las personas que no tengan su puesto
-    puesto_generico = Puesto.query.get(1)
+    puesto_generico = Puesto.query.filter_by(clave="ND").first()
+    if puesto_generico is None:
+        click.echo("ERROR: Falta el puesto con clave ND.")
+        sys.exit(1)
 
     # Definir el tabulador generico al que se van a relacionar los puestos que no tengan su tabulador
-    tabulador_generico = Tabulador.query.get(1)
+    tabulador_generico = Tabulador.query.filter_by(puesto_id=puesto_generico.id).first()
+    if tabulador_generico is None:
+        click.echo("ERROR: Falta el tabulador del puesto con clave ND.")
+        sys.exit(1)
 
     # Iniciar contadores
     contador = 0
@@ -133,7 +139,7 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando Nominas: ", nl=False)
+    click.echo(f"Alimentar Nominas a la quincena {quincena.clave}: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)
@@ -220,11 +226,6 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             sesion.add(persona)
             personas_insertadas_contador += 1
 
-        # TODO: Con la persona...
-        # 1. revisar si hubo cambios en sus datos,
-        # 2. revisar si cambio de tabulador, tal vez revisando la quincena anterior
-        # Si hay cambios, actualizar la persona, tabulador y puesto
-
         # Revisar si la Plaza existe, de lo contrario insertarla
         plaza = Plaza.query.filter_by(clave=plaza_clave).first()
         if plaza is None:
@@ -281,8 +282,9 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 
         # Incrementar contador
         contador += 1
-        if contador % 100 == 0:
-            click.echo(click.style(".", fg="cyan"), nl=False)
+
+        # Mostrar el avance con el modelo
+        click.echo(click.style(modelo, fg="cyan"), nl=False)
 
     # Poner avance de linea
     click.echo("")
@@ -310,16 +312,16 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos. Usan el generico.", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos.", fg="yellow"))
         # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador. Usan el generico.", fg="yellow"))
+        click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador.", fg="yellow"))
         # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+    click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas.", fg="green"))
 
 
 @click.command()

@@ -353,13 +353,12 @@ def actualizar_tabuladores(quincena_clave: str):
             continue
 
         # Consultar el tabulador
-        tabulador = (
-            Tabulador.query.filter_by(puesto_id=puesto.id)
-            .filter_by(modelo=modelo)
-            .filter_by(nivel=nivel)
-            .filter_by(quinquenio=quinquenios)
-            .first()
-        )
+        tabulador = Tabulador.query.filter(
+            Tabulador.puesto_id == puesto.id,
+            Tabulador.modelo == modelo,
+            Tabulador.nivel == nivel,
+            Tabulador.quinquenio == quinquenios,
+        ).first()
 
         # Si no se encuentra, agregar a la lista de anomalias y saltar
         if tabulador is None:
