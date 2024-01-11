@@ -27,6 +27,7 @@ from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
 
+AGUINALDOS_FILENAME_XLS = "Aguinaldos.XLS"
 APOYOS_FILENAME_XLS = "Apoyos.XLS"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 
@@ -67,8 +68,13 @@ def alimentar(quincena_clave: str, tipo: str):
         click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
         sys.exit(1)
 
+    # Si el tipo es AGUINALDO, se usara el archivo AGUINALDOS_FILENAME_XLS
+    if tipo == "AGUINALDO":
+        ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, AGUINALDOS_FILENAME_XLS)
+    else:
+        ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, NOMINAS_FILENAME_XLS)
+
     # Validar si existe el archivo
-    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, NOMINAS_FILENAME_XLS)
     if not ruta.exists():
         click.echo(f"ERROR: {str(ruta)} no se encontró.")
         sys.exit(1)
