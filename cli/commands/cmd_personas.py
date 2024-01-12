@@ -410,6 +410,50 @@ def actualizar_tabuladores(quincena_clave: str):
 
 
 @click.command()
+@click.argument("rfc", type=str)
+@click.argument("tabulador_id", type=int)
+def cambiar_tabulador(rfc: str, tabulador_id: int):
+    """Cambiar el Tabulador de una Persona"""
+
+    # Validar el RFC
+    try:
+        rfc = safe_rfc(rfc)
+    except ValueError:
+        click.echo(f"ERROR: RFC de origen inválido: {rfc}")
+        sys.exit(1)
+
+    # Consultar a la persona con el RFC
+    persona = Persona.query.filter_by(rfc=rfc).first()
+    if persona is None:
+        click.echo(f"ERROR: RFC de origen no encontrado: {rfc}")
+        sys.exit(1)
+    if persona.estatus != "A":
+        click.echo(f"ERROR: RFC de origen no activo: {rfc}")
+        sys.exit(1)
+
+    # Consultar el tabulador
+    tabulador = Tabulador.query.get(tabulador_id)
+    if tabulador is None:
+        click.echo(f"ERROR: Tabulador no encontrado: {tabulador_id}")
+        sys.exit(1)
+    if tabulador.estatus != "A":
+        click.echo(f"ERROR: Tabulador no activo: {tabulador_id}")
+        sys.exit(1)
+
+    # Si el tabulador de la persona es el mismo, mostrar mensaje y terminar
+    if persona.tabulador_id == tabulador.id:
+        click.echo(f"AVISO: El tabulador de {rfc} ya es {tabulador_id}.")
+        sys.exit(0)
+
+    # Actualizar la persona con el tabulador proporcionado
+    persona.tabulador_id = tabulador.id
+    persona.save()
+
+    # Mensaje de termino
+    click.echo(f"AVISO: El tabulador de {rfc} se cambió a {tabulador_id}.")
+
+
+@click.command()
 @click.argument("rfc-origen", type=str)
 @click.argument("rfc-destino", type=str)
 @click.option("--eliminar", is_flag=True, help="Eliminar el RFC de origen")
@@ -616,5 +660,6 @@ def sincronizar():
 cli.add_command(actualizar)
 cli.add_command(actualizar_tabuladores)
 cli.add_command(actualizar_fechas_ingreso)
+cli.add_command(cambiar_tabulador)
 cli.add_command(migrar_eliminar_rfc)
 cli.add_command(sincronizar)
