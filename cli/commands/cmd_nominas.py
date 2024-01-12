@@ -57,6 +57,9 @@ def cli():
 def alimentar(quincena_clave: str, fecha_pago_str: str):
     """Alimentar nominas"""
 
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
         click.echo("ERROR: Quincena inválida.")
@@ -75,9 +78,6 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     except ValueError:
         click.echo("ERROR: Fecha de pago inválida")
         sys.exit(1)
-
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    sesion = database.session
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
     if EXPLOTACION_BASE_DIR is None:
@@ -133,6 +133,10 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Iniciar contadores
     contador = 0
     centros_trabajos_insertados_contador = 0
+    personas_actualizadas_contador = 0
+    personas_actualizadas_del_tabulador = []
+    personas_actualizadas_del_modelo = []
+    personas_actualizadas_del_num_empleado = []
     personas_insertadas_contador = 0
     personas_sin_puestos = []
     personas_sin_tabulador = []
@@ -143,16 +147,23 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)
-        rfc = hoja.cell_value(fila, 2)
-        nombre_completo = hoja.cell_value(fila, 3)
         plaza_clave = hoja.cell_value(fila, 8)
         percepcion = int(hoja.cell_value(fila, 12)) / 100.0
         deduccion = int(hoja.cell_value(fila, 13)) / 100.0
         impte = int(hoja.cell_value(fila, 14)) / 100.0
         desde_s = str(int(hoja.cell_value(fila, 16)))
         hasta_s = str(int(hoja.cell_value(fila, 17)))
+
+        # Tomar las columnas con datos de la Persona
+        rfc = hoja.cell_value(fila, 2)
         modelo = int(hoja.cell_value(fila, 236))
+        nombre_completo = hoja.cell_value(fila, 3)
         num_empleado = int(hoja.cell_value(fila, 240))
+
+        # Tomar las columnas necesarias para el timbrado
+        puesto_clave = safe_clave(hoja.cell_value(fila, 20))
+        nivel = int(hoja.cell_value(fila, 9))
+        quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
 
         # Validar desde y hasta
         try:
@@ -164,40 +175,88 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
             sys.exit(1)
 
-        # Tomar las columnas necesarias para el timbrado
-        puesto_clave = safe_clave(hoja.cell_value(fila, 20))
-        nivel = int(hoja.cell_value(fila, 9))
-        quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
-
-        # Si el modelo es 2, entonces es Sindicalizado y se calculan los quinquenios
-        quinquenios = 0
-        if modelo == 2:
-            # Calcular la cantidad de quinquenios
-            fecha_ingreso = quincena_to_fecha(quincena_ingreso, dame_ultimo_dia=False)
-            quinquenios = quinquenio_count(fecha_ingreso, fecha_final)
-
-        # Separar nombre_completo, en apellido_primero, apellido_segundo y nombres
-        separado = safe_string(nombre_completo, save_enie=True).split(" ")
-        apellido_primero = separado[0]
-        apellido_segundo = separado[1]
-        nombres = " ".join(separado[2:])
-
         # Consultar el Centro de Trabajo, si no existe se agrega
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
         if centro_trabajo is None:
             centro_trabajo = CentroTrabajo(clave=centro_trabajo_clave, descripcion="ND")
             sesion.add(centro_trabajo)
+            sesion.commit()
             centros_trabajos_insertados_contador += 1
 
-        # Consultar el puesto, si no existe se agrega a personas_sin_puestos y se le asigna el puesto_generico
+        # Consultar la Plaza, si no existe se agrega
+        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+        if plaza is None:
+            plaza = Plaza(clave=plaza_clave, descripcion="ND")
+            sesion.add(plaza)
+            sesion.commit()
+            plazas_insertadas_contador += 1
+
+        # Si el modelo es 2, entonces en SINDICALIZADO, se toman 4 caracteres del puesto y se define quinquenios
+        quinquenios = None
+        if modelo == 2:
+            puesto_clave = puesto_clave[:4]
+
+            # Inicializar la bandera para saltar la fila si el concepto es PME
+            es_concepto_pme = False
+
+            # Bucle entre las columnas de los conceptos para encontrar PQ1, PQ2, PQ3, PQ4, PQ5, PQ6
+            col_num = 26
+            while True:
+                # Tomar el p_o_d
+                p_o_d = safe_string(hoja.cell_value(fila, col_num))
+                # Tomar el conc
+                conc = safe_string(hoja.cell_value(fila, col_num + 1))
+                # Si 'P' o 'D' es un texto vacio, se rompe el ciclo
+                if p_o_d == "":
+                    break
+                # Si NO es P, se salta
+                if p_o_d != "P":
+                    col_num += 6
+                    continue
+                # Si conc es ME es monedero, se rompe el ciclo porque aqui no hay quinquenios
+                if conc == "ME":
+                    es_concepto_pme = True
+                    break
+                # Si el concepto no es PQ1, PQ2, PQ3, PQ4, PQ5, PQ6, se salta
+                if conc not in ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]:
+                    col_num += 6
+                    continue
+                # Tomar el tercer caracter del concepto y convertirlo a entero porque es la cantidad de quinquenios
+                quinquenios = int(conc[1])
+                break
+
+            # Si es PME, entonces en esta fila NO esta el quinquenio, se mantiene en None
+            if es_concepto_pme:
+                quinquenios = None
+
+        else:
+            # Entonces NO es SINDICALIZADO, se define quinquenios en cero
+            quinquenios = 0
+
+        # Consultar el Puesto, si no existe se agrega a personas_sin_puestos y se le asigna el puesto_generico
         puesto = Puesto.query.filter_by(clave=puesto_clave).first()
         if puesto is None:
             personas_sin_puestos.append(rfc)
             puesto = puesto_generico
 
-        # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
-        tabulador = None
-        if puesto.id != 1:
+        # Consultar la Persona
+        persona = Persona.query.filter_by(rfc=rfc).first()
+
+        # Si NO existe la Persona, se agrega
+        if persona is None:
+            # Separar nombre_completo, en apellido_primero, apellido_segundo y nombres
+            separado = safe_string(nombre_completo, save_enie=True).split(" ")
+            apellido_primero = separado[0]
+            apellido_segundo = separado[1]
+            nombres = " ".join(separado[2:])
+
+            # Si el modelo es 2 y quinquenios es None, entonces es SINDICALIZADO y se calculan los quinquenios
+            if modelo == 2 and quinquenios is None:
+                # Calcular la cantidad de quinquenios
+                fecha_ingreso = quincena_to_fecha(quincena_ingreso, dame_ultimo_dia=False)
+                quinquenios = quinquenio_count(fecha_ingreso, fecha_final)
+
+            # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
             tabulador = (
                 Tabulador.query.filter_by(puesto_id=puesto.id)
                 .filter_by(modelo=modelo)
@@ -206,14 +265,12 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
                 .first()
             )
 
-        # Si no existe el tabulador, se agrega a personas_sin_tabulador y se le asigna tabulador_generico
-        if tabulador is None:
-            personas_sin_tabulador.append(rfc)
-            tabulador = tabulador_generico
+            # Si no existe el tabulador, se agrega a personas_sin_tabulador y se le asigna tabulador_generico
+            if tabulador is None:
+                personas_sin_tabulador.append(rfc)
+                tabulador = tabulador_generico
 
-        # Revisar si la Persona existe, de lo contrario insertarlo
-        persona = Persona.query.filter_by(rfc=rfc).first()
-        if persona is None:
+            # Insertar a la Persona
             persona = Persona(
                 tabulador_id=tabulador.id,
                 rfc=rfc,
@@ -224,14 +281,54 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
                 num_empleado=num_empleado,
             )
             sesion.add(persona)
+            sesion.commit()
             personas_insertadas_contador += 1
 
-        # Revisar si la Plaza existe, de lo contrario insertarla
-        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
-        if plaza is None:
-            plaza = Plaza(clave=plaza_clave, descripcion="ND")
-            sesion.add(plaza)
-            plazas_insertadas_contador += 1
+        # De lo contrario, se revisa si cambia la Persona de tabulador, modelo o num_empleado
+        else:
+            # Inicializar hay_cambios
+            hay_cambios = False
+
+            # Si la fila es concepto PME NO va tener los quinquenios, entonces se define con la Persona
+            if quinquenios is None:
+                quinquenios = persona.tabulador.quinquenio
+
+            # Consultar el tabulador que coincida con puesto_clave, modelo, nivel y quinquenios
+            tabulador = (
+                Tabulador.query.filter_by(puesto_id=puesto.id)
+                .filter_by(modelo=modelo)
+                .filter_by(nivel=nivel)
+                .filter_by(quinquenio=quinquenios)
+                .first()
+            )
+
+            # Si NO existe el tabulador, se agrega a personas_sin_tabulador y se le asigna tabulador_generico
+            if tabulador is None:
+                personas_sin_tabulador.append(rfc)
+                tabulador = tabulador_generico
+
+            # Revisar si hay que actualizar el tabulador a la Persona
+            if persona.tabulador_id != tabulador.id:
+                personas_actualizadas_del_tabulador.append(f"{rfc}: Tabulador: {persona.tabulador_id} -> {tabulador.id}")
+                persona.tabulador_id = tabulador.id
+                hay_cambios = True
+
+            # Revisar si hay que actualizar el modelo a la Persona
+            if persona.modelo != modelo:
+                personas_actualizadas_del_modelo.append(f"{rfc}: Modelo: {persona.modelo} -> {modelo}")
+                persona.modelo = modelo
+                hay_cambios = True
+
+            # Revisar si hay que actualizar el numero de empleado a la Persona
+            if persona.num_empleado != num_empleado:
+                personas_actualizadas_del_num_empleado.append(f"{rfc}: No. Emp. {persona.num_empleado} -> {num_empleado}")
+                persona.num_empleado = num_empleado
+                hay_cambios = True
+
+            # Si hay cambios, guardar la Persona
+            if hay_cambios:
+                persona.save()
+                personas_actualizadas_contador += 1
 
         # Bucle entre P-D para determinar el tipo entre SALARIO y DESPENSA
         nomina_tipo = None
@@ -302,6 +399,16 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     if centros_trabajos_insertados_contador > 0:
         click.echo(click.style(f"  Se insertaron {centros_trabajos_insertados_contador} Centros de Trabajo", fg="green"))
 
+    # Si hubo personas actualizadas, mostrar contador
+    if personas_actualizadas_contador > 0:
+        click.echo(click.style(f"  Se actualizaron {personas_actualizadas_contador} Personas", fg="green"))
+        for item in personas_actualizadas_del_tabulador:
+            click.echo(click.style(f"  {item}", fg="yellow"))
+        for item in personas_actualizadas_del_modelo:
+            click.echo(click.style(f"  {item}", fg="yellow"))
+        for item in personas_actualizadas_del_num_empleado:
+            click.echo(click.style(f"  {item}", fg="yellow"))
+
     # Si hubo personas insertadas, mostrar contador
     if personas_insertadas_contador > 0:
         click.echo(click.style(f"  Se insertaron {personas_insertadas_contador} Personas", fg="green"))
@@ -313,12 +420,12 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
     # Si hubo personas_sin_puestos, mostrarlas en pantalla
     if len(personas_sin_puestos) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_puestos)} Personas sin puestos.", fg="yellow"))
-        # click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_puestos)}", fg="yellow"))
 
     # Si hubo personas_sin_tabulador, mostrarlas en pantalla
     if len(personas_sin_tabulador) > 0:
         click.echo(click.style(f"  Hubo {len(personas_sin_tabulador)} Personas sin tabulador.", fg="yellow"))
-        # click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_sin_tabulador)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Nominas: {contador} insertadas.", fg="green"))

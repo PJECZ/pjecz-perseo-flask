@@ -11,7 +11,6 @@ MODELOS = [
     (1, "1) CONFIANZA"),
     (2, "2) SINDICALIZADO"),
     (3, "3) JUBILADO"),
-    (4, "4) BENEFICIARIO"),
 ]
 
 
