@@ -40,7 +40,12 @@ def datatable_json():
     else:
         consulta = consulta.filter_by(estatus="A")
     if "clave" in request.form:
-        consulta = consulta.filter(Banco.clave.contains(safe_clave(request.form["clave"])))
+        try:
+            clave = safe_clave(request.form["clave"], max_len=24)
+            if clave != "":
+                consulta = consulta.filter(Banco.clave.contains(clave))
+        except ValueError:
+            pass
     if "nombre" in request.form:
         consulta = consulta.filter(Banco.nombre.contains(safe_string(request.form["nombre"])))
     # Ordenar y paginar

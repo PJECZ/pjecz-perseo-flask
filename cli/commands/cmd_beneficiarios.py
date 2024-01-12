@@ -32,8 +32,8 @@ def cli():
 @click.command()
 @click.argument("quincena_clave", type=str)
 @click.option("--beneficiarios-csv", default=BENEFICIARIOS_CSV, help="Archivo CSV con los datos de los Beneficiarios")
-def alimentar(quincena_clave: str, beneficiarios_csv: str):
-    """Alimentar Beneficiarios"""
+def agregar_actualizar(quincena_clave: str, beneficiarios_csv: str):
+    """Agregar o actualizar Beneficiarios a partir de un archivo CSV"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -175,4 +175,4 @@ def alimentar(quincena_clave: str, beneficiarios_csv: str):
         click.echo(click.style(f"  Beneficiarios: {contador_quincenas_insertadas} quincenas insertadas.", fg="green"))
 
 
-cli.add_command(alimentar)
+cli.add_command(agregar_actualizar)

@@ -35,8 +35,8 @@ def cli():
 
 @click.command()
 @click.option("--centros-trabajos-csv", default=CENTROS_TRABAJOS_CSV, help="Archivo CSV con los datos de los C.T.")
-def actualizar(centros_trabajos_csv: str):
-    """Actualizar los C.T. a partir de un archivo CSV"""
+def agregar_actualizar(centros_trabajos_csv: str):
+    """Agregar o actualizar C.T. a partir de un archivo CSV"""
 
     # Validar archivo
     ruta = Path(centros_trabajos_csv)
@@ -177,5 +177,5 @@ def sincronizar():
     click.echo(f"Centros de Trabajo: {contador} sincronizados.")
 
 
-cli.add_command(actualizar)
+cli.add_command(agregar_actualizar)
 cli.add_command(sincronizar)

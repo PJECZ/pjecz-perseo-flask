@@ -34,8 +34,8 @@ def cli():
 
 @click.command()
 @click.option("--conceptos-csv", default=CONCEPTOS_CSV, help="Archivo CSV con los datos de los Conceptos")
-def alimentar(conceptos_csv: str):
-    """Alimentar conceptos"""
+def agregar_actualizar(conceptos_csv: str):
+    """Agregar o actualizar Conceptos a partir de un archivo CSV"""
 
     # Validar archivo CSV
     ruta = Path(conceptos_csv)
@@ -161,5 +161,5 @@ def eliminar_recuperar(quincena_clave: str):
     click.echo(click.style(f"  {', '.join(conceptos_recuperados)}", fg="green"))
 
 
-cli.add_command(alimentar)
+cli.add_command(agregar_actualizar)
 cli.add_command(eliminar_recuperar)
