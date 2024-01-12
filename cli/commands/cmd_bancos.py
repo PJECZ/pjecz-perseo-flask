@@ -25,8 +25,8 @@ def cli():
 
 @click.command()
 @click.option("--bancos-csv", default=BANCOS_CSV, help="Archivo CSV con los datos")
-def alimentar(bancos_csv: str):
-    """Alimentar bancos"""
+def agregar_actualizar(bancos_csv: str):
+    """Agregar o actualizar Bancos a partir de un archivo CSV"""
 
     # Validar archivo CSV
     ruta = Path(bancos_csv)
@@ -142,5 +142,5 @@ def reiniciar_consecutivos_temp():
     click.echo(f"Reiniciar los consecutivos temporales terminado: {contador} reiniciados.")
 
 
-cli.add_command(alimentar)
+cli.add_command(agregar_actualizar)
 cli.add_command(reiniciar_consecutivos_temp)

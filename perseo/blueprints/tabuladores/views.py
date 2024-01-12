@@ -50,9 +50,10 @@ def datatable_json():
     # Luego filtrar por columnas de otras tablas
     if "puesto_clave" in request.form:
         try:
-            puesto_clave = request.form["puesto_clave"]
-            consulta = consulta.join(Puesto)
-            consulta = consulta.filter(Puesto.clave == puesto_clave)
+            puesto_clave = safe_clave(request.form["puesto_clave"], max_len=24)
+            if puesto_clave != "":
+                consulta = consulta.join(Puesto)
+                consulta = consulta.filter(Puesto.clave.contains(puesto_clave))
         except ValueError:
             pass
     # Ordenar y paginar

@@ -26,8 +26,8 @@ def cli():
 
 @click.command()
 @click.option("--tabuladores-csv", default=TABULADORES_CSV, help="Archivo CSV con los datos de los Tabuladores")
-def alimentar(tabuladores_csv: str):
-    """Alimentar tabuladores y puestos"""
+def agregar_actualizar(tabuladores_csv: str):
+    """Agregar o actualizar tabuladores y puestos a partir de un archivo CSV"""
 
     # Validar archivo CSV
     ruta = Path(tabuladores_csv)
@@ -257,4 +257,4 @@ def alimentar(tabuladores_csv: str):
         click.echo(click.style(f"  Tabuladores: {contador_tabuladores_actualizados} actualizados.", fg="green"))
 
 
-cli.add_command(alimentar)
+cli.add_command(agregar_actualizar)
