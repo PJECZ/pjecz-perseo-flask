@@ -28,9 +28,10 @@
         {{ detail.label_value('Consecutivo temporal', banco.consecutivo_generado) }}
         {{ detail.label_value('Creado', moment(banco.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Cuentas del Banco -->
     {% if current_user.can_view('CUENTAS') %}
-        <!-- Cuentas de las Personas -->
         {% call detail.card('Cuentas de las Personas') %}
+            <!-- Filtros Cuentas -->
             <div class="row">
                 <div class="col">
                     <form class="row g-1 mb-3" id="filtradorCuentasForm" onsubmit="filtrosPersonas.buscar(); return false;">
@@ -65,6 +66,7 @@
                     </form>
                 </div>
             </div>
+            <!-- DataTable Cuentas -->
             <table id="cuentas_datatable" class="table display nowrap" style="width:100%">
                 <thead>
                     <tr>

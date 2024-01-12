@@ -19,7 +19,7 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Detalle de la persona -->
+    <!-- Detalle de la Persona -->
     {% call detail.card(estatus=persona.estatus) %}
         {{ detail.label_value_big('RFC', persona.rfc) }}
         {{ detail.label_value('Nombres', persona.nombres) }}
@@ -46,7 +46,7 @@
         {{ detail.label_value('NSS', persona.seguridad_social) }}
         {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
-    <!-- Cuentas de la persona -->
+    <!-- Cuentas de la Persona -->
     {% if current_user.can_view('CUENTAS') %}
         {% call detail.card('Cuentas') %}
             <table id="cuentas_datatable" class="table display nowrap" style="width:100%">
@@ -63,7 +63,7 @@
             {% endif %}
         {% endcall %}
     {% endif %}
-    <!-- Nominas de la persona -->
+    <!-- Nominas de la Persona -->
     {% if current_user.can_view('NOMINAS') %}
         {% call detail.card('Nominas') %}
             <!-- Filtros Nominas -->
@@ -104,7 +104,7 @@
             </table>
         {% endcall %}
     {% endif %}
-    <!-- Percepciones-Deducciones de la persona -->
+    <!-- Percepciones-Deducciones de la Persona -->
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
         {% call detail.card('Percepciones-Deducciones') %}
         <!-- Filtros Percepciones-Deducciones -->

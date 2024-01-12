@@ -17,12 +17,13 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle del Concepto -->
     {% call detail.card(estatus=concepto.estatus) %}
         {{ detail.label_value('Clave', concepto.clave) }}
         {{ detail.label_value('Descripción', concepto.descripcion) }}
         {{ detail.label_value('Creado', moment(concepto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
-    <!-- Percepciones-Deducciones del concepto -->
+    <!-- Percepciones-Deducciones del Concepto -->
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
         {% call detail.card('Percepciones-Deducciones') %}
             <!-- Filtros Percepciones-Deducciones -->
@@ -65,7 +66,7 @@
             </table>
         {% endcall %}
     {% endif %}
-    <!-- Productos del concepto -->
+    <!-- Productos del Concepto -->
     {% if current_user.can_view('PRODUCTOS') %}
         {% call detail.card('Productos') %}
             <table id="conceptos_productos" class="table display nowrap" style="width:100%">

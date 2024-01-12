@@ -7,10 +7,11 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_string
+from lib.safe_string import safe_clave, safe_message, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -40,10 +41,20 @@ def datatable_json():
         consulta = consulta.filter_by(estatus="A")
     if "puesto_id" in request.form:
         consulta = consulta.filter_by(puesto_id=request.form["puesto_id"])
+    if "modelo" in request.form:
+        consulta = consulta.filter_by(modelo=request.form["modelo"])
+    if "nivel" in request.form:
+        consulta = consulta.filter_by(nivel=request.form["nivel"])
+    if "quinquenio" in request.form:
+        consulta = consulta.filter_by(quinquenio=request.form["quinquenio"])
     # Luego filtrar por columnas de otras tablas
-    # if "persona_rfc" in request.form:
-    #     consulta = consulta.join(Persona)
-    #     consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
+    if "puesto_clave" in request.form:
+        try:
+            puesto_clave = request.form["puesto_clave"]
+            consulta = consulta.join(Puesto)
+            consulta = consulta.filter(Puesto.clave == puesto_clave)
+        except ValueError:
+            pass
     # Ordenar y paginar
     registros = consulta.order_by(Tabulador.id).offset(start).limit(rows_per_page).all()
     total = consulta.count()
