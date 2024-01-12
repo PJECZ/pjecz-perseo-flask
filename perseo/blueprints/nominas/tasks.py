@@ -184,8 +184,6 @@ def lanzar_generar_todos(quincena_clave: str) -> str:
         set_task_progress(75, msg)
         mensajes.append(msg := crear_pensionados(quincena_clave, 0, True))
         set_task_progress(100, msg)
-        # mensajes.append(msg := crear_dispersiones_pensionados(quincena_clave, 0))
-        # set_task_progress(100, msg)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)

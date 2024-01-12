@@ -309,7 +309,7 @@ def generate_nominas(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -345,7 +345,7 @@ def generate_monederos(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -381,7 +381,7 @@ def generate_pensionados(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -451,7 +451,7 @@ def generate_timbrados(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -488,7 +488,7 @@ def generate_timbrados_aguinaldos(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -525,7 +525,7 @@ def generate_timbrados_apoyos_anuales(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -548,6 +548,6 @@ def generate_todos(quincena_id):
         mensaje=f"Crear todos los archivo XLSX de {quincena.clave}...",
         quincena_clave=quincena.clave,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 60 segundos...", "info")
     # Redireccionar al detalle de la quincena
     return redirect(url_for("quincenas.detail", quincena_id=quincena.id))

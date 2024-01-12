@@ -18,6 +18,28 @@
                         </script>
                     {% endif %}
                     {% if msg.endswith('recargar en 30 segundos...') %}
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Elaborando...</span>
+                        </div>
+                        <script>
+                            // Refresh the page after 30 seconds
+                            setTimeout(function(){
+                                location.reload();
+                            }, 30000); // 30000 milliseconds = 30 seconds
+                        </script>
+                    {% endif %}
+                    {% if msg.endswith('recargar en 60 segundos...') %}
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Elaborando...</span>
+                        </div>
+                        <script>
+                            // Refresh the page after 60 seconds
+                            setTimeout(function(){
+                                location.reload();
+                            }, 60000); // 60000 milliseconds = 60 seconds
+                        </script>
+                    {% endif %}
+                    {% if msg.endswith('recargar en 30 segundos...') %}
                         <div class="progress-bar">
                             <span class="progress-bar-fill" style="width: 10%"></span>
                         </div>

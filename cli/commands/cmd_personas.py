@@ -278,7 +278,7 @@ def actualizar_tabuladores(quincena_clave: str):
     personas_actualizadas_contador = 0
 
     # Bucle por cada fila
-    click.echo(f"Actualizando Tabuladores de las Personas: ", nl=False)
+    click.echo("Actualizando Tabuladores de las Personas: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 2)
@@ -308,7 +308,7 @@ def actualizar_tabuladores(quincena_clave: str):
             puestos_claves_no_encontrados.append(puesto_clave)
             continue
 
-        # De inicio el quinquenio el que tiena la persona
+        # Inicialmente el quinquenio es el que tiene la persona
         quinquenios = persona.tabulador.quinquenio
 
         # Inicializar la bandera para saltar esta fila si el concepto es PME
