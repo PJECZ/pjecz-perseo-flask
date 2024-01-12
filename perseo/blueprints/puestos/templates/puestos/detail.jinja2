@@ -19,11 +19,13 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle del Puesto -->
     {% call detail.card(estatus=puesto.estatus) %}
         {{ detail.label_value_big('Clave', puesto.clave) }}
         {{ detail.label_value('Descripción', puesto.descripcion) }}
         {{ detail.label_value('Creado', moment(puesto.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Tabuladores del Puesto -->
     {% if current_user.can_view('TABULADORES') %}
         {% call detail.card('Tabuladores') %}
             <table id="tabuladores_datatable" class="table display nowrap" style="width:100%">

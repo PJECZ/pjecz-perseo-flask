@@ -17,11 +17,13 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle de la Plaza -->
     {% call detail.card(estatus=plaza.estatus) %}
         {{ detail.label_value('Clave', plaza.clave) }}
         {{ detail.label_value('Descripción', plaza.descripcion) }}
         {{ detail.label_value('Creado', moment(plaza.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}
+    <!-- Nominas de la Plaza -->
 {% endblock %}
 
 {% block custom_javascript %}

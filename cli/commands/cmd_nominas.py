@@ -400,7 +400,7 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Alimentando Aguinaldos: ", nl=False)
+    click.echo(f"Alimentando Aguinaldos a la quincena {quincena.clave}: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         centro_trabajo_clave = hoja.cell_value(fila, 1)

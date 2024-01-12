@@ -278,7 +278,7 @@ def actualizar_tabuladores(quincena_clave: str):
     personas_actualizadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Actualizando Tabuladores de las Personas: ", nl=False)
+    click.echo(f"Actualizando Tabuladores de las Personas: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 2)
