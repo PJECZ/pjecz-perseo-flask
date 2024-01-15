@@ -1,0 +1,41 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Tabulador {{ tabulador.id | string }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Editar ' + tabulador.clave) %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'tabulador_id': tabulador.id} %}
+        {% call f.form_tag('tabuladores.edit', fid='tabulador_form', **form_kwargs) %}
+            {% call f.form_group(form.puesto) %}{% endcall %}
+            {% call f.form_group(form.modelo) %}{% endcall %}
+            {% call f.form_group(form.nivel) %}{% endcall %}
+            {% call f.form_group(form.quinquenio) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
+            {% call f.form_group(form.sueldo_base) %}{% endcall %}
+            {% call f.form_group(form.incentivo) %}{% endcall %}
+            {% call f.form_group(form.monedero) %}{% endcall %}
+            {% call f.form_group(form.rec_cul_dep) %}{% endcall %}
+            {% call f.form_group(form.sobresueldo) %}{% endcall %}
+            {% call f.form_group(form.rec_dep_cul_gravado) %}{% endcall %}
+            {% call f.form_group(form.rec_dep_cul_excento) %}{% endcall %}
+            {% call f.form_group(form.ayuda_transp) %}{% endcall %}
+            {% call f.form_group(form.monto_quinquenio) %}{% endcall %}
+            {% call f.form_group(form.total_percepciones) %}{% endcall %}
+            {% call f.form_group(form.salario_diario) %}{% endcall %}
+            {% call f.form_group(form.prima_vacacional_mensual) %}{% endcall %}
+            {% call f.form_group(form.aguinaldo_mensual) %}{% endcall %}
+            {% call f.form_group(form.prima_vacacional_mensual_adicional) %}{% endcall %}
+            {% call f.form_group(form.total_percepciones_integrado) %}{% endcall %}
+            {% call f.form_group(form.salario_diario_integrado        ) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
