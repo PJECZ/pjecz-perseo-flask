@@ -54,11 +54,16 @@ def agregar_actualizar(tabuladores_csv: str):
                 modelo = int(row["MODELO"])
                 nivel = int(row["NIVEL"])
                 quinquenio = int(row["QUINQUENIO"])
-                sueldo_base = float(row["SUELDO BASE"])
             except ValueError as error:
                 errores.append(f"  Es incorrecto: {error}, se omite")
                 click.echo("E", nl=False)
                 continue
+
+            # SUELDO BASE
+            try:
+                sueldo_base = float(row["SUELDO BASE"])
+            except ValueError:
+                sueldo_base = 0.0
 
             # Validar CLAVE DE PUESTO
             clave_puesto = safe_clave(row["CLAVE DE PUESTO"])
@@ -167,6 +172,24 @@ def agregar_actualizar(tabuladores_csv: str):
             except ValueError:
                 fecha_inicio = datetime.now().date()
 
+            # PENSION VITALICIA (EXENTO)
+            try:
+                pension_vitalicia_extento = float(row["PENSION VITALICIA (EXENTO)"])
+            except ValueError:
+                pension_vitalicia_extento = 0.0
+
+            # PENSION VITALICIA (GRAVABLE)
+            try:
+                pension_vitalicia_gravable = float(row["PENSION VITALICIA (GRAVABLE)"])
+            except ValueError:
+                pension_vitalicia_gravable = 0.0
+
+            # BONIFICACION
+            try:
+                pension_bonificacion = float(row["BONIFICACION"])
+            except ValueError:
+                pension_bonificacion = 0.0
+
             # Consular el puesto, si no existe el puesto, se inserta con una descripción NO DEFINIDO
             puesto = Puesto.query.filter(Puesto.clave == clave_puesto).first()
             if not puesto:
@@ -209,6 +232,9 @@ def agregar_actualizar(tabuladores_csv: str):
                     total_percepciones_integrado=total_percepciones_integrado,
                     salario_diario_integrado=salario_diario_integrado,
                     fecha=fecha_inicio,
+                    pension_vitalicia_extento=pension_vitalicia_extento,
+                    pension_vitalicia_gravable=pension_vitalicia_gravable,
+                    pension_bonificacion=pension_bonificacion,
                 )
                 tabulador.save()
                 contador_tabuladores_insertados += 1
@@ -232,6 +258,9 @@ def agregar_actualizar(tabuladores_csv: str):
                 tabulador.total_percepciones_integrado = total_percepciones_integrado
                 tabulador.salario_diario_integrado = salario_diario_integrado
                 tabulador.fecha = fecha_inicio
+                tabulador.pension_vitalicia_extento = pension_vitalicia_extento
+                tabulador.pension_vitalicia_gravable = pension_vitalicia_gravable
+                tabulador.pension_bonificacion = pension_bonificacion
                 tabulador.save()
                 contador_tabuladores_actualizados += 1
                 click.echo("u", nl=False)
