@@ -45,6 +45,11 @@ class Tabulador(database.Model, UniversalMixin):
     total_percepciones_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
     salario_diario_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
 
+    # Columnas para pensionados
+    pension_vitalicia_extento = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (EXENTO)
+    pension_vitalicia_gravable = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (GRAVABLE)
+    pension_bonificacion = Column(Numeric(precision=24, scale=4), nullable=False)  # BONIFICACION
+
     # Hijos
     personas = relationship("Persona", back_populates="tabulador")
 
