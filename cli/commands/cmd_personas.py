@@ -269,87 +269,103 @@ def actualizar_tabuladores(quincena_clave: str):
     # Obtener la primera hoja
     hoja = libro.sheet_by_index(0)
 
+    # Definir el puesto generico
+    puesto_generico = Puesto.query.filter_by(clave="ND").first()
+    if puesto_generico is None:
+        click.echo("ERROR: Falta el puesto con clave ND.")
+        sys.exit(1)
+
+    # Definir el tabulador generico
+    tabulador_generico = Tabulador.query.filter_by(puesto_id=puesto_generico.id).first()
+    if tabulador_generico is None:
+        click.echo("ERROR: Falta el tabulador del puesto con clave ND.")
+        sys.exit(1)
+
     # Inicializar los listados con las anomalias
+    personas_actualizadas_del_tabulador = []
+    personas_actualizadas_del_modelo = []
+    personas_actualizadas_del_num_empleado = []
     personas_no_encontradas = []
     puestos_claves_no_encontrados = []
     tabuladores_no_encontrados = []
 
-    # Inicializar contador de personas actualizadas
+    # Inicializar contadores
+    modelos_no_validos_contador = 0
+    niveles_no_validos_contador = 0
     personas_actualizadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Actualizando Tabuladores de las Personas: ", nl=False)
+    click.echo(f"Actualizando Tabuladores de las Personas con {quincena_clave}: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 2)
-        # nombre_completo = hoja.cell_value(fila, 3)
         modelo = int(hoja.cell_value(fila, 236))
         puesto_clave = safe_clave(hoja.cell_value(fila, 20))
         nivel = int(hoja.cell_value(fila, 9))
-        # quincena_ingreso = str(int(hoja.cell_value(fila, 19)))
+        num_empleado = int(hoja.cell_value(fila, 240))
 
         # Consultar a la persona
         persona = Persona.query.filter_by(rfc=rfc).first()
 
-        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        # Si no se encuentra, agregar a personas_no_encontradas y saltar
         if persona is None:
             personas_no_encontradas.append(rfc)
             continue
 
-        # Si el modelo es 2, entonces en sindicalizado y se toman 4 caracteres del puesto
+        # Inicializar la bandera para saltar la fila si el concepto es PME
+        es_concepto_pme = False
+
+        # Si el modelo es 2, entonces en SINDICALIZADO, se toman 4 caracteres del puesto
         if modelo == 2:
             puesto_clave = puesto_clave[:4]
+
+        # Bucle entre las columnas de los conceptos para encontrar PQ1, PQ2, PQ3, PQ4, PQ5, PQ6 o PME
+        quinquenios = 0
+        col_num = 26
+        while True:
+            # Tomar el p_o_d
+            p_o_d = safe_string(hoja.cell_value(fila, col_num))
+            # Tomar el conc
+            conc = safe_string(hoja.cell_value(fila, col_num + 1))
+            # Si 'P' o 'D' es un texto vacio, se rompe el ciclo
+            if p_o_d == "":
+                break
+            # Si NO es P, se salta
+            if p_o_d != "P":
+                col_num += 6
+                continue
+            # Si conc es ME es monedero, se rompe el ciclo porque aqui no hay quinquenios
+            if conc == "ME":
+                es_concepto_pme = True
+                break
+            # Si el concepto no es PQ1, PQ2, PQ3, PQ4, PQ5, PQ6, se salta
+            if conc not in ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]:
+                col_num += 6
+                continue
+            # Tomar el tercer caracter del concepto y convertirlo a entero porque es la cantidad de quinquenios
+            quinquenios = int(conc[1])
+            break
+
+        # Si el concepto es PME, entonces en esta fila se salta
+        if es_concepto_pme:
+            continue
 
         # Consultar el puesto
         puesto = Puesto.query.filter_by(clave=puesto_clave).first()
 
-        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        # Si no se encuentra, agregar a puestos_claves_no_encontrados y saltar
         if puesto is None:
             puestos_claves_no_encontrados.append(puesto_clave)
             continue
 
-        # Inicialmente el quinquenio es el que tiene la persona
-        quinquenios = persona.tabulador.quinquenio
+        # Si el modelo NO es 1, 2 o 3, agregar a modelos_no_validos y saltar
+        if modelo not in [1, 2, 3]:
+            modelos_no_validos_contador += 1
+            continue
 
-        # Inicializar la bandera para saltar esta fila si el concepto es PME
-        saltar = False
-
-        # Si el modelo es 2, entonces en sindicalizado y se busca el quinquenio
-        if modelo == 2:
-            # Peinar las columnas de los conceptos para encontrar PQ1, PQ2, PQ3, PQ4, PQ5, PQ6
-            col_num = 26
-            while True:
-                # La primer columna es 'P' o 'D'
-                p_o_d = safe_string(hoja.cell_value(fila, col_num))
-
-                # Si 'P' o 'D' es un texto vacio, se rompe el ciclo
-                if p_o_d == "":
-                    break
-
-                # Si NO es P, se salta
-                if p_o_d != "P":
-                    col_num += 6
-                    continue
-
-                # Tomar el concepto
-                conc = safe_string(hoja.cell_value(fila, col_num + 1))
-
-                # Si el comcepto es PME es monedero, deja de buscar porque aqui no hay quinquenios
-                if conc == "ME":
-                    saltar = True
-                    break
-
-                # Si el concepto no es PQ1, PQ2, PQ3, PQ4, PQ5, PQ6, se salta
-                if conc not in ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]:
-                    col_num += 6
-                    continue
-
-                # Tomar el tercer caracter del concepto y convertirlo a entero porque es la cantidad de quinquenios
-                quinquenios = int(conc[1])
-                break
-
-        # Si se va a saltar, saltar
-        if saltar is True:
+        # Si el nivel NO esta entre 1 y 9, agregar a niveles_no_validos y saltar
+        if nivel not in range(1, 10):
+            niveles_no_validos_contador += 1
             continue
 
         # Consultar el tabulador
@@ -362,48 +378,65 @@ def actualizar_tabuladores(quincena_clave: str):
 
         # Si no se encuentra, agregar a la lista de anomalias y saltar
         if tabulador is None:
-            tabuladores_no_encontrados.append(f"Puesto: {puesto_clave} Modelo: {modelo} Nivel:{nivel} Quin:{quinquenios}")
+            tabuladores_no_encontrados.append(f"Puesto: {puesto_clave} Modelo: {modelo} Nivel: {nivel} Quin: {quinquenios}")
             continue
 
-        # Inicializar la bandera de cambios
+        # Inicializar hay_cambios
         hay_cambios = False
 
-        # Si el tabulador es diferente, actualizar
-        if int(persona.tabulador_id) != int(tabulador.id):
-            persona.tabulador_id = int(tabulador.id)
+        # Revisar si hay que actualizar el tabulador a la Persona
+        if persona.tabulador_id != tabulador.id:
+            personas_actualizadas_del_tabulador.append(
+                f"{rfc} {persona.nombre_completo}: Tabulador: {persona.tabulador_id} -> {tabulador.id}"
+            )
+            persona.tabulador_id = tabulador.id
             hay_cambios = True
 
-        # Si hay cambios, agregar a la sesion e incrementar el contador
-        if hay_cambios is True:
-            # sesion.add(persona)
+        # Revisar si hay que actualizar el modelo a la Persona
+        if persona.modelo != modelo:
+            personas_actualizadas_del_modelo.append(f"{rfc} {persona.nombre_completo}: Modelo: {persona.modelo} -> {modelo}")
+            persona.modelo = modelo
+            hay_cambios = True
+
+        # Revisar si hay que actualizar el numero de empleado a la Persona
+        if persona.num_empleado != num_empleado:
+            personas_actualizadas_del_num_empleado.append(
+                f"{rfc} {persona.nombre_completo}: No. Emp. {persona.num_empleado} -> {num_empleado}"
+            )
+            persona.num_empleado = num_empleado
+            hay_cambios = True
+
+        # Si hay cambios, guardar la Persona
+        if hay_cambios:
             persona.save()
             personas_actualizadas_contador += 1
-            if modelo == 2:
-                click.echo(click.style(quinquenios, fg="green"), nl=False)
-            else:
-                click.echo(click.style("u", fg="green"), nl=False)
+            click.echo(click.style("u", fg="green"), nl=False)
 
     # Poner avance de linea
     click.echo("")
 
-    # Cerrar la sesion para que se guarden todos los datos en la base de datos
-    # sesion.commit()
-    # sesion.close()
+    # Si hubo modelos_no_validos, mostrar contador
+    if modelos_no_validos_contador > 0:
+        click.echo(click.style(f"  Hubo {modelos_no_validos_contador} filas con modelos NO validos, se omiten", fg="yellow"))
+
+    # Si hubo niveles_no_validos, mostrar contador
+    if niveles_no_validos_contador > 0:
+        click.echo(click.style(f"  Hubo {niveles_no_validos_contador} filas con niveles NO validos, se omiten", fg="yellow"))
 
     # Si hubo personas_no_encontradas, mostrarlas
     if len(personas_no_encontradas) > 0:
         click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} personas que no se encontraron:", fg="yellow"))
-        click.echo(click.style(f"  {','.join(personas_no_encontradas)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_no_encontradas)}", fg="yellow"))
 
     # Si hubo puestos_claves_no_encontrados, mostrarlas
     if len(puestos_claves_no_encontrados) > 0:
         click.echo(click.style(f"  Hubo {len(puestos_claves_no_encontrados)} puestos que no se encontraron:", fg="yellow"))
-        click.echo(click.style(f"  {','.join(puestos_claves_no_encontrados)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(puestos_claves_no_encontrados)}", fg="yellow"))
 
     # Si hubo tabuladores_no_encontrados, mostrarlas
     if len(tabuladores_no_encontrados) > 0:
         click.echo(click.style(f"  Hubo {len(tabuladores_no_encontrados)} tabuladores que no se encontraron:", fg="yellow"))
-        click.echo(click.style(f"  {','.join(tabuladores_no_encontrados)}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(tabuladores_no_encontrados)}", fg="yellow"))
 
     # Mensaje termino
     click.echo(click.style(f"  Actualizar tabuladores de las personas: {personas_actualizadas_contador}", fg="green"))
@@ -451,6 +484,50 @@ def cambiar_tabulador(rfc: str, tabulador_id: int):
 
     # Mensaje de termino
     click.echo(f"AVISO: El tabulador de {rfc} se cambió a {tabulador_id}.")
+
+
+@click.command()
+@click.argument("tabulador_id", type=int)
+def cambiar_tabulador_a_todos(tabulador_id: int):
+    """Cambiar el Tabulador a TODOS"""
+
+    # Consultar el tabulador
+    tabulador = Tabulador.query.get(tabulador_id)
+    if tabulador is None:
+        click.echo(f"ERROR: Tabulador no encontrado: {tabulador_id}")
+        sys.exit(1)
+    if tabulador.estatus != "A":
+        click.echo(f"ERROR: Tabulador no activo: {tabulador_id}")
+        sys.exit(1)
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Inicializar contador
+    contador = 0
+
+    # Bucle por las personas activas
+    click.echo(f"Cambiar el Tabulador de TODAS las Personas activas a {tabulador_id}: ", nl=False)
+    for persona in Persona.query.filter_by(estatus="A").all():
+        # Si el tabulador de la persona es el mismo, saltar
+        if persona.tabulador_id == tabulador.id:
+            continue
+
+        # Actualizar la persona con el tabulador proporcionado
+        persona.tabulador_id = tabulador.id
+        sesion.add(persona)
+        contador += 1
+        click.echo(click.style("u", fg="green"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Guardar cambios
+    sesion.commit()
+    sesion.close()
+
+    # Mensaje termino
+    click.echo(click.style(f"  Se cambio el Tabulador a {contador} Personas a {tabulador_id}", fg="green"))
 
 
 @click.command()
@@ -661,5 +738,6 @@ cli.add_command(actualizar)
 cli.add_command(actualizar_tabuladores)
 cli.add_command(actualizar_fechas_ingreso)
 cli.add_command(cambiar_tabulador)
+cli.add_command(cambiar_tabulador_a_todos)
 cli.add_command(migrar_eliminar_rfc)
 cli.add_command(sincronizar)

@@ -130,16 +130,18 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
         click.echo("ERROR: Falta el tabulador del puesto con clave ND.")
         sys.exit(1)
 
+    # Inicializar los listados con las anomalias
+    personas_actualizadas_del_tabulador = []
+    personas_actualizadas_del_modelo = []
+    personas_actualizadas_del_num_empleado = []
+    personas_sin_puestos = []
+    personas_sin_tabulador = []
+
     # Iniciar contadores
     contador = 0
     centros_trabajos_insertados_contador = 0
     personas_actualizadas_contador = 0
-    personas_actualizadas_del_tabulador = []
-    personas_actualizadas_del_modelo = []
-    personas_actualizadas_del_num_empleado = []
     personas_insertadas_contador = 0
-    personas_sin_puestos = []
-    personas_sin_tabulador = []
     plazas_insertadas_contador = 0
 
     # Bucle por cada fila
@@ -191,7 +193,7 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             sesion.commit()
             plazas_insertadas_contador += 1
 
-        # Si el modelo es 2, entonces en SINDICALIZADO, se toman 4 caracteres del puesto y se define quinquenios
+        # Si el modelo es 2, entonces en SINDICALIZADO, se toman 4 caracteres del puesto y se busca quinquenios
         quinquenios = None
         if modelo == 2:
             puesto_clave = puesto_clave[:4]
@@ -326,7 +328,7 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             # Revisar si hay que actualizar el numero de empleado a la Persona
             if persona.num_empleado != num_empleado:
                 personas_actualizadas_del_num_empleado.append(
-                    f"{rfc} {persona.nombre_completo}: No. Emp. {persona.num_empleado} -> {num_empleado}"
+                    f"{rfc} {persona.nombre_completo}: Num. Emp. {persona.num_empleado} -> {num_empleado}"
                 )
                 persona.num_empleado = num_empleado
                 hay_cambios = True
