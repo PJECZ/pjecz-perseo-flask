@@ -21,7 +21,7 @@ class Tabulador(database.Model, UniversalMixin):
     puesto_id = Column(Integer, ForeignKey("puestos.id"), index=True, nullable=False)
     puesto = relationship("Puesto", back_populates="tabuladores")
 
-    # Columnas que junto con el puesto hacen una combinación única
+    # Columnas que junto con el Puesto hacen una combinación única
     modelo = Column(Integer, nullable=False)
     nivel = Column(Integer, nullable=False)
     quinquenio = Column(Integer, nullable=False)
@@ -46,7 +46,7 @@ class Tabulador(database.Model, UniversalMixin):
     salario_diario_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
 
     # Columnas para pensionados
-    pension_vitalicia_extento = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (EXENTO)
+    pension_vitalicia_excento = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (EXENTO)
     pension_vitalicia_gravable = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (GRAVABLE)
     pension_bonificacion = Column(Numeric(precision=24, scale=4), nullable=False)  # BONIFICACION
 

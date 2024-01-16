@@ -44,6 +44,10 @@
         {{ detail.label_value_currency('Prima Vacacional adicional', tabulador.prima_vacacional_mensual_adicional) }}
         {{ detail.label_value_currency('Total Percepciones integrado', tabulador.total_percepciones_integrado) }}
         {{ detail.label_value_currency('Salario Diario integrado', tabulador.salario_diario_integrado) }}
+        {# Columnas para pensionados #}
+        {{ detail.label_value_currency('Pensión Vitalicia excento', tabulador.pension_vitalicia_excento) }}
+        {{ detail.label_value_currency('Pensión Vitalicia gravable', tabulador.pension_vitalicia_gravable) }}
+        {{ detail.label_value_currency('Pensión Bonificación', tabulador.pension_bonificacion) }}
         {# Creado #}
         {{ detail.label_value('Creado', moment(tabulador.creado, local=True).format('DD MMM YYYY')) }}
     {% endcall %}

@@ -174,9 +174,9 @@ def agregar_actualizar(tabuladores_csv: str):
 
             # PENSION VITALICIA (EXENTO)
             try:
-                pension_vitalicia_extento = float(row["PENSION VITALICIA (EXENTO)"])
+                pension_vitalicia_excento = float(row["PENSION VITALICIA (EXENTO)"])
             except ValueError:
-                pension_vitalicia_extento = 0.0
+                pension_vitalicia_excento = 0.0
 
             # PENSION VITALICIA (GRAVABLE)
             try:
@@ -232,7 +232,7 @@ def agregar_actualizar(tabuladores_csv: str):
                     total_percepciones_integrado=total_percepciones_integrado,
                     salario_diario_integrado=salario_diario_integrado,
                     fecha=fecha_inicio,
-                    pension_vitalicia_extento=pension_vitalicia_extento,
+                    pension_vitalicia_excento=pension_vitalicia_excento,
                     pension_vitalicia_gravable=pension_vitalicia_gravable,
                     pension_bonificacion=pension_bonificacion,
                 )
@@ -258,7 +258,7 @@ def agregar_actualizar(tabuladores_csv: str):
                 tabulador.total_percepciones_integrado = total_percepciones_integrado
                 tabulador.salario_diario_integrado = salario_diario_integrado
                 tabulador.fecha = fecha_inicio
-                tabulador.pension_vitalicia_extento = pension_vitalicia_extento
+                tabulador.pension_vitalicia_excento = pension_vitalicia_excento
                 tabulador.pension_vitalicia_gravable = pension_vitalicia_gravable
                 tabulador.pension_bonificacion = pension_bonificacion
                 tabulador.save()
