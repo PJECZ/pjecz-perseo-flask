@@ -1,7 +1,7 @@
 """
 Nominas, modelos
 """
-from sqlalchemy import Column, Date, Enum, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -45,6 +45,15 @@ class Nomina(database.Model, UniversalMixin):
     importe = Column(Numeric(precision=24, scale=4), nullable=False)
     num_cheque = Column(String(24), nullable=False, default="", server_default="")
     fecha_pago = Column(Date(), nullable=False)
+
+    # Columnas con datos de los archivos XML de timbrado
+    tfd = Column(Text())
+    tfd_version = Column(String(8))
+    tfd_uuid = Column(String(64))
+    tfd_fecha_timbrado = Column(DateTime())
+    tfd_sello_cfd = Column(String(512))
+    tfd_num_cert_sat = Column(String(64))
+    tfd_sello_sat = Column(String(512))
 
     def __repr__(self):
         """Representación"""

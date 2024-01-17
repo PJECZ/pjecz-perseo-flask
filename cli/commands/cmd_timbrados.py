@@ -11,6 +11,9 @@ import click
 
 from lib.safe_string import QUINCENA_REGEXP, safe_string
 from perseo.app import create_app
+from perseo.blueprints.nominas.models import Nomina
+from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.extensions import database
 
 XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
@@ -19,7 +22,7 @@ XML_TAG_NOMINA_PREFIX = "{http://www.sat.gob.mx/nomina12}"
 
 CFDI_EMISOR_RFC = os.environ.get("CFDI_EMISOR_RFC")
 CFDI_EMISOR_NOMBRE = os.environ.get("CFDI_EMISOR_NOMBRE")
-CFDI_EMISOR_REGIMEN_FISCAL = os.environ.get("CFDI_EMISOR_REGIMEN_FISCAL")
+CFDI_EMISOR_REGFIS = os.environ.get("CFDI_EMISOR_REGFIS")
 TIMBRADOS_BASE_DIR = os.environ.get("TIMBRADOS_BASE_DIR")
 
 app = create_app()
@@ -78,11 +81,14 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     # Inicializar listas de errores
     emisor_rfc_no_coincide = []
     emisor_nombre_no_coincide = []
+    emisor_regfis_no_coincide = []
     receptor_rfc_no_encontrado = []
     receptor_rfc_no_coincide = []
+    nomina_no_encontrada = []
 
     # Inicializar contadores
-    contador = 0
+    actualizaciones_contador = 0
+    procesados_contador = 0
 
     # Recorrer los archivos con extension xml
     for archivo in timbrados_dir.glob("*.xml"):
@@ -159,7 +165,8 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
         # Bucle por los elementos de root
         for element in root.iter():
-            click.echo(click.style(f"    {element.tag}", fg="blue"))
+            # Mostrar el tag
+            # click.echo(click.style(f"    {element.tag}", fg="blue"))
 
             # Obtener datos de Emisor
             if element.tag == f"{XML_TAG_CFD_PREFIX}Emisor":
@@ -203,56 +210,124 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                     tfd_sello_sat = element.attrib["SelloSAT"]
                     click.echo(click.style(f"      TFD Sello SAT: {tfd_sello_sat}", fg="green"))
 
-        # Si NO se encontro el Receptor RFC, se agrega a la lista de errores
+        # Si NO se encontro el Receptor RFC, se agrega a la lista de errores y se omite
         if cfdi_receptor_rfc is None:
             receptor_rfc_no_encontrado.append(archivo_nombre)
             continue
 
-        # Si el Receptor RFC no coincide con el RFC en el nombre del archivo, se agrega a la lista de errores
+        # Si el Receptor RFC no coincide con el RFC en el nombre del archivo, se agrega a la lista de errores y se omite
         if cfdi_receptor_rfc != rfc_en_nombre:
             receptor_rfc_no_coincide.append(archivo_nombre)
             continue
 
-        # Si el Emisor RFC no coincide con CFDI_EMISOR_RFC, se agrega a la lista de errores
+        # Si el Emisor RFC no coincide con CFDI_EMISOR_RFC, se agrega a la lista de errores y se omite
         if cfdi_emisor_rfc != CFDI_EMISOR_RFC:
             emisor_rfc_no_coincide.append(archivo_nombre)
             continue
 
-        # Si el Emisor Nombre no coincide con CFDI_EMISOR_NOMBRE, se agrega a la lista de errores
+        # Si el Emisor Nombre no coincide con CFDI_EMISOR_NOMBRE, se agrega a la lista de errores y se omite
         if cfdi_emisor_nombre != CFDI_EMISOR_NOMBRE:
             emisor_nombre_no_coincide.append(archivo_nombre)
             continue
 
-        # Si el Emisor Regimen Fiscal no coincide con CFDI_EMISOR_REGIMEN_FISCAL, se agrega a la lista de errores
-        if cfdi_emisor_regimen_fiscal != CFDI_EMISOR_REGIMEN_FISCAL:
-            emisor_nombre_no_coincide.append(archivo_nombre)
+        # Si el Emisor Regimen Fiscal no coincide con CFDI_EMISOR_REGIMEN_FISCAL, se agrega a la lista de errores y se omite
+        if cfdi_emisor_regimen_fiscal != CFDI_EMISOR_REGFIS:
+            emisor_regfis_no_coincide.append(archivo_nombre)
             continue
 
-        # Incrementar el contador
-        contador += 1
+        # Consultar la Nomina
+        nomina = (
+            Nomina.query.join(Persona)
+            .join(Quincena)
+            .filter(Persona.rfc == cfdi_receptor_rfc)
+            .filter(Quincena.clave == quincena_clave)
+            .filter(Nomina.tipo == tipo)
+            .first()
+        )
+
+        # Si NO se encuentra registro en Nomina
+        if nomina is None:
+            nomina_no_encontrada.append(cfdi_receptor_rfc)
+            continue
+
+        # Inicializar bandera hay_cambios
+        hay_cambios = False
+
+        # Si tfd_version es diferente, hay_cambios sera verdadero
+        if nomina.tfd_version != tfd_version:
+            nomina.tfd_version = tfd_version
+            hay_cambios = True
+
+        # Si tfd_uuid es diferente, hay_cambios sera verdadero
+        if nomina.tfd_uuid != tfd_uuid:
+            nomina.tfd_uuid = tfd_uuid
+            hay_cambios = True
+
+        # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
+        if nomina.tfd_fecha_timbrado != tfd_fecha_timbrado:
+            nomina.tfd_fecha_timbrado = tfd_fecha_timbrado
+            hay_cambios = True
+
+        # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
+        if nomina.tfd_sello_cfd != tfd_sello_cfd:
+            nomina.tfd_sello_cfd = tfd_sello_cfd
+            hay_cambios = True
+
+        # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
+        if nomina.tfd_num_cert_sat != tfd_num_cert_sat:
+            nomina.tfd_num_cert_sat = tfd_num_cert_sat
+            hay_cambios = True
+
+        # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
+        if nomina.tfd_sello_sat != tfd_sello_sat:
+            nomina.tfd_sello_sat = tfd_sello_sat
+            hay_cambios = True
+
+        # Si hay_cambios, cargar el contenido XML y actualizar el registro en Nomina
+        if hay_cambios:
+            # Cargar el contenido XML
+            with open(archivo_xml, "r", encoding="utf8") as f:
+                nomina.tfd = f.read()
+
+            # Actualizar el registro en Nomina
+            database.session.add(nomina)
+            database.session.commit()
+            actualizaciones_contador += 1
+
+        # Incrementar procesados_contador
+        procesados_contador += 1
+
+    # Cerrar sesion con la base de datos
+    database.session.close()
 
     # Si hubo errores en emisor_rfc_no_coincide, se muestran
     if len(emisor_rfc_no_coincide) > 0:
-        click.echo(click.style(f"  Hubo {len(emisor_rfc_no_coincide)} errores en emisor_rfc_no_coincide", fg="yellow"))
+        click.echo(click.style(f"  En {len(emisor_rfc_no_coincide)} Emisor RFC NO es {CFDI_EMISOR_RFC}", fg="yellow"))
         click.echo(click.style(f"  {', '.join(emisor_rfc_no_coincide)}", fg="yellow"))
 
     # Si hubo errores en emisor_nombre_no_coincide, se muestran
     if len(emisor_nombre_no_coincide) > 0:
-        click.echo(click.style(f"  Hubo {len(emisor_nombre_no_coincide)} errores en emisor_nombre_no_coincide", fg="yellow"))
+        click.echo(click.style(f"  En {len(emisor_nombre_no_coincide)} Emisor Nombre NO es {CFDI_EMISOR_NOMBRE}", fg="yellow"))
         click.echo(click.style(f"  {', '.join(emisor_nombre_no_coincide)}", fg="yellow"))
+
+    # Si hubo errores en emisor_regimen_fiscal_no_coincide, se muestran
+    if len(emisor_regfis_no_coincide) > 0:
+        click.echo(click.style(f"  En {len(emisor_regfis_no_coincide)} Emisor RegFis NO es {CFDI_EMISOR_REGFIS}", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(emisor_regfis_no_coincide)}", fg="yellow"))
 
     # Si hubo errores en receptor_rfc_no_encontrado, se muestran
     if len(receptor_rfc_no_encontrado) > 0:
-        click.echo(click.style(f"  Hubo {len(receptor_rfc_no_encontrado)} errores en receptor_rfc_no_encontrado", fg="yellow"))
+        click.echo(click.style(f"  En {len(receptor_rfc_no_encontrado)} Receptor RFC NO se encuentra", fg="yellow"))
         click.echo(click.style(f"  {', '.join(receptor_rfc_no_encontrado)}", fg="yellow"))
 
     # Si hubo errores en receptor_rfc_no_coincide, se muestran
     if len(receptor_rfc_no_coincide) > 0:
-        click.echo(click.style(f"  Hubo {len(receptor_rfc_no_coincide)} errores en receptor_rfc_no_coincide", fg="yellow"))
+        click.echo(click.style(f"  En {len(receptor_rfc_no_coincide)} Receptor RFC NO coincide", fg="yellow"))
         click.echo(click.style(f"  {', '.join(receptor_rfc_no_coincide)}", fg="yellow"))
 
     # Mostrar mensaje de termino
-    click.echo(f"  Se procesaron {contador} archivos XML.")
+    click.echo(click.style(f"  Se actualizaron {actualizaciones_contador} registros en Nominas.", fg="green"))
+    click.echo(click.style(f"  Se procesaron {procesados_contador} archivos XML.", fg="green"))
 
 
 cli.add_command(actualizar)
