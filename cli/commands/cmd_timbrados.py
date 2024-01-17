@@ -75,7 +75,13 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         click.echo(f"ERROR: No existe el directorio {timbrados_dir}")
         sys.exit(1)
 
-    # Inicializar contador
+    # Inicializar listas de errores
+    emisor_rfc_no_coincide = []
+    emisor_nombre_no_coincide = []
+    receptor_rfc_no_encontrado = []
+    receptor_rfc_no_coincide = []
+
+    # Inicializar contadores
     contador = 0
 
     # Recorrer los archivos con extension xml
@@ -138,6 +144,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             cfdi_comprobante_fecha = root.attrib["Fecha"]
             click.echo(click.style(f"    Fecha: {cfdi_comprobante_fecha}", fg="green"))
 
+        # Inicializar variables de los datos que se van a obtener
         cfdi_emisor_rfc = None
         cfdi_emisor_nombre = None
         cfdi_emisor_regimen_fiscal = None
@@ -196,26 +203,56 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                     tfd_sello_sat = element.attrib["SelloSAT"]
                     click.echo(click.style(f"      TFD Sello SAT: {tfd_sello_sat}", fg="green"))
 
-        # Si no se encontro el RFC, mostrar mensaje de error
+        # Si NO se encontro el Receptor RFC, se agrega a la lista de errores
         if cfdi_receptor_rfc is None:
-            click.echo(click.style("    ERROR: No se encontro el RFC", fg="red"))
+            receptor_rfc_no_encontrado.append(archivo_nombre)
+            continue
 
-        # Si el RFC no coincide con el nombre del archivo, mostrar mensaje de error
+        # Si el Receptor RFC no coincide con el RFC en el nombre del archivo, se agrega a la lista de errores
         if cfdi_receptor_rfc != rfc_en_nombre:
-            click.echo(click.style("    ERROR: El RFC del archivo no coincide", fg="red"))
+            receptor_rfc_no_coincide.append(archivo_nombre)
+            continue
 
-        # Mostrar lo que se encontro
-        click.echo(click.style(f"    RFC:         {rfc_en_nombre} == {cfdi_receptor_rfc}", fg="green"))
+        # Si el Emisor RFC no coincide con CFDI_EMISOR_RFC, se agrega a la lista de errores
+        if cfdi_emisor_rfc != CFDI_EMISOR_RFC:
+            emisor_rfc_no_coincide.append(archivo_nombre)
+            continue
+
+        # Si el Emisor Nombre no coincide con CFDI_EMISOR_NOMBRE, se agrega a la lista de errores
+        if cfdi_emisor_nombre != CFDI_EMISOR_NOMBRE:
+            emisor_nombre_no_coincide.append(archivo_nombre)
+            continue
+
+        # Si el Emisor Regimen Fiscal no coincide con CFDI_EMISOR_REGIMEN_FISCAL, se agrega a la lista de errores
+        if cfdi_emisor_regimen_fiscal != CFDI_EMISOR_REGIMEN_FISCAL:
+            emisor_nombre_no_coincide.append(archivo_nombre)
+            continue
 
         # Incrementar el contador
         contador += 1
 
-        # Cortar el bucle en 10 archivos
-        if contador == 10:
-            break
+    # Si hubo errores en emisor_rfc_no_coincide, se muestran
+    if len(emisor_rfc_no_coincide) > 0:
+        click.echo(click.style(f"  Hubo {len(emisor_rfc_no_coincide)} errores en emisor_rfc_no_coincide", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(emisor_rfc_no_coincide)}", fg="yellow"))
+
+    # Si hubo errores en emisor_nombre_no_coincide, se muestran
+    if len(emisor_nombre_no_coincide) > 0:
+        click.echo(click.style(f"  Hubo {len(emisor_nombre_no_coincide)} errores en emisor_nombre_no_coincide", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(emisor_nombre_no_coincide)}", fg="yellow"))
+
+    # Si hubo errores en receptor_rfc_no_encontrado, se muestran
+    if len(receptor_rfc_no_encontrado) > 0:
+        click.echo(click.style(f"  Hubo {len(receptor_rfc_no_encontrado)} errores en receptor_rfc_no_encontrado", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(receptor_rfc_no_encontrado)}", fg="yellow"))
+
+    # Si hubo errores en receptor_rfc_no_coincide, se muestran
+    if len(receptor_rfc_no_coincide) > 0:
+        click.echo(click.style(f"  Hubo {len(receptor_rfc_no_coincide)} errores en receptor_rfc_no_coincide", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(receptor_rfc_no_coincide)}", fg="yellow"))
 
     # Mostrar mensaje de termino
-    click.echo(f"  Se encontraron {contador} archivos XML.")
+    click.echo(f"  Se procesaron {contador} archivos XML.")
 
 
 cli.add_command(actualizar)
