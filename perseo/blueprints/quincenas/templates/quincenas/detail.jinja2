@@ -422,7 +422,20 @@
                                 <label for="filtroPersonaApellidoSegundo">Segundo apellido</label>
                             </div>
                         </div>
-                        <div class="col-4 text-end">
+                        <div class="col-2">
+                            <select id="filtroTipo" class="form-select" aria-label="Tipo">
+                                <option selected value="">Filtro Tipo</option>
+                                <option value="AGUINALDO">AGUINALDO</option>
+                                <option value="APOYO ANUAL">APOYO ANUAL</option>
+                                <option value="SALARIO">SALARIO</option>
+                            </select>
+                            <select id="filtroTimbrado" class="form-select" aria-label="Tipo">
+                                <option selected value="">Filtro TFD</option>
+                                <option value="1">TIMBRADOS</option>
+                                <option value="-1">NO TIMBRADOS</option>
+                            </select>
+                        </div>
+                        <div class="col-2 text-end">
                             <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
                             <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                         </div>
@@ -538,6 +551,8 @@
             filtrosNominas.agregarInput('filtroPersonaNombres', 'persona_nombres');
             filtrosNominas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');
             filtrosNominas.agregarInput('filtroPersonaApellidoSegundo', 'persona_apellido_segundo');
+            filtrosNominas.agregarSelect('filtroTipo', 'tipo');
+            filtrosNominas.agregarSelect('filtroTimbrado', 'tfd');
             filtrosNominas.precargar();
         </script>
     {% endif %}
