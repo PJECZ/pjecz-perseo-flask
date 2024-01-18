@@ -37,7 +37,7 @@ def cli():
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-@click.argument("tipo", type=str)
+@click.argument("tipo", type=str, default="SALARIO")
 @click.option("--subdir", type=str, default=None)
 def actualizar(quincena_clave: str, tipo: str, subdir: str):
     """Actualizar las nominas con los timbrados de una quincena"""
@@ -242,6 +242,8 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             .filter(Persona.rfc == cfdi_receptor_rfc)
             .filter(Quincena.clave == quincena_clave)
             .filter(Nomina.tipo == tipo)
+            .filter(Nomina.estatus == "A")
+            .order_by(Nomina.id.desc())
             .first()
         )
 
@@ -254,32 +256,32 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         hay_cambios = False
 
         # Si tfd_version es diferente, hay_cambios sera verdadero
-        if nomina.tfd_version != tfd_version:
+        if tfd_version is not None and nomina.tfd_version != tfd_version:
             nomina.tfd_version = tfd_version
             hay_cambios = True
 
         # Si tfd_uuid es diferente, hay_cambios sera verdadero
-        if nomina.tfd_uuid != tfd_uuid:
+        if tfd_uuid is not None and nomina.tfd_uuid != tfd_uuid:
             nomina.tfd_uuid = tfd_uuid
             hay_cambios = True
 
         # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
-        if nomina.tfd_fecha_timbrado != tfd_fecha_timbrado:
+        if tfd_fecha_timbrado is not None and nomina.tfd_fecha_timbrado != tfd_fecha_timbrado:
             nomina.tfd_fecha_timbrado = tfd_fecha_timbrado
             hay_cambios = True
 
         # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
-        if nomina.tfd_sello_cfd != tfd_sello_cfd:
+        if tfd_sello_cfd is not None and nomina.tfd_sello_cfd != tfd_sello_cfd:
             nomina.tfd_sello_cfd = tfd_sello_cfd
             hay_cambios = True
 
         # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
-        if nomina.tfd_num_cert_sat != tfd_num_cert_sat:
+        if tfd_num_cert_sat is not tfd_num_cert_sat and nomina.tfd_num_cert_sat != tfd_num_cert_sat:
             nomina.tfd_num_cert_sat = tfd_num_cert_sat
             hay_cambios = True
 
         # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
-        if nomina.tfd_sello_sat != tfd_sello_sat:
+        if tfd_sello_sat is not None and nomina.tfd_sello_sat != tfd_sello_sat:
             nomina.tfd_sello_sat = tfd_sello_sat
             hay_cambios = True
 
@@ -290,15 +292,11 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                 nomina.tfd = f.read()
 
             # Actualizar el registro en Nomina
-            database.session.add(nomina)
-            database.session.commit()
+            nomina.save()
             actualizaciones_contador += 1
 
         # Incrementar procesados_contador
         procesados_contador += 1
-
-    # Cerrar sesion con la base de datos
-    database.session.close()
 
     # Si hubo errores en emisor_rfc_no_coincide, se muestran
     if len(emisor_rfc_no_coincide) > 0:
