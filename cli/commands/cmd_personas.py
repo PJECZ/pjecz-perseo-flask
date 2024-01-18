@@ -47,7 +47,7 @@ def cli():
 @click.command()
 @click.option("--personas-csv", default=PERSONAS_CSV, help="Archivo CSV con los datos de las Personas")
 def actualizar(personas_csv: str):
-    """Actualizar los CP, CURP y/o NSS de las Personas en base a su RFC a partir de un archivo CSV"""
+    """Actualizar los Nombres, Apellido Primero, Apellido Segundo, CP, CURP y/o NSS de las Personas en base a su RFC a partir de un archivo CSV"""
 
     # Validar archivo
     ruta = Path(personas_csv)
@@ -79,6 +79,30 @@ def actualizar(personas_csv: str):
 
             # Bandera si hubo cambios
             hay_cambios = False
+
+            # Validar nombres
+            nombres = None
+            if "nombres" in row:
+                nombres = safe_string(row["nombres"], save_enie=True)
+                if persona.nombres != nombres:
+                    persona.nombres = nombres
+                    hay_cambios = True
+
+            # Validar apellido_primero
+            apellido_primero = None
+            if "apellido_primero" in row:
+                apellido_primero = safe_string(row["apellido_primero"], save_enie=True)
+                if persona.apellido_primero != apellido_primero:
+                    persona.apellido_primero = apellido_primero
+                    hay_cambios = True
+
+            # Validar apellido_segundo
+            apellido_segundo = None
+            if "apellido_segundo" in row:
+                apellido_segundo = safe_string(row["apellido_segundo"], save_enie=True)
+                if persona.apellido_segundo != apellido_segundo:
+                    persona.apellido_segundo = apellido_segundo
+                    hay_cambios = True
 
             # Validar el CP
             codigo_postal_fiscal = None
