@@ -445,6 +445,7 @@
                         <th style="text-align:right">Importe</th>
                         <th>No. Cheque</th>
                         <th>F. de Pago</th>
+                        <th>TFD</th>
                     </tr>
                 </thead>
             </table>
@@ -479,7 +480,8 @@
                 { data: 'deduccion' },
                 { data: 'importe' },
                 { data: 'num_cheque' },
-                { data: 'fecha_pago' }
+                { data: 'fecha_pago' },
+                { data: 'tfd' },
             ];
             configDTNominas['columnDefs'] = [
                 {
@@ -511,8 +513,25 @@
                     targets: [8, 9, 10], // percepcion, deduccion, importe
                     render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
                     className: "dt-body-right",
+                },
+                {
+                    targets: 13, // tfd
+                    render: function(data, type, row, meta) {
+                        if (data != '') {
+                            return '<a href="' + data + '" target="_blank"><span class="iconify" data-icon="mdi:download"></span></a>';
+                        }
+                        return '';
+                    }
                 }
             ];
+            configDTNominas['createdRow'] = function(row, data, dataIndex) {
+                if (data.num_cheque != '' && data.tfd == '') {
+                    $(row).addClass('table-info');
+                }
+                if (data.num_cheque != '' && data.tfd != '') {
+                    $(row).addClass('table-success');
+                }
+            };
             // Filtros Nominas
             const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
             filtrosNominas.agregarInput('filtroPersonaRFC', 'persona_rfc');

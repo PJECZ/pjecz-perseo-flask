@@ -101,6 +101,7 @@ def datatable_json():
                 "importe": resultado.importe,
                 "num_cheque": resultado.num_cheque,
                 "fecha_pago": resultado.fecha_pago.strftime("%Y-%m-%d"),
+                "tfd": url_for("nominas.download_tfd_xml", nomina_id=resultado.id) if resultado.tfd else "",
             }
         )
     # Entregar JSON
