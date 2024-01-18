@@ -90,16 +90,16 @@ def actualizar(personas_csv: str):
 
             # Validar apellido_primero
             apellido_primero = None
-            if "apellido_primero" in row:
-                apellido_primero = safe_string(row["apellido_primero"], save_enie=True)
+            if "apellido primero" in row:
+                apellido_primero = safe_string(row["apellido primero"], save_enie=True)
                 if persona.apellido_primero != apellido_primero:
                     persona.apellido_primero = apellido_primero
                     hay_cambios = True
 
             # Validar apellido_segundo
             apellido_segundo = None
-            if "apellido_segundo" in row:
-                apellido_segundo = safe_string(row["apellido_segundo"], save_enie=True)
+            if "apellido segundo" in row:
+                apellido_segundo = safe_string(row["apellido segundo"], save_enie=True)
                 if persona.apellido_segundo != apellido_segundo:
                     persona.apellido_segundo = apellido_segundo
                     hay_cambios = True
