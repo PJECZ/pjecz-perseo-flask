@@ -19,41 +19,60 @@
 {% endblock %}
 
 {% block content %}
-    {% call detail.card(estatus=nomina.estatus) %}
-        {{ detail.label_value_big('ID', nomina.id) }}
-        {% if current_user.can_view("QUINCENAS") %}
-            {{ detail.label_value('Quincena', nomina.quincena.clave, url_for('quincenas.detail', quincena_id=nomina.quincena_id)) }}
-        {% else %}
-            {{ detail.label_value('Quincena', nomina.quincena.clave) }}
-        {% endif %}
-        {% set persona_texto = nomina.persona.rfc + ' - ' + nomina.persona.nombre_completo %}
-        {% if current_user.can_view("PERSONAS") %}
-            {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=nomina.persona_id)) }}
-        {% else %}
-            {{ detail.label_value('Persona', persona_texto) }}
-        {% endif %}
-        {% set centro_trabajo_texto = nomina.centro_trabajo.clave + ' - ' + nomina.centro_trabajo.descripcion %}
-        {% if current_user.can_view("CENTROS TRABAJOS") %}
-            {{ detail.label_value('Centro de trabajo', centro_trabajo_texto, url_for('centros_trabajos.detail', centro_trabajo_id=nomina.centro_trabajo_id)) }}
-        {% else %}
-            {{ detail.label_value('Centro de trabajo', centro_trabajo_texto) }}
-        {% endif %}
-        {% set plaza_texto = nomina.plaza.clave + ' - ' + nomina.plaza.descripcion %}
-        {% if current_user.can_view("PLAZAS") %}
-            {{ detail.label_value('Plaza', plaza_texto, url_for('plazas.detail', plaza_id=nomina.plaza_id)) }}
-        {% else %}
-            {{ detail.label_value('Plaza', plaza_texto) }}
-        {% endif %}
-        {{ detail.label_value('Desde', nomina.desde_clave) }}
-        {{ detail.label_value('Hasta', nomina.hasta_clave) }}
-        {{ detail.label_value('Tipo', nomina.tipo) }}
-        {{ detail.label_value_currency('Percepción', nomina.percepcion) }}
-        {{ detail.label_value_currency('Deducción', nomina.deduccion) }}
-        {{ detail.label_value_currency('Importe', nomina.importe) }}
-        {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
-        {{ detail.label_value('Fecha de pago', moment(nomina.fecha_pago).format('DD MMM YYYY')) }}
-        {{ detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) }}
-    {% endcall %}
+    <div class="row">
+        <div class="col-md-6">
+            {% call detail.card(title='Registro', estatus=nomina.estatus) %}
+                {{ detail.label_value_big('ID', nomina.id) }}
+                {% if current_user.can_view("QUINCENAS") %}
+                    {{ detail.label_value('Quincena', nomina.quincena.clave, url_for('quincenas.detail', quincena_id=nomina.quincena_id)) }}
+                {% else %}
+                    {{ detail.label_value('Quincena', nomina.quincena.clave) }}
+                {% endif %}
+                {% set persona_texto = nomina.persona.rfc + ' - ' + nomina.persona.nombre_completo %}
+                {% if current_user.can_view("PERSONAS") %}
+                    {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=nomina.persona_id)) }}
+                {% else %}
+                    {{ detail.label_value('Persona', persona_texto) }}
+                {% endif %}
+                {% set centro_trabajo_texto = nomina.centro_trabajo.clave + ' - ' + nomina.centro_trabajo.descripcion %}
+                {% if current_user.can_view("CENTROS TRABAJOS") %}
+                    {{ detail.label_value('Centro de trabajo', centro_trabajo_texto, url_for('centros_trabajos.detail', centro_trabajo_id=nomina.centro_trabajo_id)) }}
+                {% else %}
+                    {{ detail.label_value('Centro de trabajo', centro_trabajo_texto) }}
+                {% endif %}
+                {% set plaza_texto = nomina.plaza.clave + ' - ' + nomina.plaza.descripcion %}
+                {% if current_user.can_view("PLAZAS") %}
+                    {{ detail.label_value('Plaza', plaza_texto, url_for('plazas.detail', plaza_id=nomina.plaza_id)) }}
+                {% else %}
+                    {{ detail.label_value('Plaza', plaza_texto) }}
+                {% endif %}
+                {{ detail.label_value('Desde', nomina.desde_clave) }}
+                {{ detail.label_value('Hasta', nomina.hasta_clave) }}
+                {{ detail.label_value('Tipo', nomina.tipo) }}
+                {{ detail.label_value_currency('Percepción', nomina.percepcion) }}
+                {{ detail.label_value_currency('Deducción', nomina.deduccion) }}
+                {{ detail.label_value_currency('Importe', nomina.importe) }}
+                {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
+                {{ detail.label_value('Fecha de pago', moment(nomina.fecha_pago).format('DD MMM YYYY')) }}
+                {# detail.label_value('Creado', moment(nomina.creado, local=True).format('DD MMM YYYY')) #}
+            {% endcall %}
+        </div>
+        <div class="col-md-6">
+            {% call detail.card(title='Timbrado') %}
+                {% if nomina.tfd %}
+                    {{ detail.label_value('TFD Version', nomina.tfd_version) }}
+                    {{ detail.label_value('TFD UUID', nomina.tfd_uuid) }}
+                    {{ detail.label_value('TFD Fecha Timbrado', nomina.tfd_fecha_timbrado) }}
+                    {{ detail.label_value('TFD Sello CFD', nomina.tfd_sello_cfd) }}
+                    {{ detail.label_value('TFD Num. Cert. SAT', nomina.tfd_num_cert_sat) }}
+                    {{ detail.label_value('TFD Sello SAT', nomina.tfd_sello_sat) }}
+                    {{ detail.button_md('Descargar XML', url_for('nominas.download_tfd_xml', nomina_id=nomina.id), 'mdi:download', '_blank') }}
+                {% else %}
+                    <p class="lead">No tiene timbrado.</p>
+                {% endif %}
+            {% endcall %}
+        </div>
+    </div>
 {% endblock %}
 
 {% block custom_javascript %}
