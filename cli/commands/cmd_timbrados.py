@@ -257,31 +257,42 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
         # Si tfd_version es diferente, hay_cambios sera verdadero
         if tfd_version is not None and nomina.tfd_version != tfd_version:
+            click.echo(click.style(f"    TFD Version: {nomina.tfd_version} != {tfd_version}", fg="yellow"))
             nomina.tfd_version = tfd_version
             hay_cambios = True
 
         # Si tfd_uuid es diferente, hay_cambios sera verdadero
         if tfd_uuid is not None and nomina.tfd_uuid != tfd_uuid:
+            click.echo(click.style(f"    TFD UUID: {nomina.tfd_uuid} != {tfd_uuid}", fg="yellow"))
             nomina.tfd_uuid = tfd_uuid
             hay_cambios = True
 
+        # Para comparar tfd_fecha_timbrado hay que convertir el datetime a string como 2024-01-17T14:19:16
+        tfd_fecha_timbrado_str = ""
+        if nomina.tfd_fecha_timbrado is not None:
+            tfd_fecha_timbrado_str = nomina.tfd_fecha_timbrado.strftime("%Y-%m-%dT%H:%M:%S")
+
         # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
-        if tfd_fecha_timbrado is not None and nomina.tfd_fecha_timbrado != tfd_fecha_timbrado:
+        if tfd_fecha_timbrado is not None and tfd_fecha_timbrado_str != tfd_fecha_timbrado:
+            click.echo(click.style(f"    TFD Fecha Timbrado: {tfd_fecha_timbrado_str} != {tfd_fecha_timbrado}", fg="yellow"))
             nomina.tfd_fecha_timbrado = tfd_fecha_timbrado
             hay_cambios = True
 
         # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
         if tfd_sello_cfd is not None and nomina.tfd_sello_cfd != tfd_sello_cfd:
+            click.echo(click.style(f"    TFD Sello CFD: {nomina.tfd_sello_cfd} != {tfd_sello_cfd}", fg="yellow"))
             nomina.tfd_sello_cfd = tfd_sello_cfd
             hay_cambios = True
 
         # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
         if tfd_num_cert_sat is not tfd_num_cert_sat and nomina.tfd_num_cert_sat != tfd_num_cert_sat:
+            click.echo(click.style(f"    TFD Num. Cert. SAT: {nomina.tfd_num_cert_sat} != {tfd_num_cert_sat}", fg="yellow"))
             nomina.tfd_num_cert_sat = tfd_num_cert_sat
             hay_cambios = True
 
         # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
         if tfd_sello_sat is not None and nomina.tfd_sello_sat != tfd_sello_sat:
+            click.echo(click.style(f"    TFD Sello SAT: {nomina.tfd_sello_sat} != {tfd_sello_sat}", fg="yellow"))
             nomina.tfd_sello_sat = tfd_sello_sat
             hay_cambios = True
 
