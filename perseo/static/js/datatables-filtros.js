@@ -24,6 +24,18 @@ class FiltrosDataTable {
     this.inputs.push(input);
   }
 
+  // Agregar un campo select para su procesamiento
+  agregarSelect(elementById, dataName) {
+    let select = {
+      object: NaN,
+      data_name: "",
+      value: "",
+    };
+    select.object = document.getElementById(elementById);
+    select.data_name = dataName;
+    this.inputs.push(select);
+  }
+
   // Agregar un valor constante
   agregarConstante(dataName, value) {
     let input = {

@@ -49,6 +49,12 @@ def datatable_json():
         consulta = consulta.filter_by(plaza_id=request.form["plaza_id"])
     if "quincena_id" in request.form:
         consulta = consulta.filter_by(quincena_id=request.form["quincena_id"])
+    if "tipo" in request.form and request.form["tipo"] != "":
+        consulta = consulta.filter_by(tipo=request.form["tipo"])
+    if "tfd" in request.form and request.form["tfd"] == "1":
+        consulta = consulta.filter(Nomina.tfd != None)
+    if "tfd" in request.form and request.form["tfd"] == "-1":
+        consulta = consulta.filter(Nomina.tfd == None)
     # Luego filtrar por columnas de otras tablas
     if "quincena_clave" in request.form:
         try:
