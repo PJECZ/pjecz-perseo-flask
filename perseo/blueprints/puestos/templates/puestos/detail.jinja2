@@ -8,13 +8,13 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Puesto ' + puesto.clave) %}
         {{ topbar.button_previous('Puestos', url_for('puestos.list_active')) }}
-        {# if current_user.can_edit('PUESTOS') %}
+        {% if current_user.can_edit('PUESTOS') %}
             {{ topbar.button_edit('Editar', url_for('puestos.edit', puesto_id=puesto.id)) }}
         {% endif %}
         {% if current_user.can_admin('PUESTOS') %}
             {% if puesto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('puestos.delete', puesto_id=puesto.id)) }}{% endif %}
             {% if puesto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('puestos.recover', puesto_id=puesto.id)) }}{% endif %}
-        {% endif #}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 

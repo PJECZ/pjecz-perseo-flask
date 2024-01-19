@@ -106,22 +106,23 @@ def new():
         # Validar que la clave no se repita
         clave = safe_clave(form.clave.data)
         if CentroTrabajo.query.filter_by(clave=clave).first():
-            flash(safe_message(f"La clave {clave} ya está en uso. Debe de ser única."), "warning")
-        else:
-            centro_trabajo = CentroTrabajo(
-                clave=clave,
-                descripcion=safe_string(form.descripcion.data, save_enie=True),
-            )
-            centro_trabajo.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Nuevo Centro de Trabajo {centro_trabajo.clave}"),
-                url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
+            flash("La clave ya está en uso. Debe de ser única.", "warning")
+            return render_template("centros_trabajos/new.jinja2", form=form)
+        # Guardar
+        centro_trabajo = CentroTrabajo(
+            clave=clave,
+            descripcion=safe_string(form.descripcion.data, save_enie=True),
+        )
+        centro_trabajo.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Centro de Trabajo {centro_trabajo.clave}"),
+            url=url_for("centros_trabajos.detail", centro_trabajo_id=centro_trabajo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
     return render_template("centros_trabajos/new.jinja2", form=form)
 
 

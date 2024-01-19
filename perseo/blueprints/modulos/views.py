@@ -95,25 +95,26 @@ def new():
         # Validar que el nombre no se repita
         nombre = safe_string(form.nombre.data, save_enie=True)
         if Modulo.query.filter_by(nombre=nombre).first():
-            flash("La nombre ya está en uso. Debe de ser único.", "warning")
-        else:
-            modulo = Modulo(
-                nombre=nombre,
-                nombre_corto=safe_string(form.nombre_corto.data, do_unidecode=False, to_uppercase=False, save_enie=True),
-                icono=form.icono.data,
-                ruta=form.ruta.data,
-                en_navegacion=form.en_navegacion.data,
-            )
-            modulo.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Nuevo Modulo {modulo.nombre}"),
-                url=url_for("modulos.detail", modulo_id=modulo.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
+            flash("El nombre ya está en uso. Debe de ser único.", "warning")
+            return render_template("modulos/new.jinja2", form=form)
+        # Guardar
+        modulo = Modulo(
+            nombre=nombre,
+            nombre_corto=safe_string(form.nombre_corto.data, do_unidecode=False, to_uppercase=False, save_enie=True),
+            icono=form.icono.data,
+            ruta=form.ruta.data,
+            en_navegacion=form.en_navegacion.data,
+        )
+        modulo.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Modulo {modulo.nombre}"),
+            url=url_for("modulos.detail", modulo_id=modulo.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
     return render_template("modulos/new.jinja2", form=form)
 
 

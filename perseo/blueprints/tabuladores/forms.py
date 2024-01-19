@@ -2,19 +2,48 @@
 Tabuladores, formularios
 """
 from flask_wtf import FlaskForm
-from wtforms import DateField, DecimalField, IntegerField, SelectField, SubmitField
+from wtforms import DateField, DecimalField, RadioField, SelectField, SubmitField
 from wtforms.validators import DataRequired
 
 from perseo.blueprints.puestos.models import Puesto
+
+MODELOS = [
+    (1, "1) CONFIANZA"),
+    (2, "2) SINDICALIZADO"),
+    (3, "3) JUBILADO"),
+]
+
+NIVELES = [
+    (0, "0) SIN NIVEL"),
+    (1, "1) NIVEL 1"),
+    (2, "2) NIVEL 2"),
+    (3, "3) NIVEL 3"),
+    (4, "4) NIVEL 4"),
+    (5, "5) NIVEL 5"),
+    (6, "6) NIVEL 6"),
+    (7, "7) NIVEL 7"),
+    (8, "8) NIVEL 8"),
+    (9, "9) NIVEL 9"),
+]
+
+QUINQUENIOS = [
+    (0, "0) SIN QUINQUENIO"),
+    (1, "1) 1° QUINQUENIO"),
+    (2, "2) 2° QUINQUENIO"),
+    (3, "3) 3° QUINQUENIO"),
+    (4, "4) 4° QUINQUENIO"),
+    (5, "5) 5° QUINQUENIO"),
+    (6, "6) 6° QUINQUENIO"),
+]
 
 
 class TabuladorForm(FlaskForm):
     """Formulario Tabulador"""
 
     puesto = SelectField("Puesto", coerce=int, validators=[DataRequired()])
-    modelo = IntegerField("Modelo", validators=[DataRequired()])
-    nivel = IntegerField("Nivel", validators=[DataRequired()])
-    quinquenio = IntegerField("Quinquenio", validators=[DataRequired()])
+    modelo = SelectField("Modelo", validators=[DataRequired()], choices=MODELOS, coerce=int)
+    nivel = SelectField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
+    quinquenio = SelectField("Quinquenio", validators=[DataRequired()], choices=QUINQUENIOS, coerce=int)
     fecha = DateField("Fecha", validators=[DataRequired()])
     sueldo_base = DecimalField("Sueldo base", validators=[DataRequired()], default=0.0)
     incentivo = DecimalField("Incentivo", validators=[DataRequired()], default=0.0)
@@ -32,6 +61,9 @@ class TabuladorForm(FlaskForm):
     prima_vacacional_mensual_adicional = DecimalField("Prima vacacional men. adic.", validators=[DataRequired()], default=0.0)
     total_percepciones_integrado = DecimalField("Total percepciones integrado", validators=[DataRequired()], default=0.0)
     salario_diario_integrado = DecimalField("Salario diario integrado", validators=[DataRequired()], default=0.0)
+    pension_vitalicia_excento = DecimalField("Pensión vitalicia excento", validators=[DataRequired()], default=0.0)
+    pension_vitalicia_gravable = DecimalField("Pensión vitalicia gravable", validators=[DataRequired()], default=0.0)
+    pension_bonificacion = DecimalField("Pensión bonificación", validators=[DataRequired()], default=0.0)
     guardar = SubmitField("Guardar")
 
     def __init__(self, *args, **kwargs):

@@ -12,6 +12,7 @@ from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.puestos.models import Puesto
+from perseo.blueprints.tabuladores.forms import TabuladorForm
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -112,3 +113,188 @@ def detail(tabulador_id):
     """Detalle de un Tabulador"""
     tabulador = Tabulador.query.get_or_404(tabulador_id)
     return render_template("tabuladores/detail.jinja2", tabulador=tabulador)
+
+
+@tabuladores.route("/tabuladores/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Tabulador"""
+    form = TabuladorForm()
+    if form.validate_on_submit():
+        # Inicializar es_valido
+        es_valido = True
+        # Validar que solo modelo 2 tenga quinquenio mayor a cero
+        if form.modelo.data != 2 and form.quinquenio.data > 0:
+            flash("Solo el modelo 2) SINDICALIZADO puede tener quinquenio mayor a cero.", "warning")
+            es_valido = False
+        # Validar que puesto_id, modelo, nivel y quinquenio no se repitan
+        tabulador_existente = Tabulador.query.filter_by(
+            puesto=form.puesto.data,
+            modelo=form.modelo.data,
+            nivel=form.nivel.data,
+            quinquenio=form.quinquenio.data,
+        ).first()
+        if tabulador_existente:
+            flash("El Tabulador ya existe.", "warning")
+            es_valido = False
+        # Si es valido, guardar
+        if es_valido:
+            tabulador = Tabulador(
+                puesto=form.puesto.data,
+                modelo=form.modelo.data,
+                nivel=form.nivel.data,
+                quinquenio=form.quinquenio.data,
+                fecha=form.fecha.data,
+                sueldo_base=form.sueldo_base.data,
+                incentivo=form.incentivo.data,
+                monedero=form.monedero.data,
+                rec_cul_dep=form.rec_cul_dep.data,
+                sobresueldo=form.sobresueldo.data,
+                rec_dep_cul_gravado=form.rec_dep_cul_gravado.data,
+                rec_dep_cul_excento=form.rec_dep_cul_excento.data,
+                ayuda_transp=form.ayuda_transp.data,
+                monto_quinquenio=form.monto_quinquenio.data,
+                total_percepciones=form.total_percepciones.data,
+                salario_diario=form.salario_diario.data,
+                prima_vacacional_mensual=form.prima_vacacional_mensual.data,
+                aguinaldo_mensual=form.aguinaldo_mensual.data,
+                prima_vacacional_mensual_adicional=form.prima_vacacional_mensual_adicional.data,
+                total_percepciones_integrado=form.total_percepciones_integrado.data,
+                salario_diario_integrado=form.salario_diario_integrado.data,
+                pension_vitalicia_excento=form.pension_vitalicia_excento.data,
+                pension_vitalicia_gravable=form.pension_vitalicia_gravable.data,
+                pension_bonificacion=form.pension_bonificacion.data,
+            )
+            tabulador.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Nuevo Tabulador {tabulador.puesto_id}"),
+                url=url_for("tabuladores.detail", tabulador_id=tabulador.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    return render_template("tabuladores/new.jinja2", form=form)
+
+
+@tabuladores.route("/tabuladores/edicion/<int:tabulador_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(tabulador_id):
+    """Editar Tabulador"""
+    tabulador = Tabulador.query.get_or_404(tabulador_id)
+    form = TabuladorForm()
+    if form.validate_on_submit():
+        # Inicializar es_valido
+        es_valido = True
+        # Validar que solo el modelo 2 tenga quinquenio mayor a cero
+        if form.modelo.data != 2 and form.quinquenio.data > 0:
+            flash("Solo el modelo 2) SINDICALIZADO puede tener quinquenio mayor a cero.", "warning")
+            es_valido = False
+        # Validar que puesto_id, modelo, nivel y quinquenio no se repitan
+        tabulador_existente = Tabulador.query.filter_by(
+            puesto=form.puesto.data,
+            modelo=form.modelo.data,
+            nivel=form.nivel.data,
+            quinquenio=form.quinquenio.data,
+        ).first()
+        if tabulador_existente and tabulador_existente.id != tabulador.id:
+            flash("El Tabulador ya existe.", "warning")
+            es_valido = False
+        # Si es valido, guardar
+        if es_valido:
+            tabulador.puesto = form.puesto.data
+            tabulador.modelo = form.modelo.data
+            tabulador.nivel = form.nivel.data
+            tabulador.quinquenio = form.quinquenio.data
+            tabulador.fecha = form.fecha.data
+            tabulador.sueldo_base = form.sueldo_base.data
+            tabulador.incentivo = form.incentivo.data
+            tabulador.monedero = form.monedero.data
+            tabulador.rec_cul_dep = form.rec_cul_dep.data
+            tabulador.sobresueldo = form.sobresueldo.data
+            tabulador.rec_dep_cul_gravado = form.rec_dep_cul_gravado.data
+            tabulador.rec_dep_cul_excento = form.rec_dep_cul_excento.data
+            tabulador.ayuda_transp = form.ayuda_transp.data
+            tabulador.monto_quinquenio = form.monto_quinquenio.data
+            tabulador.total_percepciones = form.total_percepciones.data
+            tabulador.salario_diario = form.salario_diario.data
+            tabulador.prima_vacacional_mensual = form.prima_vacacional_mensual.data
+            tabulador.aguinaldo_mensual = form.aguinaldo_mensual.data
+            tabulador.prima_vacacional_mensual_adicional = form.prima_vacacional_mensual_adicional.data
+            tabulador.total_percepciones_integrado = form.total_percepciones_integrado.data
+            tabulador.salario_diario_integrado = form.salario_diario_integrado.data
+            tabulador.pension_vitalicia_excento = form.pension_vitalicia_excento.data
+            tabulador.pension_vitalicia_gravable = form.pension_vitalicia_gravable.data
+            tabulador.pension_bonificacion = form.pension_bonificacion.data
+            tabulador.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Tabulador {tabulador.puesto}"),
+                url=url_for("tabuladores.detail", tabulador_id=tabulador.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.puesto.data = tabulador.puesto
+    form.modelo.data = tabulador.modelo
+    form.nivel.data = tabulador.nivel
+    form.quinquenio.data = tabulador.quinquenio
+    form.fecha.data = tabulador.fecha
+    form.sueldo_base.data = tabulador.sueldo_base
+    form.incentivo.data = tabulador.incentivo
+    form.monedero.data = tabulador.monedero
+    form.rec_cul_dep.data = tabulador.rec_cul_dep
+    form.sobresueldo.data = tabulador.sobresueldo
+    form.rec_dep_cul_gravado.data = tabulador.rec_dep_cul_gravado
+    form.rec_dep_cul_excento.data = tabulador.rec_dep_cul_excento
+    form.ayuda_transp.data = tabulador.ayuda_transp
+    form.monto_quinquenio.data = tabulador.monto_quinquenio
+    form.total_percepciones.data = tabulador.total_percepciones
+    form.salario_diario.data = tabulador.salario_diario
+    form.prima_vacacional_mensual.data = tabulador.prima_vacacional_mensual
+    form.aguinaldo_mensual.data = tabulador.aguinaldo_mensual
+    form.prima_vacacional_mensual_adicional.data = tabulador.prima_vacacional_mensual_adicional
+    form.total_percepciones_integrado.data = tabulador.total_percepciones_integrado
+    form.salario_diario_integrado.data = tabulador.salario_diario_integrado
+    form.pension_vitalicia_excento.data = tabulador.pension_vitalicia_excento
+    form.pension_vitalicia_gravable.data = tabulador.pension_vitalicia_gravable
+    form.pension_bonificacion.data = tabulador.pension_bonificacion
+    return render_template("tabuladores/edit.jinja2", form=form, tabulador=tabulador)
+
+
+@tabuladores.route("/tabuladores/eliminar/<int:tabulador_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(tabulador_id):
+    """Eliminar Tabulador"""
+    tabulador = Tabulador.query.get_or_404(tabulador_id)
+    if tabulador.estatus == "A":
+        tabulador.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Tabulador {tabulador.id}"),
+            url=url_for("tabuladores.detail", tabulador_id=tabulador.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("tabuladores.detail", tabulador_id=tabulador.id))
+
+
+@tabuladores.route("/tabuladores/recuperar/<int:tabulador_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(tabulador_id):
+    """Recuperar Tabulador"""
+    tabulador = Tabulador.query.get_or_404(tabulador_id)
+    if tabulador.estatus == "B":
+        tabulador.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Tabulador {tabulador.id}"),
+            url=url_for("tabuladores.detail", tabulador_id=tabulador.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("tabuladores.detail", tabulador_id=tabulador.id))
