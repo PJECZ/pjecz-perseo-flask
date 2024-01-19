@@ -13,6 +13,8 @@ from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.forms import PersonaForm
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.puestos.models import Puesto
+from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "PERSONAS"
@@ -121,6 +123,17 @@ def new():
     """Nueva Persona"""
     form = PersonaForm()
     if form.validate_on_submit():
+        # Consultar el Puesto con clave ND
+        puesto = Puesto.query.filter_by(clave="ND").first()
+        if not puesto:
+            flash(safe_message("No existe un puesto con clave ND."), "warning")
+            return redirect(url_for("personas.new"))
+        # Consultar el Tabulador unico que debe tener el puesto con clave ND
+        tabulador = Tabulador.query.filter_by(puesto_id=puesto.id).first()
+        if not tabulador:
+            flash(safe_message("No existe un tabulador con clave ND."), "warning")
+            return redirect(url_for("personas.new"))
+        # Inicializar es_valido
         es_valido = True
         # Validar el RFC
         try:
@@ -157,6 +170,7 @@ def new():
                 nacimiento_fecha=form.nacimiento_fecha.data,
                 codigo_postal_fiscal=form.codigo_postal_fiscal.data,
                 seguridad_social=form.seguridad_social.data,
+                tabulador=tabulador,
             )
             persona.save()
             bitacora = Bitacora(
