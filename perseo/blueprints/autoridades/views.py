@@ -115,25 +115,26 @@ def new():
         clave = safe_clave(form.clave.data)
         if Autoridad.query.filter_by(clave=clave).first():
             flash("La clave ya está en uso. Debe de ser única.", "warning")
-        else:
-            distrito = Distrito.query.get_or_404(form.distrito.data)
-            autoridad = Autoridad(
-                distrito=distrito,
-                clave=clave,
-                descripcion=safe_string(form.descripcion.data, save_enie=True),
-                descripcion_corta=safe_string(form.descripcion_corta.data, save_enie=True),
-                es_extinto=form.es_extinto.data,
-            )
-            autoridad.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Nueva Autoridad {autoridad.clave}"),
-                url=url_for("autoridades.detail", autoridad_id=autoridad.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
+            return render_template("autoridades/new.jinja2", form=form)
+        # Guardar
+        distrito = Distrito.query.get_or_404(form.distrito.data)
+        autoridad = Autoridad(
+            distrito=distrito,
+            clave=clave,
+            descripcion=safe_string(form.descripcion.data, save_enie=True),
+            descripcion_corta=safe_string(form.descripcion_corta.data, save_enie=True),
+            es_extinto=form.es_extinto.data,
+        )
+        autoridad.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nueva Autoridad {autoridad.clave}"),
+            url=url_for("autoridades.detail", autoridad_id=autoridad.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
     return render_template("autoridades/new.jinja2", form=form)
 
 

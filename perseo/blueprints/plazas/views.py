@@ -106,22 +106,23 @@ def new():
         # Validar que la clave no se repita
         clave = safe_clave(form.clave.data, max_len=24)
         if Plaza.query.filter_by(clave=clave).first():
-            form.clave.errors.append("Clave repetida")
-        else:
-            plaza = Plaza(
-                clave=clave,
-                descripcion=safe_string(form.descripcion.data, save_enie=True),
-            )
-            plaza.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Nuevo Plaza {plaza.clave}"),
-                url=url_for("plazas.detail", plaza_id=plaza.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
+            flash("La clave ya está en uso. Debe de ser única.", "warning")
+            return render_template("plazas/new.jinja2", form=form)
+        # Guadar
+        plaza = Plaza(
+            clave=clave,
+            descripcion=safe_string(form.descripcion.data, save_enie=True),
+        )
+        plaza.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Plaza {plaza.clave}"),
+            url=url_for("plazas.detail", plaza_id=plaza.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
     return render_template("plazas/new.jinja2", form=form)
 
 

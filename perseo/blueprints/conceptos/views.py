@@ -106,22 +106,23 @@ def new():
         # Validar que la clave no se repita
         clave = safe_clave(form.clave.data)
         if Concepto.query.filter_by(clave=clave).first():
-            flash(safe_message(f"La clave {clave} ya está en uso. Debe de ser única."), "warning")
-        else:
-            concepto = Concepto(
-                clave=clave,
-                descripcion=safe_string(form.descripcion.data, save_enie=True),
-            )
-            concepto.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Nuevo Concepto {concepto.clave}"),
-                url=url_for("conceptos.detail", concepto_id=concepto.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
+            flash("La clave ya está en uso. Debe de ser única.", "warning")
+            return render_template("conceptos/new.jinja2", form=form)
+        # Guardar
+        concepto = Concepto(
+            clave=clave,
+            descripcion=safe_string(form.descripcion.data, save_enie=True),
+        )
+        concepto.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Concepto {concepto.clave}"),
+            url=url_for("conceptos.detail", concepto_id=concepto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
     return render_template("conceptos/new.jinja2", form=form)
 
 

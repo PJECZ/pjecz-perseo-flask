@@ -11,6 +11,7 @@ from lib.safe_string import safe_clave, safe_message, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
+from perseo.blueprints.puestos.forms import PuestoForm
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -94,3 +95,102 @@ def detail(puesto_id):
     """Detalle de un Puesto"""
     puesto = Puesto.query.get_or_404(puesto_id)
     return render_template("puestos/detail.jinja2", puesto=puesto)
+
+
+@puestos.route("/puestos/nuevo", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.CREAR)
+def new():
+    """Nuevo Puesto"""
+    form = PuestoForm()
+    if form.validate_on_submit():
+        # Validar que la clave no se repita
+        clave = safe_clave(form.clave.data, max_len=16)
+        if Puesto.query.filter_by(clave=clave).first():
+            flash("La clave ya está en uso. Debe de ser única.", "warning")
+            return render_template("puestos/new.jinja2", form=form)
+        # Guardar
+        puesto = Puesto(
+            clave=clave,
+            descripcion=safe_string(form.descripcion.data, save_enie=True),
+        )
+        puesto.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Puesto {puesto.clave}"),
+            url=url_for("puestos.detail", puesto_id=puesto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    return render_template("puestos/new.jinja2", form=form)
+
+
+@puestos.route("/puestos/edicion/<int:puesto_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(puesto_id):
+    """Editar Puesto"""
+    puesto = Puesto.query.get_or_404(puesto_id)
+    form = PuestoForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data, max_len=24)
+        if puesto.clave != clave:
+            puesto_existente = Puesto.query.filter_by(clave=clave).first()
+            if puesto_existente and puesto_existente.id != puesto.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
+        # Si es valido actualizar
+        if es_valido:
+            puesto.clave = clave
+            puesto.descripcion = safe_string(form.descripcion.data, save_enie=True)
+            puesto.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Puesto {puesto.clave}"),
+                url=url_for("puestos.detail", puesto_id=puesto.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            return redirect(bitacora.url)
+    form.clave.data = puesto.clave
+    form.descripcion.data = puesto.descripcion
+    return render_template("puestos/edit.jinja2", form=form, puesto=puesto)
+
+
+@puestos.route("/puestos/eliminar/<int:puesto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(puesto_id):
+    """Eliminar Puesto"""
+    puesto = Puesto.query.get_or_404(puesto_id)
+    if puesto.estatus == "A":
+        puesto.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Puesto {puesto.clave}"),
+            url=url_for("puestos.detail", puesto_id=puesto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("puestos.detail", puesto_id=puesto.id))
+
+
+@puestos.route("/puestos/recuperar/<int:puesto_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(puesto_id):
+    """Recuperar Puesto"""
+    puesto = Puesto.query.get_or_404(puesto_id)
+    if puesto.estatus == "B":
+        puesto.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Puesto {puesto.clave}"),
+            url=url_for("puestos.detail", puesto_id=puesto.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("puestos.detail", puesto_id=puesto.id))

@@ -94,19 +94,20 @@ def new():
         # Validar que el nombre no se repita
         nombre = safe_string(form.nombre.data, save_enie=True)
         if Rol.query.filter_by(nombre=nombre).first():
-            flash("La nombre ya está en uso. Debe de ser único.", "warning")
-        else:
-            rol = Rol(nombre=nombre)
-            rol.save()
-            bitacora = Bitacora(
-                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
-                usuario=current_user,
-                descripcion=safe_message(f"Nuevo Rol {rol.nombre}"),
-                url=url_for("roles.detail", rol_id=rol.id),
-            )
-            bitacora.save()
-            flash(bitacora.descripcion, "success")
-            return redirect(bitacora.url)
+            flash("El nombre ya está en uso. Debe de ser único.", "warning")
+            return render_template("roles/new.jinja2", form=form)
+        # Guardar
+        rol = Rol(nombre=nombre)
+        rol.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nuevo Rol {rol.nombre}"),
+            url=url_for("roles.detail", rol_id=rol.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
     return render_template("roles/new.jinja2", form=form)
 
 
