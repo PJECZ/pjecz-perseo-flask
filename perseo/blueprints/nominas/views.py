@@ -108,7 +108,7 @@ def datatable_json():
                 "num_cheque": resultado.num_cheque,
                 "fecha_pago": resultado.fecha_pago.strftime("%Y-%m-%d"),
                 "timbrado_descargar_tfd_xml": url_for("timbrados.download_tfd_xml", timbrado_id=resultado.timbrado_id)
-                if resultado.timbrado_id
+                if resultado.timbrado_id is not None
                 else "",
             }
         )
