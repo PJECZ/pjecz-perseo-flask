@@ -14,6 +14,7 @@ from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.quincenas.models import Quincena
+from perseo.blueprints.timbrados.models import Timbrado
 from perseo.extensions import database
 
 XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
@@ -87,7 +88,8 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     nomina_no_encontrada = []
 
     # Inicializar contadores
-    actualizaciones_contador = 0
+    actualizados_contador = 0
+    agregados_contador = 0
     procesados_contador = 0
 
     # Recorrer los archivos con extension xml
@@ -108,7 +110,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
         # Estructura del CFDI version 4.0
         # - cfdi:Comprobante [xmlns:xsi, xmlns:nomina12, xmlns:cfdi, Version, Serie, Folio, Fecha, SubTotal, Descuento, Moneda,
-        #     Total, TipoDeComprobante, Exportacion, MetodoPago, LugarExpedicion, Sello, Certificado]
+        #     Total, TipoDeComprobante, Exportacion, MetodoPago, LugarExpedicion, Sello, Certificado, NoCertificado]
         #   - cfdi:Emisor [Rfc, Nombre, RegimenFiscal]
         #   - cfdi:Receptor [Rfc, Nombre, DomicilioFiscalReceptor, RegimenFiscalReceptor, UsoCFDI]
         #   - cfdi:Conceptos
@@ -122,6 +124,8 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         #       - nomina12:Receptor [Curp, NumSeguridadSocial, FechaInicioRelLaboral, Antigüedad, TipoContrato, Sindicalizado,
         #           TipoJornada, TipoRegimen, NumEmpleado, Departamento, Puesto, RiesgoPuesto, PeriodicidadPago, Banco,
         #           CuentaBancaria, SalarioBaseCotApor, SalarioDiarioIntegrado, ClaveEntFed]
+        #       - nomina12:Percepciones [TotalSueldos, TotalGravado, TotalExento]
+        #         - nomina12:Percepcion [TipoPercepcion, Clave, Concepto, ImporteGravado, ImporteExento]
         #       - nomina12:Deducciones [TotalOtrasDeducciones]
         #         - nomina12:Deduccion [TipoDeduccion, Clave, Concepto, Importe]
         #       - nomina12:OtrosPagos
@@ -255,56 +259,75 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         # Inicializar bandera hay_cambios
         hay_cambios = False
 
+        # Puede existir el registro de Timbrado
+        timbrado = Timbrado.query.filter(Timbrado.nomina_id == nomina.id).order_by(Timbrado.id.desc()).first()
+
+        # Si NO existe el registro de Timbrado, se crea
+        es_nuevo = False
+        if timbrado is None:
+            timbrado = Timbrado(nomina_id=nomina.id, estado="TIMBRADO")
+            es_nuevo = True
+            hay_cambios = True
+
         # Si tfd_version es diferente, hay_cambios sera verdadero
-        if tfd_version is not None and nomina.tfd_version != tfd_version:
-            click.echo(click.style(f"    TFD Version: {nomina.tfd_version} != {tfd_version}", fg="yellow"))
-            nomina.tfd_version = tfd_version
+        if tfd_version is not None and timbrado.tfd_version != tfd_version:
+            click.echo(click.style(f"    TFD Version: {timbrado.tfd_version} != {tfd_version}", fg="yellow"))
+            timbrado.tfd_version = tfd_version
             hay_cambios = True
 
         # Si tfd_uuid es diferente, hay_cambios sera verdadero
-        if tfd_uuid is not None and nomina.tfd_uuid != tfd_uuid:
-            click.echo(click.style(f"    TFD UUID: {nomina.tfd_uuid} != {tfd_uuid}", fg="yellow"))
-            nomina.tfd_uuid = tfd_uuid
+        if tfd_uuid is not None and timbrado.tfd_uuid != tfd_uuid:
+            click.echo(click.style(f"    TFD UUID: {timbrado.tfd_uuid} != {tfd_uuid}", fg="yellow"))
+            timbrado.tfd_uuid = tfd_uuid
             hay_cambios = True
 
         # Para comparar tfd_fecha_timbrado hay que convertir el datetime a string como 2024-01-17T14:19:16
         tfd_fecha_timbrado_str = ""
-        if nomina.tfd_fecha_timbrado is not None:
-            tfd_fecha_timbrado_str = nomina.tfd_fecha_timbrado.strftime("%Y-%m-%dT%H:%M:%S")
+        if timbrado.tfd_fecha_timbrado is not None:
+            tfd_fecha_timbrado_str = timbrado.tfd_fecha_timbrado.strftime("%Y-%m-%dT%H:%M:%S")
 
         # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
         if tfd_fecha_timbrado is not None and tfd_fecha_timbrado_str != tfd_fecha_timbrado:
             click.echo(click.style(f"    TFD Fecha Timbrado: {tfd_fecha_timbrado_str} != {tfd_fecha_timbrado}", fg="yellow"))
-            nomina.tfd_fecha_timbrado = tfd_fecha_timbrado
+            timbrado.tfd_fecha_timbrado = tfd_fecha_timbrado
             hay_cambios = True
 
         # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
-        if tfd_sello_cfd is not None and nomina.tfd_sello_cfd != tfd_sello_cfd:
-            click.echo(click.style(f"    TFD Sello CFD: {nomina.tfd_sello_cfd} != {tfd_sello_cfd}", fg="yellow"))
-            nomina.tfd_sello_cfd = tfd_sello_cfd
+        if tfd_sello_cfd is not None and timbrado.tfd_sello_cfd != tfd_sello_cfd:
+            click.echo(click.style(f"    TFD Sello CFD: {timbrado.tfd_sello_cfd} != {tfd_sello_cfd}", fg="yellow"))
+            timbrado.tfd_sello_cfd = tfd_sello_cfd
             hay_cambios = True
 
         # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
-        if tfd_num_cert_sat is not tfd_num_cert_sat and nomina.tfd_num_cert_sat != tfd_num_cert_sat:
-            click.echo(click.style(f"    TFD Num. Cert. SAT: {nomina.tfd_num_cert_sat} != {tfd_num_cert_sat}", fg="yellow"))
-            nomina.tfd_num_cert_sat = tfd_num_cert_sat
+        if tfd_num_cert_sat is not None and timbrado.tfd_num_cert_sat != tfd_num_cert_sat:
+            click.echo(click.style(f"    TFD Num. Cert. SAT: {timbrado.tfd_num_cert_sat} != {tfd_num_cert_sat}", fg="yellow"))
+            timbrado.tfd_num_cert_sat = tfd_num_cert_sat
             hay_cambios = True
 
         # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
-        if tfd_sello_sat is not None and nomina.tfd_sello_sat != tfd_sello_sat:
-            click.echo(click.style(f"    TFD Sello SAT: {nomina.tfd_sello_sat} != {tfd_sello_sat}", fg="yellow"))
-            nomina.tfd_sello_sat = tfd_sello_sat
+        if tfd_sello_sat is not None and timbrado.tfd_sello_sat != tfd_sello_sat:
+            click.echo(click.style(f"    TFD Sello SAT: {timbrado.tfd_sello_sat} != {tfd_sello_sat}", fg="yellow"))
+            timbrado.tfd_sello_sat = tfd_sello_sat
             hay_cambios = True
 
-        # Si hay_cambios, cargar el contenido XML y actualizar el registro en Nomina
+        # Si hay_cambios
         if hay_cambios:
             # Cargar el contenido XML
             with open(archivo_xml, "r", encoding="utf8") as f:
-                nomina.tfd = f.read()
+                timbrado.tfd = f.read()
 
-            # Actualizar el registro en Nomina
+            # Guardar timbrado
+            timbrado.save()
+
+            # Actualizar nomina con el ID del timbrado
+            nomina.timbrado_id = timbrado.id
             nomina.save()
-            actualizaciones_contador += 1
+
+            # Si es_nuevo, incrementar agregados_contador
+            if es_nuevo:
+                agregados_contador += 1
+            else:
+                actualizados_contador += 1
 
         # Incrementar procesados_contador
         procesados_contador += 1
@@ -335,8 +358,9 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         click.echo(click.style(f"  {', '.join(receptor_rfc_no_coincide)}", fg="yellow"))
 
     # Mostrar mensaje de termino
-    click.echo(click.style(f"  Se actualizaron {actualizaciones_contador} registros en Nominas.", fg="green"))
     click.echo(click.style(f"  Se procesaron {procesados_contador} archivos XML.", fg="green"))
+    click.echo(click.style(f"  Se actualizaron {actualizados_contador} registros en Timbrados.", fg="green"))
+    click.echo(click.style(f"  Se agregaron {agregados_contador} registros en Timbrados.", fg="green"))
 
 
 cli.add_command(actualizar)

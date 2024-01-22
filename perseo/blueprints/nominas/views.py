@@ -3,7 +3,7 @@ Nominas, vistas
 """
 import json
 
-from flask import Blueprint, flash, make_response, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
@@ -107,7 +107,9 @@ def datatable_json():
                 "importe": resultado.importe,
                 "num_cheque": resultado.num_cheque,
                 "fecha_pago": resultado.fecha_pago.strftime("%Y-%m-%d"),
-                "tfd": url_for("nominas.download_tfd_xml", nomina_id=resultado.id) if resultado.tfd else "",
+                "timbrado_descargar_tfd_xml": url_for("timbrados.download_tfd_xml", timbrado_id=resultado.timbrado_id)
+                if resultado.timbrado_id
+                else "",
             }
         )
     # Entregar JSON
@@ -142,28 +144,6 @@ def detail(nomina_id):
     """Detalle de un Nomina"""
     nomina = Nomina.query.get_or_404(nomina_id)
     return render_template("nominas/detail.jinja2", nomina=nomina)
-
-
-@nominas.route("/nominas/tfd/<int:nomina_id>")
-def download_tfd_xml(nomina_id):
-    """Descargar el archivo XML del TFD de un Nomina"""
-    # Consultar la Nomina
-    nomina = Nomina.query.get_or_404(nomina_id)
-    # Si no tiene TFD, regidir a la página de detalle
-    if not nomina.tfd:
-        return redirect(url_for("nominas.detail", nomina_id=nomina.id))
-    # Determinar el nombre del archivo
-    if nomina.tipo == "SALARIO":
-        archivo_nombre = f"{nomina.persona.rfc}-{nomina.quincena.clave}.xml"
-    else:
-        tipo_str = nomina.tipo.lower().replace(" ", "_")
-        archivo_nombre = f"{nomina.persona.rfc}-{nomina.quincena.clave}-{tipo_str}.xml"
-    # Generar respuesta
-    response = make_response(nomina.tfd)
-    response.headers["Content-Type"] = "text/xml"
-    response.headers["Content-Disposition"] = f"attachment; filename={archivo_nombre}"
-    # Entregar archivo XML
-    return response
 
 
 @nominas.route("/nominas/edicion/<int:nomina_id>", methods=["GET", "POST"])

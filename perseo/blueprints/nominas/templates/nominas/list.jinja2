@@ -167,10 +167,10 @@
             }
         ];
         configDataTable['createdRow'] = function(row, data, dataIndex) {
-            if (data.num_cheque != '' && data.tfd == '') {
+            if (data.num_cheque != '' && data.timbrado_descargar_tfd_xml == '') {
                 $(row).addClass('table-info');
             }
-            if (data.num_cheque != '' && data.tfd != '') {
+            if (data.num_cheque != '' && data.timbrado_descargar_tfd_xml != '') {
                 $(row).addClass('table-success');
             }
         };

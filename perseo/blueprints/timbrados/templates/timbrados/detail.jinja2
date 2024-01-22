@@ -1,0 +1,44 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ timbrado.estado }} {{ timbrado.id | string }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Timbrado') %}
+        {{ topbar.button_previous('Timbrados', url_for('timbrados.list_active')) }}
+        {# if current_user.can_edit('TIMBRADOS') %}
+            {{ topbar.button_edit('Editar', url_for('timbrados.edit', timbrado_id=timbrado.id)) }}
+        {% endif #}
+        {# if current_user.can_admin('TIMBRADOS') %}
+            {% if timbrado.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('timbrados.delete', timbrado_id=timbrado.id)) }}{% endif %}
+            {% if timbrado.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('timbrados.recover', timbrado_id=timbrado.id)) }}{% endif %}
+        {% endif #}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=timbrado.estatus) %}
+        {{ detail.label_value_big('Estado', timbrado.estado) }}
+        {{ detail.label_value('Persona', timbrado.nomina.persona.nombre_completo) }}
+        {{ detail.label_value('Quincena', timbrado.nomina.quincena.clave) }}
+        {{ detail.label_value('Nómina', timbrado.nomina.id) }}
+        {{ detail.label_value('TFD Versión', timbrado.tfd_version) }}
+        {{ detail.label_value('TFD UUID', timbrado.tfd_uuid) }}
+        {{ detail.label_value('TFD Fecha Timbrado', timbrado.tfd_fecha_timbrado) }}
+        {{ detail.label_value('TFD Sello CFD', timbrado.tfd_sello_cfd) }}
+        {{ detail.label_value('TFD Num. Cert. SAT', timbrado.tfd_num_cert_sat) }}
+        {{ detail.label_value('TFD Sello SAT', timbrado.tfd_sello_sat) }}
+        {# detail.label_value('Creado', moment(timbrado.creado, local=True).format('DD MMM YYYY')) #}
+        {{ detail.button_md('Descargar XML', url_for('timbrados.download_tfd_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('TIMBRADOS') %}
+        {% if timbrado.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar este timbrado?') }}{% endif %}
+        {% if timbrado.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar este timbrado?') }}{% endif %}
+    {% endif %}
+    {{ detail.moment_js(moment) }}
+{% endblock %}

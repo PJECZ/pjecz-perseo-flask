@@ -32,6 +32,7 @@ from perseo.blueprints.roles.views import roles
 from perseo.blueprints.sistemas.views import sistemas
 from perseo.blueprints.tabuladores.views import tabuladores
 from perseo.blueprints.tareas.views import tareas
+from perseo.blueprints.timbrados.views import timbrados
 from perseo.blueprints.usuarios.models import Usuario
 from perseo.blueprints.usuarios.views import usuarios
 from perseo.blueprints.usuarios_roles.views import usuarios_roles
@@ -77,6 +78,7 @@ def create_app():
     app.register_blueprint(sistemas)
     app.register_blueprint(tabuladores)
     app.register_blueprint(tareas)
+    app.register_blueprint(timbrados)
     app.register_blueprint(usuarios)
     app.register_blueprint(usuarios_roles)
 
