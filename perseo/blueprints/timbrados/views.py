@@ -116,11 +116,11 @@ def download_tfd_xml(timbrado_id):
     if not timbrado.tfd:
         return redirect(url_for("timbrados.detail", nomina_id=timbrado.id))
     # Determinar el nombre del archivo
-    if timbrado.tipo == "SALARIO":
-        archivo_nombre = f"{timbrado.persona.rfc}-{timbrado.quincena.clave}.xml"
+    if timbrado.nomina.tipo == "SALARIO":
+        archivo_nombre = f"{timbrado.nomina.persona.rfc}-{timbrado.nomina.quincena.clave}.xml"
     else:
-        tipo_str = timbrado.tipo.lower().replace(" ", "_")
-        archivo_nombre = f"{timbrado.persona.rfc}-{timbrado.quincena.clave}-{tipo_str}.xml"
+        tipo_str = timbrado.nomina.tipo.lower().replace(" ", "_")
+        archivo_nombre = f"{timbrado.nomina.persona.rfc}-{timbrado.nomina.quincena.clave}-{tipo_str}.xml"
     # Generar respuesta
     response = make_response(timbrado.tfd)
     response.headers["Content-Type"] = "text/xml"
