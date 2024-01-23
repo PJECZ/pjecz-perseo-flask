@@ -8,7 +8,10 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import click
+from dotenv import load_dotenv
 
+from lib.exceptions import MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
+from lib.google_cloud_storage import check_file_exists_from_gcs, get_public_url_from_gcs, upload_file_to_gcs
 from lib.safe_string import QUINCENA_REGEXP, safe_string
 from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
@@ -21,10 +24,13 @@ XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
 XML_TAG_TFD_PREFIX = "{http://www.sat.gob.mx/TimbreFiscalDigital}"
 XML_TAG_NOMINA_PREFIX = "{http://www.sat.gob.mx/nomina12}"
 
-CFDI_EMISOR_RFC = os.environ.get("CFDI_EMISOR_RFC")
-CFDI_EMISOR_NOMBRE = os.environ.get("CFDI_EMISOR_NOMBRE")
-CFDI_EMISOR_REGFIS = os.environ.get("CFDI_EMISOR_REGFIS")
-TIMBRADOS_BASE_DIR = os.environ.get("TIMBRADOS_BASE_DIR")
+load_dotenv()
+
+CFDI_EMISOR_RFC = os.environ.get("CFDI_EMISOR_RFC", "")
+CFDI_EMISOR_NOMBRE = os.environ.get("CFDI_EMISOR_NOMBRE", "")
+CFDI_EMISOR_REGFIS = os.environ.get("CFDI_EMISOR_REGFIS", "")
+CLOUD_STORAGE_DEPOSITO = os.environ.get("CLOUD_STORAGE_DEPOSITO", "")
+TIMBRADOS_BASE_DIR = os.environ.get("TIMBRADOS_BASE_DIR", "")
 
 app = create_app()
 app.app_context().push()
@@ -41,10 +47,10 @@ def cli():
 @click.argument("tipo", type=str, default="SALARIO")
 @click.option("--subdir", type=str, default=None)
 def actualizar(quincena_clave: str, tipo: str, subdir: str):
-    """Actualizar las nominas con los timbrados de una quincena"""
+    """Actualizar los timbrados de una quincena a partir de archivos XML y PDF"""
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
-    if TIMBRADOS_BASE_DIR is None:
+    if TIMBRADOS_BASE_DIR == "":
         click.echo("ERROR: Variable de entorno TIMBRADOS_BASE_DIR no definida.")
         sys.exit(1)
 
@@ -61,14 +67,17 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
     # Por defecto, el directorio es <quincena_clave>
     directorio = quincena_clave
+    archivo_sufijo = ""
 
     # Si el tipo es APOYO ANUAL, el directorio es <quincena_clave>ApoyoAnual
     if tipo == "APOYO ANUAL":
         directorio = f"{quincena_clave}ApoyosAnuales"
+        archivo_sufijo = "apoyo-anual"
 
     # Si el tipo es AGUINALDO, el directorio es <quincena_clave>Aguinaldo
     if tipo == "AGUINALDO":
         directorio = f"{quincena_clave}Aguinaldos"
+        archivo_sufijo = "aguinaldo"
 
     # Validar que exista el directorio
     if subdir == "":
@@ -80,6 +89,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         sys.exit(1)
 
     # Inicializar listas de errores
+    archivos_pdf_no_encontrados = []
     emisor_rfc_no_coincide = []
     emisor_nombre_no_coincide = []
     emisor_regfis_no_coincide = []
@@ -90,22 +100,34 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     # Inicializar contadores
     actualizados_contador = 0
     agregados_contador = 0
+    errores_cargas_xml_contador = 0
+    errores_cargas_pdf_contador = 0
+    errores_xml = 0
     procesados_contador = 0
 
     # Recorrer los archivos con extension xml
+    click.echo(f"Actualizar los timbrados de {quincena_clave}: ", nl=False)
     for archivo in timbrados_dir.glob("*.xml"):
         # Obtener el nombre del archivo
         archivo_nombre = archivo.name
-        click.echo(f"  {archivo_nombre}")
+        # click.echo(f"  {archivo_nombre}")
 
-        # Ruta al archivo XML
-        archivo_xml = Path(timbrados_dir, archivo_nombre)
+        # Definir ruta al archivo XML
+        ruta_xml = Path(timbrados_dir, archivo_nombre)
+
+        # Definir ruta al archivo PDF
+        ruta_pdf = Path(timbrados_dir, archivo_nombre.replace(".xml", ".pdf"))
+
+        # Si no existe el archivo PDF, se agrega a la lista de errores y se omite
+        if not ruta_pdf.is_file:
+            archivos_pdf_no_encontrados.append(archivo_nombre)
+            continue
 
         # Obtener el RFC que esta en los primeros 13 caracteres del nombre del archivo
         rfc_en_nombre = archivo_nombre[:13]
 
         # Parsear el archivo XML
-        tree = ET.parse(archivo_xml)
+        tree = ET.parse(ruta_xml)
         root = tree.getroot()
 
         # Estructura del CFDI version 4.0
@@ -133,26 +155,26 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
         # Validar que el tag raiz sea cfdi:Comprobante
         if root.tag != f"{XML_TAG_CFD_PREFIX}Comprobante":
-            click.echo(click.style("    ERROR: Tag raiz no es cfdi:Comprobante", fg="red"))
+            errores_xml += 1
             continue
 
         # Obtener datos de cfdi:Comprobante
-        cfdi_comprobante_version = None
-        if "Version" in root.attrib:
-            cfdi_comprobante_version = root.attrib["Version"]
-            click.echo(click.style(f"    Version: {cfdi_comprobante_version}", fg="green"))
+        # cfdi_comprobante_version = None
+        # if "Version" in root.attrib:
+        #     cfdi_comprobante_version = root.attrib["Version"]
+        # click.echo(click.style(f"    Version: {cfdi_comprobante_version}", fg="green"))
         cfdi_comprobante_serie = None
-        if "Serie" in root.attrib:
-            cfdi_comprobante_serie = root.attrib["Serie"]
-            click.echo(click.style(f"    Serie: {cfdi_comprobante_serie}", fg="green"))
+        # if "Serie" in root.attrib:
+        #     cfdi_comprobante_serie = root.attrib["Serie"]
+        # click.echo(click.style(f"    Serie: {cfdi_comprobante_serie}", fg="green"))
         cfdi_comprobante_folio = None
-        if "Folio" in root.attrib:
-            cfdi_comprobante_folio = root.attrib["Folio"]
-            click.echo(click.style(f"    Folio: {cfdi_comprobante_folio}", fg="green"))
+        # if "Folio" in root.attrib:
+        #     cfdi_comprobante_folio = root.attrib["Folio"]
+        # click.echo(click.style(f"    Folio: {cfdi_comprobante_folio}", fg="green"))
         cfdi_comprobante_fecha = None
-        if "Fecha" in root.attrib:
-            cfdi_comprobante_fecha = root.attrib["Fecha"]
-            click.echo(click.style(f"    Fecha: {cfdi_comprobante_fecha}", fg="green"))
+        # if "Fecha" in root.attrib:
+        #     cfdi_comprobante_fecha = root.attrib["Fecha"]
+        # click.echo(click.style(f"    Fecha: {cfdi_comprobante_fecha}", fg="green"))
 
         # Inicializar variables de los datos que se van a obtener
         cfdi_emisor_rfc = None
@@ -176,43 +198,43 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             if element.tag == f"{XML_TAG_CFD_PREFIX}Emisor":
                 if "Rfc" in element.attrib:
                     cfdi_emisor_rfc = element.attrib["Rfc"]
-                    click.echo(click.style(f"      Emisor RFC: {cfdi_emisor_rfc}", fg="green"))
+                    # click.echo(click.style(f"      Emisor RFC: {cfdi_emisor_rfc}", fg="green"))
                 if "Nombre" in element.attrib:
                     cfdi_emisor_nombre = element.attrib["Nombre"]
-                    click.echo(click.style(f"      Emisor Nombre: {cfdi_emisor_nombre}", fg="green"))
+                    # click.echo(click.style(f"      Emisor Nombre: {cfdi_emisor_nombre}", fg="green"))
                 if "RegimenFiscal" in element.attrib:
                     cfdi_emisor_regimen_fiscal = element.attrib["RegimenFiscal"]
-                    click.echo(click.style(f"      Emisor Reg. Fis.: {cfdi_emisor_regimen_fiscal}", fg="green"))
+                    # click.echo(click.style(f"      Emisor Reg. Fis.: {cfdi_emisor_regimen_fiscal}", fg="green"))
 
             # Obtener datos de Receptor
             if element.tag == f"{XML_TAG_CFD_PREFIX}Receptor":
                 if "Rfc" in element.attrib:
                     cfdi_receptor_rfc = element.attrib["Rfc"]
-                    click.echo(click.style(f"      Receptor RFC: {cfdi_receptor_rfc}", fg="green"))
+                    # click.echo(click.style(f"      Receptor RFC: {cfdi_receptor_rfc}", fg="green"))
                 if "Nombre" in element.attrib:
                     cfdi_receptor_nombre = element.attrib["Nombre"]
-                    click.echo(click.style(f"      Receptor Nombre: {cfdi_receptor_nombre}", fg="green"))
+                    # click.echo(click.style(f"      Receptor Nombre: {cfdi_receptor_nombre}", fg="green"))
 
             # Obtener datos de TimbreFiscalDigital
             if element.tag == f"{XML_TAG_TFD_PREFIX}TimbreFiscalDigital":
                 if "Version" in element.attrib:
                     tfd_version = element.attrib["Version"]
-                    click.echo(click.style(f"      TFD Version: {tfd_version}", fg="green"))
+                    # click.echo(click.style(f"      TFD Version: {tfd_version}", fg="green"))
                 if "UUID" in element.attrib:
                     tfd_uuid = element.attrib["UUID"]
-                    click.echo(click.style(f"      TFD UUID: {tfd_uuid}", fg="green"))
+                    # click.echo(click.style(f"      TFD UUID: {tfd_uuid}", fg="green"))
                 if "FechaTimbrado" in element.attrib:
                     tfd_fecha_timbrado = element.attrib["FechaTimbrado"]
-                    click.echo(click.style(f"      TFD Fecha Timbrado: {tfd_fecha_timbrado}", fg="green"))
+                    # click.echo(click.style(f"      TFD Fecha Timbrado: {tfd_fecha_timbrado}", fg="green"))
                 if "SelloCFD" in element.attrib:
                     tfd_sello_cfd = element.attrib["SelloCFD"]
-                    click.echo(click.style(f"      TFD Sello CFD: {tfd_sello_cfd}", fg="green"))
+                    # click.echo(click.style(f"      TFD Sello CFD: {tfd_sello_cfd}", fg="green"))
                 if "NoCertificadoSAT" in element.attrib:
                     tfd_num_cert_sat = element.attrib["NoCertificadoSAT"]
-                    click.echo(click.style(f"      TFD Num. Cert. SAT: {tfd_num_cert_sat}", fg="green"))
+                    # click.echo(click.style(f"      TFD Num. Cert. SAT: {tfd_num_cert_sat}", fg="green"))
                 if "SelloSAT" in element.attrib:
                     tfd_sello_sat = element.attrib["SelloSAT"]
-                    click.echo(click.style(f"      TFD Sello SAT: {tfd_sello_sat}", fg="green"))
+                    # click.echo(click.style(f"      TFD Sello SAT: {tfd_sello_sat}", fg="green"))
 
         # Si NO se encontro el Receptor RFC, se agrega a la lista de errores y se omite
         if cfdi_receptor_rfc is None:
@@ -225,17 +247,17 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             continue
 
         # Si el Emisor RFC no coincide con CFDI_EMISOR_RFC, se agrega a la lista de errores y se omite
-        if cfdi_emisor_rfc != CFDI_EMISOR_RFC:
+        if CFDI_EMISOR_RFC != "" and cfdi_emisor_rfc != CFDI_EMISOR_RFC:
             emisor_rfc_no_coincide.append(archivo_nombre)
             continue
 
         # Si el Emisor Nombre no coincide con CFDI_EMISOR_NOMBRE, se agrega a la lista de errores y se omite
-        if cfdi_emisor_nombre != CFDI_EMISOR_NOMBRE:
+        if CFDI_EMISOR_NOMBRE != "" and cfdi_emisor_nombre != CFDI_EMISOR_NOMBRE:
             emisor_nombre_no_coincide.append(archivo_nombre)
             continue
 
         # Si el Emisor Regimen Fiscal no coincide con CFDI_EMISOR_REGIMEN_FISCAL, se agrega a la lista de errores y se omite
-        if cfdi_emisor_regimen_fiscal != CFDI_EMISOR_REGFIS:
+        if CFDI_EMISOR_REGFIS != "" and cfdi_emisor_regimen_fiscal != CFDI_EMISOR_REGFIS:
             emisor_regfis_no_coincide.append(archivo_nombre)
             continue
 
@@ -265,19 +287,19 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         # Si NO existe el registro de Timbrado, se crea
         es_nuevo = False
         if timbrado is None:
-            timbrado = Timbrado(nomina_id=nomina.id, estado="TIMBRADO")
+            timbrado = Timbrado(nomina_id=nomina.id, estado="TIMBRADO", archivo_pdf="", url_pdf="", archivo_xml="", url_xml="")
             es_nuevo = True
             hay_cambios = True
 
         # Si tfd_version es diferente, hay_cambios sera verdadero
         if tfd_version is not None and timbrado.tfd_version != tfd_version:
-            click.echo(click.style(f"    TFD Version: {timbrado.tfd_version} != {tfd_version}", fg="yellow"))
+            # click.echo(click.style(f"    TFD Version: {timbrado.tfd_version} != {tfd_version}", fg="yellow"))
             timbrado.tfd_version = tfd_version
             hay_cambios = True
 
         # Si tfd_uuid es diferente, hay_cambios sera verdadero
         if tfd_uuid is not None and timbrado.tfd_uuid != tfd_uuid:
-            click.echo(click.style(f"    TFD UUID: {timbrado.tfd_uuid} != {tfd_uuid}", fg="yellow"))
+            # click.echo(click.style(f"    TFD UUID: {timbrado.tfd_uuid} != {tfd_uuid}", fg="yellow"))
             timbrado.tfd_uuid = tfd_uuid
             hay_cambios = True
 
@@ -288,32 +310,124 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
         # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
         if tfd_fecha_timbrado is not None and tfd_fecha_timbrado_str != tfd_fecha_timbrado:
-            click.echo(click.style(f"    TFD Fecha Timbrado: {tfd_fecha_timbrado_str} != {tfd_fecha_timbrado}", fg="yellow"))
+            # click.echo(click.style(f"    TFD Fecha Timbrado: {tfd_fecha_timbrado_str} != {tfd_fecha_timbrado}", fg="yellow"))
             timbrado.tfd_fecha_timbrado = tfd_fecha_timbrado
             hay_cambios = True
 
         # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
         if tfd_sello_cfd is not None and timbrado.tfd_sello_cfd != tfd_sello_cfd:
-            click.echo(click.style(f"    TFD Sello CFD: {timbrado.tfd_sello_cfd} != {tfd_sello_cfd}", fg="yellow"))
+            # click.echo(click.style(f"    TFD Sello CFD: {timbrado.tfd_sello_cfd} != {tfd_sello_cfd}", fg="yellow"))
             timbrado.tfd_sello_cfd = tfd_sello_cfd
             hay_cambios = True
 
         # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
         if tfd_num_cert_sat is not None and timbrado.tfd_num_cert_sat != tfd_num_cert_sat:
-            click.echo(click.style(f"    TFD Num. Cert. SAT: {timbrado.tfd_num_cert_sat} != {tfd_num_cert_sat}", fg="yellow"))
+            # click.echo(click.style(f"    TFD Num. Cert. SAT: {timbrado.tfd_num_cert_sat} != {tfd_num_cert_sat}", fg="yellow"))
             timbrado.tfd_num_cert_sat = tfd_num_cert_sat
             hay_cambios = True
 
         # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
         if tfd_sello_sat is not None and timbrado.tfd_sello_sat != tfd_sello_sat:
-            click.echo(click.style(f"    TFD Sello SAT: {timbrado.tfd_sello_sat} != {tfd_sello_sat}", fg="yellow"))
+            # click.echo(click.style(f"    TFD Sello SAT: {timbrado.tfd_sello_sat} != {tfd_sello_sat}", fg="yellow"))
             timbrado.tfd_sello_sat = tfd_sello_sat
+            hay_cambios = True
+
+        # Definir valores por defecto
+        archivo_xml = timbrado.archivo_xml
+        url_xml = timbrado.url_xml
+        archivo_pdf = timbrado.archivo_pdf
+        url_pdf = timbrado.url_pdf
+
+        # Si esta definido el deposito GCS
+        if CLOUD_STORAGE_DEPOSITO != "":
+            # Bloque try-except para contar errores en subida de archivos XML
+            try:
+                # Definir el nombre de descarga del archivo XML
+                if archivo_sufijo == "":
+                    archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}.xml"
+                else:
+                    archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.xml"
+                # Definir la ruta del archivo XML en el deposito GCS
+                blob_nombre_xml = f"{directorio}/{tfd_uuid}.xml"
+                # Si existe el archivo XML en el deposito GCS
+                if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml):
+                    # Obtener la URL del archivo XML
+                    url_xml = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml)
+                # De lo contrario, NO existe el archivo XML en el deposito GCS
+                else:
+                    # Cargar el contenido del archivo XML
+                    with open(ruta_xml, "r", encoding="utf8") as f:
+                        data_xml = f.read()
+                    # Subir el archivo XML
+                    url_xml = upload_file_to_gcs(
+                        bucket_name=CLOUD_STORAGE_DEPOSITO,
+                        blob_name=blob_nombre_xml,
+                        content_type="application/xml",
+                        data=data_xml,
+                    )
+                    click.echo(click.style("(XML)", fg="green"), nl=False)
+            except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
+                archivo_xml = ""
+                url_xml = ""
+                errores_cargas_xml_contador += 1
+                click.echo(click.style("(XML)", fg="red"), nl=False)
+
+            # Bloque try-except para contar errores en subida de archivos PDF
+            try:
+                # Definir el nombre de descarga del archivo PDF
+                if archivo_sufijo == "":
+                    archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}.pdf"
+                else:
+                    archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.pdf"
+                # Definir la ruta del archivo PDF en el deposito GCS
+                blob_nombre_pdf = f"{directorio}/{tfd_uuid}.pdf"
+                # Si existe el archivo PDF en el deposito GCS
+                if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf):
+                    # Obtener la URL del archivo PDF
+                    url_pdf = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf)
+                # De lo contrario, NO existe el archivo PDF en el deposito GCS
+                else:
+                    # Cargar el contenido del archivo PDF
+                    with open(ruta_pdf, "rb") as f:
+                        data_pdf = f.read()
+                    # Subir el archivo PDF
+                    url_pdf = upload_file_to_gcs(
+                        bucket_name=CLOUD_STORAGE_DEPOSITO,
+                        blob_name=blob_nombre_pdf,
+                        content_type="application/pdf",
+                        data=data_pdf,
+                    )
+                    click.echo(click.style("(PDF)", fg="green"), nl=False)
+            except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
+                archivo_pdf = ""
+                url_pdf = ""
+                errores_cargas_pdf_contador += 1
+                click.echo(click.style("(PDF)", fg="red"), nl=False)
+
+        # Si archivo_xml es diferente, hay_cambios sera verdadero
+        if timbrado.archivo_xml != archivo_xml:
+            timbrado.archivo_xml = archivo_xml
+            hay_cambios = True
+
+        # Si url_xml es diferente, hay_cambios sera verdadero
+        if timbrado.url_xml != url_xml:
+            timbrado.url_xml = url_xml
+            hay_cambios = True
+
+        # Si archivo_pdf es diferente, hay_cambios sera verdadero
+        if timbrado.archivo_pdf != archivo_pdf:
+            timbrado.archivo_pdf = archivo_pdf
+            hay_cambios = True
+
+        # Si url_pdf es diferente, hay_cambios sera verdadero
+        if timbrado.url_pdf != url_pdf:
+            timbrado.url_pdf = url_pdf
             hay_cambios = True
 
         # Si hay_cambios
         if hay_cambios:
             # Cargar el contenido XML
-            with open(archivo_xml, "r", encoding="utf8") as f:
+            with open(ruta_xml, "r", encoding="utf8") as f:
                 timbrado.tfd = f.read()
 
             # Guardar timbrado
@@ -326,11 +440,21 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             # Si es_nuevo, incrementar agregados_contador
             if es_nuevo:
                 agregados_contador += 1
+                click.echo(click.style("+", fg="green"), nl=False)
             else:
                 actualizados_contador += 1
+                click.echo(click.style("u", fg="green"), nl=False)
 
         # Incrementar procesados_contador
         procesados_contador += 1
+
+        # Mostrar un punto en la terminal
+        click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Si hubo errores en archivos_pdf_no_encontrados, se muestran
+    if len(archivos_pdf_no_encontrados) > 0:
+        click.echo(click.style(f"  Faltan {len(archivos_pdf_no_encontrados)} archivos PDF", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(archivos_pdf_no_encontrados)}", fg="yellow"))
 
     # Si hubo errores en emisor_rfc_no_coincide, se muestran
     if len(emisor_rfc_no_coincide) > 0:
@@ -356,6 +480,14 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     if len(receptor_rfc_no_coincide) > 0:
         click.echo(click.style(f"  En {len(receptor_rfc_no_coincide)} Receptor RFC NO coincide", fg="yellow"))
         click.echo(click.style(f"  {', '.join(receptor_rfc_no_coincide)}", fg="yellow"))
+
+    # Si hubo errores_cargas_xml, se muestra el contador
+    if errores_cargas_xml_contador > 0:
+        click.echo(click.style(f"  Hubo {errores_cargas_xml_contador} errores en cargas XML", fg="yellow"))
+
+    # Si hubo errores_cargas_pdf, se muestra el contador
+    if errores_cargas_pdf_contador > 0:
+        click.echo(click.style(f"  Hubo {errores_cargas_pdf_contador} errores en cargas PDF", fg="yellow"))
 
     # Mostrar mensaje de termino
     click.echo(click.style(f"  Se procesaron {procesados_contador} archivos XML.", fg="green"))

@@ -35,8 +35,12 @@ class Timbrado(database.Model, UniversalMixin):
     tfd_sello_cfd = Column(String(512), nullable=False)
     tfd_num_cert_sat = Column(String(64), nullable=False)
     tfd_sello_sat = Column(String(512), nullable=False)
-    archivo = Column(String(256), nullable=False, default="", server_default="")
-    url = Column(String(512), nullable=False, default="", server_default="")
+
+    # Columnas con los nombres de descarga de archivos y URLs
+    archivo_pdf = Column(String(256), nullable=False, default="", server_default="")
+    url_pdf = Column(String(512), nullable=False, default="", server_default="")
+    archivo_xml = Column(String(256), nullable=False, default="", server_default="")
+    url_xml = Column(String(512), nullable=False, default="", server_default="")
 
     def __repr__(self):
         """Representación"""
