@@ -20,6 +20,7 @@ from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.timbrados.models import Timbrado
 from perseo.extensions import database
 
+CARPETA = "timbrados"
 XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
 XML_TAG_TFD_PREFIX = "{http://www.sat.gob.mx/TimbreFiscalDigital}"
 XML_TAG_NOMINA_PREFIX = "{http://www.sat.gob.mx/nomina12}"
@@ -163,15 +164,15 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         # if "Version" in root.attrib:
         #     cfdi_comprobante_version = root.attrib["Version"]
         # click.echo(click.style(f"    Version: {cfdi_comprobante_version}", fg="green"))
-        cfdi_comprobante_serie = None
+        # cfdi_comprobante_serie = None
         # if "Serie" in root.attrib:
         #     cfdi_comprobante_serie = root.attrib["Serie"]
         # click.echo(click.style(f"    Serie: {cfdi_comprobante_serie}", fg="green"))
-        cfdi_comprobante_folio = None
+        # cfdi_comprobante_folio = None
         # if "Folio" in root.attrib:
         #     cfdi_comprobante_folio = root.attrib["Folio"]
         # click.echo(click.style(f"    Folio: {cfdi_comprobante_folio}", fg="green"))
-        cfdi_comprobante_fecha = None
+        # cfdi_comprobante_fecha = None
         # if "Fecha" in root.attrib:
         #     cfdi_comprobante_fecha = root.attrib["Fecha"]
         # click.echo(click.style(f"    Fecha: {cfdi_comprobante_fecha}", fg="green"))
@@ -348,7 +349,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                 else:
                     archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.xml"
                 # Definir la ruta del archivo XML en el deposito GCS
-                blob_nombre_xml = f"{directorio}/{tfd_uuid}.xml"
+                blob_nombre_xml = f"{CARPETA}/{directorio}/{tfd_uuid}.xml"
                 # Si existe el archivo XML en el deposito GCS
                 if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml):
                     # Obtener la URL del archivo XML
@@ -380,7 +381,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                 else:
                     archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.pdf"
                 # Definir la ruta del archivo PDF en el deposito GCS
-                blob_nombre_pdf = f"{directorio}/{tfd_uuid}.pdf"
+                blob_nombre_pdf = f"{CARPETA}/{directorio}/{tfd_uuid}.pdf"
                 # Si existe el archivo PDF en el deposito GCS
                 if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf):
                     # Obtener la URL del archivo PDF
