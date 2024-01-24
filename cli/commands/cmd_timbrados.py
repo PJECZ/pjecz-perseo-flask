@@ -356,6 +356,9 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                     url_xml = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml)
                 # De lo contrario, NO existe el archivo XML en el deposito GCS
                 else:
+                    # Si NO existe el archivo XML, causa error
+                    if not ruta_xml.is_file():
+                        raise MyFileNotFoundError
                     # Cargar el contenido del archivo XML
                     with open(ruta_xml, "r", encoding="utf8") as f:
                         data_xml = f.read()
@@ -388,6 +391,9 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                     url_pdf = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf)
                 # De lo contrario, NO existe el archivo PDF en el deposito GCS
                 else:
+                    # Si NO existe el archivo XML, causa error
+                    if not ruta_pdf.is_file():
+                        raise MyFileNotFoundError
                     # Cargar el contenido del archivo PDF
                     with open(ruta_pdf, "rb") as f:
                         data_pdf = f.read()
