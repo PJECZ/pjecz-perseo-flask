@@ -40,7 +40,7 @@
                         <li>{{ moment(quincena_producto_nominas.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_nominas.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_nominas.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md('Descargar XLSX', url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_nominas.id), 'mdi:download', '_blank') }}
                     {% endif %}
                 {% endcall %}
             {% else %}
@@ -67,7 +67,7 @@
                         <li>{{ moment(quincena_producto_monederos.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_monederos.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_monederos.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md('Descargar XLSX', url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_monederos.id), 'mdi:download', '_blank') }}
                     {% endif %}
                 {% endcall %}
             {% else %}
@@ -94,7 +94,7 @@
                         <li>{{ moment(quincena_producto_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_pensionados.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_pensionados.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md('Descargar XLSX', url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_pensionados.id), 'mdi:download', '_blank') }}
                     {% endif %}
                 {% endcall %}
             {% else %}
@@ -123,7 +123,7 @@
                         <li>{{ moment(quincena_producto_dispersiones_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_dispersiones_pensionados.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_dispersiones_pensionados.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md('Descargar XLSX', url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_dispersiones_pensionados.id), 'mdi:download', '_blank') }}
                     {% endif %}
                 {% endcall %}
             {% else %}

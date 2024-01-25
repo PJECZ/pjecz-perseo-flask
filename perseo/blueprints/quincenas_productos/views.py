@@ -3,11 +3,13 @@ Quincenas Productos, vistas
 """
 import json
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_quincena, safe_string
+from lib.exceptions import MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError
+from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
+from lib.safe_string import safe_message, safe_quincena
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
@@ -104,6 +106,41 @@ def detail(quincena_producto_id):
     """Detalle de un Quincena Producto"""
     quincena_producto = QuincenaProducto.query.get_or_404(quincena_producto_id)
     return render_template("quincenas_productos/detail.jinja2", quincena_producto=quincena_producto)
+
+
+@quincenas_productos.route("/quincenas_productos/<int:quincena_producto_id>/xlsx")
+def download_xlsx(quincena_producto_id):
+    """Descargar archivo XLSX de una Quincena Producto"""
+
+    # Consultar la Quincena Producto
+    quincena_producto = QuincenaProducto.query.get_or_404(quincena_producto_id)
+
+    # Si no tiene URL, regidir a la página de detalle
+    if quincena_producto.url == "":
+        flash("La Quincena Producto no tiene un archivo XLSX", "warning")
+        return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+    # Si no tiene nombre para el archivo, elaborar uno con la clave de la quincena y la fuente
+    descarga_nombre = quincena_producto.archivo
+    if descarga_nombre == "":
+        fuente_str = quincena_producto.fuente.replace(" ", "_").lower()
+        descarga_nombre = f"{quincena_producto.quincena.clave}-{fuente_str}.xlsx"
+
+    # Obtener el contenido del archivo desde Google Storage
+    try:
+        descarga_contenido = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(quincena_producto.url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        flash(str(error), "danger")
+        return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+    # Descargar un archivo XLSX
+    response = make_response(descarga_contenido)
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    response.headers["Content-Disposition"] = f"attachment; filename={descarga_nombre}"
+    return response
 
 
 @quincenas_productos.route("/quincenas_productos/eliminar/<int:quincena_producto_id>")

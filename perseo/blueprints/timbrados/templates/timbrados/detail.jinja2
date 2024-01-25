@@ -31,7 +31,8 @@
         {{ detail.label_value('TFD Num. Cert. SAT', timbrado.tfd_num_cert_sat) }}
         {{ detail.label_value('TFD Sello SAT', timbrado.tfd_sello_sat) }}
         {# detail.label_value('Creado', moment(timbrado.creado, local=True).format('DD MMM YYYY')) #}
-        {{ detail.button_md('Descargar XML', url_for('timbrados.download_tfd_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+        {{ detail.button_md('Descargar PDF', url_for('timbrados.download_pdf', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+        {{ detail.button_md('Descargar XML', url_for('timbrados.download_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
     {% endcall %}
 {% endblock %}
 
