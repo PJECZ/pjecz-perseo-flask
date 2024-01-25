@@ -132,7 +132,7 @@ def download_xlsx(quincena_producto_id):
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
             blob_name=get_blob_name_from_url(quincena_producto.url),
         )
-    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError, MyNotValidParamError) as error:
         flash(str(error), "danger")
         return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
