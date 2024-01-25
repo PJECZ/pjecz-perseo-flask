@@ -3,10 +3,12 @@ Timbrados, vistas
 """
 import json
 
-from flask import Blueprint, make_response, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
+from flask_login import login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
+from lib.exceptions import MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError
+from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
 from lib.safe_string import safe_quincena, safe_rfc
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.permisos.models import Permiso
@@ -107,23 +109,69 @@ def detail(timbrado_id):
     return render_template("timbrados/detail.jinja2", timbrado=timbrado)
 
 
-@timbrados.route("/timbrados/tfd/<int:timbrado_id>")
-def download_tfd_xml(timbrado_id):
-    """Descargar el archivo XML del TFD de un Timbrado"""
+@timbrados.route("/timbrados/<int:timbrado_id>/pdf")
+def download_pdf(timbrado_id):
+    """Descargar el archivo PDF de un Timbrado"""
+
     # Consultar el Timbrado
     timbrado = Timbrado.query.get_or_404(timbrado_id)
-    # Si no tiene TFD, regidir a la página de detalle
-    if not timbrado.tfd:
+
+    # Si no tiene URL, regidir a la página de detalle
+    if timbrado.url_pdf == "":
+        flash("El Timbrado no tiene un archivo PDF", "warning")
         return redirect(url_for("timbrados.detail", nomina_id=timbrado.id))
-    # Determinar el nombre del archivo
-    if timbrado.nomina.tipo == "SALARIO":
-        archivo_nombre = f"{timbrado.nomina.persona.rfc}-{timbrado.nomina.quincena.clave}.xml"
-    else:
-        tipo_str = timbrado.nomina.tipo.lower().replace(" ", "_")
-        archivo_nombre = f"{timbrado.nomina.persona.rfc}-{timbrado.nomina.quincena.clave}-{tipo_str}.xml"
-    # Generar respuesta
-    response = make_response(timbrado.tfd)
+
+    # Si no tiene nombre para el archivo en archivo_pdf, elaborar uno con el UUID
+    descarga_nombre = timbrado.archivo_pdf
+    if descarga_nombre == "":
+        descarga_nombre = f"{timbrado.tfd_uuid}.pdf"
+
+    # Obtener el contenido del archivo desde Google Storage
+    try:
+        descarga_contenido = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(timbrado.url_pdf),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError) as error:
+        flash(str(error), "danger")
+        return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
+
+    # Descargar un archivo PDF
+    response = make_response(descarga_contenido)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f"attachment; filename={descarga_nombre}"
+    return response
+
+
+@timbrados.route("/timbrados/<int:timbrado_id>/xml")
+def download_xml(timbrado_id):
+    """Descargar el archivo XML de un Timbrado"""
+
+    # Consultar el Timbrado
+    timbrado = Timbrado.query.get_or_404(timbrado_id)
+
+    # Si no tiene URL, regidir a la página de detalle
+    if timbrado.url_xml == "":
+        flash("El Timbrado no tiene un archivo XML", "warning")
+        return redirect(url_for("timbrados.detail", nomina_id=timbrado.id))
+
+    # Si no tiene nombre para el archivo en archivo_xml, elaborar uno con el UUID
+    descarga_nombre = timbrado.archivo_xml
+    if descarga_nombre == "":
+        descarga_nombre = f"{timbrado.tfd_uuid}.xml"
+
+    # Obtener el contenido del archivo desde Google Storage
+    try:
+        descarga_contenido = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
+            blob_name=get_blob_name_from_url(timbrado.url_xml),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError) as error:
+        flash(str(error), "danger")
+        return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
+
+    # Descargar un archivo XML
+    response = make_response(descarga_contenido)
     response.headers["Content-Type"] = "text/xml"
-    response.headers["Content-Disposition"] = f"attachment; filename={archivo_nombre}"
-    # Entregar archivo XML
+    response.headers["Content-Disposition"] = f"attachment; filename={descarga_nombre}"
     return response

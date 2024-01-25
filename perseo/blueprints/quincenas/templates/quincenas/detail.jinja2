@@ -35,11 +35,11 @@
             {% call detail.card(title='Generar archivos finales') %}
                 {% if quincena.estado == 'ABIERTA' %}
                     <ol>
-                        <li>Se reiniciarán los consecutivos temporales</li>
-                        <li>Se generará Nóminas</li>
-                        <li>Se generará Monederos</li>
-                        <li>Se generará Pensionados</li>
-                        <li>Y se conservarán los números de cheques</li>
+                        <li>Se cambiarán los consecutivos temporales de los Bancos a los consecutivos</li>
+                        <li>Se generará Nóminas XLSX</li>
+                        <li>Se generará Monederos XLSX</li>
+                        <li>Se generará Pensionados XLSX</li>
+                        <li>Y se guardarán los números de cheques en Nóminas</li>
                     </ol>
                     {{ modals.button_modal_xl(
                         'Generar archivos finales',
@@ -75,7 +75,12 @@
                         <li>{{ moment(quincena_producto_nominas.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_nominas.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_nominas.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_nominas.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
@@ -123,7 +128,12 @@
                         <li>{{ moment(quincena_producto_monederos.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_monederos.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_monederos.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_monederos.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
@@ -171,7 +181,12 @@
                         <li>{{ moment(quincena_producto_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_pensionados.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_pensionados.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_pensionados.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {% if quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
@@ -227,7 +242,12 @@
                         <li>{{ moment(quincena_producto_timbrados_salarios.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_timbrados_salarios.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_salarios.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_timbrados_salarios.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {{ modals.button_modal_sm(
                         label='Eliminar',
@@ -271,7 +291,12 @@
                         <li>{{ moment(quincena_producto_timbrados_aguinaldos.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_timbrados_aguinaldos.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_aguinaldos.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_timbrados_aguinaldos.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {{ modals.button_modal_sm(
                         label='Eliminar',
@@ -315,7 +340,12 @@
                         <li>{{ moment(quincena_producto_timbrados_apoyos_anuales.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_timbrados_apoyos_anuales.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_timbrados_apoyos_anuales.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_timbrados_apoyos_anuales.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {{ modals.button_modal_sm(
                         label='Eliminar',
@@ -361,7 +391,12 @@
                         <li>{{ moment(quincena_producto_dispersiones_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
                     {% if quincena_producto_dispersiones_pensionados.url %}
-                        {{ detail.button_md('Descargar XLSX', quincena_producto_dispersiones_pensionados.url, 'mdi:download', '_blank') }}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_dispersiones_pensionados.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
                     {% endif %}
                     {{ modals.button_modal_sm(
                         label='Eliminar',
