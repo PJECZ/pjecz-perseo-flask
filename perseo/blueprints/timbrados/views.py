@@ -132,7 +132,7 @@ def download_pdf(timbrado_id):
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
             blob_name=get_blob_name_from_url(timbrado.url_pdf),
         )
-    except (MyBucketNotFoundError, MyFileNotFoundError) as error:
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
         flash(str(error), "danger")
         return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
 
@@ -166,7 +166,7 @@ def download_xml(timbrado_id):
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
             blob_name=get_blob_name_from_url(timbrado.url_xml),
         )
-    except (MyBucketNotFoundError, MyFileNotFoundError) as error:
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
         flash(str(error), "danger")
         return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
 
