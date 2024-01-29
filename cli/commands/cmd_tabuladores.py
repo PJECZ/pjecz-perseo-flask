@@ -8,10 +8,12 @@ from pathlib import Path
 
 import click
 
+from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
 from lib.safe_string import safe_clave
 from perseo.app import create_app
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
+from perseo.blueprints.tabuladores.tasks import exportar_tabuladores
 
 TABULADORES_CSV = "seed/tabuladores.csv"
 
@@ -286,4 +288,20 @@ def agregar_actualizar(tabuladores_csv: str):
         click.echo(click.style(f"  Tabuladores: {contador_tabuladores_actualizados} actualizados.", fg="green"))
 
 
+@click.command()
+def exportar():
+    """Exportar Tabuladores a un archivo XLSX"""
+
+    # Ejecutar la tarea
+    try:
+        mensaje = exportar_tabuladores()
+    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+        click.echo(click.style(str(error), fg="red"))
+        sys.exit(1)
+
+    # Mensaje de termino
+    click.echo(click.style(mensaje, fg="green"))
+
+
 cli.add_command(agregar_actualizar)
+cli.add_command(exportar)

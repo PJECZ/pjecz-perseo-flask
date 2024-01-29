@@ -13,12 +13,14 @@ import requests
 import xlrd
 from dotenv import load_dotenv
 
+from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
 from lib.fechas import quincena_to_fecha
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_curp, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.personas.tasks import exportar_personas
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
@@ -555,6 +557,21 @@ def cambiar_tabulador_a_todos(tabulador_id: int):
 
 
 @click.command()
+def exportar():
+    """Exportar Personas a un archivo XLSX"""
+
+    # Ejecutar la tarea
+    try:
+        mensaje = exportar_personas()
+    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+        click.echo(click.style(str(error), fg="red"))
+        sys.exit(1)
+
+    # Mensaje de termino
+    click.echo(click.style(mensaje, fg="green"))
+
+
+@click.command()
 @click.argument("rfc-origen", type=str)
 @click.argument("rfc-destino", type=str)
 @click.option("--eliminar", is_flag=True, help="Eliminar el RFC de origen")
@@ -763,5 +780,6 @@ cli.add_command(actualizar_tabuladores)
 cli.add_command(actualizar_fechas_ingreso)
 cli.add_command(cambiar_tabulador)
 cli.add_command(cambiar_tabulador_a_todos)
+cli.add_command(exportar)
 cli.add_command(migrar_eliminar_rfc)
 cli.add_command(sincronizar)

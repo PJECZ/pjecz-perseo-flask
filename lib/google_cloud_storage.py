@@ -179,8 +179,8 @@ def upload_file_to_gcs(
     """
 
     # Check content type
-    if content_type not in EXTENSIONS_MEDIA_TYPES.values():
-        raise MyFileNotAllowedError("File not allowed")
+    # if content_type not in EXTENSIONS_MEDIA_TYPES.values():
+    #     raise MyFileNotAllowedError("File not allowed")
 
     # Get bucket
     storage_client = storage.Client()

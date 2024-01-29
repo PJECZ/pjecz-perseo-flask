@@ -15,9 +15,11 @@ from pathlib import Path
 
 import click
 
+from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.conceptos.models import Concepto
+from perseo.blueprints.conceptos.tasks import exportar_conceptos
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.quincenas.models import Quincena
 
@@ -161,5 +163,21 @@ def eliminar_recuperar(quincena_clave: str):
     click.echo(click.style(f"  {', '.join(conceptos_recuperados)}", fg="green"))
 
 
+@click.command()
+def exportar():
+    """Exportar Conceptos a un archivo XLSX"""
+
+    # Ejecutar la tarea
+    try:
+        mensaje = exportar_conceptos()
+    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+        click.echo(click.style(str(error), fg="red"))
+        sys.exit(1)
+
+    # Mensaje de termino
+    click.echo(click.style(mensaje, fg="green"))
+
+
 cli.add_command(agregar_actualizar)
 cli.add_command(eliminar_recuperar)
+cli.add_command(exportar)

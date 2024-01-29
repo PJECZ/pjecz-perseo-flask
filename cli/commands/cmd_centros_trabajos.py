@@ -10,9 +10,11 @@ import click
 import requests
 from dotenv import load_dotenv
 
+from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
 from lib.safe_string import safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
+from perseo.blueprints.centros_trabajos.tasks import exportar_centros_trabajos
 from perseo.extensions import database
 
 load_dotenv()
@@ -110,6 +112,21 @@ def agregar_actualizar(centros_trabajos_csv: str):
 
 
 @click.command()
+def exportar():
+    """Exportar Centros de Trabajo a un archivo XLSX"""
+
+    # Ejecutar la tarea
+    try:
+        mensaje = exportar_centros_trabajos()
+    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+        click.echo(click.style(str(error), fg="red"))
+        sys.exit(1)
+
+    # Mensaje de termino
+    click.echo(click.style(mensaje, fg="green"))
+
+
+@click.command()
 def sincronizar():
     """Sincronizar los Centros de Trabajo con la informacion de RRHH Personal"""
     click.echo("Sincronizando Centros de Trabajo...")
@@ -178,4 +195,5 @@ def sincronizar():
 
 
 cli.add_command(agregar_actualizar)
+cli.add_command(exportar)
 cli.add_command(sincronizar)
