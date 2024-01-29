@@ -97,6 +97,12 @@ def detail(centro_trabajo_id):
     return render_template("centros_trabajos/detail.jinja2", centro_trabajo=centro_trabajo)
 
 
+@centros_trabajos.route("/centros_trabajos/exportar_xlsx")
+def exportar_xlsx():
+    """Exportar los Centros de Trabajo a un archivo XLSX"""
+    return redirect(url_for("centros_trabajos.list_active"))
+
+
 @centros_trabajos.route("/centros_trabajos/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():

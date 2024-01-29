@@ -115,6 +115,12 @@ def detail(tabulador_id):
     return render_template("tabuladores/detail.jinja2", tabulador=tabulador)
 
 
+@tabuladores.route("/tabuladores/exportar_xlsx")
+def exportar_xlsx():
+    """Exportar los Tabuladores a un archivo XLSX"""
+    return redirect(url_for("tabuladores.list_active"))
+
+
 @tabuladores.route("/tabuladores/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
