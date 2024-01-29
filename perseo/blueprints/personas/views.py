@@ -117,6 +117,12 @@ def detail(persona_id):
     return render_template("personas/detail.jinja2", persona=persona)
 
 
+@personas.route("/personas/exportar_xlsx")
+def exportar_xlsx():
+    """Exportar las Personas a un archivo XLSX"""
+    return redirect(url_for("personas.list_active"))
+
+
 @personas.route("/personas/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():

@@ -97,6 +97,12 @@ def detail(concepto_id):
     return render_template("conceptos/detail.jinja2", concepto=concepto)
 
 
+@conceptos.route("/conceptos/exportar_xlsx")
+def exportar_xlsx():
+    """Exportar los Conceptos a un archivo XLSX"""
+    return redirect(url_for("conceptos.list_active"))
+
+
 @conceptos.route("/conceptos/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
