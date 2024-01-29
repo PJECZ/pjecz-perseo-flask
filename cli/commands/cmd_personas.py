@@ -13,7 +13,7 @@ import requests
 import xlrd
 from dotenv import load_dotenv
 
-from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
+from lib.exceptions import MyAnyError
 from lib.fechas import quincena_to_fecha
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_curp, safe_rfc, safe_string
 from perseo.app import create_app
@@ -563,7 +563,7 @@ def exportar():
     # Ejecutar la tarea
     try:
         mensaje = exportar_personas()
-    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+    except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

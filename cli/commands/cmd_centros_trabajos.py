@@ -10,7 +10,7 @@ import click
 import requests
 from dotenv import load_dotenv
 
-from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
+from lib.exceptions import MyAnyError
 from lib.safe_string import safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
@@ -118,7 +118,7 @@ def exportar():
     # Ejecutar la tarea
     try:
         mensaje = exportar_centros_trabajos()
-    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+    except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

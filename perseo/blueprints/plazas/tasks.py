@@ -1,5 +1,5 @@
 """
-Conceptos, tareas en el fondo
+Plazas, tareas en el fondo
 """
 import logging
 from datetime import datetime
@@ -20,17 +20,17 @@ from lib.exceptions import (
 from lib.google_cloud_storage import upload_file_to_gcs
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
-from perseo.blueprints.conceptos.models import Concepto
+from perseo.blueprints.plazas.models import Plaza
 from perseo.extensions import database
 
-GCS_BASE_DIRECTORY = "conceptos"
-LOCAL_BASE_DIRECTORY = "exports/conceptos"
+GCS_BASE_DIRECTORY = "plazas"
+LOCAL_BASE_DIRECTORY = "exports/plazas"
 TIMEZONE = "America/Mexico_City"
 
 bitacora = logging.getLogger(__name__)
 bitacora.setLevel(logging.INFO)
 formato = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
-empunadura = logging.FileHandler("logs/conceptos.log")
+empunadura = logging.FileHandler("logs/plazas.log")
 empunadura.setFormatter(formato)
 bitacora.addHandler(empunadura)
 
@@ -39,11 +39,11 @@ app.app_context().push()
 database.app = app
 
 
-def exportar_conceptos() -> str:
-    """Tarea en el fondo para exportar Conceptos a un archivo XLSX"""
+def exportar_plazas() -> str:
+    """Tarea en el fondo para exportar Plazas a un archivo XLSX"""
 
-    # Consultar Conceptos
-    conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
+    # Consultar Plazas
+    plazas = Plaza.query.filter_by(estatus="A").order_by(Plaza.clave).all()
 
     # Iniciar el archivo XLSX
     libro = Workbook()
@@ -62,28 +62,28 @@ def exportar_conceptos() -> str:
     # Inicializar el contador
     contador = 0
 
-    # Bucle por los Conceptos
-    for concepto in conceptos:
+    # Bucle por los Plazas
+    for plaza in plazas:
         # Agregar la fila con los datos
         hoja.append(
             [
-                concepto.clave,
-                concepto.descripcion,
+                plaza.clave,
+                plaza.descripcion,
             ]
         )
 
         # Incrementar el contador
         contador += 1
 
-    # Si el contador es cero, entonces no hay Conceptos
+    # Si el contador es cero, entonces no hay Plazas
     if contador == 0:
-        mensaje_error = "No hay Conceptos para exportar."
+        mensaje_error = "No hay Plazas para exportar."
         bitacora.error(mensaje_error)
         raise MyEmptyError(mensaje_error)
 
     # Determinar el nombre del archivo XLSX
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
-    nombre_archivo_xlsx = f"conceptos_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+    nombre_archivo_xlsx = f"plazas_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Determinar las rutas con directorios con el año y el número de mes en dos digitos
     ruta_local = Path(LOCAL_BASE_DIRECTORY, ahora.strftime("%Y"), ahora.strftime("%m"))
@@ -118,20 +118,20 @@ def exportar_conceptos() -> str:
                 bitacora.warning("Falló al subir el archivo XLSX a GCS: %s", mensaje_fallo_gcs)
 
     # Entregar mensaje de termino
-    mensaje_termino = f"Se exportaron {contador} Conceptos a {nombre_archivo_xlsx}"
+    mensaje_termino = f"Se exportaron {contador} Plazas a {nombre_archivo_xlsx}."
     bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
-def lanzar_exportar_conceptos():
-    """Exportar Conceptos a un archivo XLSX"""
+def lanzar_exportar_plazas():
+    """Exportar Plazas a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, "Exportando Conceptos a un archivo XLSX...")
+    set_task_progress(0, "Exportando Plazas a un archivo XLSX...")
 
     # Ejecutar el creador
     try:
-        mensaje_termino = exportar_conceptos()
+        mensaje_termino = exportar_plazas()
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)

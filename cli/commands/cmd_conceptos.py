@@ -15,7 +15,7 @@ from pathlib import Path
 
 import click
 
-from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
+from lib.exceptions import MyAnyError
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.conceptos.models import Concepto
@@ -170,7 +170,7 @@ def exportar():
     # Ejecutar la tarea
     try:
         mensaje = exportar_conceptos()
-    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+    except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

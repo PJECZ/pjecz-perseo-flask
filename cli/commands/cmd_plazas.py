@@ -1,5 +1,5 @@
 """
-CLI Tabuladores
+CLI Plazas
 """
 import sys
 
@@ -7,7 +7,7 @@ import click
 
 from lib.exceptions import MyAnyError
 from perseo.app import create_app
-from perseo.blueprints.puestos.tasks import exportar_puestos
+from perseo.blueprints.plazas.tasks import exportar_plazas
 
 app = create_app()
 app.app_context().push()
@@ -15,16 +15,16 @@ app.app_context().push()
 
 @click.group()
 def cli():
-    """Puestos"""
+    """Plazas"""
 
 
 @click.command()
 def exportar():
-    """Exportar Puestos a un archivo XLSX"""
+    """Exportar Plazas a un archivo XLSX"""
 
     # Ejecutar la tarea
     try:
-        mensaje = exportar_puestos()
+        mensaje = exportar_plazas()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)

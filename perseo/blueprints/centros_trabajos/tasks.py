@@ -9,7 +9,14 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyBucketNotFoundError, MyEmptyError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
+from lib.exceptions import (
+    MyAnyError,
+    MyBucketNotFoundError,
+    MyEmptyError,
+    MyFileNotAllowedError,
+    MyFileNotFoundError,
+    MyUploadError,
+)
 from lib.google_cloud_storage import upload_file_to_gcs
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
@@ -70,7 +77,9 @@ def exportar_centros_trabajos() -> str:
 
     # Si el contador es cero, entonces no hay Centros de Trabajo
     if contador == 0:
-        raise MyEmptyError("No hay Centros de Trabajo para exportar.")
+        mensaje_error = "No hay Centros de Trabajo para exportar."
+        bitacora.error(mensaje_error)
+        raise MyEmptyError(mensaje_error)
 
     # Determinar el nombre del archivo XLSX
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
@@ -95,16 +104,23 @@ def exportar_centros_trabajos() -> str:
         # Leer el contenido del archivo XLSX
         with open(ruta_local_archivo_xlsx, "rb") as archivo:
             # Subir el archivo XLSX a Google Cloud Storage
-            public_url = upload_file_to_gcs(
-                bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
-                blob_name=f"{ruta_gcs}/{nombre_archivo_xlsx}",
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                data=archivo.read(),
-            )
-            mensaje_gcs = f"Se subio el archivo XLSX a {public_url}"
+            try:
+                public_url = upload_file_to_gcs(
+                    bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
+                    blob_name=f"{ruta_gcs}/{nombre_archivo_xlsx}",
+                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    data=archivo.read(),
+                )
+                mensaje_gcs = f"Se subio el archivo XLSX a GCS {public_url}"
+                bitacora.info(mensaje_gcs)
+            except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+                mensaje_fallo_gcs = str(error)
+                bitacora.warning("Falló al subir el archivo XLSX a GCS: %s", mensaje_fallo_gcs)
 
     # Entregar mensaje de termino
-    return f"Se exportaron {contador} Centros de Trabajo a {nombre_archivo_xlsx}. {mensaje_gcs}"
+    mensaje_termino = f"Se exportaron {contador} Centros de Trabajo a {nombre_archivo_xlsx}"
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
 
 
 def lanzar_exportar_centros_trabajos():
@@ -116,13 +132,11 @@ def lanzar_exportar_centros_trabajos():
     # Ejecutar el creador
     try:
         mensaje_termino = exportar_centros_trabajos()
-    except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+    except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
-        bitacora.error(mensaje_error)
         return mensaje_error
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
