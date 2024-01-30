@@ -1,5 +1,6 @@
 {% extends 'layouts/app.jinja2' %}
 {% import 'macros/list.jinja2' as list %}
+{% import 'macros/modals.jinja2' as modals %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
 {% block title %}{{ titulo }}{% endblock %}
@@ -9,6 +10,9 @@
         {% if current_user.can_admin('PERSONAS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('personas.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('personas.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_view('PERSONAS') %}
+            {{ modals.button_modal('Exportar a XLSX', url_for('personas.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere exportar las Personas como un archivo XLSX?") }}
         {% endif %}
         {% if current_user.can_insert('PERSONAS') %}
             {{ topbar.button_new('Nuevo Persona', url_for('personas.new')) }}
@@ -77,6 +81,7 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ modals.custom_javascript('Exportar a XLSX', '', 'ExportXLSX') }}
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>

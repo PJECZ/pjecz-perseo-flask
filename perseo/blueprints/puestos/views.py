@@ -97,6 +97,17 @@ def detail(puesto_id):
     return render_template("puestos/detail.jinja2", puesto=puesto)
 
 
+@puestos.route("/puestos/exportar_xlsx")
+def exportar_xlsx():
+    """Lanzar tarea en el fondo para exportar los Puestos a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="puestos.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando los Puestos a un archivo XLSX...",
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
+
+
 @puestos.route("/puestos/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():

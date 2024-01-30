@@ -115,6 +115,17 @@ def detail(tabulador_id):
     return render_template("tabuladores/detail.jinja2", tabulador=tabulador)
 
 
+@tabuladores.route("/tabuladores/exportar_xlsx")
+def exportar_xlsx():
+    """Lanzar tarea en el fondo para exportar los Tabuladores a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="tabuladores.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando los Tabuladores a un archivo XLSX...",
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
+
+
 @tabuladores.route("/tabuladores/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():

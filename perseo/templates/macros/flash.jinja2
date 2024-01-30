@@ -6,54 +6,58 @@
             {% for category, msg in messages %}
                 <div class="alert alert-{{ category }}" role="alert">
                     {{ msg }}
-                    {% if msg.endswith('recargar en 10 segundos...') %}
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Elaborando...</span>
-                        </div>
-                        <script>
-                            // Refresh the page after 10 seconds
-                            setTimeout(function(){
-                                location.reload();
-                            }, 10000); // 10000 milliseconds = 10 seconds
-                        </script>
-                    {% endif %}
-                    {% if msg.endswith('recargar en 30 segundos...') %}
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Elaborando...</span>
-                        </div>
-                        <script>
-                            // Refresh the page after 30 seconds
-                            setTimeout(function(){
-                                location.reload();
-                            }, 30000); // 30000 milliseconds = 30 seconds
-                        </script>
-                    {% endif %}
-                    {% if msg.endswith('recargar en 60 segundos...') %}
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Elaborando...</span>
-                        </div>
-                        <script>
-                            // Refresh the page after 60 seconds
-                            setTimeout(function(){
-                                location.reload();
-                            }, 60000); // 60000 milliseconds = 60 seconds
-                        </script>
-                    {% endif %}
-                    {% if msg.endswith('recargar en 30 segundos...') %}
-                        <div class="progress-bar">
-                            <span class="progress-bar-fill" style="width: 10%"></span>
-                        </div>
-                        <script>
-                            $('.progress-bar-fill').delay(30000).queue(function () {
-                                $(this).css('width', '100%')
-                            });
-                            // Refresh the page after 30 seconds
-                            setTimeout(function(){
-                                location.reload();
-                            }, 30000); // 30000 milliseconds = 30 seconds
-                        </script>
-                    {% endif %}
                 </div>
+                {% if msg.endswith('recargar en 10 segundos...') %}
+                    <div class="progress" style="height: 20px;">
+                        <div id="progress-bar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 1%; height: 10px;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <script>
+                        var progressBar = document.getElementById('progress-bar');
+                        var width = 1;
+                        var interval = setInterval(function() {
+                            width += 100/(10*1000/10);  // Increase by 1% every 10ms
+                            progressBar.style.width = width + '%';
+                            if (width >= 100) {
+                                clearInterval(interval);
+                                location.reload();
+                            }
+                        }, 10);
+                    </script>
+                {% endif %}
+                {% if msg.endswith('recargar en 30 segundos...') %}
+                    <div class="progress" style="height: 20px;">
+                        <div id="progress-bar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 1%; height: 10px;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <script>
+                        var progressBar = document.getElementById('progress-bar');
+                        var width = 1;
+                        var interval = setInterval(function() {
+                            width += 100/(30*1000/10);  // Increase by 1% every 10ms
+                            progressBar.style.width = width + '%';
+                            if (width >= 100) {
+                                clearInterval(interval);
+                                location.reload();
+                            }
+                        }, 10);
+                    </script>
+                {% endif %}
+                {% if msg.endswith('recargar en 60 segundos...') %}
+                    <div class="progress" style="height: 20px;">
+                        <div id="progress-bar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 1%" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <script>
+                        var progressBar = document.getElementById('progress-bar');
+                        var width = 1;
+                        var interval = setInterval(function() {
+                            width += 100/(60*1000/10);  // Increase by 1% every 10ms
+                            progressBar.style.width = width + '%';
+                            if (width >= 100) {
+                                clearInterval(interval);
+                                location.reload();
+                            }
+                        }, 10);
+                    </script>
+                {% endif %}
             {% endfor %}
             </div>
         {% endif %}

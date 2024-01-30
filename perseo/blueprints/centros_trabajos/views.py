@@ -97,6 +97,17 @@ def detail(centro_trabajo_id):
     return render_template("centros_trabajos/detail.jinja2", centro_trabajo=centro_trabajo)
 
 
+@centros_trabajos.route("/centros_trabajos/exportar_xlsx")
+def exportar_xlsx():
+    """Lanzar tarea en el fondo para exportar los Centros de Trabajo a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="centros_trabajos.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando los Centros de Trabajo a un archivo XLSX...",
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
+
+
 @centros_trabajos.route("/centros_trabajos/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
