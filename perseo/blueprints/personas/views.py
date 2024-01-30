@@ -119,8 +119,13 @@ def detail(persona_id):
 
 @personas.route("/personas/exportar_xlsx")
 def exportar_xlsx():
-    """Exportar las Personas a un archivo XLSX"""
-    return redirect(url_for("personas.list_active"))
+    """Lanzar tarea en el fondo para exportar las Personas a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="personas.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando las Personas a un archivo XLSX...",
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
 @personas.route("/personas/nuevo", methods=["GET", "POST"])

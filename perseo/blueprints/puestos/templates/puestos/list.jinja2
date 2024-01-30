@@ -12,7 +12,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('puestos.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_view('PUESTOS') %}
-            {{ modals.button_modal('Exportar a XLSX', url_for('puestos.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere descargar los Puestos como XLSX?") }}
+            {{ modals.button_modal('Exportar a XLSX', url_for('puestos.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere exportar los Puestos como un archivo XLSX?") }}
         {% endif %}
         {% if current_user.can_insert('PUESTOS') %}
             {{ topbar.button_new('Nuevo Puesto', url_for('puestos.new')) }}

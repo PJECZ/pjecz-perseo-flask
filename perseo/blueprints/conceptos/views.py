@@ -99,8 +99,13 @@ def detail(concepto_id):
 
 @conceptos.route("/conceptos/exportar_xlsx")
 def exportar_xlsx():
-    """Exportar los Conceptos a un archivo XLSX"""
-    return redirect(url_for("conceptos.list_active"))
+    """Lanzar tarea en el fondo para exportar los Conceptos a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="conceptos.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando los Conceptos a un archivo XLSX...",
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
 @conceptos.route("/conceptos/nuevo", methods=["GET", "POST"])

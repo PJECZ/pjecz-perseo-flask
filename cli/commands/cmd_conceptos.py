@@ -19,7 +19,7 @@ from lib.exceptions import MyAnyError
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.conceptos.tasks import exportar_conceptos
+from perseo.blueprints.conceptos.tasks import exportar_xlsx
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.quincenas.models import Quincena
 
@@ -169,13 +169,13 @@ def exportar():
 
     # Ejecutar la tarea
     try:
-        mensaje = exportar_conceptos()
+        mensaje_termino, _, _ = exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
     # Mensaje de termino
-    click.echo(click.style(mensaje, fg="green"))
+    click.echo(click.style(mensaje_termino, fg="green"))
 
 
 cli.add_command(agregar_actualizar)

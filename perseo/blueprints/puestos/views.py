@@ -99,8 +99,13 @@ def detail(puesto_id):
 
 @puestos.route("/puestos/exportar_xlsx")
 def exportar_xlsx():
-    """Exportar los Puestos a un archivo XLSX"""
-    return redirect(url_for("puestos.list_active"))
+    """Lanzar tarea en el fondo para exportar los Puestos a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="puestos.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando los Puestos a un archivo XLSX...",
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
 @puestos.route("/puestos/nuevo", methods=["GET", "POST"])

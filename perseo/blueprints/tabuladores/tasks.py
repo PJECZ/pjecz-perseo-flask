@@ -40,8 +40,8 @@ app.app_context().push()
 database.app = app
 
 
-def exportar_tabuladores() -> str:
-    """Tarea en el fondo para exportar Tabuladores a un archivo XLSX"""
+def exportar_xlsx() -> tuple[str, str, str]:
+    """Exportar Tabuladores a un archivo XLSX"""
 
     # Consultar Tabuladores
     tabuladores = (
@@ -167,13 +167,13 @@ def exportar_tabuladores() -> str:
                 mensaje_fallo_gcs = str(error)
                 bitacora.warning("Falló al subir el archivo XLSX a GCS: %s", mensaje_fallo_gcs)
 
-    # Entregar mensaje de termino
+    # Entregar mensaje de termino, el nombre del archivo XLSX y la URL publica
     mensaje_termino = f"Se exportaron {contador} Tabuladores a {nombre_archivo_xlsx}"
     bitacora.info(mensaje_termino)
-    return mensaje_termino
+    return mensaje_termino, nombre_archivo_xlsx, public_url
 
 
-def lanzar_exportar_tabuladores():
+def lanzar_exportar_xlsx():
     """Exportar Tabuladores a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
@@ -181,12 +181,12 @@ def lanzar_exportar_tabuladores():
 
     # Ejecutar el creador
     try:
-        mensaje_termino = exportar_tabuladores()
+        mensaje_termino, nombre_archivo_xlsx, public_url = exportar_xlsx()
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         return mensaje_error
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
-    set_task_progress(100, mensaje_termino)
+    set_task_progress(100, mensaje_termino, nombre_archivo_xlsx, public_url)
     return mensaje_termino

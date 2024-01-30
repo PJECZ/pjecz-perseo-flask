@@ -12,7 +12,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('tabuladores.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_view('TABULADORES') %}
-            {{ modals.button_modal('Exportar a XLSX', url_for('tabuladores.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere descargar los Tabuladores como XLSX?") }}
+            {{ modals.button_modal('Exportar a XLSX', url_for('tabuladores.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere exportar los Tabuladores como un archivo XLSX?") }}
         {% endif %}
         {% if current_user.can_insert('TABULADORES') %}
             {{ topbar.button_new('Nuevo Tabulador', url_for('tabuladores.new')) }}

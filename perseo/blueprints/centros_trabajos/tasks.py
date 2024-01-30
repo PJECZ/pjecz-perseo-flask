@@ -39,8 +39,8 @@ app.app_context().push()
 database.app = app
 
 
-def exportar_centros_trabajos() -> str:
-    """Tarea en el fondo para exportar Centros de Trabajo a un archivo XLSX"""
+def exportar_xlsx() -> tuple[str, str, str]:
+    """Exportar Centros de Trabajo a un archivo XLSX"""
 
     # Consultar Centros de Trabajo
     centros_trabajos = CentroTrabajo.query.filter_by(estatus="A").order_by(CentroTrabajo.clave).all()
@@ -117,13 +117,13 @@ def exportar_centros_trabajos() -> str:
                 mensaje_fallo_gcs = str(error)
                 bitacora.warning("Falló al subir el archivo XLSX a GCS: %s", mensaje_fallo_gcs)
 
-    # Entregar mensaje de termino
+    # Entregar mensaje de termino, el nombre del archivo XLSX y la URL publica
     mensaje_termino = f"Se exportaron {contador} Centros de Trabajo a {nombre_archivo_xlsx}"
     bitacora.info(mensaje_termino)
-    return mensaje_termino
+    return mensaje_termino, nombre_archivo_xlsx, public_url
 
 
-def lanzar_exportar_centros_trabajos():
+def lanzar_exportar_xlsx():
     """Exportar Centros de Trabajo a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
@@ -131,12 +131,12 @@ def lanzar_exportar_centros_trabajos():
 
     # Ejecutar el creador
     try:
-        mensaje_termino = exportar_centros_trabajos()
+        mensaje_termino, nombre_archivo_xlsx, public_url = exportar_xlsx()
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         return mensaje_error
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
-    set_task_progress(100, mensaje_termino)
+    set_task_progress(100, mensaje_termino, nombre_archivo_xlsx, public_url)
     return mensaje_termino

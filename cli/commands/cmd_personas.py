@@ -20,7 +20,7 @@ from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.personas.tasks import exportar_personas
+from perseo.blueprints.personas.tasks import exportar_xlsx
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
@@ -562,13 +562,13 @@ def exportar():
 
     # Ejecutar la tarea
     try:
-        mensaje = exportar_personas()
+        mensaje_termino, _, _ = exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
     # Mensaje de termino
-    click.echo(click.style(mensaje, fg="green"))
+    click.echo(click.style(mensaje_termino, fg="green"))
 
 
 @click.command()

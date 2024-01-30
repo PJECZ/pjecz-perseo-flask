@@ -12,7 +12,7 @@
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('personas.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_view('PERSONAS') %}
-            {{ modals.button_modal('Exportar a XLSX', url_for('personas.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere descargar las Personas como XLSX?") }}
+            {{ modals.button_modal('Exportar a XLSX', url_for('personas.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere exportar las Personas como un archivo XLSX?") }}
         {% endif %}
         {% if current_user.can_insert('PERSONAS') %}
             {{ topbar.button_new('Nuevo Persona', url_for('personas.new')) }}

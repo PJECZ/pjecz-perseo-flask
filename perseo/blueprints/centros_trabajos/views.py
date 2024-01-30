@@ -99,8 +99,13 @@ def detail(centro_trabajo_id):
 
 @centros_trabajos.route("/centros_trabajos/exportar_xlsx")
 def exportar_xlsx():
-    """Exportar los Centros de Trabajo a un archivo XLSX"""
-    return redirect(url_for("centros_trabajos.list_active"))
+    """Lanzar tarea en el fondo para exportar los Centros de Trabajo a un archivo XLSX"""
+    tarea = current_user.launch_task(
+        comando="centros_trabajos.tasks.lanzar_exportar_xlsx",
+        mensaje="Exportando los Centros de Trabajo a un archivo XLSX...",
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
 @centros_trabajos.route("/centros_trabajos/nuevo", methods=["GET", "POST"])

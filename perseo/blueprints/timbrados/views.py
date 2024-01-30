@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, flash, make_response, redirect, render
 from flask_login import login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.exceptions import MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError
+from lib.exceptions import MyAnyError
 from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
 from lib.safe_string import safe_quincena, safe_rfc
 from perseo.blueprints.nominas.models import Nomina
@@ -132,7 +132,7 @@ def download_pdf(timbrado_id):
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
             blob_name=get_blob_name_from_url(timbrado.url_pdf),
         )
-    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+    except MyAnyError as error:
         flash(str(error), "danger")
         return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
 
@@ -166,7 +166,7 @@ def download_xml(timbrado_id):
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
             blob_name=get_blob_name_from_url(timbrado.url_xml),
         )
-    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+    except MyAnyError as error:
         flash(str(error), "danger")
         return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
 

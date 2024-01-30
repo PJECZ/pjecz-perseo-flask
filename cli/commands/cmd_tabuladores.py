@@ -13,7 +13,7 @@ from lib.safe_string import safe_clave
 from perseo.app import create_app
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
-from perseo.blueprints.tabuladores.tasks import exportar_tabuladores
+from perseo.blueprints.tabuladores.tasks import exportar_xlsx
 
 TABULADORES_CSV = "seed/tabuladores.csv"
 
@@ -294,13 +294,13 @@ def exportar():
 
     # Ejecutar la tarea
     try:
-        mensaje = exportar_tabuladores()
+        mensaje_termino, _, _ = exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
     # Mensaje de termino
-    click.echo(click.style(mensaje, fg="green"))
+    click.echo(click.style(mensaje_termino, fg="green"))
 
 
 cli.add_command(agregar_actualizar)

@@ -14,7 +14,7 @@ from lib.exceptions import MyAnyError
 from lib.safe_string import safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
-from perseo.blueprints.centros_trabajos.tasks import exportar_centros_trabajos
+from perseo.blueprints.centros_trabajos.tasks import exportar_xlsx
 from perseo.extensions import database
 
 load_dotenv()
@@ -117,13 +117,13 @@ def exportar():
 
     # Ejecutar la tarea
     try:
-        mensaje = exportar_centros_trabajos()
+        mensaje_termino, _, _ = exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
     # Mensaje de termino
-    click.echo(click.style(mensaje, fg="green"))
+    click.echo(click.style(mensaje_termino, fg="green"))
 
 
 @click.command()

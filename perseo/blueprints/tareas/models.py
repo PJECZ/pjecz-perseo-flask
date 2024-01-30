@@ -25,9 +25,11 @@ class Tarea(database.Model, UniversalMixin):
     usuario = relationship("Usuario", back_populates="tareas")
 
     # Columnas
+    archivo = Column(String(256), nullable=False, default="", server_default="")
     comando = Column(String(256), nullable=False, index=True)
-    mensaje = Column(String(1024), default="", server_default="")
     ha_terminado = Column(Boolean, nullable=False, default=False)
+    mensaje = Column(String(1024), nullable=False, default="", server_default="")
+    url = Column(String(512), nullable=False, default="", server_default="")
 
     def get_rq_job(self):
         """Helper method that loads the RQ Job instance"""

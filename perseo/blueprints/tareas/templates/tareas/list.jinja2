@@ -18,11 +18,11 @@
         <table id="tareas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
-                    <th>Creado</th>
-                    <th>Usuario</th>
                     <th>Comando</th>
-                    <th>Mensaje</th>
                     <th>Ha terminado</th>
+                    <th>Mensaje</th>
+                    <th>Usuario</th>
+                    <th>Creado</th>
                 </tr>
             </thead>
         </table>
@@ -35,39 +35,46 @@
         configDataTable['ajax']['url'] = '/tareas/datatable_json';
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
-            { data: 'creado' },
-            { data: 'usuario' },
-            { data: 'comando' },
-            { data: 'mensaje' },
+            { data: 'detalle' },
             { data: 'ha_terminado' },
+            { data: 'mensaje' },
+            { data: 'usuario' },
+            { data: 'creado' },
         ];
         configDataTable['columnDefs'] = [
             {
-                targets: 0, // creado
-                type: "date",
-                render: function (data, type, row) {
-                    return moment.utc(data).local().format("YYYY-MM-DD HH:mm:ss");
-                }
-            },
-            {
-                targets: 1, // usuario
+                targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                    return '<a href="' + data.url + '">' + data.comando + '</a>';
                 }
             },
             {
-                targets: 3, // descripcion
+                targets: 1, // ha_terminado
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data) { return 'Terminado'; } else { return ''; }
+                }
+            },
+            {
+                targets: 2, // mensaje
                 data: null,
                 render: function(data, type, row, meta) {
                     return (data.length > 48 ? '<span title="'+ data +'">' + data.substr(0, 48) + '…</span>' : data);
                 }
             },
             {
-                targets: 4, // ha_terminado
+                targets: 3, // usuario
                 data: null,
                 render: function(data, type, row, meta) {
-                    if (data) { return 'Terminado'; } else { return ''; }
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                }
+            },
+            {
+                targets: 4, // creado
+                type: "date",
+                render: function (data, type, row) {
+                    return moment.utc(data).local().format("YYYY-MM-DD HH:mm:ss");
                 }
             }
         ];

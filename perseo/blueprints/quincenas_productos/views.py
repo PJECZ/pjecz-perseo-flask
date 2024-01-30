@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, flash, make_response, redirect, render
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.exceptions import MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError
+from lib.exceptions import MyAnyError
 from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
 from lib.safe_string import safe_message, safe_quincena
 from perseo.blueprints.bitacoras.models import Bitacora
@@ -132,7 +132,7 @@ def download_xlsx(quincena_producto_id):
             bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO"],
             blob_name=get_blob_name_from_url(quincena_producto.url),
         )
-    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError, MyNotValidParamError) as error:
+    except MyAnyError as error:
         flash(str(error), "danger")
         return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
