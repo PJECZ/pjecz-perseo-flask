@@ -104,7 +104,7 @@ def exportar_xlsx():
         comando="plazas.tasks.lanzar_exportar_xlsx",
         mensaje="Exportando las Plazas a un archivo XLSX...",
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
