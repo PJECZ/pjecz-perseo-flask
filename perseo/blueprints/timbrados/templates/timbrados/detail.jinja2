@@ -8,13 +8,6 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Timbrado') %}
         {{ topbar.button_previous('Timbrados', url_for('timbrados.list_active')) }}
-        {# if current_user.can_edit('TIMBRADOS') %}
-            {{ topbar.button_edit('Editar', url_for('timbrados.edit', timbrado_id=timbrado.id)) }}
-        {% endif #}
-        {# if current_user.can_admin('TIMBRADOS') %}
-            {% if timbrado.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('timbrados.delete', timbrado_id=timbrado.id)) }}{% endif %}
-            {% if timbrado.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('timbrados.recover', timbrado_id=timbrado.id)) }}{% endif %}
-        {% endif #}
     {% endcall %}
 {% endblock %}
 
@@ -31,15 +24,17 @@
         {{ detail.label_value('TFD Num. Cert. SAT', timbrado.tfd_num_cert_sat) }}
         {{ detail.label_value('TFD Sello SAT', timbrado.tfd_sello_sat) }}
         {# detail.label_value('Creado', moment(timbrado.creado, local=True).format('DD MMM YYYY')) #}
-        {{ detail.button_md('Descargar PDF', url_for('timbrados.download_pdf', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
-        {{ detail.button_md('Descargar XML', url_for('timbrados.download_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+        <div class="row my-2">
+            <div class="col-md-6 p-2">
+                {{ detail.button_md('Descargar PDF', url_for('timbrados.download_pdf', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+            </div>
+            <div class="col-md-6 p-2">
+                {{ detail.button_md('Descargar XML', url_for('timbrados.download_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+            </div>
+        </div>
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
-    {% if current_user.can_admin('TIMBRADOS') %}
-        {% if timbrado.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar este timbrado?') }}{% endif %}
-        {% if timbrado.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar este timbrado?') }}{% endif %}
-    {% endif %}
     {{ detail.moment_js(moment) }}
 {% endblock %}

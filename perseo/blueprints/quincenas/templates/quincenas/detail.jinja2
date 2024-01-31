@@ -530,7 +530,7 @@
                 { data: 'importe' },
                 { data: 'num_cheque' },
                 { data: 'fecha_pago' },
-                { data: 'timbrado_descargar_tfd_xml' },
+                { data: 'timbrado' },
             ];
             configDTNominas['columnDefs'] = [
                 {
@@ -566,8 +566,8 @@
                 {
                     targets: 13, // tfd
                     render: function(data, type, row, meta) {
-                        if (data != '') {
-                            return '<a href="' + data + '" target="_blank"><span class="iconify" data-icon="mdi:download"></span></a>';
+                        if (data.id != 0) {
+                            return '<a href="' + data.url + '"><span class="iconify" data-icon="mdi:invoice-list"></span></a>';
                         }
                         return '';
                     }
