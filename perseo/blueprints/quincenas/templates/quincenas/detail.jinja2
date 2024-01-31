@@ -574,11 +574,12 @@
                 }
             ];
             configDTNominas['createdRow'] = function(row, data, dataIndex) {
-                if (data.num_cheque != '' && data.tfd == '') {
-                    $(row).addClass('table-info');
-                }
-                if (data.num_cheque != '' && data.tfd != '') {
-                    $(row).addClass('table-success');
+                if (data.num_cheque != '') {
+                    if (data.timbrado.url != '') {
+                        $(row).addClass('table-success');
+                    } else {
+                        $(row).addClass('table-info');
+                    }
                 }
             };
             // Filtros Nominas

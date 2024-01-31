@@ -128,7 +128,6 @@
         configDataTable['columnDefs'] = [
             {
                 targets: 0, // detalle
-                data: null,
                 render: function(data, type, row, meta) {
                     return '<a href="' + data.url + '">' + data.id + '</a>';
                 }
@@ -167,11 +166,12 @@
             }
         ];
         configDataTable['createdRow'] = function(row, data, dataIndex) {
-            if (data.num_cheque != '' && data.timbrado_descargar_tfd_xml == '') {
-                $(row).addClass('table-info');
-            }
-            if (data.num_cheque != '' && data.timbrado_descargar_tfd_xml != '') {
-                $(row).addClass('table-success');
+            if (data.num_cheque != '') {
+                if (data.timbrado.url != '') {
+                    $(row).addClass('table-success');
+                } else {
+                    $(row).addClass('table-info');
+                }
             }
         };
         // Filtros Nominas
