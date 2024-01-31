@@ -122,7 +122,7 @@ def exportar_xlsx():
         comando="tabuladores.tasks.lanzar_exportar_xlsx",
         mensaje="Exportando los Tabuladores a un archivo XLSX...",
     )
-    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
     return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
