@@ -116,8 +116,8 @@
                         <th>Desde</th>
                         <th>Hasta</th>
                         <th>Tipo</th>
-                        <th style="text-align:right">Percepcion</th>
-                        <th style="text-align:right">Deduccion</th>
+                        <th style="text-align:right">Percepción</th>
+                        <th style="text-align:right">Deducción</th>
                         <th style="text-align:right">Importe</th>
                         <th>No. Cheque</th>
                         <th>F. de Pago</th>
@@ -249,11 +249,12 @@
                 }
             ];
             configDTNominas['createdRow'] = function(row, data, dataIndex) {
-                if (data.num_cheque != '' && data.tfd == '') {
-                    $(row).addClass('table-info');
-                }
-                if (data.num_cheque != '' && data.tfd != '') {
-                    $(row).addClass('table-success');
+                if (data.num_cheque != '') {
+                    if (data.timbrado.url != '') {
+                        $(row).addClass('table-success');
+                    } else {
+                        $(row).addClass('table-info');
+                    }
                 }
             };
             // Filtros Nominas
