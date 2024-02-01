@@ -26,6 +26,7 @@ from perseo.blueprints.productos.models import Producto
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.tabuladores.models import Tabulador
+from perseo.blueprints.timbrados.models import Timbrado
 from perseo.extensions import database
 
 EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
@@ -49,6 +50,89 @@ database.app = app
 @click.group()
 def cli():
     """Nominas"""
+
+
+@cli.command()
+@click.argument("quincena_clave", type=str)
+def actualizar_timbrados(quincena_clave: str):
+    """Actualizar los timbrados_ids (cambiar a cero si esta eliminado o no existe) de las nominas de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se termina
+    if quincena is None:
+        click.echo(f"ERROR: Quincena {quincena_clave} no existe.")
+        sys.exit(1)
+
+    # Inicializar contadores
+    revisados_contador = 0
+    actualizados_contador = 0
+    puestos_en_cero_contador = 0
+
+    # Bucle por cada nomina de la quincena
+    click.echo(f"Actualizando los timbrados_ids de la quincena {quincena_clave}: ", nl=False)
+    for nomina in quincena.nominas:
+        # Si el estatus NO es 'A', se omite
+        if nomina.estatus != "A":
+            continue
+
+        # Si el tipo es 'DESPENSA', se omite
+        if nomina.tipo == "DESPENSA":
+            continue
+
+        # Incrementar revisados_contador
+        revisados_contador += 1
+
+        # De forma inicial, se define timbrado_id en None
+        timbrado_id = None
+
+        # Consultar el ultimo timbrado de la Nomina con estatus 'A' y ordenados por id descendente
+        timbrado_ultimo = (
+            Timbrado.query.filter_by(nomina_id=nomina.id).filter_by(estatus="A").order_by(Timbrado.id.desc()).first()
+        )
+
+        # Si existe el timbrado_ultimo, se toma su id
+        if timbrado_ultimo is not None:
+            timbrado_id = timbrado_ultimo.id
+
+        # Si el timbrado_id es diferente al timbrado_id de la nomina, se actualiza
+        if nomina.timbrado_id != timbrado_id:
+            nomina.timbrado_id = timbrado_id
+            nomina.save()
+            actualizados_contador += 1
+            # Si NO hay timbrado entonces timbrado_id es cero, se incrementa el contador
+            if timbrado_id is None:
+                puestos_en_cero_contador += 1
+                click.echo(click.style("0", fg="yellow"), nl=False)
+            else:
+                click.echo(click.style("u", fg="green"), nl=False)
+        else:
+            click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea en la terminal
+    click.echo("")
+
+    # Si revisados_contador es cero, mostrar mensaje de error y terminar
+    if revisados_contador == 0:
+        click.echo(click.style("  No hubo registros de Nominas que revisar", fg="red"))
+        sys.exit(1)
+
+    # Si hubo nominas actualizadas, mostrar contador
+    if actualizados_contador > 0:
+        click.echo(click.style(f"  Se ACTUALIZARON {actualizados_contador} Nominas", fg="green"))
+
+    # Si hubo puestos_en_cero_contador en cero, mostrar contador
+    if puestos_en_cero_contador > 0:
+        click.echo(click.style(f"  De la cuales {puestos_en_cero_contador} Nominas cambiaron timbrado_id a cero", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Se revisaron {revisados_contador} Nominas", fg="green"))
 
 
 @click.command()
@@ -1917,6 +2001,7 @@ def generar_timbrados(quincena_clave: str, tipo: str):
     click.echo(f"  Generar Timbrados: {contador} filas en {nombre_archivo}")
 
 
+cli.add_command(actualizar_timbrados)
 cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
