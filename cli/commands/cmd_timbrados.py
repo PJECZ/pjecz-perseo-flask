@@ -199,43 +199,32 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             if element.tag == f"{XML_TAG_CFD_PREFIX}Emisor":
                 if "Rfc" in element.attrib:
                     cfdi_emisor_rfc = element.attrib["Rfc"]
-                    # click.echo(click.style(f"      Emisor RFC: {cfdi_emisor_rfc}", fg="green"))
                 if "Nombre" in element.attrib:
                     cfdi_emisor_nombre = element.attrib["Nombre"]
-                    # click.echo(click.style(f"      Emisor Nombre: {cfdi_emisor_nombre}", fg="green"))
                 if "RegimenFiscal" in element.attrib:
                     cfdi_emisor_regimen_fiscal = element.attrib["RegimenFiscal"]
-                    # click.echo(click.style(f"      Emisor Reg. Fis.: {cfdi_emisor_regimen_fiscal}", fg="green"))
 
             # Obtener datos de Receptor
             if element.tag == f"{XML_TAG_CFD_PREFIX}Receptor":
                 if "Rfc" in element.attrib:
                     cfdi_receptor_rfc = element.attrib["Rfc"]
-                    # click.echo(click.style(f"      Receptor RFC: {cfdi_receptor_rfc}", fg="green"))
                 if "Nombre" in element.attrib:
                     cfdi_receptor_nombre = element.attrib["Nombre"]
-                    # click.echo(click.style(f"      Receptor Nombre: {cfdi_receptor_nombre}", fg="green"))
 
             # Obtener datos de TimbreFiscalDigital
             if element.tag == f"{XML_TAG_TFD_PREFIX}TimbreFiscalDigital":
                 if "Version" in element.attrib:
                     tfd_version = element.attrib["Version"]
-                    # click.echo(click.style(f"      TFD Version: {tfd_version}", fg="green"))
                 if "UUID" in element.attrib:
                     tfd_uuid = element.attrib["UUID"]
-                    # click.echo(click.style(f"      TFD UUID: {tfd_uuid}", fg="green"))
                 if "FechaTimbrado" in element.attrib:
                     tfd_fecha_timbrado = element.attrib["FechaTimbrado"]
-                    # click.echo(click.style(f"      TFD Fecha Timbrado: {tfd_fecha_timbrado}", fg="green"))
                 if "SelloCFD" in element.attrib:
                     tfd_sello_cfd = element.attrib["SelloCFD"]
-                    # click.echo(click.style(f"      TFD Sello CFD: {tfd_sello_cfd}", fg="green"))
                 if "NoCertificadoSAT" in element.attrib:
                     tfd_num_cert_sat = element.attrib["NoCertificadoSAT"]
-                    # click.echo(click.style(f"      TFD Num. Cert. SAT: {tfd_num_cert_sat}", fg="green"))
                 if "SelloSAT" in element.attrib:
                     tfd_sello_sat = element.attrib["SelloSAT"]
-                    # click.echo(click.style(f"      TFD Sello SAT: {tfd_sello_sat}", fg="green"))
 
         # Si NO se encontro el Receptor RFC, se agrega a la lista de errores y se omite
         if cfdi_receptor_rfc is None:
@@ -283,24 +272,22 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         hay_cambios = False
 
         # Puede existir el registro de Timbrado
-        timbrado = Timbrado.query.filter(Timbrado.nomina_id == nomina.id).order_by(Timbrado.id.desc()).first()
+        timbrado = Timbrado.query.filter(Timbrado.nomina == nomina).filter_by(estatus="A").order_by(Timbrado.id.desc()).first()
 
         # Si NO existe el registro de Timbrado, se crea
         es_nuevo = False
         if timbrado is None:
-            timbrado = Timbrado(nomina_id=nomina.id, estado="TIMBRADO", archivo_pdf="", url_pdf="", archivo_xml="", url_xml="")
+            timbrado = Timbrado(nomina=nomina, estado="TIMBRADO", archivo_pdf="", url_pdf="", archivo_xml="", url_xml="")
             es_nuevo = True
             hay_cambios = True
 
         # Si tfd_version es diferente, hay_cambios sera verdadero
         if tfd_version is not None and timbrado.tfd_version != tfd_version:
-            # click.echo(click.style(f"    TFD Version: {timbrado.tfd_version} != {tfd_version}", fg="yellow"))
             timbrado.tfd_version = tfd_version
             hay_cambios = True
 
         # Si tfd_uuid es diferente, hay_cambios sera verdadero
         if tfd_uuid is not None and timbrado.tfd_uuid != tfd_uuid:
-            # click.echo(click.style(f"    TFD UUID: {timbrado.tfd_uuid} != {tfd_uuid}", fg="yellow"))
             timbrado.tfd_uuid = tfd_uuid
             hay_cambios = True
 
@@ -311,25 +298,21 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
 
         # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
         if tfd_fecha_timbrado is not None and tfd_fecha_timbrado_str != tfd_fecha_timbrado:
-            # click.echo(click.style(f"    TFD Fecha Timbrado: {tfd_fecha_timbrado_str} != {tfd_fecha_timbrado}", fg="yellow"))
             timbrado.tfd_fecha_timbrado = tfd_fecha_timbrado
             hay_cambios = True
 
         # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
         if tfd_sello_cfd is not None and timbrado.tfd_sello_cfd != tfd_sello_cfd:
-            # click.echo(click.style(f"    TFD Sello CFD: {timbrado.tfd_sello_cfd} != {tfd_sello_cfd}", fg="yellow"))
             timbrado.tfd_sello_cfd = tfd_sello_cfd
             hay_cambios = True
 
         # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
         if tfd_num_cert_sat is not None and timbrado.tfd_num_cert_sat != tfd_num_cert_sat:
-            # click.echo(click.style(f"    TFD Num. Cert. SAT: {timbrado.tfd_num_cert_sat} != {tfd_num_cert_sat}", fg="yellow"))
             timbrado.tfd_num_cert_sat = tfd_num_cert_sat
             hay_cambios = True
 
         # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
         if tfd_sello_sat is not None and timbrado.tfd_sello_sat != tfd_sello_sat:
-            # click.echo(click.style(f"    TFD Sello SAT: {timbrado.tfd_sello_sat} != {tfd_sello_sat}", fg="yellow"))
             timbrado.tfd_sello_sat = tfd_sello_sat
             hay_cambios = True
 
