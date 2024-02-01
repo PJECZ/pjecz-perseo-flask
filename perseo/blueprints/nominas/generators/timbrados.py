@@ -8,9 +8,17 @@ import pytz
 from openpyxl import Workbook
 
 from config.settings import get_settings
-from lib.exceptions import MyAnyError, MyEmptyError, MyNotValidParamError
+from lib.exceptions import (
+    MyAnyError,
+    MyBucketNotFoundError,
+    MyEmptyError,
+    MyFileNotAllowedError,
+    MyFileNotFoundError,
+    MyNotValidParamError,
+    MyUploadError,
+)
 from lib.fechas import quincena_to_fecha
-from lib.storage import GoogleCloudStorage
+from lib.google_cloud_storage import upload_file_to_gcs
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.nominas.generators.common import (
     GCS_BASE_DIRECTORY,

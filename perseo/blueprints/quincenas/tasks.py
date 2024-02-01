@@ -17,7 +17,7 @@ TIMEZONE = "America/Mexico_City"
 bitacora = logging.getLogger(__name__)
 bitacora.setLevel(logging.INFO)
 formato = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
-empunadura = logging.FileHandler("quincenas.log")
+empunadura = logging.FileHandler("logs/quincenas.log")
 empunadura.setFormatter(formato)
 bitacora.addHandler(empunadura)
 
