@@ -1,6 +1,7 @@
 """
 Nominas, generadores de dispersiones de pensionados
 """
+
 from datetime import datetime
 from pathlib import Path
 
@@ -9,7 +10,6 @@ from openpyxl import Workbook
 
 from config.settings import get_settings
 from lib.exceptions import (
-    MyAnyError,
     MyBucketNotFoundError,
     MyEmptyError,
     MyFileNotAllowedError,

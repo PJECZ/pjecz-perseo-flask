@@ -1,6 +1,7 @@
 """
 Nominas, generadores de nominas
 """
+
 from datetime import datetime
 from pathlib import Path
 
@@ -9,7 +10,6 @@ from openpyxl import Workbook
 
 from config.settings import get_settings
 from lib.exceptions import (
-    MyAnyError,
     MyBucketNotFoundError,
     MyEmptyError,
     MyFileNotAllowedError,
@@ -179,45 +179,41 @@ def crear_nominas(
     # Actualizar los consecutivos de cada banco
     sesion.commit()
 
-    # Determinar la fecha y tiempo actual en la zona horaria de Mexico
+    # Determinar el nombre del archivo XLSX
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
-
-    # Determinar el nombre y ruta del archivo XLSX
     nombre_archivo_xlsx = f"nominas_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
-    descripcion_archivo_xlsx = f"Nominas {quincena_clave} {ahora.strftime('%Y-%m-%d %H%M%S')}"
-    archivo_xlsx = Path(LOCAL_BASE_DIRECTORY, nombre_archivo_xlsx)
 
-    # Si no existe la carpeta LOCAL_BASE_DIRECTORY, crearla
-    Path(LOCAL_BASE_DIRECTORY).mkdir(parents=True, exist_ok=True)
+    # Determinar las rutas con directorios con el año y el número de mes en dos digitos
+    ruta_local = Path(LOCAL_BASE_DIRECTORY, ahora.strftime("%Y"), ahora.strftime("%m"))
+    ruta_gcs = Path(GCS_BASE_DIRECTORY, ahora.strftime("%Y"), ahora.strftime("%m"))
+
+    # Si no existe el directorio local, crearlo
+    Path(ruta_local).mkdir(parents=True, exist_ok=True)
 
     # Guardar el archivo XLSX
-    libro.save(archivo_xlsx)
+    ruta_local_archivo_xlsx = str(Path(ruta_local, nombre_archivo_xlsx))
+    libro.save(ruta_local_archivo_xlsx)
 
-    # Si esta configurado settings.CLOUD_STORAGE_DEPOSITO, entonces subir el archivo XLSX a Google Cloud Storage
-    gcs_public_path = ""
+    # Si esta configurado Google Cloud Storage
+    mensaje_gcs = ""
+    public_url = ""
     settings = get_settings()
     if settings.CLOUD_STORAGE_DEPOSITO != "":
-        with open(archivo_xlsx, "rb") as archivo:
+        # Leer el contenido del archivo XLSX
+        with open(ruta_local_archivo_xlsx, "rb") as archivo:
+            # Subir el archivo XLSX a Google Cloud Storage
             try:
-                bitacora.info("GCS: Bucket %s", settings.CLOUD_STORAGE_DEPOSITO)
-                gcstorage = GoogleCloudStorage(
-                    base_directory=GCS_BASE_DIRECTORY,
-                    upload_date=ahora.date(),
-                    allowed_extensions=["xlsx"],
-                    month_in_word=False,
+                public_url = upload_file_to_gcs(
                     bucket_name=settings.CLOUD_STORAGE_DEPOSITO,
+                    blob_name=f"{ruta_gcs}/{nombre_archivo_xlsx}",
+                    content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    data=archivo.read(),
                 )
-                gcs_nombre_archivo_xlsx = gcstorage.set_filename(
-                    description=descripcion_archivo_xlsx,
-                    extension="xlsx",
-                    start_with_date=False,
-                )
-                bitacora.info("GCS: Subiendo %s", gcs_nombre_archivo_xlsx)
-                gcs_public_path = gcstorage.upload(archivo.read())
-                bitacora.info("GCS: Depositado %s", gcs_public_path)
-            except MyAnyError as error:
-                mensaje = str(error)
-                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
+                mensaje_gcs = f"Se subio el archivo XLSX a GCS {public_url}"
+                bitacora.info(mensaje_gcs)
+            except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
+                mensaje_fallo_gcs = str(error)
+                actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje_fallo_gcs])
                 raise error
 
     # Si hubo personas sin cuentas, entonces juntarlas para mensajes
@@ -249,7 +245,7 @@ def crear_nominas(
         fuente=FUENTE,
         mensajes=mensajes,
         archivo=nombre_archivo_xlsx,
-        url=gcs_public_path,
+        url=public_url,
         es_satisfactorio=es_satisfactorio,
     )
 
