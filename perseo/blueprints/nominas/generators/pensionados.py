@@ -29,7 +29,6 @@ from perseo.blueprints.nominas.generators.common import (
 )
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 
 FUENTE = "PENSIONADOS"
 
