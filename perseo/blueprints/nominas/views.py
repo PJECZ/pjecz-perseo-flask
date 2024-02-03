@@ -1,6 +1,7 @@
 """
 Nominas, vistas
 """
+
 import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -52,9 +53,9 @@ def datatable_json():
     if "tipo" in request.form and request.form["tipo"] != "":
         consulta = consulta.filter_by(tipo=request.form["tipo"])
     if "tfd" in request.form and request.form["tfd"] == "1":
-        consulta = consulta.filter(Nomina.tfd != None)
+        consulta = consulta.filter(Nomina.timbrado_id != None)
     if "tfd" in request.form and request.form["tfd"] == "-1":
-        consulta = consulta.filter(Nomina.tfd == None)
+        consulta = consulta.filter(Nomina.timbrado_id == None)
     # Luego filtrar por columnas de otras tablas
     if "quincena_clave" in request.form:
         try:
