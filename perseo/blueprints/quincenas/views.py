@@ -18,6 +18,7 @@ from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.blueprints.usuarios.decorators import permission_required
 
 MODULO = "QUINCENAS"
+TIMEOUT = 300  # 5 minutos
 
 quincenas = Blueprint("quincenas", __name__, template_folder="templates")
 
@@ -456,6 +457,7 @@ def generate_timbrados_empleados_activos(quincena_id):
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_timbrados",
+        timeout=TIMEOUT,
         mensaje=f"Crear un archivo XLSX con los timbrados de {quincena.clave} con empleados activos...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -491,6 +493,7 @@ def generate_timbrados_pensionados(quincena_id):
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_timbrados",
+        timeout=TIMEOUT,
         mensaje=f"Crear un archivo XLSX con los timbrados de {quincena.clave} con pensionados...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -529,6 +532,7 @@ def generate_timbrados_aguinaldos(quincena_id):
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_timbrados_aguinaldos",
+        timeout=TIMEOUT,
         mensaje=f"Crear un archivo XLSX con los timbrados aguinaldos de {quincena.clave}...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -566,6 +570,7 @@ def generate_timbrados_apoyos_anuales(quincena_id):
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_timbrados_apoyos_anuales",
+        timeout=TIMEOUT,
         mensaje=f"Crear un archivo XLSX con los timbrados apoyos anuales de {quincena.clave}...",
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,

@@ -19,7 +19,9 @@ from lib.exceptions import (
 )
 from lib.fechas import quincena_to_fecha
 from lib.google_cloud_storage import upload_file_to_gcs
+from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
+from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.generators.common import (
     GCS_BASE_DIRECTORY,
     LOCAL_BASE_DIRECTORY,
@@ -27,10 +29,12 @@ from perseo.blueprints.nominas.generators.common import (
     actualizar_quincena_producto,
     bitacora,
     consultar_validar_quincena,
+    database,
 )
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.tabuladores.models import Tabulador
 
 PATRON_RFC = "PJE901211TI9"
 COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
@@ -112,20 +116,19 @@ def crear_timbrados(
         actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
         raise MyEmptyError(mensaje)
 
-    # Consultar las Nominas activas de la quincena, del tipo dado, juntar con personas para ordenar por RFC
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    session = database.session
+
+    # Consultar Nominas activas de la quincena, del tipo dado, juntar con personas
     nominas = (
-        Nomina.query.join(Persona)
+        session.query(Nomina)
+        .join(Persona)
         .filter(Nomina.quincena_id == quincena.id)
         .filter(Nomina.tipo == tipo)
         .filter(Nomina.estatus == "A")
+        .order_by(Persona.rfc)
+        .all()
     )
-
-    # Si hay modelos, filtrar por ellos
-    if modelos is not None:
-        nominas = nominas.filter(Persona.modelo.in_(modelos))
-
-    # Consultar los registros de nominas ordenando por RFC
-    nominas = nominas.order_by(Persona.rfc).all()
 
     # Si no hay registros, provocar error
     if len(nominas) == 0:
@@ -205,19 +208,32 @@ def crear_timbrados(
 
     # Bucle para crear cada fila del archivo XLSX
     for nomina in nominas:
-        # Consultar las cuentas de la persona
-        cuentas = nomina.persona.cuentas
+        # Consultar la Persona
+        persona = session.query(Persona).get(nomina.persona_id)
+
+        # Si modelos no es None y el modelo de la persona NO esta en modelos, se omite
+        if modelos is not None and persona.modelo not in modelos:
+            continue
+
+        # Consultar el Centro de Trabajo de la Nomina
+        centro_trabajo = session.query(CentroTrabajo).get(nomina.centro_trabajo_id)
+
+        # Consultar el Tabulador de la Persona
+        tabulador = session.query(Tabulador).get(persona.tabulador_id)
+
+        # Consultar las Cuentas de la Persona
+        cuentas = session.query(Cuenta).filter_by(persona_id=nomina.persona_id).filter_by(estatus="A").order_by(id.desc()).all()
 
         # De las cuentas hay que sacar la que no tenga la clave 9, porque esa clave es la de DESPENSA
         su_cuenta = None
         for cuenta in cuentas:
-            if cuenta.banco.clave != "9" and cuenta.estatus == "A":
+            if cuenta.banco.clave != "9":
                 su_cuenta = cuenta
                 break
 
         # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if su_cuenta is None:
-            personas_sin_cuentas.append(nomina.persona.rfc)
+            personas_sin_cuentas.append(persona.rfc)
             continue
 
         # Incrementar contador
@@ -226,21 +242,21 @@ def crear_timbrados(
         # Fila parte 1
         fila_parte_1 = [
             contador,  # CONSECUTIVO
-            nomina.persona.num_empleado,  # NUMERO DE EMPLEADO
-            nomina.persona.apellido_primero,  # APELLIDO PRIMERO
-            nomina.persona.apellido_segundo,  # APELLIDO SEGUNDO
-            nomina.persona.nombres,  # NOMBRES
-            nomina.persona.rfc,  # RFC
-            nomina.persona.curp,  # CURP
-            nomina.persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
-            nomina.persona.ingreso_pj_fecha,  # FECHA DE INGRESO
+            persona.num_empleado,  # NUMERO DE EMPLEADO
+            persona.apellido_primero,  # APELLIDO PRIMERO
+            persona.apellido_segundo,  # APELLIDO SEGUNDO
+            persona.nombres,  # NOMBRES
+            persona.rfc,  # RFC
+            persona.curp,  # CURP
+            persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
+            persona.ingreso_pj_fecha,  # FECHA DE INGRESO
             "O" if tipo == "SALARIO" else "E",  # CLAVE TIPO NOMINA ordinarias es O, extraordinarias es E
-            "SI" if nomina.persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
+            "SI" if persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
             su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
             su_cuenta.num_cuenta,  # NUMERO DE CUENTA
             "",  # PLANTA nula
-            nomina.persona.tabulador.salario_diario,  # SALARIO DIARIO
-            nomina.persona.tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
+            tabulador.salario_diario,  # SALARIO DIARIO
+            tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
             quincena_fecha_inicial,  # FECHA INICIAL PERIODO
             quincena_fecha_final,  # FECHA FINAL PERIODO
             nomina.fecha_pago,  # FECHA DE PAGO
@@ -264,9 +280,9 @@ def crear_timbrados(
             "",  # CLAVE CENTRO COSTOS nulo
             "",  # CENTRO COSTOS nulo
             "04" if tipo == "SALARIO" else "99",  # FORMA DE PAGO para la ayuda es 99 y para los salarios es 04
-            nomina.centro_trabajo.clave,  # CLAVE DEPARTAMENTO
-            nomina.centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
-            nomina.persona.tabulador.puesto.clave,  # NOMBRE PUESTO por lo pronto es la clave del puesto
+            centro_trabajo.clave,  # CLAVE DEPARTAMENTO
+            centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
+            tabulador.puesto.clave,  # NOMBRE PUESTO por lo pronto es la clave del puesto
         ]
 
         # Fila parte 2
@@ -277,7 +293,7 @@ def crear_timbrados(
                 # Consultar la P-D de la quincena, la persona y el concepto
                 percepcion_deduccion = (
                     PercepcionDeduccion.query.filter_by(quincena_id=quincena.id)
-                    .filter_by(persona_id=nomina.persona.id)
+                    .filter_by(persona_id=persona.id)
                     .filter_by(concepto_id=concepto.id)
                     .first()
                 )
@@ -290,7 +306,7 @@ def crear_timbrados(
             percepcion_deduccion_paz = (
                 PercepcionDeduccion.query.join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
-                .filter(PercepcionDeduccion.persona_id == nomina.persona.id)
+                .filter(PercepcionDeduccion.persona_id == persona.id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
                 .filter(Concepto.clave == "PAZ")
                 .first()
@@ -300,7 +316,7 @@ def crear_timbrados(
             percepcion_deduccion_daz = (
                 PercepcionDeduccion.query.join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
-                .filter(PercepcionDeduccion.persona_id == nomina.persona.id)
+                .filter(PercepcionDeduccion.persona_id == persona.id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
                 .filter(Concepto.clave == "DAZ")
                 .first()
@@ -310,7 +326,7 @@ def crear_timbrados(
             percepcion_deduccion_d62 = (
                 PercepcionDeduccion.query.join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
-                .filter(PercepcionDeduccion.persona_id == nomina.persona.id)
+                .filter(PercepcionDeduccion.persona_id == persona.id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
                 .filter(Concepto.clave == "D62")
                 .first()
@@ -319,15 +335,15 @@ def crear_timbrados(
 
         # Si el codigo postal fiscal es cero, entonces se usa 00000
         codigo_postal_fiscal = "00000"
-        if nomina.persona.codigo_postal_fiscal:
-            codigo_postal_fiscal = str(nomina.persona.codigo_postal_fiscal).zfill(5)
+        if persona.codigo_postal_fiscal:
+            codigo_postal_fiscal = str(persona.codigo_postal_fiscal).zfill(5)
 
         # Fila parte 3
         fila_parte_3 = [
             "IP",  # ORIGEN RECURSO
             "100",  # MONTO DEL RECURSO
             codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
-            nomina.persona.modelo,  # MODELO
+            persona.modelo,  # MODELO
         ]
 
         # Agregar la fila
@@ -344,15 +360,16 @@ def crear_timbrados(
 
     # Determinar el nombre del archivo XLSX
     if tipo == "SALARIO":
-        nombre_archivo_xlsx = f"timbrados_salarios_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+        prefijo = f"timbrados"
         if modelos == [3]:
-            nombre_archivo_xlsx = f"timbrados_pensionados_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+            prefijo = f"timbrados_pensionados"
         elif modelos == [1, 2]:
-            nombre_archivo_xlsx = f"timbrados_empleados_activos_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+            prefijo = f"timbrados_empleados_activos"
     elif tipo == "AGUINALDO":
-        nombre_archivo_xlsx = f"timbrados_aguinaldos_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+        prefijo = f"timbrados_aguinaldos"
     elif tipo == "APOYO ANUAL":
-        nombre_archivo_xlsx = f"timbrados_apoyos_anuales_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+        prefijo = f"timbrados_apoyos_anuales"
+    nombre_archivo_xlsx = f"{prefijo}_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Determinar las rutas con directorios con el año y el número de mes en dos digitos
     ruta_local = Path(LOCAL_BASE_DIRECTORY, ahora.strftime("%Y"), ahora.strftime("%m"))
