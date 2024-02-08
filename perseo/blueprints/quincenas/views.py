@@ -1,6 +1,7 @@
 """
 Quincenas, vistas
 """
+
 import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -279,7 +280,7 @@ def close_all():
 
 
 @quincenas.route("/quincenas/generar_nominas/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_nominas(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con las nominas de una quincena"""
     # Consultar y validar la quincena
@@ -315,7 +316,7 @@ def generate_nominas(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_monederos/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_monederos(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los monederos de una quincena"""
     # Consultar y validar la quincena
@@ -351,7 +352,7 @@ def generate_monederos(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_pensionados/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_pensionados(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los pensionados de una quincena"""
     # Consultar y validar la quincena
@@ -387,7 +388,7 @@ def generate_pensionados(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_dispersiones_pensionados/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_dispersiones_pensionados(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con las dispersiones pensionados de una quincena"""
     # Consultar y validar la quincena
@@ -423,7 +424,7 @@ def generate_dispersiones_pensionados(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_timbrados/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_timbrados(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados de una quincena"""
     # Consultar y validar la quincena
@@ -457,7 +458,7 @@ def generate_timbrados(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_timbrados_aguinaldos/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_timbrados_aguinaldos(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados aguinaldos de una quincena"""
     # Consultar y validar la quincena
@@ -494,7 +495,7 @@ def generate_timbrados_aguinaldos(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_timbrados_apoyos_anuales/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_timbrados_apoyos_anuales(quincena_id):
     """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados apoyos anuales de una quincena"""
     # Consultar y validar la quincena
@@ -531,7 +532,7 @@ def generate_timbrados_apoyos_anuales(quincena_id):
 
 
 @quincenas.route("/quincenas/generar_todos/<int:quincena_id>")
-@permission_required(MODULO, Permiso.ADMINISTRAR)
+@permission_required(MODULO, Permiso.CREAR)
 def generate_todos(quincena_id):
     """Lanzar tarea en el fondo para crear todos los archivo XLSX de una quincena"""
     # Consultar y validar la quincena
