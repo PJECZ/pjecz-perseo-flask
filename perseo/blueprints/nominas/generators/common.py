@@ -1,6 +1,7 @@
 """
 Nominas, comunes para los generadores
 """
+
 import logging
 import re
 
@@ -11,7 +12,7 @@ from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.quincenas_productos.models import QuincenaProducto
 from perseo.extensions import database
 
-GCS_BASE_DIRECTORY = "reports/nominas"
+GCS_BASE_DIRECTORY = "nominas"
 LOCAL_BASE_DIRECTORY = "reports/nominas"
 TIMEZONE = "America/Mexico_City"
 

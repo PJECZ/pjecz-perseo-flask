@@ -30,6 +30,7 @@
                 {{ detail.label_value('Creado', moment(quincena.creado).format('DD MMM YYYY')) }}
             {% endcall %}
         </div>
+        {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
         <div class="col-md-6">
             {# Generar todos los archivos #}
             {% call detail.card(title='Generar archivos finales') %}
@@ -53,6 +54,7 @@
                 {% endif %}
             {% endcall %}
         </div>
+        {% endif %}
     </div>
     {# Descargar y generar los productos de la quincena #}
     <div class="row mb-2">
@@ -82,7 +84,7 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {% if quincena.estado == 'ABIERTA' %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
                             label='Eliminar',
                             url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_nominas.id),
@@ -96,7 +98,7 @@
             {% else %}
                 {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
-                    {% if quincena.estado == 'ABIERTA' %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_md(
                             label='Generar XLSX',
                             url=url_for('quincenas.generate_nominas', quincena_id=quincena.id),
@@ -135,7 +137,7 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {% if quincena.estado == 'ABIERTA' %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
                             label='Eliminar',
                             url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_monederos.id),
@@ -149,7 +151,7 @@
             {% else %}
                 {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
-                    {% if quincena.estado == 'ABIERTA' %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_md(
                             label='Generar XLSX',
                             url=url_for('quincenas.generate_monederos', quincena_id=quincena.id),
@@ -188,7 +190,7 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {% if quincena.estado == 'ABIERTA' %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_sm(
                             label='Eliminar',
                             url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_pensionados.id),
@@ -202,7 +204,7 @@
             {% else %}
                 {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
-                    {% if quincena.estado == 'ABIERTA' %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
                         {{ modals.button_modal_md(
                             label='Generar XLSX',
                             url=url_for('quincenas.generate_pensionados', quincena_id=quincena.id),
@@ -249,26 +251,30 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {{ modals.button_modal_sm(
-                        label='Eliminar',
-                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_salarios.id),
-                        id='DeleteTimbradosSalarios',
-                        icon='mdi:delete',
-                        message="¿Eliminar el archivo XLSX para tmbrados salarios?",
-                        color_class='btn-outline-danger')
-                    }}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_sm(
+                            label='Eliminar',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_salarios.id),
+                            id='DeleteTimbradosSalarios',
+                            icon='mdi:delete',
+                            message="¿Eliminar el archivo XLSX para tmbrados salarios?",
+                            color_class='btn-outline-danger')
+                        }}
+                    {% endif %}
                 {% endcall %}
             {% else %}
                 {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
-                    {{ modals.button_modal_md(
-                        label='Generar XLSX',
-                        url=url_for('quincenas.generate_timbrados', quincena_id=quincena.id),
-                        id='GenerateTimbradosSalarios',
-                        icon='mdi:play',
-                        message="¿Generar un nuevo archivo XLSX para timbrados salarios?",
-                        color_class='btn-outline-success')
-                    }}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_timbrados', quincena_id=quincena.id),
+                            id='GenerateTimbradosSalarios',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para timbrados salarios?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endif %}
                 {% endcall %}
             {% endif %}
         </div>
@@ -298,27 +304,31 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {{ modals.button_modal_sm(
-                        label='Eliminar',
-                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_aguinaldos.id),
-                        id='DeleteTimbradosAguinaldos',
-                        icon='mdi:delete',
-                        message="¿Eliminar el archivo XLSX para timbrados aguinaldos?",
-                        color_class='btn-outline-danger')
-                    }}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_sm(
+                            label='Eliminar',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_aguinaldos.id),
+                            id='DeleteTimbradosAguinaldos',
+                            icon='mdi:delete',
+                            message="¿Eliminar el archivo XLSX para timbrados aguinaldos?",
+                            color_class='btn-outline-danger')
+                        }}
+                    {% endif %}
                 {% endcall %}
             {% else %}
                 {% if quincena.tiene_aguinaldos %}
                     {% call detail.card(title=title) %}
                         <p class="lead text-center">No hay archivo</p>
-                        {{ modals.button_modal_md(
-                            label='Generar XLSX',
-                            url=url_for('quincenas.generate_timbrados_aguinaldos', quincena_id=quincena.id),
-                            id='GenerateTimbradosAguinaldos',
-                            icon='mdi:play',
-                            message="¿Generar un nuevo archivo XLSX para timbrados aguinaldos?",
-                            color_class='btn-outline-success')
-                        }}
+                        {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                            {{ modals.button_modal_md(
+                                label='Generar XLSX',
+                                url=url_for('quincenas.generate_timbrados_aguinaldos', quincena_id=quincena.id),
+                                id='GenerateTimbradosAguinaldos',
+                                icon='mdi:play',
+                                message="¿Generar un nuevo archivo XLSX para timbrados aguinaldos?",
+                                color_class='btn-outline-success')
+                            }}
+                        {% endif %}
                     {% endcall %}
                 {% endif %}
             {% endif %}
@@ -347,27 +357,31 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {{ modals.button_modal_sm(
-                        label='Eliminar',
-                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_apoyos_anuales.id),
-                        id='DeleteTimbradosApoyosAnuales',
-                        icon='mdi:delete',
-                        message="¿Eliminar el archivo XLSX para timbrados apoyos anuales?",
-                        color_class='btn-outline-danger')
-                    }}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_sm(
+                            label='Eliminar',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_apoyos_anuales.id),
+                            id='DeleteTimbradosApoyosAnuales',
+                            icon='mdi:delete',
+                            message="¿Eliminar el archivo XLSX para timbrados apoyos anuales?",
+                            color_class='btn-outline-danger')
+                        }}
+                    {% endif %}
                 {% endcall %}
             {% else %}
                 {% if quincena.tiene_apoyos_anuales %}
                     {% call detail.card(title=title) %}
                         <p class="lead text-center">No hay archivo</p>
-                        {{ modals.button_modal_md(
-                            label='Generar XLSX',
-                            url=url_for('quincenas.generate_timbrados_apoyos_anuales', quincena_id=quincena.id),
-                            id='GenerateTimbradosApoyosAnuales',
-                            icon='mdi:play',
-                            message="¿Generar un nuevo archivo XLSX para timbrados apoyos anuales?",
-                            color_class='btn-outline-success')
-                        }}
+                        {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                            {{ modals.button_modal_md(
+                                label='Generar XLSX',
+                                url=url_for('quincenas.generate_timbrados_apoyos_anuales', quincena_id=quincena.id),
+                                id='GenerateTimbradosApoyosAnuales',
+                                icon='mdi:play',
+                                message="¿Generar un nuevo archivo XLSX para timbrados apoyos anuales?",
+                                color_class='btn-outline-success')
+                            }}
+                        {% endif %}
                     {% endcall %}
                 {% endif %}
             {% endif %}
@@ -398,26 +412,30 @@
                             target='_blank')
                         }}
                     {% endif %}
-                    {{ modals.button_modal_sm(
-                        label='Eliminar',
-                        url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_dispersiones_pensionados.id),
-                        id='DeleteDispersionesPensionados',
-                        icon='mdi:delete',
-                        message="¿Eliminar el archivo XLSX para dispersiones pensionados?",
-                        color_class='btn-outline-danger')
-                    }}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_sm(
+                            label='Eliminar',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_dispersiones_pensionados.id),
+                            id='DeleteDispersionesPensionados',
+                            icon='mdi:delete',
+                            message="¿Eliminar el archivo XLSX para dispersiones pensionados?",
+                            color_class='btn-outline-danger')
+                        }}
+                    {% endif %}
                 {% endcall %}
             {% else %}
                 {% call detail.card(title=title) %}
                     <p class="lead text-center">No hay archivo</p>
-                    {{ modals.button_modal_md(
-                        label='Generar XLSX',
-                        url=url_for('quincenas.generate_dispersiones_pensionados', quincena_id=quincena.id),
-                        id='GenerateDispersionesPensionados',
-                        icon='mdi:play',
-                        message="¿Generar un nuevo archivo XLSX para dispersiones pensionados?",
-                        color_class='btn-outline-success')
-                    }}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_dispersiones_pensionados', quincena_id=quincena.id),
+                            id='GenerateDispersionesPensionados',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para dispersiones pensionados?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endif %}
                 {% endcall %}
             {% endif %}
         </div>
