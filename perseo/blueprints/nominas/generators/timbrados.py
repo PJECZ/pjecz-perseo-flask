@@ -41,12 +41,19 @@ COMPANIA_CP = "25000"
 def crear_timbrados(
     quincena_clave: str,
     quincena_producto_id: int,
+    modelos: list = None,
     tipo: str = "SALARIO",
 ) -> str:
     """Crear archivo XLSX con los timbrados de una quincena"""
 
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
+
+    # Validar los modelos 1: "CONFIANZA", 2: "SINDICALIZADO", 3: "JUBILADO"
+    if modelos is not None:
+        for modelo in modelos:
+            if modelo not in [1, 2, 3]:
+                raise MyNotValidParamError(f"El modelo {modelo} no es valido")
 
     # Validar el tipo
     if tipo not in ["APOYO ANUAL", "AGUINALDO", "SALARIO"]:
@@ -58,6 +65,10 @@ def crear_timbrados(
         fuente = "TIMBRADOS AGUINALDOS"
     elif tipo == "APOYO ANUAL":
         fuente = "TIMBRADOS APOYOS ANUALES"
+    elif modelos == [3]:
+        fuente = "TIMBRADOS PENSIONADOS"
+    elif modelos == [1, 2]:
+        fuente = "TIMBRADOS EMPLEADOS ACTIVOS"
 
     # Inicializar el diccionario de conceptos
     conceptos_dict = {}
@@ -107,9 +118,14 @@ def crear_timbrados(
         .filter(Nomina.quincena_id == quincena.id)
         .filter(Nomina.tipo == tipo)
         .filter(Nomina.estatus == "A")
-        .order_by(Persona.rfc)
-        .all()
     )
+
+    # Si hay modelos, filtrar por ellos
+    if modelos is not None:
+        nominas = nominas.filter(Persona.modelo.in_(modelos))
+
+    # Consultar los registros de nominas ordenando por RFC
+    nominas = nominas.order_by(Persona.rfc).all()
 
     # Si no hay registros, provocar error
     if len(nominas) == 0:
@@ -177,6 +193,7 @@ def crear_timbrados(
         "ORIGEN RECURSO",
         "MONTO DEL RECURSO",
         "CODIGO POSTAL FISCAL",
+        "MODELO",
     ]
 
     # Agregar la fila con las cabeceras de las columnas
@@ -310,6 +327,7 @@ def crear_timbrados(
             "IP",  # ORIGEN RECURSO
             "100",  # MONTO DEL RECURSO
             codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
+            nomina.persona.modelo,  # MODELO
         ]
 
         # Agregar la fila
@@ -327,6 +345,10 @@ def crear_timbrados(
     # Determinar el nombre del archivo XLSX
     if tipo == "SALARIO":
         nombre_archivo_xlsx = f"timbrados_salarios_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+        if modelos == [3]:
+            nombre_archivo_xlsx = f"timbrados_pensionados_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+        elif modelos == [1, 2]:
+            nombre_archivo_xlsx = f"timbrados_empleados_activos_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
     elif tipo == "AGUINALDO":
         nombre_archivo_xlsx = f"timbrados_aguinaldos_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
     elif tipo == "APOYO ANUAL":

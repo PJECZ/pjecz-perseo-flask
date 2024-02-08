@@ -1,6 +1,7 @@
 """
 Quincenas Productos, modelos
 """
+
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
@@ -17,6 +18,8 @@ class QuincenaProducto(database.Model, UniversalMixin):
         "NOMINAS": "NOMINAS",
         "PENSIONADOS": "PENSIONADOS",
         "TIMBRADOS": "TIMBRADOS",
+        "TIMBRADOS EMPLEADOS ACTIVOS": "TIMBRADOS EMPLEADOS ACTIVOS",
+        "TIMBRADOS PENSIONADOS": "TIMBRADOS PENSIONADOS",
         "TIMBRADOS AGUINALDOS": "TIMBRADOS AGUINALDOS",
         "TIMBRADOS APOYOS ANUALES": "TIMBRADOS APOYOS ANUALES",
     }
