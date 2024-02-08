@@ -222,7 +222,13 @@ def crear_timbrados(
         tabulador = session.query(Tabulador).get(persona.tabulador_id)
 
         # Consultar las Cuentas de la Persona
-        cuentas = session.query(Cuenta).filter_by(persona_id=nomina.persona_id).filter_by(estatus="A").order_by(id.desc()).all()
+        cuentas = (
+            session.query(Cuenta)
+            .filter_by(persona_id=nomina.persona_id)
+            .filter_by(estatus="A")
+            .order_by(Cuenta.id.desc())
+            .all()
+        )
 
         # De las cuentas hay que sacar la que no tenga la clave 9, porque esa clave es la de DESPENSA
         su_cuenta = None
