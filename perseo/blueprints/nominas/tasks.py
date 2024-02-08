@@ -1,6 +1,7 @@
 """
 Nominas, tareas en el fondo
 """
+
 from lib.exceptions import MyAnyError
 from lib.tasks import set_task_error, set_task_progress
 from perseo.blueprints.bancos.tasks import reiniciar_consecutivos_generados
@@ -96,7 +97,7 @@ def lanzar_generar_dispersiones_pensionados(quincena_clave: str, quincena_produc
     return mensaje_termino
 
 
-def lanzar_generar_timbrados(quincena_clave: str, quincena_producto_id: int) -> str:
+def lanzar_generar_timbrados(quincena_clave: str, quincena_producto_id: int, modelos: list) -> str:
     """Tarea en el fondo para crear un archivo XLSX con los timbrados de una quincena"""
 
     # Iniciar la tarea en el fondo
@@ -104,7 +105,11 @@ def lanzar_generar_timbrados(quincena_clave: str, quincena_producto_id: int) -> 
 
     # Ejecutar el creador
     try:
-        mensaje_termino = crear_timbrados(quincena_clave, quincena_producto_id)
+        mensaje_termino = crear_timbrados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto_id,
+            modelos=modelos,
+        )
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)

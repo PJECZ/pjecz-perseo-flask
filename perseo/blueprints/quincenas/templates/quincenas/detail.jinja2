@@ -19,6 +19,7 @@
 {% endblock %}
 
 {% block content %}
+    {# Detalle de la quincena y egenerar archivos finales #}
     <div class="row mb-2">
         <div class="col-md-6">
             {# Detalle de la quincena #}
@@ -56,8 +57,9 @@
         </div>
         {% endif %}
     </div>
-    {# Descargar y generar los productos de la quincena #}
+    {# Generar, descargar y eliminar los productos de la quincena #}
     <div class="row mb-2">
+        {# Nóminas #}
         <div class="col-md-3">
             {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Nóminas' %}
             {% if quincena_producto_nominas %}
@@ -111,6 +113,7 @@
                 {% endcall %}
             {% endif %}
         </div>
+        {# Monederos #}
         <div class="col-md-3">
             {% set title = '<span class="iconify" data-icon="mdi:cart"></span> Monederos' %}
             {% if quincena_producto_monederos %}
@@ -164,6 +167,7 @@
                 {% endcall %}
             {% endif %}
         </div>
+        {# Pensionados #}
         <div class="col-md-3">
             {% set title = '<span class="iconify" data-icon="mdi:human-female-boy"></span> Pensionados' %}
             {% if quincena_producto_pensionados %}
@@ -217,18 +221,14 @@
                 {% endcall %}
             {% endif %}
         </div>
-        <div class="col-md-3">
-            {% call detail.card(title='<span class="iconify" data-icon="mdi:folder"></span> Otros') %}
-                <p class="lead text-center">No hay archivo</p>
-            {% endcall %}
-        </div>
     </div>
-    {# Descargar y generar los dispersiones y timbrados de la quincena #}
+    {# Generar, descargar y eliminar timbrados #}
     <div class="row mb-2">
+        {# Timbrados de Empleados Activos #}
         <div class="col-md-3">
-            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Salarios' %}
-            {% if quincena_producto_timbrados_salarios %}
-                {% if quincena_producto_timbrados_salarios.es_satisfactorio %}
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados de Empleados Activos' %}
+            {% if quincena_producto_timbrados_empleados_activos %}
+                {% if quincena_producto_timbrados_empleados_activos.es_satisfactorio %}
                     {% set border_class='border-success' %}
                     {% set text_class='text-success' %}
                 {% else %}
@@ -237,16 +237,16 @@
                 {% endif %}
                 {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
                     <ul>
-                        {% if quincena_producto_timbrados_salarios.mensajes %}
-                            {% set list = quincena_producto_timbrados_salarios.mensajes.split("\n") %}
+                        {% if quincena_producto_timbrados_empleados_activos.mensajes %}
+                            {% set list = quincena_producto_timbrados_empleados_activos.mensajes.split("\n") %}
                             {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
                         {% endif %}
-                        <li>{{ moment(quincena_producto_timbrados_salarios.creado).format('DD MMM YYYY HH:mm') }}</li>
+                        <li>{{ moment(quincena_producto_timbrados_empleados_activos.creado).format('DD MMM YYYY HH:mm') }}</li>
                     </ul>
-                    {% if quincena_producto_timbrados_salarios.url %}
+                    {% if quincena_producto_timbrados_empleados_activos.url %}
                         {{ detail.button_md(
                             label='Descargar XLSX',
-                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_timbrados_salarios.id),
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_timbrados_empleados_activos.id),
                             icon='mdi:download',
                             target='_blank')
                         }}
@@ -254,10 +254,10 @@
                     {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
                         {{ modals.button_modal_sm(
                             label='Eliminar',
-                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_salarios.id),
-                            id='DeleteTimbradosSalarios',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_empleados_activos.id),
+                            id='DeleteTimbradosEmpleadosActivos',
                             icon='mdi:delete',
-                            message="¿Eliminar el archivo XLSX para tmbrados salarios?",
+                            message="¿Eliminar el archivo XLSX para timbrados de empleados activos?",
                             color_class='btn-outline-danger')
                         }}
                     {% endif %}
@@ -267,17 +267,72 @@
                     <p class="lead text-center">No hay archivo</p>
                     {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
                         {{ modals.button_modal_md(
-                            label='Generar XLSX',
-                            url=url_for('quincenas.generate_timbrados', quincena_id=quincena.id),
-                            id='GenerateTimbradosSalarios',
+                            label='Generar XLSX empleados activos',
+                            url=url_for('quincenas.generate_timbrados_empleados_activos', quincena_id=quincena.id),
+                            id='GenerateTimbradosEmpleadosActivos',
                             icon='mdi:play',
-                            message="¿Generar un nuevo archivo XLSX para timbrados salarios?",
+                            message="¿Generar un nuevo archivo XLSX para timbrados de empleados activos?",
                             color_class='btn-outline-success')
                         }}
                     {% endif %}
                 {% endcall %}
             {% endif %}
         </div>
+        {# Timbrados de Pensionados #}
+        <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados de Pensionados' %}
+            {% if quincena_producto_timbrados_pensionados %}
+                {% if quincena_producto_timbrados_pensionados.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_timbrados_pensionados.mensajes %}
+                            {% set list = quincena_producto_timbrados_pensionados.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_timbrados_pensionados.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_timbrados_pensionados.url %}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_timbrados_pensionados.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
+                    {% endif %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_sm(
+                            label='Eliminar',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_timbrados_pensionados.id),
+                            id='DeleteTimbradosPensionados',
+                            icon='mdi:delete',
+                            message="¿Eliminar el archivo XLSX para timbrados de pensionados?",
+                            color_class='btn-outline-danger')
+                        }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title=title) %}
+                    <p class="lead text-center">No hay archivo</p>
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX pensionados',
+                            url=url_for('quincenas.generate_timbrados_pensionados', quincena_id=quincena.id),
+                            id='GenerateTimbradosPensionados',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para timbrados de pensionados?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endif %}
+                {% endcall %}
+            {% endif %}
+        </div>
+        {# Timbrados Aguinaldos #}
         <div class="col-md-3">
             {% set title = '<span class="iconify" data-icon="mdi:credit-card"></span> Timbrados Aguinaldos' %}
             {% if quincena_producto_timbrados_aguinaldos %}
@@ -386,6 +441,7 @@
                 {% endif %}
             {% endif %}
         </div>
+        {# Dispersiones Pensionados #}
         <div class="col-md-3">
             {% set title = '<span class="iconify" data-icon="mdi:human-wheelchair"></span> Dispersiones Pensionados' %}
             {% if quincena_producto_dispersiones_pensionados %}
@@ -438,11 +494,6 @@
                     {% endif %}
                 {% endcall %}
             {% endif %}
-        </div>
-        <div class="col-md-3">
-            {% call detail.card(title='<span class="iconify" data-icon="mdi:folder"></span> Otros') %}
-                <p class="lead text-center">No hay archivo</p>
-            {% endcall %}
         </div>
     </div>
     {# Datatable con las nominas de la Quincena #}
@@ -618,8 +669,10 @@
     {{ modals.custom_javascript('Eliminar Monederos', '', 'DeleteMonederos') }}
     {{ modals.custom_javascript('Generar Pensionados', '', 'GeneratePensionados') }}
     {{ modals.custom_javascript('Eliminar Pensionados', '', 'DeletePensionados') }}
-    {{ modals.custom_javascript('Generar Timbrados Salarios', '', 'GenerateTimbradosSalarios') }}
-    {{ modals.custom_javascript('Eliminar Timbrados Salarios', '', 'DeleteTimbradosSalarios') }}
+    {{ modals.custom_javascript('Generar Timbrados Empleados Activos', '', 'GenerateTimbradosEmpleadosActivos') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Empleados Activos', '', 'DeleteTimbradosEmpleadosActivos') }}
+    {{ modals.custom_javascript('Generar Timbrados Pensionados', '', 'GenerateTimbradosPensionados') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Pensionados', '', 'DeleteTimbradosPensionados') }}
     {{ modals.custom_javascript('Generar Timbrados Aguinaldos', '', 'GenerateTimbradosAguinaldos') }}
     {{ modals.custom_javascript('Eliminar Timbrados Aguinaldos', '', 'DeleteTimbradosAguinaldos') }}
     {{ modals.custom_javascript('Generar Timbrados Apoyos Anuales', '', 'GenerateTimbradosApoyosAnuales') }}
