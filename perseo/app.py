@@ -1,6 +1,7 @@
 """
 Flask App
 """
+
 import rq
 from flask import Flask
 from redis import Redis
@@ -49,7 +50,7 @@ def create_app():
 
     # Redis
     app.redis = Redis.from_url(app.config["REDIS_URL"])
-    app.task_queue = rq.Queue(app.config["TASK_QUEUE"], connection=app.redis, default_timeout=1920)
+    app.task_queue = rq.Queue(app.config["TASK_QUEUE"], connection=app.redis, default_timeout=3000)
 
     # Registrar blueprints
     app.register_blueprint(autoridades)
