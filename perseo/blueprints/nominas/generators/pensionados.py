@@ -48,6 +48,9 @@ def crear_pensionados(
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
+    # Mandar mensaje de inicio a la bitacora
+    bitacora.info("Inicia crear pensionados %s %s", quincena_clave, tipo)
+
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
@@ -229,4 +232,6 @@ def crear_pensionados(
     )
 
     # Entregar mensaje de termino
-    return f"Crear pensionados: {mensaje_termino}"
+    mensaje_termino = f"Termina crear pensionados: {mensaje_termino}"
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
