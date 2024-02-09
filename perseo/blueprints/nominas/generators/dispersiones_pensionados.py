@@ -46,6 +46,9 @@ def crear_dispersiones_pensionados(
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
+    # Mandar mensaje de inicio a la bitacora
+    bitacora.info("Inicia crear dispersiones pensionados %s %s", quincena_clave, tipo)
+
     # Consultar las nominas de la quincena
     nominas = (
         Nomina.query.join(Persona)
@@ -211,4 +214,6 @@ def crear_dispersiones_pensionados(
     )
 
     # Entregar mensaje de termino
-    return f"Crear dispersiones pensionados: {mensaje_termino}"
+    mensaje_termino = f"Crear dispersiones pensionados: {mensaje_termino}"
+    bitacora.info(mensaje_termino)
+    return mensaje_termino

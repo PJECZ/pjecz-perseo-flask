@@ -49,6 +49,9 @@ def crear_nominas(
     # Consultar y validar quincena
     quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
 
+    # Mandar mensaje de inicio a la bitacora
+    bitacora.info("Inicia crear nominas %s %s", quincena_clave, tipo)
+
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
     sesion = database.session
 
@@ -250,4 +253,6 @@ def crear_nominas(
     )
 
     # Entregar mensaje de termino
-    return f"Crear nominas: {mensaje_termino}"
+    mensaje_termino = f"Termina crear nominas: {mensaje_termino}"
+    bitacora.info(mensaje_termino)
+    return mensaje_termino

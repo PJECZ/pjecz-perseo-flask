@@ -30,7 +30,6 @@ def lanzar_generar_nominas(quincena_clave: str, quincena_producto_id: int) -> st
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -51,7 +50,6 @@ def lanzar_generar_monederos(quincena_clave: str, quincena_producto_id: int) -> 
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -72,7 +70,6 @@ def lanzar_generar_pensionados(quincena_clave: str, quincena_producto_id: int) -
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -93,7 +90,6 @@ def lanzar_generar_dispersiones_pensionados(quincena_clave: str, quincena_produc
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -118,7 +114,6 @@ def lanzar_generar_timbrados(quincena_clave: str, quincena_producto_id: int, mod
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -143,7 +138,6 @@ def lanzar_generar_timbrados_aguinaldos(quincena_clave: str, quincena_producto_i
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -168,7 +162,6 @@ def lanzar_generar_timbrados_apoyos_anuales(quincena_clave: str, quincena_produc
 
     # Terminar la tarea en el fondo y entregar el mensaje de termino
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino
 
 
@@ -193,9 +186,9 @@ def lanzar_generar_todos(quincena_clave: str) -> str:
         mensaje_error = str(error)
         set_task_error(mensaje_error)
         bitacora.error(mensaje_error)
+        return mensaje_error
 
     # Entregar mensajes de termino
     mensaje_termino = "\n".join(mensajes)
     set_task_progress(100, mensaje_termino)
-    bitacora.info(mensaje_termino)
     return mensaje_termino

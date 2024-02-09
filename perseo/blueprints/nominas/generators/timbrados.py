@@ -85,10 +85,13 @@ def crear_timbrados(
         quincena_fecha_inicial = datetime(year=2023, month=1, day=1).date()
         quincena_fecha_final = datetime(year=2023, month=12, day=31).date()
 
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    session = database.session
+
     # Si el tipo es AGUINALDO o SALARIO armar un diccionario con las percepciones y deducciones de Conceptos activos
     if tipo in ["AGUINALDO", "SALARIO"]:
         # Consultar los conceptos activos
-        conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
+        conceptos = session.query(Concepto).filter_by(estatus="A").order_by(Concepto.clave).all()
         # Ordenar las claves, primero las que empiezan con P
         for concepto in conceptos:
             if concepto.clave.startswith("P"):
@@ -116,8 +119,8 @@ def crear_timbrados(
         actualizar_quincena_producto(quincena_producto_id, quincena.id, fuente, [mensaje])
         raise MyEmptyError(mensaje)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
-    session = database.session
+    # Mandar mensaje de inicio a la bitacora
+    bitacora.info("Inicia crear timbrados %s %s modelos %s", quincena_clave, tipo, " ".join([str(m) for m in modelos]))
 
     # Consultar Nominas activas de la quincena, del tipo dado, juntar con personas
     nominas = (
@@ -298,7 +301,8 @@ def crear_timbrados(
             for _, concepto in conceptos_dict.items():
                 # Consultar la P-D de la quincena, la persona y el concepto
                 percepcion_deduccion = (
-                    PercepcionDeduccion.query.filter_by(quincena_id=quincena.id)
+                    session.query(PercepcionDeduccion)
+                    .filter_by(quincena_id=quincena.id)
                     .filter_by(persona_id=persona.id)
                     .filter_by(concepto_id=concepto.id)
                     .first()
@@ -310,7 +314,8 @@ def crear_timbrados(
         elif tipo == "APOYO ANUAL":
             # Consultar la PercepcionDeduccion con concepto PAZ
             percepcion_deduccion_paz = (
-                PercepcionDeduccion.query.join(Concepto)
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
                 .filter(PercepcionDeduccion.persona_id == persona.id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
@@ -320,7 +325,8 @@ def crear_timbrados(
             fila_parte_2.append(percepcion_deduccion_paz.importe if percepcion_deduccion_paz is not None else 0)
             # Consultar la PercepcionDeduccion con concepto DAZ
             percepcion_deduccion_daz = (
-                PercepcionDeduccion.query.join(Concepto)
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
                 .filter(PercepcionDeduccion.persona_id == persona.id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
@@ -330,7 +336,8 @@ def crear_timbrados(
             fila_parte_2.append(percepcion_deduccion_daz.importe if percepcion_deduccion_daz is not None else 0)
             # Consultar la PercepcionDeduccion con concepto D62
             percepcion_deduccion_d62 = (
-                PercepcionDeduccion.query.join(Concepto)
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
                 .filter(PercepcionDeduccion.persona_id == persona.id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
@@ -366,15 +373,15 @@ def crear_timbrados(
 
     # Determinar el nombre del archivo XLSX
     if tipo == "SALARIO":
-        prefijo = f"timbrados"
+        prefijo = "timbrados"
         if modelos == [3]:
-            prefijo = f"timbrados_pensionados"
+            prefijo = "timbrados_pensionados"
         elif modelos == [1, 2]:
-            prefijo = f"timbrados_empleados_activos"
+            prefijo = "timbrados_empleados_activos"
     elif tipo == "AGUINALDO":
-        prefijo = f"timbrados_aguinaldos"
+        prefijo = "timbrados_aguinaldos"
     elif tipo == "APOYO ANUAL":
-        prefijo = f"timbrados_apoyos_anuales"
+        prefijo = "timbrados_apoyos_anuales"
     nombre_archivo_xlsx = f"{prefijo}_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Determinar las rutas con directorios con el año y el número de mes en dos digitos
@@ -439,4 +446,6 @@ def crear_timbrados(
     )
 
     # Entregar mensaje de termino
-    return f"Crear timbrados: {mensaje_termino}"
+    mensaje_termino = f"Termina crear timbrados: {mensaje_termino}"
+    bitacora.info(mensaje_termino)
+    return mensaje_termino
