@@ -1,6 +1,8 @@
 """
 CLI Percepciones-Deducciones
 """
+
+import csv
 import os
 import re
 import sys
@@ -10,7 +12,7 @@ import click
 import xlrd
 
 from lib.fechas import quincena_to_fecha, quinquenio_count
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
+from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
@@ -641,5 +643,139 @@ def alimentar_apoyos_anuales(quincena_clave: str):
     click.echo(click.style(f"  Alimentar P-D Apoyos Anuales: {contador} insertadas.", fg="green"))
 
 
+@click.command()
+@click.argument("archivo_csv", type=click.Path(exists=True))
+def inyectar(archivo_csv):
+    """Inyectar registros en P-D a partir de un archivo CSV"""
+
+    # Validar que el archivo sea CSV
+    archivo_csv = Path(archivo_csv)
+    if archivo_csv.exists() and archivo_csv.suffix != ".csv":
+        click.echo("ERROR: El archivo no existe o no es CSV.")
+        sys.exit(1)
+
+    # Iniciar contadores
+    contador_p_d_actualizados = 0
+    contador_p_d_insertados = 0
+
+    # Leer el archivo CSV
+    click.echo("Inyectando Percepciones-Deducciones: ", nl=False)
+    with open(archivo_csv, newline="", encoding="utf8") as csvfile:
+        # Para evitar que se carguen registros y se interrumpa por un error, se inicializa un listado de datos
+        datos = []
+
+        # Bucle por cada fila
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Tomar las columnas rfc, centro de trabajo, plaza, quincena, tipo, concepto, concepto descripcion, importe
+            try:
+                rfc = safe_rfc(row["rfc"])
+                centro_trabajo_clave = safe_clave(row["centro de trabajo"])
+                plaza_clave = safe_clave(row["plaza"], max_len=24)
+                quincena_clave = safe_clave(row["quincena"])
+                tipo = safe_string(row["tipo"])
+                concepto_clave = safe_clave(row["concepto"])
+                importe = float(row["importe"])
+            except (KeyError, ValueError):
+                click.echo("ERROR: Columnas no encontradas.")
+                sys.exit(1)
+
+            # Consultar la persona por su rfc
+            persona = Persona.query.filter_by(rfc=rfc).first()
+            if persona is None:
+                click.echo(click.style(f"ERROR: No existe la persona con rfc {rfc}", fg="red"))
+                sys.exit(1)
+
+            # Consultar el centro de trabajo por su clave
+            centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+            if centro_trabajo is None:
+                click.echo(click.style(f"ERROR: No existe el centro de trabajo con clave {centro_trabajo_clave}", fg="red"))
+                sys.exit(1)
+
+            # Consultar la plaza por su clave
+            plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+            if plaza is None:
+                click.echo(click.style(f"ERROR: No existe la plaza con clave {plaza_clave}", fg="red"))
+                sys.exit(1)
+
+            # Consultar la quincena por su clave
+            quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+            if quincena is None:
+                click.echo(click.style(f"ERROR: No existe la quincena con clave {quincena_clave}", fg="red"))
+                sys.exit(1)
+
+            # Validar el tipo
+            if tipo not in PercepcionDeduccion.TIPOS:
+                click.echo(click.style(f"ERROR: Tipo no reconocido {tipo}", fg="red"))
+                sys.exit(1)
+
+            # Consultar el concepto por su clave
+            concepto = Concepto.query.filter_by(clave=concepto_clave).first()
+            if concepto is None:
+                click.echo(click.style(f"ERROR: No existe el concepto con clave {concepto_clave}", fg="red"))
+                sys.exit(1)
+
+            # Acumular en el listado de datos
+            datos.append(
+                {
+                    "centro_trabajo": centro_trabajo,
+                    "concepto": concepto,
+                    "importe": importe,
+                    "persona": persona,
+                    "plaza": plaza,
+                    "quincena": quincena,
+                    "tipo": tipo,
+                }
+            )
+
+        # Bucle por cada dato
+        for dato in datos:
+            # Consultar el registro en PercepcionDeduccion
+            p_d = (
+                PercepcionDeduccion.query.filter_by(centro_trabajo_id=dato["centro_trabajo"].id)
+                .filter_by(concepto_id=dato["concepto"].id)
+                .filter_by(persona_id=dato["persona"].id)
+                .filter_by(plaza_id=dato["plaza"].id)
+                .filter_by(quincena_id=dato["quincena"].id)
+                .filter_by(tipo=dato["tipo"])
+                .first()
+            )
+
+            # Si existe el registros...
+            if p_d is not None:
+                # Si el importe es diferente, se actualiza
+                if p_d.importe != dato["importe"]:
+                    p_d.importe = dato["importe"]
+                    p_d.save()
+                    contador_p_d_actualizados += 1
+                    click.echo(click.style("u", fg="cyan"), nl=False)
+            # De lo contrario, se agrega
+            else:
+                p_d = PercepcionDeduccion(
+                    centro_trabajo=dato["centro_trabajo"],
+                    concepto=dato["concepto"],
+                    importe=dato["importe"],
+                    persona=dato["persona"],
+                    plaza=dato["plaza"],
+                    quincena=dato["quincena"],
+                    tipo=dato["tipo"],
+                )
+                p_d.save()
+                contador_p_d_insertados += 1
+                click.echo(click.style("+", fg="green"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Mostrar el contador de registros actualizados
+    if contador_p_d_actualizados > 0:
+        click.echo(click.style(f"  Se actualizaron {contador_p_d_actualizados} registros.", fg="green"))
+
+    # Mostrar el contador de registros insertados
+    if contador_p_d_insertados > 0:
+        click.echo(click.style(f"  Se insertaron {contador_p_d_insertados} registros.", fg="green"))
+
+
 cli.add_command(alimentar)
 cli.add_command(alimentar_apoyos_anuales)
+cli.add_command(inyectar)
