@@ -35,11 +35,11 @@ class QuincenaProducto(database.Model, UniversalMixin):
     quincena = relationship("Quincena", back_populates="quincenas_productos")
 
     # Columnas
-    archivo = Column(String(256), nullable=False)
-    es_satisfactorio = Column(Boolean, nullable=False)
+    archivo = Column(String(256), nullable=False, default="", server_default="")
+    es_satisfactorio = Column(Boolean, nullable=False, default=False)
     fuente = Column(Enum(*FUENTES, name="quincenas_productos_fuentes"), index=True, nullable=False)
-    mensajes = Column(Text)
-    url = Column(String(512), nullable=False)
+    mensajes = Column(Text, default="", server_default="")
+    url = Column(String(512), nullable=False, default="", server_default="")
 
     def __repr__(self):
         """Representación"""

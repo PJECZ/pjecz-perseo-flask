@@ -776,6 +776,116 @@ def inyectar(archivo_csv):
         click.echo(click.style(f"  Se insertaron {contador_p_d_insertados} registros.", fg="green"))
 
 
+@click.command()
+def corregir_concepto_d62_a_d62m():
+    """Corregir el concepto D62 a D62M"""
+
+    # Consultar el concepto con clave D62
+    concepto_d62 = Concepto.query.filter_by(clave="D62").first()
+    if concepto_d62 is None:
+        click.echo("ERROR: No existe el concepto con clave D62.")
+        sys.exit(1)
+
+    # Consultar el concepto con clave D62M
+    concepto_d62m = Concepto.query.filter_by(clave="D62M").first()
+    if concepto_d62m is None:
+        click.echo("ERROR: No existe el concepto con clave D62M.")
+        sys.exit(1)
+
+    # Consultar las quincenas activas ordenadas por la clave
+    quincenas = Quincena.query.filter_by(estatus="A").order_by(Quincena.clave).all()
+
+    # Si no hay quincenas, mostrar mensaje y terminar
+    if len(quincenas) == 0:
+        click.echo("ERROR: No hay quincenas abiertas.")
+        sys.exit(1)
+
+    # Inicializar contadores
+    correcciones_contador = 0
+    errores_contador = 0
+
+    # Bucle por cada quincena
+    for quincena in quincenas:
+        # Mostrar la clave de la quincena
+        click.echo(f"  Corrigiendo la quincena {quincena.clave}: ", nl=False)
+
+        # Consultar los registros en PercepcionesDeducciones con concepto D62M
+        p_d_d62m = (
+            PercepcionDeduccion.query.filter_by(concepto_id=concepto_d62m.id)
+            .filter_by(quincena_id=quincena.id)
+            .filter_by(tipo="SALARIO")
+            .filter_by(estatus="A")
+            .all()
+        )
+
+        # Si hay registros, se omite esta quincena porque ya esta corregida
+        if len(p_d_d62m) > 0:
+            # Mostrar un OK en verde con avance de linea y omitir
+            click.echo(click.style("OK", fg="green"))
+            continue
+
+        # Consultar los registros en PercepcionesDeducciones con concepto D62 ordenados por persona_id
+        p_d_d62 = (
+            PercepcionDeduccion.query.filter_by(concepto_id=concepto_d62.id)
+            .filter_by(quincena_id=quincena.id)
+            .filter_by(tipo="SALARIO")
+            .filter_by(estatus="A")
+            .order_by(PercepcionDeduccion.persona_id, PercepcionDeduccion.importe)
+            .all()
+        )
+
+        # Si no hay registros, se omite esta quincena
+        if len(p_d_d62) == 0:
+            # Mostrar un Sin D62 en amarillo con avance de linea y omitir
+            click.echo(click.style("Sin D62", fg="yellow"))
+            continue
+
+        # Bucle para cada registro
+        persona_id_anterior = None
+        p_d_d62_anterior = None
+        contador = 0
+        for p_d in p_d_d62:
+            # Si es el primero en revisar o si ha cambiado la persona, se recuerda y se omite
+            if persona_id_anterior is None or p_d_d62_anterior is None or p_d.persona_id != persona_id_anterior:
+                persona_id_anterior = p_d.persona_id
+                p_d_d62_anterior = p_d
+                contador = 0
+                continue
+
+            # Incrementar el contador
+            contador += 1
+
+            # Si contador es mayor a uno (no es 1)
+            if contador > 1:
+                errores_contador += 1
+                # Mostrar una letra e en color amarillo
+                click.echo(click.style("e", fg="yellow"), nl=False)
+                continue
+
+            # Cambiar el concepto del registro anterior a D62M
+            p_d_d62_anterior.concepto_id = concepto_d62m.id
+
+            # Guardar el registro anterior
+            p_d_d62_anterior.save()
+
+            # Mostrar una letra u en color cyan
+            click.echo(click.style("u", fg="cyan"), nl=False)
+
+            # Incrementar el contador
+            correcciones_contador += 1
+
+        # Poner avance de linea
+        click.echo("")
+
+    # Si hubo errores, mostrar mensaje
+    if errores_contador > 0:
+        click.echo(click.style(f"  Hubo {errores_contador} casos donde habia mas de dos D62.", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Se corrigieron {correcciones_contador} p_d.", fg="green"))
+
+
 cli.add_command(alimentar)
 cli.add_command(alimentar_apoyos_anuales)
 cli.add_command(inyectar)
+cli.add_command(corregir_concepto_d62_a_d62m)

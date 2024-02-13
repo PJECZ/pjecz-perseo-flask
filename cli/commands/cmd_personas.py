@@ -1,6 +1,7 @@
 """
 CLI Personas
 """
+
 import csv
 import os
 import re
@@ -20,7 +21,7 @@ from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.personas.tasks import exportar_xlsx
+from perseo.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
@@ -557,12 +558,12 @@ def cambiar_tabulador_a_todos(tabulador_id: int):
 
 
 @click.command()
-def exportar():
+def exportar_xlsx():
     """Exportar Personas a un archivo XLSX"""
 
     # Ejecutar la tarea
     try:
-        mensaje_termino, _, _ = exportar_xlsx()
+        mensaje_termino, _, _ = task_exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
@@ -780,6 +781,6 @@ cli.add_command(actualizar_tabuladores)
 cli.add_command(actualizar_fechas_ingreso)
 cli.add_command(cambiar_tabulador)
 cli.add_command(cambiar_tabulador_a_todos)
-cli.add_command(exportar)
+cli.add_command(exportar_xlsx)
 cli.add_command(migrar_eliminar_rfc)
 cli.add_command(sincronizar)
