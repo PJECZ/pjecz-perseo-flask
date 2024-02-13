@@ -10,7 +10,7 @@ from pathlib import Path
 
 import click
 import xlrd
-from openpyxl import Workbook, load_workbook
+from openpyxl import load_workbook
 
 from lib.exceptions import MyAnyError
 from lib.fechas import quincena_to_fecha, quinquenio_count
@@ -18,11 +18,13 @@ from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_str
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.nominas.generators.dispersiones_pensionados import crear_dispersiones_pensionados
-from perseo.blueprints.nominas.generators.monederos import crear_monederos
-from perseo.blueprints.nominas.generators.nominas import crear_nominas
-from perseo.blueprints.nominas.generators.pensionados import crear_pensionados
-from perseo.blueprints.nominas.generators.timbrados import crear_timbrados
+from perseo.blueprints.nominas.generators.dispersiones_pensionados import (
+    crear_dispersiones_pensionados as task_crear_dispersiones_pensionados,
+)
+from perseo.blueprints.nominas.generators.monederos import crear_monederos as task_crear_monederos
+from perseo.blueprints.nominas.generators.nominas import crear_nominas as task_crear_nominas
+from perseo.blueprints.nominas.generators.pensionados import crear_pensionados as task_crear_pensionados
+from perseo.blueprints.nominas.generators.timbrados import crear_timbrados as task_crear_timbrados
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
@@ -1021,8 +1023,8 @@ def generar_issste(quincena_clave, serica_xlsx, output_txt):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def lanzar_crear_dispersiones_pensionados(quincena_clave):
-    """Lanzar crear archivo XLSX con las dispersiones para pensionados"""
+def crear_dispersiones_pensionados(quincena_clave):
+    """Crear archivo XLSX con las dispersiones para pensionados"""
 
     # Validar quincena_clave
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -1047,7 +1049,7 @@ def lanzar_crear_dispersiones_pensionados(quincena_clave):
 
     # Ejecutar crear_dispersiones_pensionados
     try:
-        mensaje_termino = crear_dispersiones_pensionados(quincena_clave, quincena_producto.id)
+        mensaje_termino = task_crear_dispersiones_pensionados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1058,8 +1060,8 @@ def lanzar_crear_dispersiones_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def lanzar_crear_monederos(quincena_clave):
-    """Lanzar crear archivo XLSX con los monederos de una quincena"""
+def crear_monederos(quincena_clave):
+    """Crear archivo XLSX con los monederos de una quincena"""
 
     # Validar quincena_clave
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -1084,7 +1086,7 @@ def lanzar_crear_monederos(quincena_clave):
 
     # Ejecutar crear_monederos
     try:
-        mensaje_termino = crear_monederos(quincena_clave, quincena_producto.id)
+        mensaje_termino = task_crear_monederos(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1095,8 +1097,8 @@ def lanzar_crear_monederos(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def lanzar_crear_nominas(quincena_clave):
-    """Lanzar crear archivo XLSX con las nominas de una quincena"""
+def crear_nominas(quincena_clave):
+    """Crear archivo XLSX con las nominas de una quincena"""
 
     # Validar quincena_clave
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -1121,7 +1123,7 @@ def lanzar_crear_nominas(quincena_clave):
 
     # Ejecutar crear_nominas
     try:
-        mensaje_termino = crear_nominas(quincena_clave, quincena_producto.id)
+        mensaje_termino = task_crear_nominas(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1132,8 +1134,8 @@ def lanzar_crear_nominas(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def lanzar_crear_pensionados(quincena_clave):
-    """Lanzar crear archivo XLSX con los pensionados de una quincena"""
+def crear_pensionados(quincena_clave):
+    """Crear archivo XLSX con los pensionados de una quincena"""
 
     # Validar quincena_clave
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -1158,7 +1160,7 @@ def lanzar_crear_pensionados(quincena_clave):
 
     # Ejecutar crear_pensionados
     try:
-        mensaje_termino = crear_pensionados(quincena_clave, quincena_producto.id)
+        mensaje_termino = task_crear_pensionados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1169,8 +1171,8 @@ def lanzar_crear_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def lanzar_crear_timbrados(quincena_clave):
-    """Lanzar crear archivo XLSX con los timbrados de una quincena"""
+def crear_timbrados(quincena_clave):
+    """Crear archivo XLSX con los timbrados de una quincena"""
 
     # Validar quincena_clave
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -1195,7 +1197,7 @@ def lanzar_crear_timbrados(quincena_clave):
 
     # Ejecutar crear_timbrados
     try:
-        mensaje_termino = crear_timbrados(quincena_clave, quincena_producto.id)
+        mensaje_termino = task_crear_timbrados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1209,8 +1211,8 @@ cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
 cli.add_command(generar_issste)
-cli.add_command(lanzar_crear_dispersiones_pensionados)
-cli.add_command(lanzar_crear_monederos)
-cli.add_command(lanzar_crear_nominas)
-cli.add_command(lanzar_crear_pensionados)
-cli.add_command(lanzar_crear_timbrados)
+cli.add_command(crear_dispersiones_pensionados)
+cli.add_command(crear_monederos)
+cli.add_command(crear_nominas)
+cli.add_command(crear_pensionados)
+cli.add_command(crear_timbrados)

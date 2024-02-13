@@ -1,6 +1,7 @@
 """
 CLI Tabuladores
 """
+
 import csv
 import sys
 from datetime import datetime
@@ -13,7 +14,7 @@ from lib.safe_string import safe_clave
 from perseo.app import create_app
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
-from perseo.blueprints.tabuladores.tasks import exportar_xlsx
+from perseo.blueprints.tabuladores.tasks import exportar_xlsx as task_exportar_xlsx
 
 TABULADORES_CSV = "seed/tabuladores.csv"
 
@@ -289,12 +290,12 @@ def agregar_actualizar(tabuladores_csv: str):
 
 
 @click.command()
-def exportar():
+def exportar_xlsx():
     """Exportar Tabuladores a un archivo XLSX"""
 
     # Ejecutar la tarea
     try:
-        mensaje_termino, _, _ = exportar_xlsx()
+        mensaje_termino, _, _ = task_exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
@@ -304,4 +305,4 @@ def exportar():
 
 
 cli.add_command(agregar_actualizar)
-cli.add_command(exportar)
+cli.add_command(exportar_xlsx)

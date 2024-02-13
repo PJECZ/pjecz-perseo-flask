@@ -1,13 +1,14 @@
 """
 CLI Tabuladores
 """
+
 import sys
 
 import click
 
 from lib.exceptions import MyAnyError
 from perseo.app import create_app
-from perseo.blueprints.puestos.tasks import exportar_xlsx
+from perseo.blueprints.puestos.tasks import exportar_xlsx as task_exportar_xlsx
 
 app = create_app()
 app.app_context().push()
@@ -19,12 +20,12 @@ def cli():
 
 
 @click.command()
-def exportar():
+def exportar_xlsx():
     """Exportar Puestos a un archivo XLSX"""
 
     # Ejecutar la tarea
     try:
-        mensaje_termino, _, _ = exportar_xlsx()
+        mensaje_termino, _, _ = task_exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
@@ -33,4 +34,4 @@ def exportar():
     click.echo(click.style(mensaje_termino, fg="green"))
 
 
-cli.add_command(exportar)
+cli.add_command(exportar_xlsx)

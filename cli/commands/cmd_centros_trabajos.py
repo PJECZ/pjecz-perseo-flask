@@ -1,6 +1,7 @@
 """
 CLI Centros de Trabajo
 """
+
 import csv
 import os
 import sys
@@ -14,7 +15,7 @@ from lib.exceptions import MyAnyError
 from lib.safe_string import safe_clave, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
-from perseo.blueprints.centros_trabajos.tasks import exportar_xlsx
+from perseo.blueprints.centros_trabajos.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.extensions import database
 
 load_dotenv()
@@ -112,12 +113,12 @@ def agregar_actualizar(centros_trabajos_csv: str):
 
 
 @click.command()
-def exportar():
+def exportar_xlsx():
     """Exportar Centros de Trabajo a un archivo XLSX"""
 
     # Ejecutar la tarea
     try:
-        mensaje_termino, _, _ = exportar_xlsx()
+        mensaje_termino, _, _ = task_exportar_xlsx()
     except MyAnyError as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
@@ -195,5 +196,5 @@ def sincronizar():
 
 
 cli.add_command(agregar_actualizar)
-cli.add_command(exportar)
+cli.add_command(exportar_xlsx)
 cli.add_command(sincronizar)
