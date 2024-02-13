@@ -1,6 +1,7 @@
 """
 Puestos, tareas en el fondo
 """
+
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -54,6 +55,7 @@ def exportar_xlsx() -> tuple[str, str, str]:
     # Agregar la fila con las cabeceras de las columnas
     hoja.append(
         [
+            "ID",
             "CLAVE",
             "DESCRIPCION",
         ]
@@ -67,6 +69,7 @@ def exportar_xlsx() -> tuple[str, str, str]:
         # Agregar la fila con los datos
         hoja.append(
             [
+                puesto.id,
                 puesto.clave,
                 puesto.descripcion,
             ]
