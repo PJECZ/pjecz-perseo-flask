@@ -16,7 +16,7 @@ from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.blueprints.tabuladores.tasks import exportar_xlsx as task_exportar_xlsx
 
-TABULADORES_CSV = "seed/tabuladores.csv"
+TABULADORES_CSV = "seed/tabuladores-NNN.csv"
 
 app = create_app()
 app.app_context().push()
@@ -57,7 +57,7 @@ def agregar_actualizar(tabuladores_csv: str):
                 modelo = int(row["MODELO"])
                 nivel = int(row["NIVEL"])
                 quinquenio = int(row["QUINQUENIO"])
-            except ValueError as error:
+            except (KeyError, ValueError) as error:
                 errores.append(f"  Es incorrecto: {error}, se omite")
                 click.echo("E", nl=False)
                 continue
@@ -65,7 +65,7 @@ def agregar_actualizar(tabuladores_csv: str):
             # SUELDO BASE
             try:
                 sueldo_base = float(row["SUELDO BASE"])
-            except ValueError:
+            except (KeyError, ValueError):
                 sueldo_base = 0.0
 
             # Validar CLAVE DE PUESTO
@@ -78,119 +78,115 @@ def agregar_actualizar(tabuladores_csv: str):
             # INCENTIVO
             try:
                 incentivo = float(row["INCENTIVO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 incentivo = 0.0
 
             # MONEDERO
             try:
                 monedero = float(row["MONEDERO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 monedero = 0.0
 
             # RECREACION CULTURA Y DEPORTE
             try:
                 rec_cul_dep = float(row["RECREACION CULTURA Y DEPORTE"])
-            except ValueError:
+            except (KeyError, ValueError):
                 rec_cul_dep = 0.0
 
             # SOBRESUELDO
             try:
                 sobresueldo = float(row["SOBRESUELDO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 sobresueldo = 0.0
 
             # RECREACION DEPORTE Y CULTURA GRAVADO
             try:
                 rec_dep_cul_gravado = float(row["RECREACION DEPORTE Y CULTURA GRAVADO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 rec_dep_cul_gravado = 0.0
 
             # RECREACION DEPORTE Y CULTURA EXCENTO
             try:
                 rec_dep_cul_excento = float(row["RECREACION DEPORTE Y CULTURA EXCENTO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 rec_dep_cul_excento = 0.0
 
             # AYUDA DE TRANSPORTE
             try:
                 ayuda_transp = float(row["AYUDA DE TRANSPORTE"])
-            except ValueError:
+            except (KeyError, ValueError):
                 ayuda_transp = 0.0
 
             # MONTO QUINQUENIO
             try:
                 monto_quinquenio = float(row["MONTO QUINQUENIO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 monto_quinquenio = 0.0
 
             # TOTAL DE PERCEPCIONES
             try:
                 total_percepciones = float(row["TOTAL DE PERCEPCIONES"])
-            except ValueError:
-                errores.append("  Falta TOTAL DE PERCEPCIONES, se omite")
-                click.echo("E", nl=False)
-                continue
+            except (KeyError, ValueError):
+                total_percepciones = 0.0
 
             # SALARIO DIARIO
             try:
                 salario_diario = float(row["SALARIO DIARIO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 salario_diario = 0.0
 
             # PRIMA VACACIONAL MENSUAL
             try:
                 prima_vacacional_mensual = float(row["PRIMA VACACIONAL MENSUAL"])
-            except ValueError:
+            except (KeyError, ValueError):
                 prima_vacacional_mensual = 0.0
 
             # AGUINALDO MENSUAL
             try:
                 aguinaldo_mensual = float(row["AGUINALDO MENSUAL"])
-            except ValueError:
+            except (KeyError, ValueError):
                 aguinaldo_mensual = 0.0
 
             # PRIMA VACACIONAL MENSUAL ADICIONAL
             try:
                 prima_vacacional_mensual_adicional = float(row["PRIMA VACACIONAL MENSUAL ADICIONAL"])
-            except ValueError:
+            except (KeyError, ValueError):
                 prima_vacacional_mensual_adicional = 0.0
 
             # TOTAL DE PERCEPCIONES INTEGRADO
             try:
                 total_percepciones_integrado = float(row["TOTAL DE PERCEPCIONES INTEGRADO"])
-            except ValueError:
-                errores.append("  Falta TOTAL DE PERCEPCIONES INTEGRADO, se omite")
-                click.echo("E", nl=False)
-                continue
+            except (KeyError, ValueError):
+                total_percepciones_integrado = 0.0
 
             # SALARIO DIARIO INTEGRADO
             try:
                 salario_diario_integrado = float(row["SALARIO DIARIO INTEGRADO"])
-            except ValueError:
+            except (KeyError, ValueError):
                 salario_diario_integrado = 0.0
 
             # FECHA INICIO viene como DD/MM/YYYY convertir a date
             try:
                 fecha_inicio = datetime.strptime(row["FECHA INICIO"], "%d/%m/%Y").date()
-            except ValueError:
+            except (KeyError, ValueError):
                 fecha_inicio = datetime.now().date()
 
             # PENSION VITALICIA (EXENTO)
             try:
                 pension_vitalicia_excento = float(row["PENSION VITALICIA (EXENTO)"])
-            except ValueError:
+            except (KeyError, ValueError):
                 pension_vitalicia_excento = 0.0
 
             # PENSION VITALICIA (GRAVABLE)
             try:
                 pension_vitalicia_gravable = float(row["PENSION VITALICIA (GRAVABLE)"])
-            except ValueError:
+            except (KeyError, ValueError):
                 pension_vitalicia_gravable = 0.0
 
             # BONIFICACION
             try:
                 pension_bonificacion = float(row["BONIFICACION"])
-            except ValueError:
+            except (KeyError, ValueError):
                 pension_bonificacion = 0.0
 
             # Consular el puesto, si no existe el puesto, se inserta con una descripción NO DEFINIDO
