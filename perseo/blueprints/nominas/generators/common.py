@@ -40,15 +40,15 @@ def consultar_validar_quincena(quincena_clave: str) -> Quincena:
 
     # Si no existe la quincena, provocar error y terminar
     if quincena is None:
-        return MyNotExistsError(f"No existe la quincena {quincena_clave}")
+        raise MyNotExistsError(f"No existe la quincena {quincena_clave}")
 
     # Si la quincena no esta ABIERTA, provocar error y terminar
     if quincena.estado != "ABIERTA":
-        return MyNotValidParamError(f"La quincena {quincena_clave} no esta ABIERTA")
+        raise MyNotValidParamError(f"La quincena {quincena_clave} no esta ABIERTA")
 
     # Si la quincena esta eliminada, provocar error y terminar
     if quincena.estatus != "A":
-        return MyNotValidParamError(f"La quincena {quincena_clave} esta eliminada")
+        raise MyNotValidParamError(f"La quincena {quincena_clave} esta eliminada")
 
     # Entregar la quincena
     return quincena

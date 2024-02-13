@@ -14,6 +14,7 @@ from lib.exceptions import (
     MyEmptyError,
     MyFileNotAllowedError,
     MyFileNotFoundError,
+    MyNotExistsError,
     MyNotValidParamError,
     MyUploadError,
 )
@@ -34,6 +35,7 @@ from perseo.blueprints.nominas.generators.common import (
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.tabuladores.models import Tabulador
 
 PATRON_RFC = "PJE901211TI9"
@@ -50,11 +52,21 @@ def crear_timbrados(
 ) -> str:
     """Crear archivo XLSX con los timbrados de una quincena"""
 
-    # Consultar y validar quincena
-    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, provocar error y terminar
+    if quincena is None:
+        raise MyNotExistsError(f"No existe la quincena {quincena_clave}")
+
+    # Si la quincena esta eliminada, provocar error y terminar
+    if quincena.estatus != "A":
+        raise MyNotValidParamError(f"La quincena {quincena_clave} esta eliminada")
 
     # Validar los modelos 1: "CONFIANZA", 2: "SINDICALIZADO", 3: "JUBILADO"
-    if modelos is not None:
+    if modelos is None:
+        modelos = [1, 2]
+    else:
         for modelo in modelos:
             if modelo not in [1, 2, 3]:
                 raise MyNotValidParamError(f"El modelo {modelo} no es valido")
@@ -120,7 +132,8 @@ def crear_timbrados(
         raise MyEmptyError(mensaje)
 
     # Mandar mensaje de inicio a la bitacora
-    bitacora.info("Inicia crear timbrados %s %s modelos %s", quincena_clave, tipo, " ".join([str(m) for m in modelos]))
+    descripcion = f"timbrados {quincena_clave} {tipo} modelos {modelos}"
+    bitacora.info("Inicia crear %s", descripcion)
 
     # Consultar Nominas activas de la quincena, del tipo dado, juntar con personas
     nominas = (
@@ -362,6 +375,10 @@ def crear_timbrados(
         # Agregar la fila
         hoja.append(fila_parte_1 + fila_parte_2 + fila_parte_3)
 
+        # Mandar a la bitacora el contador cada 100 filas
+        if contador % 100 == 0:
+            bitacora.info("Van %s filas en %s", contador, descripcion)
+
     # Si el contador es cero, provocar error
     if contador == 0:
         mensaje = "No hubo filas que agregar al archivo XLSX"
@@ -431,7 +448,7 @@ def crear_timbrados(
             bitacora.warning(m)
 
     # Agregar el ultimo mensaje con la cantidad de filas en el archivo XLSX
-    mensaje_termino = f"Se generaron {contador} filas"
+    mensaje_termino = f"Se generaron {contador} filas en {nombre_archivo_xlsx}"
     mensajes.append(mensaje_termino)
 
     # Actualizar quincena_producto
