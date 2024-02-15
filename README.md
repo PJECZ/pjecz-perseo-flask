@@ -1,6 +1,6 @@
 # pjecz-perseo-flask
 
-PJECZ Perseo es un sistema web hecho con Flask.
+Es un sistema web hecho con Flask para administrar la nómina.
 
 ## Docker
 
