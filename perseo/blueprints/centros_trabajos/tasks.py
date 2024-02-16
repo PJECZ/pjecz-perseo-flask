@@ -42,6 +42,7 @@ database.app = app
 
 def exportar_xlsx() -> tuple[str, str, str]:
     """Exportar Centros de Trabajo a un archivo XLSX"""
+    bitacora.info("Inicia exportar Centros de Trabajo a un archivo XLSX")
 
     # Consultar Centros de Trabajo
     centros_trabajos = CentroTrabajo.query.filter_by(estatus="A").order_by(CentroTrabajo.clave).all()
@@ -130,7 +131,7 @@ def lanzar_exportar_xlsx():
     """Exportar Centros de Trabajo a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, "Exportando Centros de Trabajo a un archivo XLSX...")
+    set_task_progress(0, "Inicia exportar Centros de Trabajo a un archivo XLSX")
 
     # Ejecutar el creador
     try:

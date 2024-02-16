@@ -1,6 +1,7 @@
 """
 Conceptos, modelos
 """
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -22,8 +23,8 @@ class Concepto(database.Model, UniversalMixin):
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
-    conceptos_productos = relationship("ConceptoProducto", back_populates="concepto")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="concepto")
+    conceptos_productos = relationship("ConceptoProducto", back_populates="concepto", lazy="noload")
+    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="concepto", lazy="noload")
 
     def __repr__(self):
         """Representación"""

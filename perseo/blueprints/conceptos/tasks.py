@@ -42,6 +42,7 @@ database.app = app
 
 def exportar_xlsx() -> tuple[str, str, str]:
     """Exportar Conceptos a un archivo XLSX"""
+    bitacora.info("Inicia exportar Conceptos a un archivo XLSX")
 
     # Consultar Conceptos
     conceptos = Concepto.query.filter_by(estatus="A").order_by(Concepto.clave).all()
@@ -130,7 +131,7 @@ def lanzar_exportar_xlsx():
     """Exportar Conceptos a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, "Exportando Conceptos a un archivo XLSX...")
+    set_task_progress(0, "Inicia exportar Conceptos a un archivo XLSX")
 
     # Ejecutar el creador
     try:

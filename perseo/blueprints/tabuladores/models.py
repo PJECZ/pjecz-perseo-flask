@@ -1,6 +1,7 @@
 """
 Tabuladores, modelos
 """
+
 from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import relationship
 
@@ -51,7 +52,7 @@ class Tabulador(database.Model, UniversalMixin):
     pension_bonificacion = Column(Numeric(precision=24, scale=4), nullable=False)  # BONIFICACION
 
     # Hijos
-    personas = relationship("Persona", back_populates="tabulador")
+    personas = relationship("Persona", back_populates="tabulador", lazy="noload")
 
     def __repr__(self):
         """Representación"""

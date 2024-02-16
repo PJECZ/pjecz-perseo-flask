@@ -1,6 +1,7 @@
 """
 Centros de Trabajo, modelos
 """
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -22,8 +23,8 @@ class CentroTrabajo(database.Model, UniversalMixin):
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
-    nominas = relationship("Nomina", back_populates="centro_trabajo")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="centro_trabajo")
+    nominas = relationship("Nomina", back_populates="centro_trabajo", lazy="noload")
+    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="centro_trabajo", lazy="noload")
 
     def __repr__(self):
         """Representación"""
