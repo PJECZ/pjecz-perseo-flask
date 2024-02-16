@@ -42,6 +42,7 @@ database.app = app
 
 def exportar_xlsx() -> tuple[str, str, str]:
     """Exportar Plazas a un archivo XLSX"""
+    bitacora.info("Inicia exportar Plazas a un archivo XLSX")
 
     # Consultar Plazas
     plazas = Plaza.query.filter_by(estatus="A").order_by(Plaza.clave).all()
@@ -130,7 +131,7 @@ def lanzar_exportar_xlsx():
     """Exportar Plazas a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, "Exportando Plazas a un archivo XLSX...")
+    set_task_progress(0, "Inicia exportar Plazas a un archivo XLSX")
 
     # Ejecutar el creador
     try:

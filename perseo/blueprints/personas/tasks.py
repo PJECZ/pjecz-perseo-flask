@@ -42,6 +42,7 @@ database.app = app
 
 def exportar_xlsx() -> tuple[str, str, str]:
     """Exportar Personas a un archivo XLSX"""
+    bitacora.info("Inicia exportar Personas a un archivo XLSX")
 
     # Consultar Personas
     personas = Persona.query.filter_by(estatus="A").order_by(Persona.rfc).all()
@@ -150,7 +151,7 @@ def lanzar_exportar_xlsx():
     """Exportar Personas a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, "Exportando Personas a un archivo XLSX...")
+    set_task_progress(0, "Inicia exportar Personas a un archivo XLSX")
 
     # Ejecutar el creador
     try:

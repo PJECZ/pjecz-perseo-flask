@@ -1171,8 +1171,8 @@ def crear_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_timbrados(quincena_clave):
-    """Crear archivo XLSX con los timbrados de una quincena"""
+def crear_timbrados_empleados_activos(quincena_clave):
+    """Crear archivo XLSX con los timbrados de los empleados activos"""
 
     # Validar quincena_clave
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -1190,14 +1190,59 @@ def crear_timbrados(quincena_clave):
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
         quincena=quincena,
-        fuente="TIMBRADOS",
-        mensajes="Crear archivo XLSX con los timbrados de una quincena",
+        fuente="TIMBRADOS EMPLEADOS ACTIVOS",
+        mensajes="Crear archivo XLSX con los timbrados de los empleados activos...",
     )
     quincena_producto.save()
 
-    # Ejecutar crear_timbrados
+    # Ejecutar crear_timbrados con Personas con modelos 1: "CONFIANZA" y 2: "SINDICALIZADO"
     try:
-        mensaje_termino = task_crear_timbrados(quincena_clave, quincena_producto.id)
+        mensaje_termino = task_crear_timbrados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            modelos=[1, 2],
+        )
+    except MyAnyError as error:
+        click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
+        sys.exit(1)
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+def crear_timbrados_pensionados(quincena_clave):
+    """Crear archivo XLSX con los timbrados de los pensionados"""
+
+    # Validar quincena_clave
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo(click.style("ERROR: Clave de la quincena inválida.", fg="red"))
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena o ha sido eliminada, causa error
+    if quincena is None or quincena.estatus != "A":
+        click.echo(click.style("ERROR: No existe o ha sido eliminada la quincena.", fg="red"))
+        sys.exit(1)
+
+    # Crear un producto para la quincena
+    quincena_producto = QuincenaProducto(
+        quincena=quincena,
+        fuente="TIMBRADOS PENSIONADOS",
+        mensajes="Crear archivo XLSX con los timbrados de los pensionados",
+    )
+    quincena_producto.save()
+
+    # Ejecutar crear_timbrados con Personas con modelo 3: "PENSIONADO"
+    try:
+        mensaje_termino = task_crear_timbrados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            modelos=[3],
+        )
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1215,4 +1260,5 @@ cli.add_command(crear_dispersiones_pensionados)
 cli.add_command(crear_monederos)
 cli.add_command(crear_nominas)
 cli.add_command(crear_pensionados)
-cli.add_command(crear_timbrados)
+cli.add_command(crear_timbrados_empleados_activos)
+cli.add_command(crear_timbrados_pensionados)

@@ -43,6 +43,7 @@ database.app = app
 
 def exportar_xlsx() -> tuple[str, str, str]:
     """Exportar Tabuladores a un archivo XLSX"""
+    bitacora.info("Inicia exportar Tabuladores a un archivo XLSX")
 
     # Consultar Tabuladores
     tabuladores = (
@@ -180,7 +181,7 @@ def lanzar_exportar_xlsx():
     """Exportar Tabuladores a un archivo XLSX"""
 
     # Iniciar la tarea en el fondo
-    set_task_progress(0, "Exportando Tabuladores a un archivo XLSX...")
+    set_task_progress(0, "Inicia exportar Tabuladores a un archivo XLSX")
 
     # Ejecutar el creador
     try:

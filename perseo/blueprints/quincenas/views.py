@@ -440,9 +440,6 @@ def generate_timbrados_empleados_activos(quincena_id):
     if quincena.estatus != "A":
         flash("Quincena no activa", "warning")
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
-    if quincena.estado != "ABIERTA":
-        flash("Quincena no abierta", "warning")
-        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Agregar producto
     quincena_producto = QuincenaProducto(
         quincena=quincena,
@@ -474,9 +471,6 @@ def generate_timbrados_pensionados(quincena_id):
     quincena = Quincena.query.get_or_404(quincena_id)
     if quincena.estatus != "A":
         flash("Quincena no activa", "warning")
-        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
-    if quincena.estado != "ABIERTA":
-        flash("Quincena no abierta", "warning")
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Agregar producto
     quincena_producto = QuincenaProducto(
