@@ -1,13 +1,14 @@
 """
 Tabuladores, vistas
 """
+
 import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_clave, safe_message, safe_string
+from lib.safe_string import safe_clave, safe_message
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso

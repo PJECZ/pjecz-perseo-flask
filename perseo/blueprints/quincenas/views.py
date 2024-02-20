@@ -458,7 +458,7 @@ def generate_timbrados_empleados_activos(quincena_id):
         quincena_producto_id=quincena_producto.id,
         modelos=[1, 2],  # Modelos en Personas 1: "CONFIANZA", 2: "SINDICALIZADO"
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 60 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -490,7 +490,7 @@ def generate_timbrados_pensionados(quincena_id):
         quincena_producto_id=quincena_producto.id,
         modelos=[3],  # Modelos en Personas 3: "PENSIONADO"
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 60 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -527,7 +527,7 @@ def generate_timbrados_aguinaldos(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 60 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -564,7 +564,7 @@ def generate_timbrados_apoyos_anuales(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 60 segundos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
