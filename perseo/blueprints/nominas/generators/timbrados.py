@@ -142,6 +142,7 @@ def crear_timbrados(
         .filter(Nomina.quincena_id == quincena.id)
         .filter(Nomina.tipo == tipo)
         .filter(Nomina.estatus == "A")
+        .filter(Persona.modelo.in_(modelos))
         .order_by(Persona.rfc)
         .all()
     )
@@ -224,38 +225,22 @@ def crear_timbrados(
 
     # Bucle para crear cada fila del archivo XLSX
     for nomina in nominas:
-        # Consultar la Persona
-        persona = session.query(Persona).get(nomina.persona_id)
 
         # Si modelos no es None y el modelo de la persona NO esta en modelos, se omite
-        if modelos is not None and persona.modelo not in modelos:
-            continue
+        # if modelos is not None and nomina.persona.modelo not in modelos:
+        #     continue
 
-        # Consultar el Centro de Trabajo de la Nomina
-        centro_trabajo = session.query(CentroTrabajo).get(nomina.centro_trabajo_id)
-
-        # Consultar el Tabulador de la Persona
-        tabulador = session.query(Tabulador).get(persona.tabulador_id)
-
-        # Consultar las Cuentas de la Persona
-        cuentas = (
-            session.query(Cuenta)
-            .filter_by(persona_id=nomina.persona_id)
-            .filter_by(estatus="A")
-            .order_by(Cuenta.id.desc())
-            .all()
-        )
-
-        # De las cuentas hay que sacar la que no tenga la clave 9, porque esa clave es la de DESPENSA
+        # De las cuentas hay que tomar la que NO tenga la clave 9, porque esa clave es la de DESPENSA
         su_cuenta = None
-        for cuenta in cuentas:
-            if cuenta.banco.clave != "9":
+        su_cuenta_id = 0
+        for cuenta in nomina.persona.cuentas:
+            if cuenta.estatus == "A" and cuenta.banco.clave != "9" and cuenta.id > su_cuenta_id:
                 su_cuenta = cuenta
                 break
 
         # Si no tiene cuenta bancaria, entonces se agrega a la lista de personas_sin_cuentas y se salta
         if su_cuenta is None:
-            personas_sin_cuentas.append(persona.rfc)
+            personas_sin_cuentas.append(nomina.persona.rfc)
             continue
 
         # Incrementar contador
@@ -264,21 +249,21 @@ def crear_timbrados(
         # Fila parte 1
         fila_parte_1 = [
             contador,  # CONSECUTIVO
-            persona.num_empleado,  # NUMERO DE EMPLEADO
-            persona.apellido_primero,  # APELLIDO PRIMERO
-            persona.apellido_segundo,  # APELLIDO SEGUNDO
-            persona.nombres,  # NOMBRES
-            persona.rfc,  # RFC
-            persona.curp,  # CURP
-            persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
-            persona.ingreso_pj_fecha,  # FECHA DE INGRESO
+            nomina.persona.num_empleado,  # NUMERO DE EMPLEADO
+            nomina.persona.apellido_primero,  # APELLIDO PRIMERO
+            nomina.persona.apellido_segundo,  # APELLIDO SEGUNDO
+            nomina.persona.nombres,  # NOMBRES
+            nomina.persona.rfc,  # RFC
+            nomina.persona.curp,  # CURP
+            nomina.persona.seguridad_social,  # NO DE SEGURIDAD SOCIAL
+            nomina.persona.ingreso_pj_fecha,  # FECHA DE INGRESO
             "O" if tipo == "SALARIO" else "E",  # CLAVE TIPO NOMINA ordinarias es O, extraordinarias es E
-            "SI" if persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
+            "SI" if nomina.persona.modelo == 2 else "NO",  # SINDICALIZADO modelo es 2
             su_cuenta.banco.clave_dispersion_pensionados,  # CLAVE BANCO SAT
             su_cuenta.num_cuenta,  # NUMERO DE CUENTA
             "",  # PLANTA nula
-            tabulador.salario_diario,  # SALARIO DIARIO
-            tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
+            nomina.persona.tabulador.salario_diario,  # SALARIO DIARIO
+            nomina.persona.tabulador.salario_diario_integrado,  # SALARIO INTEGRADO
             quincena_fecha_inicial,  # FECHA INICIAL PERIODO
             quincena_fecha_final,  # FECHA FINAL PERIODO
             nomina.fecha_pago,  # FECHA DE PAGO
@@ -302,35 +287,39 @@ def crear_timbrados(
             "",  # CLAVE CENTRO COSTOS nulo
             "",  # CENTRO COSTOS nulo
             "04" if tipo == "SALARIO" else "99",  # FORMA DE PAGO para la ayuda es 99 y para los salarios es 04
-            centro_trabajo.clave,  # CLAVE DEPARTAMENTO
-            centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
-            tabulador.puesto.clave,  # NOMBRE PUESTO por lo pronto es la clave del puesto
+            nomina.centro_trabajo.clave,  # CLAVE DEPARTAMENTO
+            nomina.centro_trabajo.descripcion,  # NOMBRE DEPARTAMENTO
+            nomina.persona.tabulador.puesto.clave,  # NOMBRE PUESTO por lo pronto es la clave del puesto
         ]
 
         # Fila parte 2
         fila_parte_2 = []
         if tipo == "SALARIO":
+            # Consultar TODAS las P-D de la quincena y la persona
+            percepciones_deducciones = (
+                session.query(PercepcionDeduccion)
+                .filter_by(quincena_id=quincena.id)
+                .filter_by(persona_id=nomina.persona_id)
+                .all()
+            )
+            # Bucle por las P-D para definir un diccionario con las claves y los importes
+            percepciones_deducciones_dict = {}
+            for percepcion_deduccion in percepciones_deducciones:
+                percepciones_deducciones_dict[percepcion_deduccion.concepto.clave] = percepcion_deduccion.importe
             # Bucle por los conceptos
             for _, concepto in conceptos_dict.items():
-                # Consultar la P-D de la quincena, la persona y el concepto
-                percepcion_deduccion = (
-                    session.query(PercepcionDeduccion)
-                    .filter_by(quincena_id=quincena.id)
-                    .filter_by(persona_id=persona.id)
-                    .filter_by(concepto_id=concepto.id)
-                    .first()
-                )
-                if percepcion_deduccion is not None:
-                    fila_parte_2.append(percepcion_deduccion.importe)
+                # Si el concepto esta en el diccionario de P-D, entonces agregar el importe
+                if concepto.clave in percepciones_deducciones_dict:
+                    fila_parte_2.append(percepciones_deducciones_dict[concepto.clave])
                 else:
-                    fila_parte_2.append(0)
+                    fila_parte_2.append(0)  # De lo contrario agregar cero
         elif tipo == "APOYO ANUAL":
             # Consultar la PercepcionDeduccion con concepto PAZ
             percepcion_deduccion_paz = (
                 session.query(PercepcionDeduccion)
                 .join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
-                .filter(PercepcionDeduccion.persona_id == persona.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
                 .filter(Concepto.clave == "PAZ")
                 .first()
@@ -341,7 +330,7 @@ def crear_timbrados(
                 session.query(PercepcionDeduccion)
                 .join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
-                .filter(PercepcionDeduccion.persona_id == persona.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
                 .filter(Concepto.clave == "DAZ")
                 .first()
@@ -352,7 +341,7 @@ def crear_timbrados(
                 session.query(PercepcionDeduccion)
                 .join(Concepto)
                 .filter(PercepcionDeduccion.quincena_id == quincena.id)
-                .filter(PercepcionDeduccion.persona_id == persona.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
                 .filter(PercepcionDeduccion.tipo == "APOYO ANUAL")
                 .filter(Concepto.clave == "D62")
                 .first()
@@ -361,15 +350,15 @@ def crear_timbrados(
 
         # Si el codigo postal fiscal es cero, entonces se usa 00000
         codigo_postal_fiscal = "00000"
-        if persona.codigo_postal_fiscal:
-            codigo_postal_fiscal = str(persona.codigo_postal_fiscal).zfill(5)
+        if nomina.persona.codigo_postal_fiscal:
+            codigo_postal_fiscal = str(nomina.persona.codigo_postal_fiscal).zfill(5)
 
         # Fila parte 3
         fila_parte_3 = [
             "IP",  # ORIGEN RECURSO
             "100",  # MONTO DEL RECURSO
             codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
-            persona.modelo,  # MODELO
+            nomina.persona.modelo,  # MODELO
         ]
 
         # Agregar la fila

@@ -1,6 +1,7 @@
 """
 Plazas, modelos
 """
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -22,8 +23,8 @@ class Plaza(database.Model, UniversalMixin):
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
-    nominas = relationship("Nomina", back_populates="plaza")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="plaza")
+    nominas = relationship("Nomina", back_populates="plaza", lazy="noload")
+    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="plaza", lazy="noload")
 
     def __repr__(self):
         """Representación"""

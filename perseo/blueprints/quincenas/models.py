@@ -1,6 +1,7 @@
 """
 Quincenas, modelos
 """
+
 from sqlalchemy import Boolean, Column, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -29,10 +30,10 @@ class Quincena(database.Model, UniversalMixin):
     tiene_apoyos_anuales = Column(Boolean, nullable=False, default=False)
 
     # Hijos
-    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="quincena")
-    quincenas_productos = relationship("QuincenaProducto", back_populates="quincena")
-    nominas = relationship("Nomina", back_populates="quincena")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="quincena")
+    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="quincena", lazy="noload")
+    quincenas_productos = relationship("QuincenaProducto", back_populates="quincena", lazy="noload")
+    nominas = relationship("Nomina", back_populates="quincena", lazy="noload")
+    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="quincena", lazy="noload")
 
     def __repr__(self):
         """Representación"""

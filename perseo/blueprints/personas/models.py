@@ -1,6 +1,7 @@
 """
 Personas, modelos
 """
+
 from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -47,9 +48,9 @@ class Persona(database.Model, UniversalMixin):
     modelo = Column(Integer, nullable=False, index=True)  # 1: Confianza, 2: Sindicalizado, 3: Jubilado, 4: Beneficiario
 
     # Hijos
-    cuentas = relationship("Cuenta", back_populates="persona")
-    nominas = relationship("Nomina", back_populates="persona")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona")
+    cuentas = relationship("Cuenta", back_populates="persona")  # Sin lazy="noload" para elaborar el timbrado
+    nominas = relationship("Nomina", back_populates="persona", lazy="noload")
+    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona", lazy="noload")
     # puestos_historiales = relationship("PuestoHistorial", back_populates="persona")
 
     @property

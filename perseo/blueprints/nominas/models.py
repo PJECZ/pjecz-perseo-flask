@@ -1,6 +1,7 @@
 """
 Nominas, modelos
 """
+
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
@@ -48,7 +49,7 @@ class Nomina(database.Model, UniversalMixin):
     timbrado_id = Column(Integer())  # Pueder ser nulo o el ID del Timbrado
 
     # Hijos
-    timbrados = relationship("Timbrado", back_populates="nomina")
+    timbrados = relationship("Timbrado", back_populates="nomina", lazy="noload")
 
     def __repr__(self):
         """Representación"""
