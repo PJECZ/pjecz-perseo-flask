@@ -1,6 +1,7 @@
 """
 Puestos, modelos
 """
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -23,7 +24,7 @@ class Puesto(database.Model, UniversalMixin):
 
     # Hijos
     # puestos_historiales = relationship("PuestoHistorial", back_populates="puesto")
-    tabuladores = relationship("Tabulador", back_populates="puesto")
+    tabuladores = relationship("Tabulador", back_populates="puesto", lazy="noload")
 
     def __repr__(self):
         """Representación"""
