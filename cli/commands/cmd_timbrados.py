@@ -1,6 +1,7 @@
 """
 CLI Timbrados
 """
+
 import os
 import re
 import sys
@@ -141,7 +142,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         #   - cfdi:Complemento
         #     - tfd:TimbreFiscalDigital [Version, UUID, FechaTimbrado, RfcProvCertif, SelloCFD, NoCertificadoSAT, SelloSAT]
         #     - nomina12:Nomina [Version, TipoNomina, FechaPago, FechaInicialPago, FechaFinalPago, NumDiasPagados,
-        #         TotalDeducciones, TotalOtrosPagos]
+        #         TotalPercepciones, TotalDeducciones, TotalOtrosPagos]
         #       - nomina12:Emisor [RegistroPatronal]
         #         - nomina12:EntidadSNCF [OrigenRecurso]
         #       - nomina12:Receptor [Curp, NumSeguridadSocial, FechaInicioRelLaboral, Antigüedad, TipoContrato, Sindicalizado,
@@ -178,17 +179,25 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         # click.echo(click.style(f"    Fecha: {cfdi_comprobante_fecha}", fg="green"))
 
         # Inicializar variables de los datos que se van a obtener
-        cfdi_emisor_rfc = None
-        cfdi_emisor_nombre = None
-        cfdi_emisor_regimen_fiscal = None
-        cfdi_receptor_rfc = None
-        cfdi_receptor_nombre = None
-        tfd_version = None
-        tfd_uuid = None
-        tfd_fecha_timbrado = None
-        tfd_sello_cfd = None
-        tfd_num_cert_sat = None
-        tfd_sello_sat = None
+        cfdi_emisor_rfc = None  # cfdi:Emisor [Rfc]
+        cfdi_emisor_nombre = None  # cfdi:Emisor [Nombre]
+        cfdi_emisor_regimen_fiscal = None  # cfdi:Emisor [RegimenFiscal]
+        cfdi_receptor_rfc = None  # cfdi:Receptor [Rfc]
+        cfdi_receptor_nombre = None  # cfdi:Receptor [Nombre]
+        tfd_version = None  # tfd:TimbreFiscalDigital [Version]
+        tfd_uuid = None  # tfd:TimbreFiscalDigital [UUID]
+        tfd_fecha_timbrado = None  # tfd:TimbreFiscalDigital [FechaTimbrado]
+        tfd_sello_cfd = None  # tfd:TimbreFiscalDigital [SelloCFD]
+        tfd_num_cert_sat = None  # tfd:TimbreFiscalDigital [NoCertificadoSAT]
+        tfd_sello_sat = None  # tfd:TimbreFiscalDigital [SelloSAT]
+        nomina12_nomina_version = None  # nomina12:Nomina [Version]
+        nomina12_nomina_tipo_nomina = None  # nomina12:Nomina [TipoNomina]
+        nomina12_nomina_fecha_pago = None  # nomina12:Nomina [FechaPago]
+        nomina12_nomina_fecha_inicial_pago = None  # nomina12:Nomina [FechaInicialPago]
+        nomina12_nomina_fecha_final_pago = None  # nomina12:Nomina [FechaFinalPago]
+        nomina12_nomina_total_percepciones = None  # nomina12:Nomina [TotalPercepciones]
+        nomina12_nomina_total_deducciones = None  # nomina12:Nomina [TotalDeducciones]
+        nomina12_nomina_total_otros_pagos = None  # nomina12:Nomina [TotalOtrosPagos]
 
         # Bucle por los elementos de root
         for element in root.iter():
@@ -314,6 +323,76 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
         if tfd_sello_sat is not None and timbrado.tfd_sello_sat != tfd_sello_sat:
             timbrado.tfd_sello_sat = tfd_sello_sat
+            hay_cambios = True
+
+        # Si nomina12_nomina_version es diferente, hay_cambios sera verdadero
+        if nomina12_nomina_version is not None and timbrado.nomina12_nomina_version != nomina12_nomina_version:
+            timbrado.nomina12_nomina_version = nomina12_nomina_version
+            hay_cambios = True
+
+        # Si nomina12_nomina_tipo_nomina es diferente, hay_cambios sera verdadero
+        if nomina12_nomina_tipo_nomina is not None and timbrado.nomina12_nomina_tipo_nomina != nomina12_nomina_tipo_nomina:
+            timbrado.nomina12_nomina_tipo_nomina = nomina12_nomina_tipo_nomina
+            hay_cambios = True
+
+        # Para comparar nomina12_nomina_fecha_pago hay que convertir el datetime a string como 2024-01-17T14:19:16
+        nomina12_nomina_fecha_pago_str = ""
+        if timbrado.nomina12_nomina_fecha_pago is not None:
+            nomina12_nomina_fecha_pago_str = timbrado.nomina12_nomina_fecha_pago.strftime("%Y-%m-%dT%H:%M:%S")
+
+        # Si nomina12_nomina_fecha_pago es diferente, hay_cambios sera verdadero
+        if nomina12_nomina_fecha_pago is not None and nomina12_nomina_fecha_pago_str != nomina12_nomina_fecha_pago:
+            timbrado.nomina12_nomina_fecha_pago = nomina12_nomina_fecha_pago
+            hay_cambios = True
+
+        # Para comparar nomina12_nomina_fecha_inicial_pago hay que convertir el datetime a string como 2024-01-17T14:19:16
+        nomina12_nomina_fecha_inicial_pago_str = ""
+        if timbrado.nomina12_nomina_fecha_inicial_pago is not None:
+            nomina12_nomina_fecha_inicial_pago_str = timbrado.nomina12_nomina_fecha_inicial_pago.strftime("%Y-%m-%dT%H:%M:%S")
+
+        # Si nomina12_nomina_fecha_inicial_pago es diferente, hay_cambios sera verdadero
+        if (
+            nomina12_nomina_fecha_inicial_pago is not None
+            and nomina12_nomina_fecha_inicial_pago_str != nomina12_nomina_fecha_inicial_pago
+        ):
+            timbrado.nomina12_nomina_fecha_inicial_pago = nomina12_nomina_fecha_inicial_pago
+            hay_cambios = True
+
+        # Para comparar nomina12_nomina_fecha_final_pago hay que convertir el datetime a string como 2024-01-17T14:19:16
+        nomina12_nomina_fecha_final_pago_str = ""
+        if timbrado.nomina12_nomina_fecha_final_pago is not None:
+            nomina12_nomina_fecha_final_pago_str = timbrado.nomina12_nomina_fecha_final_pago.strftime("%Y-%m-%dT%H:%M:%S")
+
+        # Si nomina12_nomina_fecha_final_pago es diferente, hay_cambios sera verdadero
+        if (
+            nomina12_nomina_fecha_final_pago is not None
+            and nomina12_nomina_fecha_final_pago_str != nomina12_nomina_fecha_final_pago
+        ):
+            timbrado.nomina12_nomina_fecha_final_pago = nomina12_nomina_fecha_final_pago
+            hay_cambios = True
+
+        # Si nomina12_nomina_total_percepciones es diferente, hay_cambios sera verdadero
+        if (
+            nomina12_nomina_total_percepciones is not None
+            and timbrado.nomina12_nomina_total_percepciones != nomina12_nomina_total_percepciones
+        ):
+            timbrado.nomina12_nomina_total_percepciones = nomina12_nomina_total_percepciones
+            hay_cambios = True
+
+        # Si nomina12_nomina_total_deducciones es diferente, hay_cambios sera verdadero
+        if (
+            nomina12_nomina_total_deducciones is not None
+            and timbrado.nomina12_nomina_total_deducciones != nomina12_nomina_total_deducciones
+        ):
+            timbrado.nomina12_nomina_total_deducciones = nomina12_nomina_total_deducciones
+            hay_cambios = True
+
+        # Si nomina12_nomina_total_otros_pagos es diferente, hay_cambios sera verdadero
+        if (
+            nomina12_nomina_total_otros_pagos is not None
+            and timbrado.nomina12_nomina_total_otros_pagos != nomina12_nomina_total_otros_pagos
+        ):
+            timbrado.nomina12_nomina_total_otros_pagos = nomina12_nomina_total_otros_pagos
             hay_cambios = True
 
         # Definir valores por defecto
