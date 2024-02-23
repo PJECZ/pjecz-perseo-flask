@@ -40,8 +40,6 @@ app = create_app()
 app.app_context().push()
 database.app = app
 
-getcontext().prec = 4  # set the precision to 4 decimal places
-
 
 @click.group()
 def cli():
@@ -270,17 +268,17 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                         nomina12_nomina_fecha_final_pago = None
                 if "TotalPercepciones" in element.attrib:
                     try:
-                        nomina12_nomina_total_percepciones = Decimal(element.attrib["TotalPercepciones"])
+                        nomina12_nomina_total_percepciones = Decimal(format(float(element.attrib["TotalPercepciones"]), ".4f"))
                     except InvalidOperation:
                         nomina12_nomina_total_percepciones = None
                 if "TotalDeducciones" in element.attrib:
                     try:
-                        nomina12_nomina_total_deducciones = Decimal(element.attrib["TotalDeducciones"])
+                        nomina12_nomina_total_deducciones = Decimal(format(float(element.attrib["TotalDeducciones"]), ".4f"))
                     except InvalidOperation:
                         nomina12_nomina_total_deducciones = None
                 if "TotalOtrosPagos" in element.attrib:
                     try:
-                        nomina12_nomina_total_otros_pagos = Decimal(element.attrib["TotalOtrosPagos"])
+                        nomina12_nomina_total_otros_pagos = Decimal(format(float(element.attrib["TotalOtrosPagos"]), ".4f"))
                     except InvalidOperation:
                         nomina12_nomina_total_otros_pagos = None
 
@@ -327,7 +325,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             .filter(Quincena.clave == quincena_clave)
             .filter(Nomina.tipo == tipo)
             .filter(Nomina.estatus == "A")
-            .order_by(Nomina.id.desc())
+            .order_by(Nomina.id)
             .all()
         )
 
@@ -346,13 +344,11 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             if nomina.importe == 0:
                 continue
 
-            # Si nomina.percepcion NO es igual a nomina12_nomina_total_percepciones
-            # y nomina.deduccion NO es igual a nomina12_nomina_total_deducciones
-            # entonces se omite esta nomina
-            if nomina.percepcion != nomina12_nomina_total_percepciones:
-                continue
-            if nomina.deduccion != nomina12_nomina_total_deducciones:
-                continue
+            # Si la cantidad de nominas es mayor a 1 y aun NO ES LA ULTIMA...
+            if len(nominas) > 1 and nomina != nominas[-1]:
+                # Si nomina.deduccion NO es igual a nomina12_nomina_total_deducciones, se omite esta nomina
+                if nomina.deduccion != nomina12_nomina_total_deducciones:
+                    continue
 
             # Si se llega a este punto, se encontro la nomina
             este_timbrado_tiene_nomina = True
@@ -360,10 +356,8 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             # Inicializar bandera hay_cambios
             hay_cambios = False
 
-            # Puede existir el registro de Timbrado
-            timbrado = (
-                Timbrado.query.filter(Timbrado.nomina == nomina).filter_by(estatus="A").order_by(Timbrado.id.desc()).first()
-            )
+            # Puede existir el registro de Timbrado, consultar por el UUID
+            timbrado = Timbrado.query.filter(Timbrado.tfd_uuid == tfd_uuid).first()
 
             # Si NO existe el registro de Timbrado, se crea
             es_nuevo = False
@@ -676,10 +670,16 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     if errores_cargas_pdf_contador > 0:
         click.echo(click.style(f"  Hubo {errores_cargas_pdf_contador} errores en cargas PDF", fg="yellow"))
 
-    # Mostrar mensaje de termino
+    # Si se actualizaron registros en Timbrados, se muestra el contador
+    if actualizados_contador > 0:
+        click.echo(click.style(f"  Se actualizaron {actualizados_contador} registros en Timbrados.", fg="green"))
+
+    # Si se agregaron registros en Timbrados, se muestra el contador
+    if agregados_contador > 0:
+        click.echo(click.style(f"  Se agregaron {agregados_contador} registros en Timbrados.", fg="green"))
+
+    # Mostrar la cantidad de archivos XML procesados
     click.echo(click.style(f"  Se procesaron {procesados_contador} archivos XML.", fg="green"))
-    click.echo(click.style(f"  Se actualizaron {actualizados_contador} registros en Timbrados.", fg="green"))
-    click.echo(click.style(f"  Se agregaron {agregados_contador} registros en Timbrados.", fg="green"))
 
 
 cli.add_command(actualizar)
