@@ -12,27 +12,76 @@
 {% endblock %}
 
 {% block content %}
-    {% call detail.card(estatus=timbrado.estatus) %}
-        {{ detail.label_value_big('Estado', timbrado.estado) }}
-        {{ detail.label_value('Persona', timbrado.nomina.persona.nombre_completo) }}
-        {{ detail.label_value('Quincena', timbrado.nomina.quincena.clave) }}
-        {{ detail.label_value('Nómina', timbrado.nomina.id) }}
-        {{ detail.label_value('TFD Versión', timbrado.tfd_version) }}
-        {{ detail.label_value('TFD UUID', timbrado.tfd_uuid) }}
-        {{ detail.label_value('TFD Fecha Timbrado', timbrado.tfd_fecha_timbrado) }}
-        {{ detail.label_value('TFD Sello CFD', timbrado.tfd_sello_cfd) }}
-        {{ detail.label_value('TFD Num. Cert. SAT', timbrado.tfd_num_cert_sat) }}
-        {{ detail.label_value('TFD Sello SAT', timbrado.tfd_sello_sat) }}
-        {# detail.label_value('Creado', moment(timbrado.creado, local=True).format('DD MMM YYYY')) #}
-        <div class="row my-2">
-            <div class="col-md-6 p-2">
-                {{ detail.button_md('Descargar PDF', url_for('timbrados.download_pdf', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
-            </div>
-            <div class="col-md-6 p-2">
-                {{ detail.button_md('Descargar XML', url_for('timbrados.download_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
-            </div>
+    <div class="row">
+        <div class="col-md-12">
+            {% call detail.card(title='Timbrado', estatus=timbrado.estatus) %}
+                {{ detail.label_value_big('Estado', timbrado.estado) }}
+                {% set persona_texto = timbrado.nomina.persona.rfc + ' - ' + timbrado.nomina.persona.nombre_completo %}
+                {{ detail.label_value('Persona', persona_texto, url_for('personas.detail', persona_id=timbrado.nomina.persona_id)) }}
+                {{ detail.label_value('Quincena', timbrado.nomina.quincena.clave, url_for('quincenas.detail', quincena_id=timbrado.nomina.quincena_id)) }}
+                {{ detail.label_value('Nómina', timbrado.nomina_id, url_for('nominas.detail', nomina_id=timbrado.nomina_id)) }}
+            {% endcall %}
         </div>
-    {% endcall %}
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {% call detail.card(title='Emisor', estatus=timbrado.estatus) %}
+                {{ detail.label_value('RFC', timbrado.cfdi_emisor_rfc) }}
+                {{ detail.label_value('Nombre', timbrado.cfdi_emisor_nombre) }}
+                {{ detail.label_value('Régimen fiscal', timbrado.cfdi_emisor_regimen_fiscal) }}
+            {% endcall %}
+        </div>
+        <div class="col-md-6">
+            {% call detail.card(title='Receptor', estatus=timbrado.estatus) %}
+                {{ detail.label_value('RFC', timbrado.cfdi_receptor_rfc) }}
+                {{ detail.label_value('Nombre', timbrado.cfdi_receptor_nombre) }}
+            {% endcall %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {% call detail.card(title='En Nóminas (Finanzas)', estatus=timbrado.estatus) %}
+                {{ detail.label_value_currency('Percepción', timbrado.nomina.percepcion) }}
+                {{ detail.label_value_currency('Deducción', timbrado.nomina.deduccion) }}
+                {{ detail.label_value_currency('Importe', timbrado.nomina.importe) }}
+                {{ detail.label_value('Tipo', timbrado.nomina.tipo) }}
+                {{ detail.label_value('Desde', timbrado.nomina.desde_clave) }}
+                {{ detail.label_value('Hasta', timbrado.nomina.hasta_clave) }}
+            {% endcall %}
+        </div>
+        <div class="col-md-6">
+            {% call detail.card(title='En Timbrado (XML)', estatus=timbrado.estatus) %}
+                {{ detail.label_value_currency('Total percepciones', timbrado.nomina12_nomina_total_percepciones) }}
+                {{ detail.label_value_currency('Total deducciones', timbrado.nomina12_nomina_total_deducciones) }}
+                {{ detail.label_value_currency('Total otros pagos', timbrado.nomina12_nomina_total_otros_pagos) }}
+                {{ detail.label_value('Versión', timbrado.nomina12_nomina_version) }}
+                {{ detail.label_value('Tipo nómina', timbrado.nomina12_nomina_tipo_nomina) }}
+                {{ detail.label_value('Fecha pago', timbrado.nomina12_nomina_fecha_pago) }}
+                {{ detail.label_value('Fecha inicial pago', timbrado.nomina12_nomina_fecha_inicial_pago) }}
+                {{ detail.label_value('Fecha final pago', timbrado.nomina12_nomina_fecha_final_pago) }}
+            {% endcall %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            {% call detail.card(title='Timbre Fiscal Digital', estatus=timbrado.estatus) %}
+                {{ detail.label_value('TFD Versión', timbrado.tfd_version) }}
+                {{ detail.label_value('TFD UUID', timbrado.tfd_uuid) }}
+                {{ detail.label_value('TFD Fecha Timbrado', timbrado.tfd_fecha_timbrado) }}
+                {{ detail.label_value('TFD Sello CFD', timbrado.tfd_sello_cfd) }}
+                {{ detail.label_value('TFD Num. Cert. SAT', timbrado.tfd_num_cert_sat) }}
+                {{ detail.label_value('TFD Sello SAT', timbrado.tfd_sello_sat) }}
+                <div class="row my-2">
+                    <div class="col-md-6 p-2">
+                        {{ detail.button_md('Descargar PDF', url_for('timbrados.download_pdf', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+                    </div>
+                    <div class="col-md-6 p-2">
+                        {{ detail.button_md('Descargar XML', url_for('timbrados.download_xml', timbrado_id=timbrado.id), 'mdi:download', '_blank') }}
+                    </div>
+                </div>
+            {% endcall %}
+        </div>
+    </div>
 {% endblock %}
 
 {% block custom_javascript %}

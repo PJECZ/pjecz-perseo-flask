@@ -2,7 +2,7 @@
 Nominas, modelos
 """
 
-from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, Date, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
 from lib.universal_mixin import UniversalMixin

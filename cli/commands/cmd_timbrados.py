@@ -1,10 +1,13 @@
 """
 CLI Timbrados
 """
+
 import os
 import re
 import sys
 import xml.etree.ElementTree as ET
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import click
@@ -94,9 +97,12 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     emisor_rfc_no_coincide = []
     emisor_nombre_no_coincide = []
     emisor_regfis_no_coincide = []
+    nomina_total_percepciones_no_encontrado = []
+    nomina_total_deducciones_no_encontrado = []
     receptor_rfc_no_encontrado = []
     receptor_rfc_no_coincide = []
     nomina_no_encontrada = []
+    timbrados_sin_nominas = []
 
     # Inicializar contadores
     actualizados_contador = 0
@@ -141,7 +147,7 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         #   - cfdi:Complemento
         #     - tfd:TimbreFiscalDigital [Version, UUID, FechaTimbrado, RfcProvCertif, SelloCFD, NoCertificadoSAT, SelloSAT]
         #     - nomina12:Nomina [Version, TipoNomina, FechaPago, FechaInicialPago, FechaFinalPago, NumDiasPagados,
-        #         TotalDeducciones, TotalOtrosPagos]
+        #         TotalPercepciones, TotalDeducciones, TotalOtrosPagos]
         #       - nomina12:Emisor [RegistroPatronal]
         #         - nomina12:EntidadSNCF [OrigenRecurso]
         #       - nomina12:Receptor [Curp, NumSeguridadSocial, FechaInicioRelLaboral, Antigüedad, TipoContrato, Sindicalizado,
@@ -178,17 +184,25 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
         # click.echo(click.style(f"    Fecha: {cfdi_comprobante_fecha}", fg="green"))
 
         # Inicializar variables de los datos que se van a obtener
-        cfdi_emisor_rfc = None
-        cfdi_emisor_nombre = None
-        cfdi_emisor_regimen_fiscal = None
-        cfdi_receptor_rfc = None
-        cfdi_receptor_nombre = None
-        tfd_version = None
-        tfd_uuid = None
-        tfd_fecha_timbrado = None
-        tfd_sello_cfd = None
-        tfd_num_cert_sat = None
-        tfd_sello_sat = None
+        cfdi_emisor_rfc = None  # cfdi:Emisor [Rfc]
+        cfdi_emisor_nombre = None  # cfdi:Emisor [Nombre]
+        cfdi_emisor_regimen_fiscal = None  # cfdi:Emisor [RegimenFiscal]
+        cfdi_receptor_rfc = None  # cfdi:Receptor [Rfc]
+        cfdi_receptor_nombre = None  # cfdi:Receptor [Nombre]
+        tfd_version = None  # tfd:TimbreFiscalDigital [Version]
+        tfd_uuid = None  # tfd:TimbreFiscalDigital [UUID]
+        tfd_fecha_timbrado = None  # tfd:TimbreFiscalDigital [FechaTimbrado]
+        tfd_sello_cfd = None  # tfd:TimbreFiscalDigital [SelloCFD]
+        tfd_num_cert_sat = None  # tfd:TimbreFiscalDigital [NoCertificadoSAT]
+        tfd_sello_sat = None  # tfd:TimbreFiscalDigital [SelloSAT]
+        nomina12_nomina_version = None  # nomina12:Nomina [Version]
+        nomina12_nomina_tipo_nomina = None  # nomina12:Nomina [TipoNomina]
+        nomina12_nomina_fecha_pago = None  # nomina12:Nomina [FechaPago]
+        nomina12_nomina_fecha_inicial_pago = None  # nomina12:Nomina [FechaInicialPago]
+        nomina12_nomina_fecha_final_pago = None  # nomina12:Nomina [FechaFinalPago]
+        nomina12_nomina_total_percepciones = None  # nomina12:Nomina [TotalPercepciones]
+        nomina12_nomina_total_deducciones = None  # nomina12:Nomina [TotalDeducciones]
+        nomina12_nomina_total_otros_pagos = None  # nomina12:Nomina [TotalOtrosPagos]
 
         # Bucle por los elementos de root
         for element in root.iter():
@@ -226,6 +240,47 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
                 if "SelloSAT" in element.attrib:
                     tfd_sello_sat = element.attrib["SelloSAT"]
 
+            # Obtener datos de Nomina
+            if element.tag == f"{XML_TAG_NOMINA_PREFIX}Nomina":
+                if "Version" in element.attrib:
+                    nomina12_nomina_version = element.attrib["Version"]
+                if "TipoNomina" in element.attrib:
+                    nomina12_nomina_tipo_nomina = element.attrib["TipoNomina"]
+                if "FechaPago" in element.attrib:
+                    try:
+                        nomina12_nomina_fecha_pago = datetime.strptime(element.attrib["FechaPago"], "%Y-%m-%d").date()
+                    except ValueError:
+                        nomina12_nomina_fecha_pago = None
+                if "FechaInicialPago" in element.attrib:
+                    try:
+                        nomina12_nomina_fecha_inicial_pago = datetime.strptime(
+                            element.attrib["FechaInicialPago"], "%Y-%m-%d"
+                        ).date()
+                    except ValueError:
+                        nomina12_nomina_fecha_inicial_pago = None
+                if "FechaFinalPago" in element.attrib:
+                    try:
+                        nomina12_nomina_fecha_final_pago = datetime.strptime(
+                            element.attrib["FechaFinalPago"], "%Y-%m-%d"
+                        ).date()
+                    except ValueError:
+                        nomina12_nomina_fecha_final_pago = None
+                if "TotalPercepciones" in element.attrib:
+                    try:
+                        nomina12_nomina_total_percepciones = Decimal(format(float(element.attrib["TotalPercepciones"]), ".4f"))
+                    except InvalidOperation:
+                        nomina12_nomina_total_percepciones = None
+                if "TotalDeducciones" in element.attrib:
+                    try:
+                        nomina12_nomina_total_deducciones = Decimal(format(float(element.attrib["TotalDeducciones"]), ".4f"))
+                    except InvalidOperation:
+                        nomina12_nomina_total_deducciones = None
+                if "TotalOtrosPagos" in element.attrib:
+                    try:
+                        nomina12_nomina_total_otros_pagos = Decimal(format(float(element.attrib["TotalOtrosPagos"]), ".4f"))
+                    except InvalidOperation:
+                        nomina12_nomina_total_otros_pagos = None
+
         # Si NO se encontro el Receptor RFC, se agrega a la lista de errores y se omite
         if cfdi_receptor_rfc is None:
             receptor_rfc_no_encontrado.append(archivo_nombre)
@@ -251,195 +306,330 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
             emisor_regfis_no_coincide.append(archivo_nombre)
             continue
 
+        # Si nomina12_nomina_total_percepciones no se encuentra, se agrega a la lista de errores y se omite
+        if nomina_total_percepciones_no_encontrado is None:
+            nomina_total_percepciones_no_encontrado.append(archivo_nombre)
+            continue
+
+        # Si nomina12_nomina_total_deducciones no se encuentra, se agrega a la lista de errores y se omite
+        if nomina_total_deducciones_no_encontrado is None:
+            nomina_total_deducciones_no_encontrado.append(archivo_nombre)
+            continue
+
         # Consultar la Nomina
-        nomina = (
+        nominas = (
             Nomina.query.join(Persona)
             .join(Quincena)
             .filter(Persona.rfc == cfdi_receptor_rfc)
             .filter(Quincena.clave == quincena_clave)
             .filter(Nomina.tipo == tipo)
             .filter(Nomina.estatus == "A")
-            .order_by(Nomina.id.desc())
-            .first()
+            .order_by(Nomina.id)
+            .all()
         )
 
         # Si NO se encuentra registro en Nomina
-        if nomina is None:
+        if len(nominas) == 0:
             nomina_no_encontrada.append(cfdi_receptor_rfc)
             continue
 
-        # Inicializar bandera hay_cambios
-        hay_cambios = False
+        # Inicializar bandera este_timbrado_tiene_nomina
+        este_timbrado_tiene_nomina = False
 
-        # Puede existir el registro de Timbrado
-        timbrado = Timbrado.query.filter(Timbrado.nomina == nomina).filter_by(estatus="A").order_by(Timbrado.id.desc()).first()
+        # Bucle por las nominas encontradas, se busca la que coincida en percepciones y deducciones
+        for nomina in nominas:
 
-        # Si NO existe el registro de Timbrado, se crea
-        es_nuevo = False
-        if timbrado is None:
-            timbrado = Timbrado(nomina=nomina, estado="TIMBRADO", archivo_pdf="", url_pdf="", archivo_xml="", url_xml="")
-            es_nuevo = True
-            hay_cambios = True
+            # Si nomina.importe es CERO, se omite esta nomina
+            if nomina.importe == 0:
+                continue
 
-        # Si tfd_version es diferente, hay_cambios sera verdadero
-        if tfd_version is not None and timbrado.tfd_version != tfd_version:
-            timbrado.tfd_version = tfd_version
-            hay_cambios = True
+            # Si la cantidad de nominas es mayor a 1 y aun NO ES LA ULTIMA...
+            if len(nominas) > 1 and nomina != nominas[-1]:
+                # Si nomina.deduccion NO es igual a nomina12_nomina_total_deducciones, se omite esta nomina
+                if nomina.deduccion != nomina12_nomina_total_deducciones:
+                    continue
 
-        # Si tfd_uuid es diferente, hay_cambios sera verdadero
-        if tfd_uuid is not None and timbrado.tfd_uuid != tfd_uuid:
-            timbrado.tfd_uuid = tfd_uuid
-            hay_cambios = True
+            # Si se llega a este punto, se encontro la nomina
+            este_timbrado_tiene_nomina = True
 
-        # Para comparar tfd_fecha_timbrado hay que convertir el datetime a string como 2024-01-17T14:19:16
-        tfd_fecha_timbrado_str = ""
-        if timbrado.tfd_fecha_timbrado is not None:
-            tfd_fecha_timbrado_str = timbrado.tfd_fecha_timbrado.strftime("%Y-%m-%dT%H:%M:%S")
+            # Inicializar bandera hay_cambios
+            hay_cambios = False
 
-        # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
-        if tfd_fecha_timbrado is not None and tfd_fecha_timbrado_str != tfd_fecha_timbrado:
-            timbrado.tfd_fecha_timbrado = tfd_fecha_timbrado
-            hay_cambios = True
+            # Puede existir el registro de Timbrado, consultar por el UUID
+            timbrado = Timbrado.query.filter(Timbrado.tfd_uuid == tfd_uuid).first()
 
-        # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
-        if tfd_sello_cfd is not None and timbrado.tfd_sello_cfd != tfd_sello_cfd:
-            timbrado.tfd_sello_cfd = tfd_sello_cfd
-            hay_cambios = True
+            # Si NO existe el registro de Timbrado, se crea
+            es_nuevo = False
+            if timbrado is None:
+                timbrado = Timbrado(nomina=nomina, estado="TIMBRADO", archivo_pdf="", url_pdf="", archivo_xml="", url_xml="")
+                es_nuevo = True
+                hay_cambios = True
 
-        # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
-        if tfd_num_cert_sat is not None and timbrado.tfd_num_cert_sat != tfd_num_cert_sat:
-            timbrado.tfd_num_cert_sat = tfd_num_cert_sat
-            hay_cambios = True
+            # Si cfdi_emisor_rfc es diferente, hay_cambios sera verdadero
+            if cfdi_emisor_rfc is not None and timbrado.cfdi_emisor_rfc != cfdi_emisor_rfc:
+                timbrado.cfdi_emisor_rfc = cfdi_emisor_rfc
+                hay_cambios = True
 
-        # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
-        if tfd_sello_sat is not None and timbrado.tfd_sello_sat != tfd_sello_sat:
-            timbrado.tfd_sello_sat = tfd_sello_sat
-            hay_cambios = True
+            # Si cfdi_emisor_nombre es diferente, hay_cambios sera verdadero
+            if cfdi_emisor_nombre is not None and timbrado.cfdi_emisor_nombre != cfdi_emisor_nombre:
+                timbrado.cfdi_emisor_nombre = cfdi_emisor_nombre
+                hay_cambios = True
 
-        # Definir valores por defecto
-        archivo_xml = timbrado.archivo_xml
-        url_xml = timbrado.url_xml
-        archivo_pdf = timbrado.archivo_pdf
-        url_pdf = timbrado.url_pdf
+            # Si cfdi_emisor_regimen_fiscal es diferente, hay_cambios sera verdadero
+            if cfdi_emisor_regimen_fiscal is not None and timbrado.cfdi_emisor_regimen_fiscal != cfdi_emisor_regimen_fiscal:
+                timbrado.cfdi_emisor_regimen_fiscal = cfdi_emisor_regimen_fiscal
+                hay_cambios = True
 
-        # Si esta definido el deposito GCS
-        if CLOUD_STORAGE_DEPOSITO != "":
-            # Bloque try-except para contar errores en subida de archivos XML
-            try:
-                # Definir el nombre de descarga del archivo XML
-                if archivo_sufijo == "":
-                    archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}.xml"
+            # Si cfdi_receptor_rfc es diferente, hay_cambios sera verdadero
+            if cfdi_receptor_rfc is not None and timbrado.cfdi_receptor_rfc != cfdi_receptor_rfc:
+                timbrado.cfdi_receptor_rfc = cfdi_receptor_rfc
+                hay_cambios = True
+
+            # Si cfdi_receptor_nombre es diferente, hay_cambios sera verdadero
+            if cfdi_receptor_nombre is not None and timbrado.cfdi_receptor_nombre != cfdi_receptor_nombre:
+                timbrado.cfdi_receptor_nombre = cfdi_receptor_nombre
+                hay_cambios = True
+
+            # Si tfd_version es diferente, hay_cambios sera verdadero
+            if tfd_version is not None and timbrado.tfd_version != tfd_version:
+                timbrado.tfd_version = tfd_version
+                hay_cambios = True
+
+            # Si tfd_uuid es diferente, hay_cambios sera verdadero
+            if tfd_uuid is not None and timbrado.tfd_uuid != tfd_uuid:
+                timbrado.tfd_uuid = tfd_uuid
+                hay_cambios = True
+
+            # Para comparar tfd_fecha_timbrado hay que convertir el datetime a string como 2024-01-17T14:19:16
+            tfd_fecha_timbrado_str = ""
+            if timbrado.tfd_fecha_timbrado is not None:
+                tfd_fecha_timbrado_str = timbrado.tfd_fecha_timbrado.strftime("%Y-%m-%dT%H:%M:%S")
+
+            # Si tfd_fecha_timbrado es diferente, hay_cambios sera verdadero
+            if tfd_fecha_timbrado is not None and tfd_fecha_timbrado_str != tfd_fecha_timbrado:
+                timbrado.tfd_fecha_timbrado = tfd_fecha_timbrado
+                hay_cambios = True
+
+            # Si tfd_sello_cfd es diferente, hay_cambios sera verdadero
+            if tfd_sello_cfd is not None and timbrado.tfd_sello_cfd != tfd_sello_cfd:
+                timbrado.tfd_sello_cfd = tfd_sello_cfd
+                hay_cambios = True
+
+            # Si tfd_num_cert_sat es diferente, hay_cambios sera verdadero
+            if tfd_num_cert_sat is not None and timbrado.tfd_num_cert_sat != tfd_num_cert_sat:
+                timbrado.tfd_num_cert_sat = tfd_num_cert_sat
+                hay_cambios = True
+
+            # Si tfd_sello_sat es diferente, hay_cambios sera verdadero
+            if tfd_sello_sat is not None and timbrado.tfd_sello_sat != tfd_sello_sat:
+                timbrado.tfd_sello_sat = tfd_sello_sat
+                hay_cambios = True
+
+            # Si nomina12_nomina_version es diferente, hay_cambios sera verdadero
+            if nomina12_nomina_version is not None and timbrado.nomina12_nomina_version != nomina12_nomina_version:
+                timbrado.nomina12_nomina_version = nomina12_nomina_version
+                hay_cambios = True
+
+            # Si nomina12_nomina_tipo_nomina es diferente, hay_cambios sera verdadero
+            if nomina12_nomina_tipo_nomina is not None and timbrado.nomina12_nomina_tipo_nomina != nomina12_nomina_tipo_nomina:
+                timbrado.nomina12_nomina_tipo_nomina = nomina12_nomina_tipo_nomina
+                hay_cambios = True
+
+            # Para comparar nomina12_nomina_fecha_pago hay que convertir el datetime a string como 2024-01-17T14:19:16
+            nomina12_nomina_fecha_pago_str = ""
+            if timbrado.nomina12_nomina_fecha_pago is not None:
+                nomina12_nomina_fecha_pago_str = timbrado.nomina12_nomina_fecha_pago.strftime("%Y-%m-%dT%H:%M:%S")
+
+            # Si nomina12_nomina_fecha_pago es diferente, hay_cambios sera verdadero
+            if nomina12_nomina_fecha_pago is not None and nomina12_nomina_fecha_pago_str != nomina12_nomina_fecha_pago:
+                timbrado.nomina12_nomina_fecha_pago = nomina12_nomina_fecha_pago
+                hay_cambios = True
+
+            # Para comparar nomina12_nomina_fecha_inicial_pago hay que convertir el datetime a string como 2024-01-17T14:19:16
+            nomina12_nomina_fecha_inicial_pago_str = ""
+            if timbrado.nomina12_nomina_fecha_inicial_pago is not None:
+                nomina12_nomina_fecha_inicial_pago_str = timbrado.nomina12_nomina_fecha_inicial_pago.strftime(
+                    "%Y-%m-%dT%H:%M:%S"
+                )
+
+            # Si nomina12_nomina_fecha_inicial_pago es diferente, hay_cambios sera verdadero
+            if (
+                nomina12_nomina_fecha_inicial_pago is not None
+                and nomina12_nomina_fecha_inicial_pago_str != nomina12_nomina_fecha_inicial_pago
+            ):
+                timbrado.nomina12_nomina_fecha_inicial_pago = nomina12_nomina_fecha_inicial_pago
+                hay_cambios = True
+
+            # Para comparar nomina12_nomina_fecha_final_pago hay que convertir el datetime a string como 2024-01-17T14:19:16
+            nomina12_nomina_fecha_final_pago_str = ""
+            if timbrado.nomina12_nomina_fecha_final_pago is not None:
+                nomina12_nomina_fecha_final_pago_str = timbrado.nomina12_nomina_fecha_final_pago.strftime("%Y-%m-%dT%H:%M:%S")
+
+            # Si nomina12_nomina_fecha_final_pago es diferente, hay_cambios sera verdadero
+            if (
+                nomina12_nomina_fecha_final_pago is not None
+                and nomina12_nomina_fecha_final_pago_str != nomina12_nomina_fecha_final_pago
+            ):
+                timbrado.nomina12_nomina_fecha_final_pago = nomina12_nomina_fecha_final_pago
+                hay_cambios = True
+
+            # Si nomina12_nomina_total_percepciones es diferente, hay_cambios sera verdadero
+            if (
+                nomina12_nomina_total_percepciones is not None
+                and timbrado.nomina12_nomina_total_percepciones != nomina12_nomina_total_percepciones
+            ):
+                timbrado.nomina12_nomina_total_percepciones = nomina12_nomina_total_percepciones
+                hay_cambios = True
+
+            # Si nomina12_nomina_total_deducciones es diferente, hay_cambios sera verdadero
+            if (
+                nomina12_nomina_total_deducciones is not None
+                and timbrado.nomina12_nomina_total_deducciones != nomina12_nomina_total_deducciones
+            ):
+                timbrado.nomina12_nomina_total_deducciones = nomina12_nomina_total_deducciones
+                hay_cambios = True
+
+            # Si nomina12_nomina_total_otros_pagos es diferente, hay_cambios sera verdadero
+            if (
+                nomina12_nomina_total_otros_pagos is not None
+                and timbrado.nomina12_nomina_total_otros_pagos != nomina12_nomina_total_otros_pagos
+            ):
+                timbrado.nomina12_nomina_total_otros_pagos = nomina12_nomina_total_otros_pagos
+                hay_cambios = True
+
+            # Definir valores por defecto
+            archivo_xml = timbrado.archivo_xml
+            url_xml = timbrado.url_xml
+            archivo_pdf = timbrado.archivo_pdf
+            url_pdf = timbrado.url_pdf
+
+            # Si esta definido el deposito GCS
+            if CLOUD_STORAGE_DEPOSITO != "":
+                # Bloque try-except para contar errores en subida de archivos XML
+                try:
+                    # Definir el nombre de descarga del archivo XML
+                    if archivo_sufijo == "":
+                        archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}.xml"
+                    else:
+                        archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.xml"
+                    # Definir la ruta del archivo XML en el deposito GCS
+                    blob_nombre_xml = f"{CARPETA}/{directorio}/{tfd_uuid}.xml"
+                    # Si existe el archivo XML en el deposito GCS
+                    if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml):
+                        # Obtener la URL del archivo XML
+                        url_xml = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml)
+                    # De lo contrario, NO existe el archivo XML en el deposito GCS
+                    else:
+                        # Si NO existe el archivo XML, causa error
+                        if not ruta_xml.is_file():
+                            raise MyFileNotFoundError
+                        # Cargar el contenido del archivo XML
+                        with open(ruta_xml, "r", encoding="utf8") as f:
+                            data_xml = f.read()
+                        # Subir el archivo XML
+                        url_xml = upload_file_to_gcs(
+                            bucket_name=CLOUD_STORAGE_DEPOSITO,
+                            blob_name=blob_nombre_xml,
+                            content_type="application/xml",
+                            data=data_xml,
+                        )
+                        click.echo(click.style("(XML)", fg="green"), nl=False)
+                except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
+                    archivo_xml = ""
+                    url_xml = ""
+                    errores_cargas_xml_contador += 1
+                    click.echo(click.style("(XML)", fg="red"), nl=False)
+
+                # Bloque try-except para contar errores en subida de archivos PDF
+                try:
+                    # Definir el nombre de descarga del archivo PDF
+                    if archivo_sufijo == "":
+                        archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}.pdf"
+                    else:
+                        archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.pdf"
+                    # Definir la ruta del archivo PDF en el deposito GCS
+                    blob_nombre_pdf = f"{CARPETA}/{directorio}/{tfd_uuid}.pdf"
+                    # Si existe el archivo PDF en el deposito GCS
+                    if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf):
+                        # Obtener la URL del archivo PDF
+                        url_pdf = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf)
+                    # De lo contrario, NO existe el archivo PDF en el deposito GCS
+                    else:
+                        # Si NO existe el archivo XML, causa error
+                        if not ruta_pdf.is_file():
+                            raise MyFileNotFoundError
+                        # Cargar el contenido del archivo PDF
+                        with open(ruta_pdf, "rb") as f:
+                            data_pdf = f.read()
+                        # Subir el archivo PDF
+                        url_pdf = upload_file_to_gcs(
+                            bucket_name=CLOUD_STORAGE_DEPOSITO,
+                            blob_name=blob_nombre_pdf,
+                            content_type="application/pdf",
+                            data=data_pdf,
+                        )
+                        click.echo(click.style("(PDF)", fg="green"), nl=False)
+                except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
+                    archivo_pdf = ""
+                    url_pdf = ""
+                    errores_cargas_pdf_contador += 1
+                    click.echo(click.style("(PDF)", fg="red"), nl=False)
+
+            # Si archivo_xml es diferente, hay_cambios sera verdadero
+            if timbrado.archivo_xml != archivo_xml:
+                timbrado.archivo_xml = archivo_xml
+                hay_cambios = True
+
+            # Si url_xml es diferente, hay_cambios sera verdadero
+            if timbrado.url_xml != url_xml:
+                timbrado.url_xml = url_xml
+                hay_cambios = True
+
+            # Si archivo_pdf es diferente, hay_cambios sera verdadero
+            if timbrado.archivo_pdf != archivo_pdf:
+                timbrado.archivo_pdf = archivo_pdf
+                hay_cambios = True
+
+            # Si url_pdf es diferente, hay_cambios sera verdadero
+            if timbrado.url_pdf != url_pdf:
+                timbrado.url_pdf = url_pdf
+                hay_cambios = True
+
+            # Si hay_cambios
+            if hay_cambios:
+                # Cargar el contenido XML
+                with open(ruta_xml, "r", encoding="utf8") as f:
+                    timbrado.tfd = f.read()
+
+                # Guardar timbrado
+                timbrado.save()
+
+                # Actualizar nomina con el ID del timbrado
+                nomina.timbrado_id = timbrado.id
+                nomina.save()
+
+                # Si es_nuevo, incrementar agregados_contador
+                if es_nuevo:
+                    agregados_contador += 1
+                    click.echo(click.style("+", fg="green"), nl=False)
                 else:
-                    archivo_xml = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.xml"
-                # Definir la ruta del archivo XML en el deposito GCS
-                blob_nombre_xml = f"{CARPETA}/{directorio}/{tfd_uuid}.xml"
-                # Si existe el archivo XML en el deposito GCS
-                if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml):
-                    # Obtener la URL del archivo XML
-                    url_xml = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_xml)
-                # De lo contrario, NO existe el archivo XML en el deposito GCS
-                else:
-                    # Si NO existe el archivo XML, causa error
-                    if not ruta_xml.is_file():
-                        raise MyFileNotFoundError
-                    # Cargar el contenido del archivo XML
-                    with open(ruta_xml, "r", encoding="utf8") as f:
-                        data_xml = f.read()
-                    # Subir el archivo XML
-                    url_xml = upload_file_to_gcs(
-                        bucket_name=CLOUD_STORAGE_DEPOSITO,
-                        blob_name=blob_nombre_xml,
-                        content_type="application/xml",
-                        data=data_xml,
-                    )
-                    click.echo(click.style("(XML)", fg="green"), nl=False)
-            except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
-                archivo_xml = ""
-                url_xml = ""
-                errores_cargas_xml_contador += 1
-                click.echo(click.style("(XML)", fg="red"), nl=False)
+                    actualizados_contador += 1
+                    click.echo(click.style("u", fg="green"), nl=False)
 
-            # Bloque try-except para contar errores en subida de archivos PDF
-            try:
-                # Definir el nombre de descarga del archivo PDF
-                if archivo_sufijo == "":
-                    archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}.pdf"
-                else:
-                    archivo_pdf = f"{cfdi_receptor_rfc}-{quincena_clave}-{archivo_sufijo}.pdf"
-                # Definir la ruta del archivo PDF en el deposito GCS
-                blob_nombre_pdf = f"{CARPETA}/{directorio}/{tfd_uuid}.pdf"
-                # Si existe el archivo PDF en el deposito GCS
-                if check_file_exists_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf):
-                    # Obtener la URL del archivo PDF
-                    url_pdf = get_public_url_from_gcs(CLOUD_STORAGE_DEPOSITO, blob_nombre_pdf)
-                # De lo contrario, NO existe el archivo PDF en el deposito GCS
-                else:
-                    # Si NO existe el archivo XML, causa error
-                    if not ruta_pdf.is_file():
-                        raise MyFileNotFoundError
-                    # Cargar el contenido del archivo PDF
-                    with open(ruta_pdf, "rb") as f:
-                        data_pdf = f.read()
-                    # Subir el archivo PDF
-                    url_pdf = upload_file_to_gcs(
-                        bucket_name=CLOUD_STORAGE_DEPOSITO,
-                        blob_name=blob_nombre_pdf,
-                        content_type="application/pdf",
-                        data=data_pdf,
-                    )
-                    click.echo(click.style("(PDF)", fg="green"), nl=False)
-            except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
-                archivo_pdf = ""
-                url_pdf = ""
-                errores_cargas_pdf_contador += 1
-                click.echo(click.style("(PDF)", fg="red"), nl=False)
+            # Incrementar procesados_contador
+            procesados_contador += 1
 
-        # Si archivo_xml es diferente, hay_cambios sera verdadero
-        if timbrado.archivo_xml != archivo_xml:
-            timbrado.archivo_xml = archivo_xml
-            hay_cambios = True
+            # Mostrar un punto en la terminal
+            click.echo(click.style(".", fg="cyan"), nl=False)
 
-        # Si url_xml es diferente, hay_cambios sera verdadero
-        if timbrado.url_xml != url_xml:
-            timbrado.url_xml = url_xml
-            hay_cambios = True
+        # Si NO se encontro la nomina para este timbrado, se agrega a la lista de timbrados sin nominas
+        if este_timbrado_tiene_nomina is False:
+            timbrados_sin_nominas.append(archivo_nombre)
 
-        # Si archivo_pdf es diferente, hay_cambios sera verdadero
-        if timbrado.archivo_pdf != archivo_pdf:
-            timbrado.archivo_pdf = archivo_pdf
-            hay_cambios = True
-
-        # Si url_pdf es diferente, hay_cambios sera verdadero
-        if timbrado.url_pdf != url_pdf:
-            timbrado.url_pdf = url_pdf
-            hay_cambios = True
-
-        # Si hay_cambios
-        if hay_cambios:
-            # Cargar el contenido XML
-            with open(ruta_xml, "r", encoding="utf8") as f:
-                timbrado.tfd = f.read()
-
-            # Guardar timbrado
-            timbrado.save()
-
-            # Actualizar nomina con el ID del timbrado
-            nomina.timbrado_id = timbrado.id
-            nomina.save()
-
-            # Si es_nuevo, incrementar agregados_contador
-            if es_nuevo:
-                agregados_contador += 1
-                click.echo(click.style("+", fg="green"), nl=False)
-            else:
-                actualizados_contador += 1
-                click.echo(click.style("u", fg="green"), nl=False)
-
-        # Incrementar procesados_contador
-        procesados_contador += 1
-
-        # Mostrar un punto en la terminal
-        click.echo(click.style(".", fg="cyan"), nl=False)
+    # Si hubo timbrados sin nominas, se muestran
+    if len(timbrados_sin_nominas) > 0:
+        click.echo(click.style(f"  Hubo {len(timbrados_sin_nominas)} Timbrados cuyos totales NO coinciden", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(timbrados_sin_nominas)}", fg="yellow"))
 
     # Si hubo errores en archivos_pdf_no_encontrados, se muestran
     if len(archivos_pdf_no_encontrados) > 0:
@@ -479,10 +669,16 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     if errores_cargas_pdf_contador > 0:
         click.echo(click.style(f"  Hubo {errores_cargas_pdf_contador} errores en cargas PDF", fg="yellow"))
 
-    # Mostrar mensaje de termino
+    # Si se actualizaron registros en Timbrados, se muestra el contador
+    if actualizados_contador > 0:
+        click.echo(click.style(f"  Se actualizaron {actualizados_contador} registros en Timbrados.", fg="green"))
+
+    # Si se agregaron registros en Timbrados, se muestra el contador
+    if agregados_contador > 0:
+        click.echo(click.style(f"  Se agregaron {agregados_contador} registros en Timbrados.", fg="green"))
+
+    # Mostrar la cantidad de archivos XML procesados
     click.echo(click.style(f"  Se procesaron {procesados_contador} archivos XML.", fg="green"))
-    click.echo(click.style(f"  Se actualizaron {actualizados_contador} registros en Timbrados.", fg="green"))
-    click.echo(click.style(f"  Se agregaron {agregados_contador} registros en Timbrados.", fg="green"))
 
 
 cli.add_command(actualizar)
