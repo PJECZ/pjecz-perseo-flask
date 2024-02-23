@@ -7,7 +7,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from decimal import Decimal, getcontext, InvalidOperation
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import click
@@ -99,7 +99,6 @@ def actualizar(quincena_clave: str, tipo: str, subdir: str):
     emisor_regfis_no_coincide = []
     nomina_total_percepciones_no_encontrado = []
     nomina_total_deducciones_no_encontrado = []
-    nomina_total_otros_pagos_no_encontrado = []
     receptor_rfc_no_encontrado = []
     receptor_rfc_no_coincide = []
     nomina_no_encontrada = []
