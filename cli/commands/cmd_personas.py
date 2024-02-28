@@ -169,8 +169,8 @@ def actualizar(personas_csv: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def actualizar_fechas_ingreso(quincena_clave: str):
-    """Actualizar las fechas de ingreso de las personas a partir de los archivos de explotacion de una quincena"""
+def actualizar_curp_cp_fiscal_fechas_ingreso(quincena_clave: str):
+    """Actualizar los CURPs, CP fiscal y las fechas de ingreso de las personas a partir de los archivos de explotacion de una quincena"""
 
     # Validar quincena
     if re.match(QUINCENA_REGEXP, quincena_clave) is None:
@@ -204,12 +204,25 @@ def actualizar_fechas_ingreso(quincena_clave: str):
     personas_actualizadas_contador = 0
 
     # Bucle por cada fila
-    click.echo("Actualizando las fechas de ingreso de las Personas: ", nl=False)
+    click.echo("Actualizando las Personas: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
         rfc = hoja.cell_value(fila, 0)
         quincena_ingreso_pj_fecha_str = str(int(hoja.cell_value(fila, 7)))
         quincena_ingreso_gobierno_fecha_str = str(int(hoja.cell_value(fila, 8)))
+
+        # Validar el CURP
+        try:
+            curp = safe_curp(hoja.cell_value(fila, 17))
+        except ValueError:
+            click.echo(f"ERROR: {hoja.cell_value(fila, 17)} no es CURP VALIDO.")
+            continue
+
+        # Si la celda de CP fiscal es vacia, tomar el valor 0
+        if hoja.cell_value(fila, 21) == "":
+            cp_fiscal = 0
+        else:
+            cp_fiscal = int(hoja.cell_value(fila, 21))
 
         # Convertir la quincena_ingreso_pj_fecha_str a fecha
         try:
@@ -246,6 +259,16 @@ def actualizar_fechas_ingreso(quincena_clave: str):
         # Si persona.ingreso_gobierno_fecha es diferente, actualizar
         if persona.ingreso_gobierno_fecha != ingreso_gobierno_fecha:
             persona.ingreso_gobierno_fecha = ingreso_gobierno_fecha
+            hay_cambios = True
+
+        # Si la persona NO tiene CURP, actualizar
+        if persona.curp == "":
+            persona.curp = curp
+            hay_cambios = True
+
+        # Si la persona NO tiene CP fiscal, actualizar
+        if persona.codigo_postal_fiscal == 0 and cp_fiscal > 0:
+            persona.codigo_postal_fiscal = cp_fiscal
             hay_cambios = True
 
         # Si hay cambios, agregar a la sesion e incrementar el contador
@@ -778,7 +801,7 @@ def sincronizar():
 
 cli.add_command(actualizar)
 cli.add_command(actualizar_tabuladores)
-cli.add_command(actualizar_fechas_ingreso)
+cli.add_command(actualizar_curp_cp_fiscal_fechas_ingreso)
 cli.add_command(cambiar_tabulador)
 cli.add_command(cambiar_tabulador_a_todos)
 cli.add_command(exportar_xlsx)
