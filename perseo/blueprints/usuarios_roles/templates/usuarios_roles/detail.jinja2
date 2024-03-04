@@ -27,7 +27,7 @@
         {% else %}
             {{ detail.label_value('Usuario', usuario_rol.usuario.nombre) }}
         {% endif %}
-        {{ detail.label_value('Creado', moment(usuario_rol.creado).format('llll')) }}
+        {# detail.label_value('Creado', moment(usuario_rol.creado).format('llll')) #}
     {% endcall %}
 {% endblock %}
 

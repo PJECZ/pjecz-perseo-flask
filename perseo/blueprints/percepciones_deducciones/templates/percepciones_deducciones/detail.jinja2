@@ -51,7 +51,7 @@
             {{ detail.label_value('Concepto', concepto_texto) }}
         {% endif %}
         {{ detail.label_value_currency('Importe', percepcion_deduccion.importe) }}
-        {{ detail.label_value('Creado', moment(percepcion_deduccion.creado, local=True).format('DD MMM YYYY')) }}
+        {# detail.label_value('Creado', moment(percepcion_deduccion.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
 

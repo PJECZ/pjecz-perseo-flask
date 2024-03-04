@@ -45,7 +45,7 @@ class Persona(database.Model, UniversalMixin):
     # 1: Confianza
     # 2: Sindicalizado
     # 3: Jubilado
-    modelo = Column(Integer, nullable=False, index=True)  # 1: Confianza, 2: Sindicalizado, 3: Jubilado, 4: Beneficiario
+    modelo = Column(Integer, nullable=False, index=True)
 
     # Hijos
     cuentas = relationship("Cuenta", back_populates="persona")  # Sin lazy="noload" para elaborar el timbrado

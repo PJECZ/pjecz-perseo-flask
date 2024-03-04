@@ -205,7 +205,7 @@ def edit(tabulador_id):
             es_valido = False
         # Validar que puesto_id, modelo, nivel y quinquenio no se repitan
         tabulador_existente = Tabulador.query.filter_by(
-            puesto=form.puesto.data,
+            puesto_id=form.puesto.data,
             modelo=form.modelo.data,
             nivel=form.nivel.data,
             quinquenio=form.quinquenio.data,
@@ -215,7 +215,7 @@ def edit(tabulador_id):
             es_valido = False
         # Si es valido, guardar
         if es_valido:
-            tabulador.puesto = form.puesto.data
+            tabulador.puesto_id = form.puesto.data
             tabulador.modelo = form.modelo.data
             tabulador.nivel = form.nivel.data
             tabulador.quinquenio = form.quinquenio.data
@@ -243,7 +243,7 @@ def edit(tabulador_id):
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
-                descripcion=safe_message(f"Editado Tabulador {tabulador.puesto}"),
+                descripcion=safe_message(f"Editado Tabulador ID {tabulador.id}"),
                 url=url_for("tabuladores.detail", tabulador_id=tabulador.id),
             )
             bitacora.save()

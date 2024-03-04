@@ -34,7 +34,7 @@
             {{ detail.label_value('Autoridad', usuario.autoridad.descripcion) }}
         {% endif %}
         {{ detail.label_value('Puesto', usuario.puesto) }}
-        {{ detail.label_value('Creado', moment(usuario.creado).format('llll')) }}
+        {# detail.label_value('Creado', moment(usuario.creado).format('llll')) #}
     {% endcall %}
     {% if current_user.can_view('USUARIOS ROLES') %}
         {% call detail.card('Roles') %}

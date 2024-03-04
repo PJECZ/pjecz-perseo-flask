@@ -30,7 +30,7 @@
         {% else %}
             {{ detail.label_value('Módulo', permiso.modulo.nombre) }}
         {% endif %}
-        {{ detail.label_value('Creado', moment(permiso.creado).format('llll')) }}
+        {# detail.label_value('Creado', moment(permiso.creado).format('llll')) #}
     {% endcall %}
 {% endblock %}
 

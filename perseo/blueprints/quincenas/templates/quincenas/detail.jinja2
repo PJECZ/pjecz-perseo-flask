@@ -28,7 +28,7 @@
                 {{ detail.label_value('Estado', quincena.estado) }}
                 {{ detail.label_value_boolean('Tiene aguinaldos', quincena.tiene_aguinaldos) }}
                 {{ detail.label_value_boolean('Tiene apoyos anuales', quincena.tiene_apoyos_anuales) }}
-                {{ detail.label_value('Creado', moment(quincena.creado).format('DD MMM YYYY')) }}
+                {# detail.label_value('Creado', moment(quincena.creado).format('llll')) #}
             {% endcall %}
         </div>
         {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}

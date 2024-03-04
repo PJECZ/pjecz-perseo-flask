@@ -41,12 +41,12 @@
                 {% endif %}
                 {# Termina tabulador de la persona #}
                 {{ detail.label_value('Modelo', persona.modelo) }}
-                {{ detail.label_value('Fecha de ingreso gobierno', persona.ingreso_gobierno_fecha) }}
-                {{ detail.label_value('Fecha de ingreso P.J.', persona.ingreso_pj_fecha) }}
-                {{ detail.label_value('Fecha de nacimiento', persona.nacimiento_fecha) }}
+                {{ detail.label_value('F. ingreso gobierno', persona.ingreso_gobierno_fecha) }}
+                {{ detail.label_value('F. ingreso P.J.', persona.ingreso_pj_fecha) }}
+                {{ detail.label_value('F. nacimiento', persona.nacimiento_fecha) }}
                 {{ detail.label_value('Código Postal fiscal', persona.codigo_postal_fiscal) }}
                 {{ detail.label_value('NSS', persona.seguridad_social) }}
-                {{ detail.label_value('Creado', moment(persona.creado, local=True).format('DD MMM YYYY')) }}
+                {# detail.label_value('Creado', moment(persona.creado, local=True).format('llll')) #}
             {% endcall %}
         </div>
         <div class="col-md-6">

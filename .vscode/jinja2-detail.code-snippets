@@ -102,7 +102,7 @@
       "\t\t{{ detail.label_value_big('Nombre o Descripción', ${2:instancia}.${3:clave}) }}",
       "\t\t{{ detail.label_value('Columna 1', ${2:instancia}.columna_1) }}",
       "\t\t{{ detail.label_value('Columna 2', ${2:instancia}.columna_2) }}",
-      "\t\t{{ detail.label_value('Creado', moment(${2:instancia}.creado, local=True).format('DD MMM YYYY')) }}",
+      "\t\t{# detail.label_value('Creado', moment(${2:instancia}.creado, local=True).format('llll')) #}",
       "\t{% endcall %}",
       "{% endblock %}",
       "",
