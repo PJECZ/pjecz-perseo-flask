@@ -20,7 +20,7 @@
     {% call detail.card(estatus=producto.estatus) %}
         {{ detail.label_value('Clave', producto.clave) }}
         {{ detail.label_value('Descripción', producto.descripcion) }}
-        {{ detail.label_value('Creado', moment(producto.creado, local=True).format('DD MMM YYYY')) }}
+        {# detail.label_value('Creado', moment(producto.creado, local=True).format('llll')) #}
     {% endcall %}
     {% if current_user.can_view('CONCEPTOS') %}
         {% call detail.card('Conceptos') %}

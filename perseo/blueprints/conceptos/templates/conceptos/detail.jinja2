@@ -21,7 +21,7 @@
     {% call detail.card(estatus=concepto.estatus) %}
         {{ detail.label_value('Clave', concepto.clave) }}
         {{ detail.label_value('Descripción', concepto.descripcion) }}
-        {{ detail.label_value('Creado', moment(concepto.creado, local=True).format('DD MMM YYYY')) }}
+        {# detail.label_value('Creado', moment(concepto.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Percepciones-Deducciones del Concepto -->
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}

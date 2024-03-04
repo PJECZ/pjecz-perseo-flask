@@ -49,7 +49,7 @@
         {{ detail.label_value_currency('Pensión Vitalicia gravable', tabulador.pension_vitalicia_gravable) }}
         {{ detail.label_value_currency('Pensión Bonificación', tabulador.pension_bonificacion) }}
         {# Creado #}
-        {{ detail.label_value('Creado', moment(tabulador.creado, local=True).format('DD MMM YYYY')) }}
+        {# detail.label_value('Creado', moment(tabulador.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Personas en el Tabulador -->
     {% if current_user.can_view('PERSONAS') %}

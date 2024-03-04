@@ -26,7 +26,7 @@
         {{ detail.label_value('Clave SAT/Dispersiones Pensionados', banco.clave_dispersion_pensionados) }}
         {{ detail.label_value('Consecutivo', banco.consecutivo) }}
         {{ detail.label_value('Consecutivo temporal', banco.consecutivo_generado) }}
-        {# detail.label_value('Creado', moment(banco.creado, local=True).format('DD MMM YYYY')) #}
+        {# detail.label_value('Creado', moment(banco.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Cuentas del Banco -->
     {% if current_user.can_view('CUENTAS') %}

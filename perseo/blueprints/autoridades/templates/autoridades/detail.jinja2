@@ -29,7 +29,7 @@
         {{ detail.label_value('Descripción', autoridad.descripcion) }}
         {{ detail.label_value('Descripción corta', autoridad.descripcion_corta) }}
         {{ detail.label_value_boolean('Es Extinto', autoridad.es_extinto) }}
-        {{ detail.label_value('Creado', moment(autoridad.creado).format('llll')) }}
+        {# detail.label_value('Creado', moment(autoridad.creado).format('llll')) #}
     {% endcall %}
     {% if current_user.can_view('USUARIOS') %}
         {% call detail.card('Usuarios') %}
