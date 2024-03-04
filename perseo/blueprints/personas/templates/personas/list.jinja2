@@ -15,7 +15,7 @@
             {{ modals.button_modal('Exportar a XLSX', url_for('personas.exportar_xlsx'), 'ExportXLSX', 'mdi:download', "¿Quiere exportar las Personas como un archivo XLSX?") }}
         {% endif %}
         {% if current_user.can_insert('PERSONAS') %}
-            {{ topbar.button_new('Nuevo Persona', url_for('personas.new')) }}
+            {{ topbar.button_new('Nueva Persona', url_for('personas.new')) }}
         {% endif %}
     {% endcall %}
 {% endblock %}
