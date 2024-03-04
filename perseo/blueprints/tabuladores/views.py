@@ -141,7 +141,7 @@ def new():
             es_valido = False
         # Validar que puesto_id, modelo, nivel y quinquenio no se repitan
         tabulador_existente = Tabulador.query.filter_by(
-            puesto=form.puesto.data,
+            puesto_id=form.puesto.data,
             modelo=form.modelo.data,
             nivel=form.nivel.data,
             quinquenio=form.quinquenio.data,
@@ -152,7 +152,7 @@ def new():
         # Si es valido, guardar
         if es_valido:
             tabulador = Tabulador(
-                puesto=form.puesto.data,
+                puesto_id=form.puesto.data,
                 modelo=form.modelo.data,
                 nivel=form.nivel.data,
                 quinquenio=form.quinquenio.data,

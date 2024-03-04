@@ -1,9 +1,10 @@
 """
 Tabuladores, formularios
 """
+
 from flask_wtf import FlaskForm
-from wtforms import DateField, DecimalField, RadioField, SelectField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms import DateField, DecimalField, SelectField, SubmitField
+from wtforms.validators import DataRequired, Optional
 
 from perseo.blueprints.puestos.models import Puesto
 
@@ -42,28 +43,28 @@ class TabuladorForm(FlaskForm):
 
     puesto = SelectField("Puesto", coerce=int, validators=[DataRequired()])
     modelo = SelectField("Modelo", validators=[DataRequired()], choices=MODELOS, coerce=int)
-    nivel = SelectField("Nivel", validators=[DataRequired()], choices=NIVELES, coerce=int)
-    quinquenio = SelectField("Quinquenio", validators=[DataRequired()], choices=QUINQUENIOS, coerce=int)
+    nivel = SelectField("Nivel", validators=[Optional()], choices=NIVELES, coerce=int)
+    quinquenio = SelectField("Quinquenio", validators=[Optional()], choices=QUINQUENIOS, coerce=int)
     fecha = DateField("Fecha", validators=[DataRequired()])
-    sueldo_base = DecimalField("Sueldo base", validators=[DataRequired()], default=0.0)
-    incentivo = DecimalField("Incentivo", validators=[DataRequired()], default=0.0)
-    monedero = DecimalField("Monedero", validators=[DataRequired()], default=0.0)
-    rec_cul_dep = DecimalField("Rec. Cul. Dep.", validators=[DataRequired()], default=0.0)
-    sobresueldo = DecimalField("Sobresueldo", validators=[DataRequired()], default=0.0)
-    rec_dep_cul_gravado = DecimalField("Rec. Dep. Cul. Gravado", validators=[DataRequired()], default=0.0)
-    rec_dep_cul_excento = DecimalField("Rec. Dep. Cul. Excento", validators=[DataRequired()], default=0.0)
-    ayuda_transp = DecimalField("Ayuda transp.", validators=[DataRequired()], default=0.0)
-    monto_quinquenio = DecimalField("Monto quinquenio", validators=[DataRequired()], default=0.0)
-    total_percepciones = DecimalField("Total percepciones", validators=[DataRequired()], default=0.0)
-    salario_diario = DecimalField("Salario diario", validators=[DataRequired()], default=0.0)
-    prima_vacacional_mensual = DecimalField("Prima vacacional mensual", validators=[DataRequired()], default=0.0)
-    aguinaldo_mensual = DecimalField("Aguinaldo mensual", validators=[DataRequired()], default=0.0)
-    prima_vacacional_mensual_adicional = DecimalField("Prima vacacional men. adic.", validators=[DataRequired()], default=0.0)
-    total_percepciones_integrado = DecimalField("Total percepciones integrado", validators=[DataRequired()], default=0.0)
-    salario_diario_integrado = DecimalField("Salario diario integrado", validators=[DataRequired()], default=0.0)
-    pension_vitalicia_excento = DecimalField("Pensión vitalicia excento", validators=[DataRequired()], default=0.0)
-    pension_vitalicia_gravable = DecimalField("Pensión vitalicia gravable", validators=[DataRequired()], default=0.0)
-    pension_bonificacion = DecimalField("Pensión bonificación", validators=[DataRequired()], default=0.0)
+    sueldo_base = DecimalField("Sueldo base", validators=[Optional()], default=0.0)
+    incentivo = DecimalField("Incentivo", validators=[Optional()], default=0.0)
+    monedero = DecimalField("Monedero", validators=[Optional()], default=0.0)
+    rec_cul_dep = DecimalField("Rec. Cul. Dep.", validators=[Optional()], default=0.0)
+    sobresueldo = DecimalField("Sobresueldo", validators=[Optional()], default=0.0)
+    rec_dep_cul_gravado = DecimalField("Rec. Dep. Cul. Gravado", validators=[Optional()], default=0.0)
+    rec_dep_cul_excento = DecimalField("Rec. Dep. Cul. Excento", validators=[Optional()], default=0.0)
+    ayuda_transp = DecimalField("Ayuda transp.", validators=[Optional()], default=0.0)
+    monto_quinquenio = DecimalField("Monto quinquenio", validators=[Optional()], default=0.0)
+    total_percepciones = DecimalField("Total percepciones", validators=[Optional()], default=0.0)
+    salario_diario = DecimalField("Salario diario", validators=[Optional()], default=0.0)
+    prima_vacacional_mensual = DecimalField("Prima vacacional mensual", validators=[Optional()], default=0.0)
+    aguinaldo_mensual = DecimalField("Aguinaldo mensual", validators=[Optional()], default=0.0)
+    prima_vacacional_mensual_adicional = DecimalField("Prima vacacional men. adic.", validators=[Optional()], default=0.0)
+    total_percepciones_integrado = DecimalField("Total percepciones integrado", validators=[Optional()], default=0.0)
+    salario_diario_integrado = DecimalField("Salario diario integrado", validators=[Optional()], default=0.0)
+    pension_vitalicia_excento = DecimalField("Pensión vitalicia excento", validators=[Optional()], default=0.0)
+    pension_vitalicia_gravable = DecimalField("Pensión vitalicia gravable", validators=[Optional()], default=0.0)
+    pension_bonificacion = DecimalField("Pensión bonificación", validators=[Optional()], default=0.0)
     guardar = SubmitField("Guardar")
 
     def __init__(self, *args, **kwargs):
