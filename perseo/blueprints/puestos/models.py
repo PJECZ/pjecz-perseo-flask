@@ -23,7 +23,6 @@ class Puesto(database.Model, UniversalMixin):
     descripcion = Column(String(256), nullable=False)
 
     # Hijos
-    # puestos_historiales = relationship("PuestoHistorial", back_populates="puesto")
     tabuladores = relationship("Tabulador", back_populates="puesto", lazy="noload")
 
     def __repr__(self):

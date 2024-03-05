@@ -14,18 +14,24 @@
     {% call f.card() %}
         {% set form_kwargs = {'persona_id': persona.id} %}
         {% call f.form_tag('personas.edit', fid='persona_form', **form_kwargs) %}
-            {% call f.form_group(form.rfc) %}{% endcall %}
-            {% call f.form_group(form.nombres) %}{% endcall %}
-            {% call f.form_group(form.apellido_primero) %}{% endcall %}
-            {% call f.form_group(form.apellido_segundo) %}{% endcall %}
-            {% call f.form_group(form.curp) %}{% endcall %}
-            {% call f.form_group(form.num_empleado) %}{% endcall %}
-            {% call f.form_group(form.modelo) %}{% endcall %}
-            {% call f.form_group(form.ingreso_gobierno_fecha) %}{% endcall %}
-            {% call f.form_group(form.ingreso_pj_fecha) %}{% endcall %}
-            {% call f.form_group(form.nacimiento_fecha) %}{% endcall %}
-            {% call f.form_group(form.codigo_postal_fiscal) %}{% endcall %}
-            {% call f.form_group(form.seguridad_social) %}{% endcall %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% call f.form_group(form.rfc) %}{% endcall %}
+                    {% call f.form_group(form.nombres) %}{% endcall %}
+                    {% call f.form_group(form.apellido_primero) %}{% endcall %}
+                    {% call f.form_group(form.apellido_segundo) %}{% endcall %}
+                    {% call f.form_group(form.curp) %}{% endcall %}
+                    {% call f.form_group(form.nacimiento_fecha) %}{% endcall %}
+                    {% call f.form_group(form.codigo_postal_fiscal) %}{% endcall %}
+                </div>
+                <div class="col-md-6">
+                    {% call f.form_group(form.num_empleado) %}{% endcall %}
+                    {% call f.form_group(form.seguridad_social) %}{% endcall %}
+                    {% call f.form_group(form.ingreso_gobierno_fecha) %}{% endcall %}
+                    {% call f.form_group(form.ingreso_pj_fecha) %}{% endcall %}
+                    {% call f.form_group(form.modelo) %}{% endcall %}
+                </div>
+            </div>
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
