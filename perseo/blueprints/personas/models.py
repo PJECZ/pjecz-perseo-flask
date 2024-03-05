@@ -51,7 +51,6 @@ class Persona(database.Model, UniversalMixin):
     cuentas = relationship("Cuenta", back_populates="persona")  # Sin lazy="noload" para elaborar el timbrado
     nominas = relationship("Nomina", back_populates="persona", lazy="noload")
     percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona", lazy="noload")
-    # puestos_historiales = relationship("PuestoHistorial", back_populates="persona")
 
     @property
     def nombre_completo(self):
