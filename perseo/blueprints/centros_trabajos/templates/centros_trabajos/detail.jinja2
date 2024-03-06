@@ -19,17 +19,155 @@
 {% endblock %}
 
 {% block content %}
+    <!-- Detalle del Centro de Trabajo -->
     {% call detail.card(estatus=centro_trabajo.estatus) %}
         {{ detail.label_value_big('Clave', centro_trabajo.clave) }}
         {{ detail.label_value('Descripción', centro_trabajo.descripcion) }}
         {# detail.label_value('Creado', moment(centro_trabajo.creado, local=True).format('llll')) #}
     {% endcall %}
+    <!-- Nominas del Centro de Trabajo -->
+    {% if current_user.can_view('NOMINAS') %}
+        {% call detail.card('Nóminas') %}
+            <!-- Filtros Nominas -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroNominaQuincenaClave" type="text" class="form-control" aria-label="Quincena">
+                                <label for="filtroNominaQuincenaClave">Quincena</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <select id="filtroTipo" class="form-select" aria-label="Tipo">
+                                <option selected value="">Filtro Tipo</option>
+                                <option value="AGUINALDO">AGUINALDO</option>
+                                <option value="APOYO ANUAL">APOYO ANUAL</option>
+                                <option value="DESPENSA">DESPENSA</option>
+                                <option value="SALARIO">SALARIO</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <select id="filtroTimbrado" class="form-select" aria-label="Tipo">
+                                <option selected value="">Filtro TFD</option>
+                                <option value="1">TIMBRADOS</option>
+                                <option value="-1">NO TIMBRADOS</option>
+                            </select>
+                        </div>
+                        <div class="col-3 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Nominas -->
+            <table id="nominas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>RFC</th>
+                        <th>Nombre completo</th>
+                        <th>Plaza</th>
+                        <th>Desde</th>
+                        <th>Hasta</th>
+                        <th>Tipo</th>
+                        <th style="text-align:right">Percepción</th>
+                        <th style="text-align:right">Deducción</th>
+                        <th style="text-align:right">Importe</th>
+                        <th>No. Cheque</th>
+                        <th>F. de Pago</th>
+                        <th>TFD</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Nominas del Centro de Trabajo -->
+    {% if current_user.can_view('NOMINAS') %}
+        <script>
+            // DataTable Nominas
+            let configDTNominas = constructorDataTable.config();
+            configDTNominas['ajax']['url'] = '/nominas/datatable_json';
+            configDTNominas['ajax']['data'] = { 'estatus': "A", 'centro_trabajo_id': {{ centro_trabajo.id }} };
+            configDTNominas['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena_clave' },
+                { data: 'persona_rfc' },
+                { data: 'persona_nombre_completo' },
+                { data: 'plaza_clave' },
+                { data: 'desde_clave' },
+                { data: 'hasta_clave' },
+                { data: 'tipo' },
+                { data: 'percepcion' },
+                { data: 'deduccion' },
+                { data: 'importe' },
+                { data: 'num_cheque' },
+                { data: 'fecha_pago' },
+                { data: 'timbrado' },
+            ];
+            configDTNominas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 3, // persona_nombre_completo
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return (data.length > 16 ? data.substr(0, 16) + '…' : data);
+                    }
+                },
+                {
+                    targets: [8, 9, 10], // percepcion, deduccion, importe
+                    render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                    className: "dt-body-right",
+                },
+                {
+                    targets: 13, // timbrado
+                    render: function(data, type, row, meta) {
+                        if (data.id != 0) {
+                            return '<a href="' + data.url + '"><span class="iconify" data-icon="mdi:invoice-list"></span></a>';
+                        }
+                        return '';
+                    }
+                }
+            ];
+            configDTNominas['createdRow'] = function(row, data, dataIndex) {
+                if (data.num_cheque != '') {
+                    if (data.timbrado.url != '') {
+                        $(row).addClass('table-success');
+                    } else {
+                        $(row).addClass('table-info');
+                    }
+                }
+            };
+            // Filtros Nominas
+            const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
+            filtrosNominas.agregarInput('filtroNominaQuincenaClave', 'quincena_clave');
+            filtrosNominas.agregarSelect('filtroTipo', 'tipo');
+            filtrosNominas.agregarSelect('filtroTimbrado', 'tfd');
+            filtrosNominas.precargar();
+        </script>
+    {% endif %}
+    <!-- Modales -->
     {% if current_user.can_admin('CENTROS TRABAJOS') %}
         {% if centro_trabajo.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + centro_trabajo.clave + '?') }}{% endif %}
         {% if centro_trabajo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + centro_trabajo.clave + '?') }}{% endif %}
     {% endif %}
+    <!-- Moment.js -->
     {{ detail.moment_js(moment) }}
 {% endblock %}

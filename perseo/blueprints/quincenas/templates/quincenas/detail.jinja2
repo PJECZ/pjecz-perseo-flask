@@ -498,7 +498,7 @@
     </div>
     {# Datatable con las nominas de la Quincena #}
     {% if current_user.can_view('NOMINAS') %}
-        {% call detail.card('Nómina ' + quincena.clave) %}
+        {% call detail.card('Nóminas') %}
             <div class="row">
                 <div class="col">
                     <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
@@ -611,11 +611,9 @@
                 },
                 {
                     targets: 2, // persona_nombre_completo
+                    data: null,
                     render: function(data, type, row, meta) {
-                        if (data.length < 12) {
-                            return data;
-                        }
-                        return '<span title="' + data + '">' + data.substring(0, 12) + '...</span>';
+                        return (data.length > 16 ? data.substr(0, 16) + '…' : data);
                     }
                 },
                 {
