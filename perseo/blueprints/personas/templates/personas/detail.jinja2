@@ -71,7 +71,7 @@
     {% endif %}
     <!-- Nominas de la Persona -->
     {% if current_user.can_view('NOMINAS') %}
-        {% call detail.card('Nominas') %}
+        {% call detail.card('Nóminas') %}
             <!-- Filtros Nominas -->
             <div class="row">
                 <div class="col">
@@ -209,7 +209,7 @@
             // DataTable Nominas
             let configDTNominas = constructorDataTable.config();
             configDTNominas['ajax']['url'] = '/nominas/datatable_json';
-            configDTNominas['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
+            configDTNominas['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id }} };
             configDTNominas['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
@@ -265,6 +265,7 @@
             filtrosNominas.precargar();
         </script>
     {% endif %}
+    <!-- Percepciones-Deducciones de la Persona -->
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
         <script>
             // DataTable Percepciones-Deducciones
