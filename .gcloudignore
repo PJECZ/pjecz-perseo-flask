@@ -23,6 +23,7 @@ __pycache__/
 /.venv
 /.vscode
 /cli
+/poetry.lock
 /seed
 /setup.cfg
 /sql
