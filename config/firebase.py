@@ -12,11 +12,15 @@ Configure los siguientes secretos en google cloud secret manager:
 - firebase_projectid
 - firebase_storagebucket
 """
+
 import os
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from google.cloud import secretmanager
 from pydantic_settings import BaseSettings
+
+load_dotenv()
 
 PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
 PREFIX = os.getenv("PREFIX", "firebase")  # Es comun a todos los sistemas web

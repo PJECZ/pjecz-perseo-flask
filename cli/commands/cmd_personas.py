@@ -28,14 +28,13 @@ from perseo.extensions import database
 
 load_dotenv()
 
-RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL")
-RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY")
-TIMEOUT = 12
-
-PERSONAS_CSV = "seed/personas.csv"
-EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
-NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 EMPLEADOS_ALFABETICO_FILENAME_XLS = "EmpleadosAlfabetico.XLS"
+EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
+NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+PERSONAS_CSV = "seed/personas.csv"
+RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL", "")
+RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY", "")
+TIMEOUT = 12
 
 app = create_app()
 app.app_context().push()

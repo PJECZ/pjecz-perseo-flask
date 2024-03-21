@@ -21,11 +21,15 @@ Para desarrollo, debe crear un archivo .env con las variables de entorno:
 - SQLALCHEMY_DATABASE_URI
 - TASK_QUEUE
 """
+
 import os
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from google.cloud import secretmanager
 from pydantic_settings import BaseSettings
+
+load_dotenv()
 
 PROJECT_ID = os.getenv("PROJECT_ID", "")  # Por defecto esta vacio, esto significa estamos en modo local
 SERVICE_PREFIX = os.getenv("SERVICE_PREFIX", "pjecz_perseo")

@@ -27,7 +27,7 @@ from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
-EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
+EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
 
 AGUINALDOS_FILENAME_XLS = "Aguinaldos.XLS"
 APOYOS_FILENAME_XLS = "Apoyos.XLS"

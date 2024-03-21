@@ -30,11 +30,11 @@ XML_TAG_NOMINA_PREFIX = "{http://www.sat.gob.mx/nomina12}"
 
 load_dotenv()
 
-CFDI_EMISOR_RFC = os.environ.get("CFDI_EMISOR_RFC", "")
-CFDI_EMISOR_NOMBRE = os.environ.get("CFDI_EMISOR_NOMBRE", "")
-CFDI_EMISOR_REGFIS = os.environ.get("CFDI_EMISOR_REGFIS", "")
-CLOUD_STORAGE_DEPOSITO = os.environ.get("CLOUD_STORAGE_DEPOSITO", "")
-TIMBRADOS_BASE_DIR = os.environ.get("TIMBRADOS_BASE_DIR", "")
+CFDI_EMISOR_RFC = os.getenv("CFDI_EMISOR_RFC", "")
+CFDI_EMISOR_NOMBRE = os.getenv("CFDI_EMISOR_NOMBRE", "")
+CFDI_EMISOR_REGFIS = os.getenv("CFDI_EMISOR_REGFIS", "")
+CLOUD_STORAGE_DEPOSITO = os.getenv("CLOUD_STORAGE_DEPOSITO", "")
+TIMBRADOS_BASE_DIR = os.getenv("TIMBRADOS_BASE_DIR", "")
 
 app = create_app()
 app.app_context().push()
