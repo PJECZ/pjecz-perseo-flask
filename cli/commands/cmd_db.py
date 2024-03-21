@@ -1,6 +1,7 @@
 """
 CLI db
 """
+
 import os
 import sys
 
@@ -36,7 +37,8 @@ app.app_context().push()
 database.app = app
 
 load_dotenv()
-ENTORNO_IMPLEMENTACION = os.getenv("ENTORNO_IMPLEMENTACION")
+
+ENTORNO_IMPLEMENTACION = os.getenv("ENTORNO_IMPLEMENTACION", "DEVELOPMENT")
 
 
 @click.group()

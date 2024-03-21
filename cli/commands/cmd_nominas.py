@@ -10,6 +10,7 @@ from pathlib import Path
 
 import click
 import xlrd
+from dotenv import load_dotenv
 from openpyxl import load_workbook
 
 from lib.exceptions import MyAnyError
@@ -36,18 +37,18 @@ from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.blueprints.timbrados.models import Timbrado
 from perseo.extensions import database
 
-EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
+load_dotenv()
 
 AGUINALDOS_FILENAME_XLS = "Aguinaldos.XLS"
 APOYOS_FILENAME_XLS = "Apoyos.XLS"
 BONOS_FILENAME_XLS = "Bonos.XLS"
-NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
-SERICA_FILENAME_XLSX = "SERICA.xlsx"
-
-PATRON_RFC = "PJE901211TI9"
 COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
-COMPANIA_RFC = PATRON_RFC
+COMPANIA_RFC = "PJE901211TI9"
 COMPANIA_CP = "25000"
+EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
+NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+PATRON_RFC = "PJE901211TI9"
+SERICA_FILENAME_XLSX = "SERICA.xlsx"
 
 app = create_app()
 app.app_context().push()
