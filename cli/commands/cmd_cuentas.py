@@ -6,6 +6,7 @@ Toma el archivo EmpleadosAlfabetico.XLS
 Necesita la quincena como argumento para saber donde buscar el archivo
 
 """
+
 import os
 import re
 import sys
@@ -29,7 +30,9 @@ from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.productos.models import Producto
 from perseo.extensions import database
 
-EXPLOTACION_BASE_DIR = os.environ.get("EXPLOTACION_BASE_DIR")
+load_dotenv()
+
+EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
 CUENTAS_FILENAME_XLS = "EmpleadosAlfabetico.XLS"
 MONEDEROS_FILENAME_XLS = "Monederos.XLS"
 

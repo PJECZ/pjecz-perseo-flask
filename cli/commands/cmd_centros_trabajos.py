@@ -20,11 +20,10 @@ from perseo.extensions import database
 
 load_dotenv()
 
-RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL")
-RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY")
-TIMEOUT = 12
-
 CENTROS_TRABAJOS_CSV = "seed/centros_trabajos.csv"
+RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL", "")
+RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY", "")
+TIMEOUT = 12
 
 app = create_app()
 app.app_context().push()
