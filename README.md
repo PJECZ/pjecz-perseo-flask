@@ -116,8 +116,20 @@ SALT=XXXXXXXX
 # Si esta en PRODUCTION se evita reiniciar la base de datos
 DEPLOYMENT_ENVIRONMENT=develop
 
+# RRHH Personal API
+RRHH_PERSONAL_URL=
+RRHH_PERSONAL_API_KEY=
+
 # Directorio donde se encuentran las quincenas y sus respectivos archivos de explotacion
-EXPLOTACION_BASE_DIR=/home/guivaloz/Downloads/NOMINAS
+EXPLOTACION_BASE_DIR=/home/USUARIO/Downloads/NOMINAS
+
+# Directorio donde se encuentran los archivos de timbrado
+TIMBRADOS_BASE_DIR=/home/USUARIO/Downloads/TIMBRADOS
+
+# Datos del CFDI que deben aparecer en cada XML
+CFDI_EMISOR_RFC=""
+CFDI_EMISOR_NOMBRE=""
+CFDI_EMISOR_REGFIS=""
 ```
 
 Crear un archivo `.bashrc` que se ejecute al iniciar la terminal
@@ -139,7 +151,10 @@ echo
 if [ -f .env ]
 then
     echo "-- Variables de entorno"
-    export $(grep -v '^#' .env | xargs)
+    source .env && export $(sed '/^#/d' .env | cut -d= -f1)
+    echo "   CFDI_EMISOR_RFC: ${CFDI_EMISOR_RFC}"
+    echo "   CFDI_EMISOR_NOMBRE: ${CFDI_EMISOR_NOMBRE}"
+    echo "   CFDI_EMISOR_REGFIS: ${CFDI_EMISOR_REGFIS}"
     echo "   CLOUD_STORAGE_DEPOSITO: ${CLOUD_STORAGE_DEPOSITO}"
     echo "   DB_HOST: ${DB_HOST}"
     echo "   DB_PORT: ${DB_PORT}"
@@ -157,6 +172,7 @@ then
     echo "   SECRET_KEY: ${SECRET_KEY}"
     echo "   SQLALCHEMY_DATABASE_URI: ${SQLALCHEMY_DATABASE_URI}"
     echo "   TASK_QUEUE: ${TASK_QUEUE}"
+    echo "   TIMBRADOS_BASE_DIR: ${TIMBRADOS_BASE_DIR}"
     echo
     export PGHOST=$DB_HOST
     export PGPORT=$DB_PORT
@@ -173,24 +189,17 @@ then
     export PYTHONPATH=$(pwd)
     echo "   PYTHONPATH: ${PYTHONPATH}"
     echo
+    echo "-- Poetry"
+    export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+    echo "   $(poetry --version)"
+    echo
     if [ -f cli/app.py ]
     then
         echo "-- Ejecutar el CLI"
         alias cli="python3 ${PWD}/cli/app.py"
         echo "   cli --help"
         echo
-        echo "-- Reiniciar la base de datos"
-        function reiniciar() {
-            CLI="python3 ${PWD}/cli/app.py"
-            $CLI db reiniciar \
-            && $CLI conceptos alimentar \
-            && $CLI bancos alimentar \
-            && $CLI tabuladores alimentar
-        }
-        export -f reiniciar
-        echo "   reiniciar"
-        echo
-        echo "-- Alimentar archivos de explotacion"
+        echo "-- Alimentar archivos de explotacion (nominas, percepciones_deducciones, cuentas, tabuladores)"
         function alimentar() {
             CLI="python3 ${PWD}/cli/app.py"
             CLAVE=$1
@@ -199,7 +208,8 @@ then
             && $CLI percepciones_deducciones alimentar $CLAVE \
             && $CLI cuentas alimentar-bancarias $CLAVE \
             && $CLI cuentas alimentar-monederos $CLAVE \
-            && $CLI beneficiarios alimentar $CLAVE
+            && $CLI personas actualizar-tabuladores $CLAVE \
+            && $CLI personas actualizar-curp-cp-fiscal-fechas-ingreso $CLAVE
         }
         export -f alimentar
         echo "   alimentar <Quincena YYYYMM> <Fecha de pago YYYY-MM-DD>"
@@ -208,23 +218,34 @@ then
         echo "   cli nominas alimentar-apoyos-anuales 202322 2023-11-17"
         echo "   cli nominas alimentar-aguinaldos 202324 2023-12-05"
         echo
-        echo "-- Sincronizar datos con la API de RRHH Personal"
+        echo "-- Sincronizar con la API de RRHH Personal"
         echo "   cli centros_trabajos sincronizar"
         echo "   cli personas sincronizar"
-        echo
-        echo "-- Migrar y eliminar RFCs erroneos"
-        echo "   cli personas migrar-eliminar-rfc --eliminar <RFCEquivocado> <RFCCorrecto>"
         echo
         echo "-- Eliminar o recuperar Conceptos segun no/si se usen"
         echo "   cli conceptos eliminar-recuperar"
         echo "   cli conceptos eliminar-recuperar --quincena-clave 202320"
         echo
+        echo "-- Actualizar timbrados de una quincena de tipo SALARIO de la quincena 202403"
+        echo "   cli timbrados actualizar --poner_en_ceros --subdir Activos 202403"
+        echo "   cli timbrados actualizar --subdir Extraordinarios 202403"
+        echo "   cli timbrados actualizar --subdir Pensionados 202403"
+        echo
     fi
-    echo "-- Arrancar Flask o RQ Worker"
+    echo "-- Flask 127.0.0.1:5000"
     alias arrancar="flask run --port=5000"
-    alias fondear="rq worker ${TASK_QUEUE}"
     echo "   arrancar = flask run --port=5000"
-    echo "   fondear = rq worker ${TASK_QUEUE}"
+    echo
+    echo "-- RQ Worker ${TASK_QUEUE}"
+    alias fondear="rq worker ${TASK_QUEUE}"
+    echo "   fondear"
+    echo
+fi
+
+if [ -f .github/workflows/gcloud-app-deploy.yml ]
+then
+    echo "-- Si cambia pyproject.toml reconstruya requirements.txt para el deploy en GCP via GitHub Actions"
+    echo "   poetry export -f requirements.txt --output requirements.txt --without-hashes"
     echo
 fi
 ```
@@ -250,30 +271,6 @@ En `.bashrc` se encuentra la función `reiniciar` que ejecuta el **CLI** para re
 ```bash
 reiniciar
 ```
-
-## Recargar archivos de explotacion
-
-Con los archivos de explotacion en el directorio `EXPLOTACION_BASE_DIR` puede recargar los datos de la quincena **202320** con:
-
-```bash
-recargar 202320
-```
-
-Para recargar todo el año 2023
-
-```bash
-for ((i = 202301 ; i < 202322 ; i++ )); do recargar "$i"; done
-```
-
-## Generar cada producto
-
-Para crear los archivos XLSX a partir del **CLI** ejecute:
-
-```bash
-generar 202320
-```
-
-En cambio, esos generadores para el sistema web en **Flask** se ejecutan como tareas en el fondo con **RQ Worker**.
 
 ## Tareas en el fondo
 
