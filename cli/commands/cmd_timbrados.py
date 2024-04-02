@@ -50,8 +50,9 @@ def cli():
 @click.argument("quincena_clave", type=str)
 @click.argument("tipo", type=str, default="SALARIO")
 @click.option("--poner_en_ceros", is_flag=True, default=False, help="Poner en ceros el campo timbrado_id")
+@click.option("--sobreescribir", is_flag=True, default=False, help="Sin importar el valor de timbrado_id")
 @click.option("--subdir", type=str, default=None)
-def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, subdir: str):
+def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescribir: bool, subdir: str):
     """Actualizar los timbrados de una quincena a partir de archivos XML y PDF"""
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
@@ -341,11 +342,14 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, subdir: str
             .filter(Persona.rfc == cfdi_receptor_rfc)
             .filter(Quincena.clave == quincena_clave)
             .filter(Nomina.tipo == tipo)
-            .filter(Nomina.timbrado_id == 0)
-            .filter(Nomina.estatus == "A")
-            .order_by(Persona.rfc, Nomina.desde_clave)
-            .all()
         )
+
+        # Si sobreescribir es falso, se filtra por los registros con timbrado_id igual a CERO
+        if sobreescribir is False:
+            nominas = nominas.filter(Nomina.timbrado_id == 0)
+
+        # Consultar las nominas, ordenar
+        nominas = nominas.filter(Nomina.estatus == "A").order_by(Persona.rfc, Nomina.desde_clave).all()
 
         # Si NO se encuentra registro en Nomina
         if len(nominas) == 0:
