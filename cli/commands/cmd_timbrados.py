@@ -651,6 +651,11 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
     # Poner avance de linea
     click.echo("")
 
+    # Si hubo nomina_no_encontrada, se muestran
+    if len(nomina_no_encontrada) > 0:
+        click.echo(click.style(f"  NO se encontraron nominas para {len(nomina_no_encontrada)} archivos XML", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(nomina_no_encontrada)}", fg="yellow"))
+
     # Si hubo timbrados sin nominas, se muestran
     if len(timbrados_sin_nominas) > 0:
         click.echo(click.style(f"  Hubo {len(timbrados_sin_nominas)} Timbrados cuyos totales NO coinciden", fg="yellow"))
