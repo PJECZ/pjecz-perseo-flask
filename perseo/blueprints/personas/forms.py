@@ -11,7 +11,10 @@ from lib.safe_string import CURP_REGEXP, RFC_REGEXP
 MODELOS = [
     (1, "1) CONFIANZA"),
     (2, "2) SINDICALIZADO"),
-    (3, "3) JUBILADO"),
+    (3, "3) PENSIONADO"),
+    (4, "4) BENEFICIARIO PENSION ALIMENTICIA"),
+    (5, "5) ASIMILADO A SALARIOS"),
+    (6, "6) EXTRAORDINARIO"),
 ]
 
 

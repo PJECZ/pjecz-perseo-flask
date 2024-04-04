@@ -14,17 +14,23 @@
     {% call f.card() %}
         {% set form_kwargs = {'nomina_id': nomina.id} %}
         {% call f.form_tag('nominas.edit', fid='nomina_form', **form_kwargs) %}
-            {% call f.form_group(form.quincena_clave, readonly=true) %}{% endcall %}
-            {% call f.form_group(form.persona_rfc, readonly=true) %}{% endcall %}
-            {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
-            {% call f.form_group(form.centro_trabajo_clave, readonly=true) %}{% endcall %}
-            {% call f.form_group(form.plaza_clave, readonly=true) %}{% endcall %}
-            {% call f.form_group(form.tipo) %}{% endcall %}
-            {% call f.form_group(form.percepcion) %}{% endcall %}
-            {% call f.form_group(form.deduccion) %}{% endcall %}
-            {% call f.form_group(form.importe) %}{% endcall %}
-            {% call f.form_group(form.num_cheque) %}{% endcall %}
-            {% call f.form_group(form.fecha_pago) %}{% endcall %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% call f.form_group(form.quincena_clave, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.persona_rfc, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.persona_nombre_completo, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.centro_trabajo_clave, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.plaza_clave, readonly=true) %}{% endcall %}
+                </div>
+                <div class="col-md-6">
+                    {% call f.form_group(form.tipo) %}{% endcall %}
+                    {% call f.form_group(form.percepcion) %}{% endcall %}
+                    {% call f.form_group(form.deduccion) %}{% endcall %}
+                    {% call f.form_group(form.importe) %}{% endcall %}
+                    {% call f.form_group(form.num_cheque) %}{% endcall %}
+                    {% call f.form_group(form.fecha_pago) %}{% endcall %}
+                </div>
+            </div>
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}

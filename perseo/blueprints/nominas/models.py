@@ -17,6 +17,7 @@ class Nomina(database.Model, UniversalMixin):
         "APOYO ANUAL": "APOYO ANUAL",
         "DESPENSA": "DESPENSA",
         "SALARIO": "SALARIO",
+        "EXTRAORDINARIO": "EXTRAORDINARIO",
     }
 
     # Nombre de la tabla

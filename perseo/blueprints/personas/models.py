@@ -15,7 +15,10 @@ class Persona(database.Model, UniversalMixin):
     MODELOS = {
         1: "CONFIANZA",
         2: "SINDICALIZADO",
-        3: "JUBILADO",
+        3: "PENSIONADO",
+        4: "BENEFICIARIO PENSION ALIMENTICIA",
+        5: "ASIMILADO A SALARIOS",
+        6: "EXTRAORDINARIO",
     }
 
     # Nombre de la tabla
@@ -41,10 +44,7 @@ class Persona(database.Model, UniversalMixin):
     codigo_postal_fiscal = Column(Integer, default=0)
     seguridad_social = Column(String(24))
 
-    # Columna modelo en Persona
-    # 1: Confianza
-    # 2: Sindicalizado
-    # 3: Jubilado
+    # Columna modelo es entero del 1 al 6
     modelo = Column(Integer, nullable=False, index=True)
 
     # Hijos
