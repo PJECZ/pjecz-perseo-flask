@@ -15,7 +15,7 @@ from openpyxl import load_workbook
 
 from lib.exceptions import MyAnyError
 from lib.fechas import quincena_to_fecha, quinquenio_count
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_string
+from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
@@ -46,6 +46,7 @@ COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
 COMPANIA_RFC = "PJE901211TI9"
 COMPANIA_CP = "25000"
 EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
+EXTRAORDINARIOS_BASE_DIR = os.getenv("EXTRAORDINARIOS_BASE_DIR", "")
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 PATRON_RFC = "PJE901211TI9"
 SERICA_FILENAME_XLSX = "SERICA.xlsx"
@@ -966,6 +967,212 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
     # Mensaje termino
     click.echo(click.style(f"  Alimentar Apoyos Anuales: {contador} insertadas en la quincena {quincena_clave}.", fg="green"))
+
+
+@click.command()
+@click.argument("archivo_xlsx", type=str)
+def alimentar_extraordinarios(archivo_xlsx: str):
+    """Alimentar extraordinarios"""
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Validar el directorio donde espera encontrar los archivos
+    if EXTRAORDINARIOS_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXTRAORDINARIOS_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, archivo_xlsx)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # El archivo debe tener los siguientes encabezados
+    # RFC
+    # QUINCENA
+    # CLAVE CENTRO TRABAJO
+    # PLAZA	DESDE
+    # HASTA
+    # TIPO NOMINA
+    # PERCEPCION
+    # DEDUCCION
+    # IMPORTE
+    # NUM CHEQUE
+    # FECHA DE PAGO
+    # TIPO DE EXTRAORDINARIA
+    # P30
+    # PGN
+    # PGA
+    # P22
+    # PVD
+    # PGP
+    # P20
+    # PAM
+    # PS3
+    # D01
+    # D1A
+    # P07
+    # P7G
+    # PHR
+    # PFB
+
+    # Leer archivo_xlsx con openpyxl
+    workbook = load_workbook(filename=ruta, read_only=True, data_only=True)
+
+    # Inicializar listado de personas NO encontradas
+    personas_no_encontradas = []
+
+    # Inicializar listado de quincenas NO encontradas
+    quincenas_no_encontradas = []
+
+    # Inicializar desde no validos
+    desde_no_validos = []
+
+    # Inicializar hasta no validos
+    hasta_no_validos = []
+
+    # Bucle por los renglones de la hoja
+    contador = 0
+    click.echo("Alimentando Extraordinarios: ", nl=False)
+    for row in workbook.active.iter_rows(min_row=2, max_col=26, max_row=3000):
+        # Juntar todas las celdas de la fila en una lista
+        fila = [celda.value for celda in row]
+
+        # Si el primer elemento de la fila es vacio, se rompe el ciclo
+        if str(fila[0]).strip() == "" or fila[0] is None or fila[0] == "None":
+            break
+
+        # Asegurarse de que cada valor sea un string ascii
+        # for i, valor in enumerate(fila):
+        #     # Si el valor es "0", cambiarlo por "", de lo contrario, convertirlo a ascii
+        #     if valor == "0":
+        #         fila[i] = ""
+        #     else:
+        #         fila[i] = valor.encode("ascii", "ignore").decode("ascii")
+
+        # Tomar los valores de la fila
+        rfc = safe_rfc(fila[0])
+        quincena_clave = fila[1]
+        centro_trabajo_clave = safe_clave(fila[2])
+        plaza_clave = fila[3]
+        desde = fila[4]
+        hasta = fila[5]
+        tipo_nomina = fila[6]
+        percepcion = fila[7]
+        deduccion = fila[8]
+        importe = fila[9]
+        num_cheque = fila[10]
+        fecha_pago = fila[11]
+        tipo_extraordinaria = fila[12]
+        p30 = fila[13]
+        pgn = fila[14]
+        pga = fila[15]
+        p22 = fila[16]
+        pvd = fila[17]
+        pgp = fila[18]
+        p20 = fila[19]
+        pam = fila[20]
+        ps3 = fila[21]
+        d01 = fila[22]
+        d1a = fila[23]
+        p07 = fila[24]
+        p7g = fila[25]
+        phr = fila[26]
+        pfb = fila[27]
+
+        # Consultar el centro de trabajo a partir de la clave, si no se encuentra, se usa el ND
+        centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+        if centro_trabajo is None:
+            centro_trabajo = CentroTrabajo.query.filter_by(clave="ND").first()
+
+        # Consultar la persona a partir del rfc, si no se encuentra, se omite
+        persona = Persona.query.filter_by(rfc=rfc).first()
+        if persona is None:
+            personas_no_encontradas.append(rfc)
+            continue
+
+        # Consultar la plaza a partir de la clave, si no se encuentra, se usa el ND
+        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+        if plaza is None:
+            plaza = Plaza.query.filter_by(clave="ND").first()
+
+        # Consultar la quincena a partir de la clave, si no se encuentra, se omite
+        quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+        if quincena is None:
+            quincenas_no_encontradas.append(quincena_clave)
+            continue
+
+        # Validar desde
+        try:
+            desde_clave = safe_quincena(desde)
+            desde = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+        except ValueError:
+            desde_no_validos.append(desde)
+            continue
+
+        # Validar desde y hasta
+        try:
+            hasta_clave = safe_quincena(hasta)
+            hasta = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+        except ValueError:
+            hasta_no_validos.append(hasta)
+            continue
+
+        # Alimentar nomina
+        nomina = Nomina(
+            centro_trabajo=centro_trabajo,
+            persona=persona,
+            plaza=plaza,
+            quincena=quincena,
+            desde=desde,
+            desde_clave=desde_clave,
+            hasta=hasta,
+            hasta_clave=hasta_clave,
+            percepcion=percepcion,
+            deduccion=deduccion,
+            importe=importe,
+            tipo="EXTRAORDINARIO",
+            fecha_pago=fecha_pago,
+        )
+        sesion.add(nomina)
+
+        # Incrementar contador
+        contador += 1
+        click.echo(click.style(".", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Cerrar la sesion para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Si hubo personas_no_encontradas, mostrarlos
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} Personas no encontradas.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_no_encontradas)}", fg="yellow"))
+
+    # Si hubo quincenas_no_encontradas, mostrarlos
+    if len(quincenas_no_encontradas) > 0:
+        click.echo(click.style(f"  Hubo {len(quincenas_no_encontradas)} Quincenas no encontradas.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(quincenas_no_encontradas)}", fg="yellow"))
+
+    # Si hubo desde_no_validos, mostrarlos
+    if len(desde_no_validos) > 0:
+        click.echo(click.style(f"  Hubo {len(desde_no_validos)} Desde no validos.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(desde_no_validos)}", fg="yellow"))
+
+    # Si hubo hasta_no_validos, mostrarlos
+    if len(hasta_no_validos) > 0:
+        click.echo(click.style(f"  Hubo {len(hasta_no_validos)} Hasta no validos.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(hasta_no_validos)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Alimentar Extraordinarios: {contador} insertados.", fg="green"))
 
 
 @click.command()
