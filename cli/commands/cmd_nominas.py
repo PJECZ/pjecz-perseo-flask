@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from openpyxl import load_workbook
 
 from lib.exceptions import MyAnyError
-from lib.fechas import quincena_to_fecha, quinquenio_count
+from lib.fechas import crear_clave_quincena, quincena_to_fecha, quinquenio_count
 from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_rfc, safe_string
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
@@ -971,7 +971,8 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
 
 @click.command()
 @click.argument("archivo_xlsx", type=str)
-def alimentar_extraordinarios(archivo_xlsx: str):
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
     """Alimentar extraordinarios"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
@@ -983,7 +984,7 @@ def alimentar_extraordinarios(archivo_xlsx: str):
         sys.exit(1)
 
     # Validar si existe el archivo
-    ruta = Path(EXPLOTACION_BASE_DIR, archivo_xlsx)
+    ruta = Path(EXTRAORDINARIOS_BASE_DIR, archivo_xlsx)
     if not ruta.exists():
         click.echo(f"ERROR: {str(ruta)} no se encontró.")
         sys.exit(1)
@@ -1056,33 +1057,33 @@ def alimentar_extraordinarios(archivo_xlsx: str):
 
         # Tomar los valores de la fila
         rfc = safe_rfc(fila[0])
-        quincena_clave = fila[1]
-        centro_trabajo_clave = safe_clave(fila[2])
-        plaza_clave = fila[3]
-        desde = fila[4]
-        hasta = fila[5]
-        tipo_nomina = fila[6]
+        quincena_clave = safe_quincena(str(fila[1]))
+        centro_trabajo_clave = safe_clave(fila[2], max_len=10)
+        plaza_clave = safe_clave(fila[3], max_len=24)
+        desde_dt = fila[4]
+        hasta_dt = fila[5]
+        # tipo_nomina = fila[6]
         percepcion = fila[7]
         deduccion = fila[8]
         importe = fila[9]
-        num_cheque = fila[10]
+        # num_cheque = fila[10]
         fecha_pago = fila[11]
-        tipo_extraordinaria = fila[12]
-        p30 = fila[13]
-        pgn = fila[14]
-        pga = fila[15]
-        p22 = fila[16]
-        pvd = fila[17]
-        pgp = fila[18]
-        p20 = fila[19]
-        pam = fila[20]
-        ps3 = fila[21]
-        d01 = fila[22]
-        d1a = fila[23]
-        p07 = fila[24]
-        p7g = fila[25]
-        phr = fila[26]
-        pfb = fila[27]
+        # tipo_extraordinaria = fila[12]
+        # p30 = fila[13]
+        # pgn = fila[14]
+        # pga = fila[15]
+        # p22 = fila[16]
+        # pvd = fila[17]
+        # pgp = fila[18]
+        # p20 = fila[19]
+        # pam = fila[20]
+        # ps3 = fila[21]
+        # d01 = fila[22]
+        # d1a = fila[23]
+        # p07 = fila[24]
+        # p7g = fila[25]
+        # phr = fila[26]
+        # pfb = fila[27]
 
         # Consultar el centro de trabajo a partir de la clave, si no se encuentra, se usa el ND
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
@@ -1093,6 +1094,7 @@ def alimentar_extraordinarios(archivo_xlsx: str):
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
             personas_no_encontradas.append(rfc)
+            click.echo(click.style("X", fg="red"), nl=False)
             continue
 
         # Consultar la plaza a partir de la clave, si no se encuentra, se usa el ND
@@ -1100,45 +1102,55 @@ def alimentar_extraordinarios(archivo_xlsx: str):
         if plaza is None:
             plaza = Plaza.query.filter_by(clave="ND").first()
 
+        # Validar quincena
+        if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+            quincenas_no_encontradas.append(quincena_clave)
+            click.echo(click.style("X", fg="red"), nl=False)
+            continue
+
         # Consultar la quincena a partir de la clave, si no se encuentra, se omite
         quincena = Quincena.query.filter_by(clave=quincena_clave).first()
         if quincena is None:
             quincenas_no_encontradas.append(quincena_clave)
+            click.echo(click.style("X", fg="red"), nl=False)
             continue
 
         # Validar desde
         try:
-            desde_clave = safe_quincena(desde)
-            desde = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+            desde_clave = crear_clave_quincena(desde_dt.date())
+            desde_dt = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
         except ValueError:
-            desde_no_validos.append(desde)
+            desde_no_validos.append(desde_dt)
+            click.echo(click.style("X", fg="red"), nl=False)
             continue
 
         # Validar desde y hasta
         try:
-            hasta_clave = safe_quincena(hasta)
-            hasta = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+            hasta_clave = crear_clave_quincena(hasta_dt.date())
+            hasta_dt = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
         except ValueError:
-            hasta_no_validos.append(hasta)
+            hasta_no_validos.append(hasta_dt)
+            click.echo(click.style("X", fg="red"), nl=False)
             continue
 
         # Alimentar nomina
-        nomina = Nomina(
-            centro_trabajo=centro_trabajo,
-            persona=persona,
-            plaza=plaza,
-            quincena=quincena,
-            desde=desde,
-            desde_clave=desde_clave,
-            hasta=hasta,
-            hasta_clave=hasta_clave,
-            percepcion=percepcion,
-            deduccion=deduccion,
-            importe=importe,
-            tipo="EXTRAORDINARIO",
-            fecha_pago=fecha_pago,
-        )
-        sesion.add(nomina)
+        if probar is False:
+            nomina = Nomina(
+                centro_trabajo=centro_trabajo,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                desde=desde_dt,
+                desde_clave=desde_clave,
+                hasta=hasta_dt,
+                hasta_clave=hasta_clave,
+                percepcion=percepcion,
+                deduccion=deduccion,
+                importe=importe,
+                tipo="EXTRAORDINARIO",
+                fecha_pago=fecha_pago,
+            )
+            sesion.add(nomina)
 
         # Incrementar contador
         contador += 1
@@ -1172,7 +1184,10 @@ def alimentar_extraordinarios(archivo_xlsx: str):
         click.echo(click.style(f"  {', '.join(hasta_no_validos)}", fg="yellow"))
 
     # Mensaje termino
-    click.echo(click.style(f"  Alimentar Extraordinarios: {contador} insertados.", fg="green"))
+    if probar:
+        click.echo(click.style(f"  Alimentar Extraordinarios: modo PROBAR {contador} pueden insertarse.", fg="green"))
+    else:
+        click.echo(click.style(f"  Alimentar Extraordinarios: {contador} insertados.", fg="green"))
 
 
 @click.command()
@@ -1463,6 +1478,7 @@ cli.add_command(actualizar_timbrados)
 cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
+cli.add_command(alimentar_extraordinarios)
 cli.add_command(generar_issste)
 cli.add_command(crear_dispersiones_pensionados)
 cli.add_command(crear_monederos)
