@@ -1021,6 +1021,23 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
     # PHR
     # PFB
 
+    # Consultar los conceptos
+    concepto_p30 = Concepto.query.filter_by(clave="P30").first()
+    concepto_pgn = Concepto.query.filter_by(clave="PGN").first()
+    concepto_pga = Concepto.query.filter_by(clave="PGA").first()
+    concepto_p22 = Concepto.query.filter_by(clave="P22").first()
+    concepto_pvd = Concepto.query.filter_by(clave="PVD").first()
+    concepto_pgp = Concepto.query.filter_by(clave="PGP").first()
+    concepto_p20 = Concepto.query.filter_by(clave="P20").first()
+    concepto_pam = Concepto.query.filter_by(clave="PAM").first()
+    concepto_ps3 = Concepto.query.filter_by(clave="PS3").first()
+    concepto_d01 = Concepto.query.filter_by(clave="D01").first()
+    concepto_d1a = Concepto.query.filter_by(clave="D1A").first()
+    concepto_p07 = Concepto.query.filter_by(clave="P07").first()
+    concepto_p7g = Concepto.query.filter_by(clave="P7G").first()
+    concepto_phr = Concepto.query.filter_by(clave="PHR").first()
+    concepto_pfb = Concepto.query.filter_by(clave="PFB").first()
+
     # Leer archivo_xlsx con openpyxl
     workbook = load_workbook(filename=ruta, read_only=True, data_only=True)
 
@@ -1039,21 +1056,13 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
     # Bucle por los renglones de la hoja
     contador = 0
     click.echo("Alimentando Extraordinarios: ", nl=False)
-    for row in workbook.active.iter_rows(min_row=2, max_col=26, max_row=3000):
+    for row in workbook.active.iter_rows(min_row=2, max_col=28, max_row=3000):
         # Juntar todas las celdas de la fila en una lista
         fila = [celda.value for celda in row]
 
         # Si el primer elemento de la fila es vacio, se rompe el ciclo
         if str(fila[0]).strip() == "" or fila[0] is None or fila[0] == "None":
             break
-
-        # Asegurarse de que cada valor sea un string ascii
-        # for i, valor in enumerate(fila):
-        #     # Si el valor es "0", cambiarlo por "", de lo contrario, convertirlo a ascii
-        #     if valor == "0":
-        #         fila[i] = ""
-        #     else:
-        #         fila[i] = valor.encode("ascii", "ignore").decode("ascii")
 
         # Tomar los valores de la fila
         rfc = safe_rfc(fila[0])
@@ -1069,21 +1078,21 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
         # num_cheque = fila[10]
         fecha_pago = fila[11]
         # tipo_extraordinaria = fila[12]
-        # p30 = fila[13]
-        # pgn = fila[14]
-        # pga = fila[15]
-        # p22 = fila[16]
-        # pvd = fila[17]
-        # pgp = fila[18]
-        # p20 = fila[19]
-        # pam = fila[20]
-        # ps3 = fila[21]
-        # d01 = fila[22]
-        # d1a = fila[23]
-        # p07 = fila[24]
-        # p7g = fila[25]
-        # phr = fila[26]
-        # pfb = fila[27]
+        p30 = fila[13]
+        pgn = fila[14]
+        pga = fila[15]
+        p22 = fila[16]
+        pvd = fila[17]
+        pgp = fila[18]
+        p20 = fila[19]
+        pam = fila[20]
+        ps3 = fila[21]
+        d01 = fila[22]
+        d1a = fila[23]
+        p07 = fila[24]
+        p7g = fila[25]
+        phr = fila[26]
+        pfb = fila[27]
 
         # Consultar el centro de trabajo a partir de la clave, si no se encuentra, se usa el ND
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
@@ -1133,8 +1142,9 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
             click.echo(click.style("X", fg="red"), nl=False)
             continue
 
-        # Alimentar nomina
+        # Si probar es falso
         if probar is False:
+            # Alimentar nomina
             nomina = Nomina(
                 centro_trabajo=centro_trabajo,
                 persona=persona,
@@ -1151,6 +1161,261 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
                 fecha_pago=fecha_pago,
             )
             sesion.add(nomina)
+
+        # Alimentar percepcion_deduccion con el concepto P30
+        if p30 is not None and float(p30) > 0:
+            if concepto_p30 is not None:
+                if probar is False:
+                    percepcion_deduccion_p30 = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_p30,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=p30,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_p30)
+            else:
+                click.echo(click.style("[P30]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PGN
+        if pgn is not None and float(pgn) > 0:
+            if concepto_pgn is not None:
+                if probar is False:
+                    percepcion_deduccion_pgn = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_pgn,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=pgn,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_pgn)
+            else:
+                click.echo(click.style("[PGN]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PGA
+        if pga is not None and float(pga) > 0:
+            if concepto_pga is not None:
+                if probar is False:
+                    percepcion_deduccion_pga = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_pga,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=pga,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_pga)
+            else:
+                click.echo(click.style("[PGA]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto P22
+        if p22 is not None and float(p22) > 0:
+            if concepto_p22 is not None:
+                if probar is False:
+                    percepcion_deduccion_p22 = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_p22,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=p22,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_p22)
+            else:
+                click.echo(click.style("[P22]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PVD
+        if pvd is not None and float(pvd) > 0:
+            if concepto_pvd is not None:
+                if probar is False:
+                    percepcion_deduccion_pvd = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_pvd,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=pvd,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_pvd)
+            else:
+                click.echo(click.style("[PVD]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PGP
+        if pgp is not None and float(pgp) > 0:
+            if concepto_pgp is not None:
+                if probar is False:
+                    percepcion_deduccion_pgp = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_pgp,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=pgp,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_pgp)
+            else:
+                click.echo(click.style("[PGP]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto P20
+        if p20 is not None and float(p20) > 0:
+            if concepto_p20 is not None:
+                if probar is False:
+                    percepcion_deduccion_p20 = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_p20,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=p20,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_p20)
+            else:
+                click.echo(click.style("[P20]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PAM
+        if pam is not None and float(pam) > 0:
+            if concepto_pam is not None:
+                if probar is False:
+                    percepcion_deduccion_pam = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_pam,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=pam,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_pam)
+            else:
+                click.echo(click.style("[PAM]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PS3
+        if ps3 is not None and float(ps3) > 0:
+            if concepto_ps3 is not None:
+                if probar is False:
+                    percepcion_deduccion_ps3 = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_ps3,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=ps3,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_ps3)
+            else:
+                click.echo(click.style("[PS3]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto D01
+        if d01 is not None and float(d01) > 0:
+            if concepto_d01 is not None:
+                if probar is False:
+                    percepcion_deduccion_d01 = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_d01,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=d01,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_d01)
+            else:
+                click.echo(click.style("[D01]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto D01
+        if d1a is not None and float(d1a) > 0:
+            if concepto_d1a is not None:
+                if probar is False:
+                    percepcion_deduccion_d1a = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_d1a,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=d1a,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_d1a)
+            else:
+                click.echo(click.style("[D1A]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto P07
+        if p07 is not None and float(p07) > 0:
+            if concepto_p07 is not None:
+                if probar is False:
+                    percepcion_deduccion_p07 = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_p07,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=p07,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_p07)
+            else:
+                click.echo(click.style("[P07]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto P7G
+        if p7g is not None and float(p7g) > 0:
+            if concepto_p7g is not None:
+                if probar is False:
+                    percepcion_deduccion_p7g = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_p7g,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=p7g,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_p7g)
+            else:
+                click.echo(click.style("[P7G]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PHR
+        if phr is not None and float(phr) > 0:
+            if concepto_phr is not None:
+                if probar is False:
+                    percepcion_deduccion_phr = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_phr,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=phr,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_phr)
+            else:
+                click.echo(click.style("[PHR]", fg="red"), nl=False)
+
+        # Alimentar percepcion_deduccion con el concepto PFB
+        if pfb is not None and float(pfb) > 0:
+            if concepto_pfb is not None:
+                if probar is False:
+                    percepcion_deduccion_pfb = PercepcionDeduccion(
+                        centro_trabajo=centro_trabajo,
+                        concepto=concepto_pfb,
+                        persona=persona,
+                        plaza=plaza,
+                        quincena=quincena,
+                        importe=pfb,
+                        tipo="EXTRAORDINARIO",
+                    )
+                    sesion.add(percepcion_deduccion_pfb)
+            else:
+                click.echo(click.style("[PFB]", fg="red"), nl=False)
 
         # Incrementar contador
         contador += 1
