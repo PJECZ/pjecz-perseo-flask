@@ -63,7 +63,8 @@ def cli():
 
 @cli.command()
 @click.argument("quincena_clave", type=str)
-def actualizar_timbrados(quincena_clave: str):
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def actualizar_timbrados(quincena_clave: str, probar: bool = False):
     """Actualizar los timbrados_ids (cambiar a cero si esta eliminado o no existe) de las nominas de una quincena"""
 
     # Validar quincena
@@ -113,7 +114,8 @@ def actualizar_timbrados(quincena_clave: str):
         # Si el timbrado_id es diferente al timbrado_id de la nomina, se actualiza
         if nomina.timbrado_id != timbrado_id:
             nomina.timbrado_id = timbrado_id
-            nomina.save()
+            if probar is False:
+                nomina.save()
             actualizados_contador += 1
             # Si NO hay timbrado entonces timbrado_id es cero, se incrementa el contador
             if timbrado_id is None:
@@ -147,7 +149,8 @@ def actualizar_timbrados(quincena_clave: str):
 @click.command()
 @click.argument("quincena_clave", type=str)
 @click.argument("fecha_pago_str", type=str)
-def alimentar(quincena_clave: str, fecha_pago_str: str):
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def alimentar(quincena_clave: str, fecha_pago_str: str, probar: bool = False):
     """Alimentar nominas"""
 
     # Iniciar sesion con la base de datos para que la alimentacion sea rapida
@@ -428,7 +431,8 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 
             # Si hay cambios, guardar la Persona
             if hay_cambios:
-                persona.save()
+                if probar is False:
+                    persona.save()
                 personas_actualizadas_contador += 1
 
         # Bucle entre P-D para determinar el tipo entre SALARIO y DESPENSA
@@ -461,22 +465,23 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
             nomina_tipo = Nomina.TIPOS["SALARIO"]
 
         # Alimentar nomina
-        nomina = Nomina(
-            centro_trabajo=centro_trabajo,
-            persona=persona,
-            plaza=plaza,
-            quincena=quincena,
-            desde=desde,
-            desde_clave=desde_clave,
-            hasta=hasta,
-            hasta_clave=hasta_clave,
-            percepcion=percepcion,
-            deduccion=deduccion,
-            importe=impte,
-            tipo=nomina_tipo,
-            fecha_pago=fecha_pago,
-        )
-        sesion.add(nomina)
+        if probar is False:
+            nomina = Nomina(
+                centro_trabajo=centro_trabajo,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                desde=desde,
+                desde_clave=desde_clave,
+                hasta=hasta,
+                hasta_clave=hasta_clave,
+                percepcion=percepcion,
+                deduccion=deduccion,
+                importe=impte,
+                tipo=nomina_tipo,
+                fecha_pago=fecha_pago,
+            )
+            sesion.add(nomina)
 
         # Incrementar contador
         contador += 1
@@ -493,8 +498,9 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
         sys.exit(1)
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
-    sesion.commit()
-    sesion.close()
+    if probar is False:
+        sesion.commit()
+        sesion.close()
 
     # Si hubo centros_trabajos_insertados, mostrar contador
     if centros_trabajos_insertados_contador > 0:
@@ -535,7 +541,8 @@ def alimentar(quincena_clave: str, fecha_pago_str: str):
 @click.command()
 @click.argument("quincena_clave", type=str)
 @click.argument("fecha_pago_str", type=str)
-def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str, probar: bool = False):
     """Alimentar aguinaldos"""
 
     # Validar quincena
@@ -653,22 +660,23 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
             plazas_insertadas_contador += 1
 
         # Alimentar registro en Nomina
-        nomina = Nomina(
-            centro_trabajo=centro_trabajo,
-            persona=persona,
-            plaza=plaza,
-            quincena=quincena,
-            desde=desde,
-            desde_clave=desde_clave,
-            hasta=hasta,
-            hasta_clave=hasta_clave,
-            percepcion=percepcion,
-            deduccion=deduccion,
-            importe=impte,
-            tipo="AGUINALDO",
-            fecha_pago=fecha_pago,
-        )
-        sesion.add(nomina)
+        if probar is False:
+            nomina = Nomina(
+                centro_trabajo=centro_trabajo,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                desde=desde,
+                desde_clave=desde_clave,
+                hasta=hasta,
+                hasta_clave=hasta_clave,
+                percepcion=percepcion,
+                deduccion=deduccion,
+                importe=impte,
+                tipo="AGUINALDO",
+                fecha_pago=fecha_pago,
+            )
+            sesion.add(nomina)
 
         # Incrementar contador
         contador += 1
@@ -712,7 +720,8 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str):
 @click.command()
 @click.argument("quincena_clave", type=str)
 @click.argument("fecha_pago_str", type=str)
-def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: bool = False):
     """Alimentar apoyos anuales"""
 
     # Validar quincena
@@ -867,62 +876,66 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str):
             continue
 
         # Alimentar percepcion en PercepcionDeduccion, con concepto PAZ
-        percepcion_deduccion_paz = PercepcionDeduccion(
-            centro_trabajo=centro_trabajo,
-            concepto=concepto_paz,
-            persona=persona,
-            plaza=plaza,
-            quincena=quincena,
-            importe=percepcion,
-            tipo="APOYO ANUAL",
-        )
-        sesion.add(percepcion_deduccion_paz)
-
-        # Alimentar deduccion en PercepcionDeduccion, con concepto DAZ
-        percepcion_deduccion_daz = PercepcionDeduccion(
-            centro_trabajo=centro_trabajo,
-            concepto=concepto_daz,
-            persona=persona,
-            plaza=plaza,
-            quincena=quincena,
-            importe=deduccion,
-            tipo="APOYO ANUAL",
-        )
-        sesion.add(percepcion_deduccion_daz)
-
-        # Si tiene concepto_d62, alimentar registro en PercepcionDeduccion
-        if impte_concepto_d62 > 0:
-            percepcion_deduccion_d62 = PercepcionDeduccion(
+        if probar is False:
+            percepcion_deduccion_paz = PercepcionDeduccion(
                 centro_trabajo=centro_trabajo,
-                concepto=concepto_d62,
+                concepto=concepto_paz,
                 persona=persona,
                 plaza=plaza,
                 quincena=quincena,
-                importe=impte_concepto_d62,
+                importe=percepcion,
                 tipo="APOYO ANUAL",
             )
-            sesion.add(percepcion_deduccion_d62)
+            sesion.add(percepcion_deduccion_paz)
+
+        # Alimentar deduccion en PercepcionDeduccion, con concepto DAZ
+        if probar is False:
+            percepcion_deduccion_daz = PercepcionDeduccion(
+                centro_trabajo=centro_trabajo,
+                concepto=concepto_daz,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                importe=deduccion,
+                tipo="APOYO ANUAL",
+            )
+            sesion.add(percepcion_deduccion_daz)
+
+        # Si tiene concepto_d62, alimentar registro en PercepcionDeduccion
+        if impte_concepto_d62 > 0:
+            if probar is False:
+                percepcion_deduccion_d62 = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_d62,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impte_concepto_d62,
+                    tipo="APOYO ANUAL",
+                )
+                sesion.add(percepcion_deduccion_d62)
 
             # Sumar a deduccion el impte_concepto_d62
             deduccion += impte_concepto_d62
 
         # Alimentar registro en Nomina
-        nomina = Nomina(
-            centro_trabajo=centro_trabajo,
-            persona=persona,
-            plaza=plaza,
-            quincena=quincena,
-            desde=desde,
-            desde_clave=desde_clave,
-            hasta=hasta,
-            hasta_clave=hasta_clave,
-            percepcion=percepcion,
-            deduccion=deduccion,
-            importe=impte,
-            tipo="APOYO ANUAL",
-            fecha_pago=fecha_pago,
-        )
-        sesion.add(nomina)
+        if probar is False:
+            nomina = Nomina(
+                centro_trabajo=centro_trabajo,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                desde=desde,
+                desde_clave=desde_clave,
+                hasta=hasta,
+                hasta_clave=hasta_clave,
+                percepcion=percepcion,
+                deduccion=deduccion,
+                importe=impte,
+                tipo="APOYO ANUAL",
+                fecha_pago=fecha_pago,
+            )
+            sesion.add(nomina)
 
         # Incrementar contador
         contador += 1
@@ -993,50 +1006,61 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
         sys.exit(1)
 
     # El archivo debe tener los siguientes encabezados
-    # RFC
-    # QUINCENA
-    # CLAVE CENTRO TRABAJO
-    # PLAZA	DESDE
-    # HASTA
-    # TIPO NOMINA
-    # PERCEPCION
-    # DEDUCCION
-    # IMPORTE
-    # NUM CHEQUE
-    # FECHA DE PAGO
-    # TIPO DE EXTRAORDINARIA
-    # P30
-    # PGN
-    # PGA
-    # P22
-    # PVD
-    # PGP
-    # P20
-    # PAM
-    # PS3
-    # D01
-    # D1A
-    # P07
-    # P7G
-    # PHR
-    # PFB
+    # 01: RFC
+    # 02: QUINCENA
+    # 03: CLAVE CENTRO TRABAJO
+    # 04: PLAZA	DESDE
+    # 05: HASTA
+    # 06: TIPO NOMINA
+    # 07: PERCEPCION
+    # 08: DEDUCCION
+    # 09: IMPORTE
+    # 10: NUM CHEQUE
+    # 11: FECHA DE PAGO
+    # 12: TIPO DE EXTRAORDINARIA
+    # 13: P30
+    # 14: PGN
+    # 15: PGA
+    # 16: P22
+    # 17: PVD
+    # 18: PGP
+    # 19: P20
+    # 20: PAM
+    # 21: PS3
+    # 22: D01
+    # 23: D1A
+    # 24: P07
+    # 25: P7G
+    # 26: PHR
+    # 27: PFB
 
-    # Consultar los conceptos
-    concepto_p30 = Concepto.query.filter_by(clave="P30").first()
-    concepto_pgn = Concepto.query.filter_by(clave="PGN").first()
-    concepto_pga = Concepto.query.filter_by(clave="PGA").first()
-    concepto_p22 = Concepto.query.filter_by(clave="P22").first()
-    concepto_pvd = Concepto.query.filter_by(clave="PVD").first()
-    concepto_pgp = Concepto.query.filter_by(clave="PGP").first()
-    concepto_p20 = Concepto.query.filter_by(clave="P20").first()
-    concepto_pam = Concepto.query.filter_by(clave="PAM").first()
-    concepto_ps3 = Concepto.query.filter_by(clave="PS3").first()
-    concepto_d01 = Concepto.query.filter_by(clave="D01").first()
-    concepto_d1a = Concepto.query.filter_by(clave="D1A").first()
-    concepto_p07 = Concepto.query.filter_by(clave="P07").first()
-    concepto_p7g = Concepto.query.filter_by(clave="P7G").first()
-    concepto_phr = Concepto.query.filter_by(clave="PHR").first()
-    concepto_pfb = Concepto.query.filter_by(clave="PFB").first()
+    # Definir el diccionario con los numeros de columnas y las claves de los conceptos
+    numeros_columnas_conceptos_claves = {
+        13: "P30",
+        14: "PGN",
+        15: "PGA",
+        16: "P22",
+        17: "PVD",
+        18: "PGP",
+        19: "P20",
+        20: "PAM",
+        21: "PS3",
+        22: "D01",
+        23: "D1A",
+        24: "P07",
+        25: "P7G",
+        26: "PHR",
+        27: "PFB",
+    }
+
+    # Consultar el diccionario con los numeros de columnas y las consultas a los conceptos
+    click.echo("Consultando conceptos...")
+    numeros_columnas_conceptos = {}
+    for num_col, concepto_clave in numeros_columnas_conceptos_claves.items():
+        concepto = Concepto.query.filter_by(clave=concepto_clave).first()
+        if concepto is None:
+            click.echo(click.style(f"  ADVERTENCIA: No existe el concepto con clave {concepto_clave}", fg="yellow"))
+        numeros_columnas_conceptos[num_col] = concepto
 
     # Leer archivo_xlsx con openpyxl
     workbook = load_workbook(filename=ruta, read_only=True, data_only=True)
@@ -1055,7 +1079,7 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
 
     # Bucle por los renglones de la hoja
     contador = 0
-    click.echo("Alimentando Extraordinarios: ", nl=False)
+    click.echo("Alimentando Extraordinarios:")
     for row in workbook.active.iter_rows(min_row=2, max_col=28, max_row=3000):
         # Juntar todas las celdas de la fila en una lista
         fila = [celda.value for celda in row]
@@ -1078,21 +1102,6 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
         # num_cheque = fila[10]
         fecha_pago = fila[11]
         # tipo_extraordinaria = fila[12]
-        p30 = fila[13]
-        pgn = fila[14]
-        pga = fila[15]
-        p22 = fila[16]
-        pvd = fila[17]
-        pgp = fila[18]
-        p20 = fila[19]
-        pam = fila[20]
-        ps3 = fila[21]
-        d01 = fila[22]
-        d1a = fila[23]
-        p07 = fila[24]
-        p7g = fila[25]
-        phr = fila[26]
-        pfb = fila[27]
 
         # Consultar el centro de trabajo a partir de la clave, si no se encuentra, se usa el ND
         centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
@@ -1103,7 +1112,7 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
         persona = Persona.query.filter_by(rfc=rfc).first()
         if persona is None:
             personas_no_encontradas.append(rfc)
-            click.echo(click.style("X", fg="red"), nl=False)
+            click.echo(click.style(f"[{rfc}]", fg="yellow"))
             continue
 
         # Consultar la plaza a partir de la clave, si no se encuentra, se usa el ND
@@ -1114,14 +1123,14 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
         # Validar quincena
         if re.match(QUINCENA_REGEXP, quincena_clave) is None:
             quincenas_no_encontradas.append(quincena_clave)
-            click.echo(click.style("X", fg="red"), nl=False)
+            click.echo(click.style("f[{quincena_clave}]", fg="yellow"))
             continue
 
         # Consultar la quincena a partir de la clave, si no se encuentra, se omite
         quincena = Quincena.query.filter_by(clave=quincena_clave).first()
         if quincena is None:
             quincenas_no_encontradas.append(quincena_clave)
-            click.echo(click.style("X", fg="red"), nl=False)
+            click.echo(click.style(f"[{quincena_clave}]", fg="yellow"))
             continue
 
         # Validar desde
@@ -1130,7 +1139,7 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
             desde_dt = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
         except ValueError:
             desde_no_validos.append(desde_dt)
-            click.echo(click.style("X", fg="red"), nl=False)
+            click.echo(click.style("[desde]", fg="yellow"))
             continue
 
         # Validar desde y hasta
@@ -1139,7 +1148,7 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
             hasta_dt = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
         except ValueError:
             hasta_no_validos.append(hasta_dt)
-            click.echo(click.style("X", fg="red"), nl=False)
+            click.echo(click.style("[hasta]", fg="yellow"))
             continue
 
         # Si probar es falso
@@ -1161,268 +1170,36 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
                 fecha_pago=fecha_pago,
             )
             sesion.add(nomina)
+        click.echo(click.style(f"  {rfc} {quincena_clave}: ", fg="cyan"), nl=False)
 
-        # Alimentar percepcion_deduccion con el concepto P30
-        if p30 is not None and float(p30) > 0:
-            if concepto_p30 is not None:
-                if probar is False:
-                    percepcion_deduccion_p30 = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_p30,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=p30,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_p30)
-            else:
-                click.echo(click.style("[P30]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PGN
-        if pgn is not None and float(pgn) > 0:
-            if concepto_pgn is not None:
-                if probar is False:
-                    percepcion_deduccion_pgn = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_pgn,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=pgn,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_pgn)
-            else:
-                click.echo(click.style("[PGN]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PGA
-        if pga is not None and float(pga) > 0:
-            if concepto_pga is not None:
-                if probar is False:
-                    percepcion_deduccion_pga = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_pga,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=pga,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_pga)
-            else:
-                click.echo(click.style("[PGA]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto P22
-        if p22 is not None and float(p22) > 0:
-            if concepto_p22 is not None:
-                if probar is False:
-                    percepcion_deduccion_p22 = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_p22,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=p22,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_p22)
-            else:
-                click.echo(click.style("[P22]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PVD
-        if pvd is not None and float(pvd) > 0:
-            if concepto_pvd is not None:
-                if probar is False:
-                    percepcion_deduccion_pvd = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_pvd,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=pvd,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_pvd)
-            else:
-                click.echo(click.style("[PVD]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PGP
-        if pgp is not None and float(pgp) > 0:
-            if concepto_pgp is not None:
-                if probar is False:
-                    percepcion_deduccion_pgp = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_pgp,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=pgp,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_pgp)
-            else:
-                click.echo(click.style("[PGP]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto P20
-        if p20 is not None and float(p20) > 0:
-            if concepto_p20 is not None:
-                if probar is False:
-                    percepcion_deduccion_p20 = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_p20,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=p20,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_p20)
-            else:
-                click.echo(click.style("[P20]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PAM
-        if pam is not None and float(pam) > 0:
-            if concepto_pam is not None:
-                if probar is False:
-                    percepcion_deduccion_pam = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_pam,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=pam,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_pam)
-            else:
-                click.echo(click.style("[PAM]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PS3
-        if ps3 is not None and float(ps3) > 0:
-            if concepto_ps3 is not None:
-                if probar is False:
-                    percepcion_deduccion_ps3 = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_ps3,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=ps3,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_ps3)
-            else:
-                click.echo(click.style("[PS3]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto D01
-        if d01 is not None and float(d01) > 0:
-            if concepto_d01 is not None:
-                if probar is False:
-                    percepcion_deduccion_d01 = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_d01,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=d01,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_d01)
-            else:
-                click.echo(click.style("[D01]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto D01
-        if d1a is not None and float(d1a) > 0:
-            if concepto_d1a is not None:
-                if probar is False:
-                    percepcion_deduccion_d1a = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_d1a,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=d1a,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_d1a)
-            else:
-                click.echo(click.style("[D1A]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto P07
-        if p07 is not None and float(p07) > 0:
-            if concepto_p07 is not None:
-                if probar is False:
-                    percepcion_deduccion_p07 = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_p07,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=p07,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_p07)
-            else:
-                click.echo(click.style("[P07]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto P7G
-        if p7g is not None and float(p7g) > 0:
-            if concepto_p7g is not None:
-                if probar is False:
-                    percepcion_deduccion_p7g = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_p7g,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=p7g,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_p7g)
-            else:
-                click.echo(click.style("[P7G]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PHR
-        if phr is not None and float(phr) > 0:
-            if concepto_phr is not None:
-                if probar is False:
-                    percepcion_deduccion_phr = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_phr,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=phr,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_phr)
-            else:
-                click.echo(click.style("[PHR]", fg="red"), nl=False)
-
-        # Alimentar percepcion_deduccion con el concepto PFB
-        if pfb is not None and float(pfb) > 0:
-            if concepto_pfb is not None:
-                if probar is False:
-                    percepcion_deduccion_pfb = PercepcionDeduccion(
-                        centro_trabajo=centro_trabajo,
-                        concepto=concepto_pfb,
-                        persona=persona,
-                        plaza=plaza,
-                        quincena=quincena,
-                        importe=pfb,
-                        tipo="EXTRAORDINARIO",
-                    )
-                    sesion.add(percepcion_deduccion_pfb)
-            else:
-                click.echo(click.style("[PFB]", fg="red"), nl=False)
+        # Tomar los valores de la hoja de calculo y alimentar las percepciones y deducciones
+        for num_col, concepto in numeros_columnas_conceptos.items():
+            valor = fila[num_col]
+            if concepto is None:
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+            if valor is None:
+                click.echo(click.style("_", fg="yellow"), nl=False)
+                continue
+            if float(valor) == 0:
+                click.echo(click.style("0", fg="yellow"), nl=False)
+                continue
+            if probar is False:
+                percepcion_deduccion = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=valor,
+                    tipo="EXTRAORDINARIO",
+                )
+                sesion.add(percepcion_deduccion)
+            click.echo(click.style("+", fg="green"), nl=False)
 
         # Incrementar contador
         contador += 1
-        click.echo(click.style(".", fg="cyan"), nl=False)
-
-    # Poner avance de linea
-    click.echo("")
+        click.echo("")
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
@@ -1450,9 +1227,9 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
 
     # Mensaje termino
     if probar:
-        click.echo(click.style(f"  Alimentar Extraordinarios: modo PROBAR {contador} pueden insertarse.", fg="green"))
+        click.echo(click.style(f"Alimentar Extraordinarios: modo PROBAR {contador} pueden insertarse.", fg="green"))
     else:
-        click.echo(click.style(f"  Alimentar Extraordinarios: {contador} insertados.", fg="green"))
+        click.echo(click.style(f"Alimentar Extraordinarios: {contador} insertados.", fg="green"))
 
 
 @click.command()
@@ -1535,7 +1312,7 @@ def crear_dispersiones_pensionados(quincena_clave):
     )
     quincena_producto.save()
 
-    # Ejecutar crear_dispersiones_pensionados
+    # Ejecutar tarea en el fondo crear_dispersiones_pensionados
     try:
         mensaje_termino = task_crear_dispersiones_pensionados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
@@ -1572,7 +1349,7 @@ def crear_monederos(quincena_clave):
     )
     quincena_producto.save()
 
-    # Ejecutar crear_monederos
+    # Ejecutar tarea en el fondo crear_monederos
     try:
         mensaje_termino = task_crear_monederos(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
@@ -1609,7 +1386,7 @@ def crear_nominas(quincena_clave):
     )
     quincena_producto.save()
 
-    # Ejecutar crear_nominas
+    # Ejecutar tarea en el fondo crear_nominas
     try:
         mensaje_termino = task_crear_nominas(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
@@ -1646,7 +1423,7 @@ def crear_pensionados(quincena_clave):
     )
     quincena_producto.save()
 
-    # Ejecutar crear_pensionados
+    # Ejecutar tarea en el fondo crear_pensionados
     try:
         mensaje_termino = task_crear_pensionados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
@@ -1683,7 +1460,7 @@ def crear_timbrados_empleados_activos(quincena_clave):
     )
     quincena_producto.save()
 
-    # Ejecutar crear_timbrados con Personas con modelos 1: "CONFIANZA" y 2: "SINDICALIZADO"
+    # Ejecutar tarea en el fondo crear_timbrados con Personas con modelos 1: "CONFIANZA" y 2: "SINDICALIZADO"
     try:
         mensaje_termino = task_crear_timbrados(
             quincena_clave=quincena_clave,
@@ -1724,7 +1501,7 @@ def crear_timbrados_pensionados(quincena_clave):
     )
     quincena_producto.save()
 
-    # Ejecutar crear_timbrados con Personas con modelo 3: "PENSIONADO"
+    # Ejecutar tarea en el fondo crear_timbrados con Personas con modelo 3: "PENSIONADO"
     try:
         mensaje_termino = task_crear_timbrados(
             quincena_clave=quincena_clave,
