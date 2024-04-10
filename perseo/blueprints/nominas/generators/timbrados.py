@@ -63,7 +63,7 @@ def crear_timbrados(
     if quincena.estatus != "A":
         raise MyNotValidParamError(f"La quincena {quincena_clave} esta eliminada")
 
-    # Validar los modelos 1: "CONFIANZA", 2: "SINDICALIZADO", 3: "JUBILADO"
+    # Validar los modelos 1: "CONFIANZA", 2: "SINDICALIZADO", 3: "PENSIONADO"
     if modelos is None:
         modelos = [1, 2]
     else:

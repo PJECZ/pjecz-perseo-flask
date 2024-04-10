@@ -11,7 +11,7 @@ from perseo.blueprints.puestos.models import Puesto
 MODELOS = [
     (1, "1) CONFIANZA"),
     (2, "2) SINDICALIZADO"),
-    (3, "3) JUBILADO"),
+    (3, "3) PENSIONADO"),
 ]
 
 NIVELES = [

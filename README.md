@@ -16,7 +16,7 @@ Lea el archivo [docker-compose.yml](docker-compose.yml) para más información.
 
 ## Requerimientos
 
-Los requerimiento son
+Los requerimientos son
 
 - Python 3.11
 - PostgreSQL 15
@@ -90,11 +90,11 @@ SECRET_KEY=XXXXXXXX
 
 # Database
 DB_HOST=127.0.0.1
-DB_PORT=8432
+DB_PORT=5432
 DB_NAME=pjecz_perseo
 DB_USER=adminpjeczperseo
 DB_PASS=XXXXXXXX
-SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczperseo:XXXXXXXX@127.0.0.1:8432/pjecz_perseo"
+SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczperseo:XXXXXXXX@127.0.0.1:5432/pjecz_perseo"
 
 # Google Cloud Storage
 CLOUD_STORAGE_DEPOSITO=XXXXXXXX
@@ -105,10 +105,6 @@ HOST=http://localhost:5000
 # Redis
 REDIS_URL=redis://127.0.0.1:6379
 TASK_QUEUE=pjecz_perseo
-
-# RRHH Personal API
-RRHH_PERSONAL_URL=https://rrhh-personal-api-key.justiciadigital.gob.mx/v4
-RRHH_PERSONAL_API_KEY=XXXXXXXX
 
 # Salt sirve para cifrar el ID con HashID
 SALT=XXXXXXXX
@@ -127,9 +123,9 @@ EXPLOTACION_BASE_DIR=/home/USUARIO/Downloads/NOMINAS
 TIMBRADOS_BASE_DIR=/home/USUARIO/Downloads/TIMBRADOS
 
 # Datos del CFDI que deben aparecer en cada XML
-CFDI_EMISOR_RFC=""
-CFDI_EMISOR_NOMBRE=""
-CFDI_EMISOR_REGFIS=""
+CFDI_EMISOR_RFC=
+CFDI_EMISOR_NOMBRE=
+CFDI_EMISOR_REGFIS=
 ```
 
 Crear un archivo `.bashrc` que se ejecute al iniciar la terminal
@@ -258,18 +254,10 @@ Antes de usar el CLI o de arrancar el servidor de **Flask** debe cargar las vari
 . .bashrc
 ```
 
-Tendrá el alias al **CLI**
+Tendrá el alias al **Command Line Interface**
 
 ```bash
 cli --help
-```
-
-## Reiniciar la base de datos
-
-En `.bashrc` se encuentra la función `reiniciar` que ejecuta el **CLI** para reiniciar la base de datos y alimentarla con los datos iniciales. Siempre que haya los archivos necesarios en el directorio `seed`.
-
-```bash
-reiniciar
 ```
 
 ## Tareas en el fondo
@@ -292,7 +280,7 @@ arrancar
 
 Así se arrancará el servidor de **Flask**.
 
-## Requirements.txt
+## Actualizar requirements.txt
 
 Como se usa _poetry_ al cambiar las dependencias debe crear un nuevo `requirements.txt` con:
 

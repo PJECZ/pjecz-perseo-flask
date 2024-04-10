@@ -1,6 +1,7 @@
 """
 Percepciones Deducciones, modelos
 """
+
 from sqlalchemy import Column, Enum, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import relationship
 
@@ -16,6 +17,7 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
         "APOYO ANUAL": "APOYO ANUAL",
         "DESPENSA": "DESPENSA",
         "SALARIO": "SALARIO",
+        "EXTRAORDINARIO": "EXTRAORDINARIO",
     }
 
     # Nombre de la tabla

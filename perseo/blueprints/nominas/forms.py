@@ -1,11 +1,18 @@
 """
 Nominas, formularios
 """
+
 from flask_wtf import FlaskForm
-from wtforms import DateField, FloatField, SelectField, StringField, SubmitField
+from wtforms import DateField, FloatField, RadioField, StringField, SubmitField
 from wtforms.validators import DataRequired, Optional
 
-from perseo.blueprints.nominas.models import Nomina
+TIPOS = [
+    ("AGUINALDO", "AGUINALDO"),
+    ("APOYO ANUAL", "APOYO ANUAL"),
+    ("DESPENSA", "DESPENSA"),
+    ("SALARIO", "SALARIO"),
+    ("EXTRAORDINARIO", "EXTRAORDINARIO"),
+]
 
 
 class NominaEditForm(FlaskForm):
@@ -16,7 +23,7 @@ class NominaEditForm(FlaskForm):
     persona_nombre_completo = StringField("Nombre completo")  # Solo lectura
     centro_trabajo_clave = StringField("Centro de Trabajo")  # Solo lectura
     plaza_clave = StringField("Plaza")  # Solo lectura
-    tipo = SelectField("Tipo", choices=Nomina.TIPOS, validators=[DataRequired()])
+    tipo = RadioField("Tipo", validators=[DataRequired()], choices=TIPOS)
     percepcion = FloatField("Percepción", validators=[DataRequired()])
     deduccion = FloatField("Deducción", validators=[DataRequired()])
     importe = FloatField("Importe", validators=[DataRequired()])
