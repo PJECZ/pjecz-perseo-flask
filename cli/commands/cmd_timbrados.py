@@ -67,7 +67,7 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
 
     # Validar tipo
     tipo = safe_string(tipo)
-    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL"]:
+    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "EXTRAORDINARIO"]:
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
