@@ -41,6 +41,21 @@
                     {{ detail.label_value('Tabulador', tabulador_str) }}
                 {% endif %}
                 {# Termina tabulador de la persona #}
+                {% if current_user.can_view('CENTROS TRABAJOS') %}
+                    {{ detail.label_value('Último centro de trabajo ID', persona.ultimo_centro_trabajo_id, url_for('centros_trabajos.detail', centro_trabajo_id=persona.ultimo_centro_trabajo_id))}}
+                {% else %}
+                    {{ detail.label_value('Último centro de trabajo ID', persona.ultimo_centro_trabajo_id)}}
+                {% endif %}
+                {% if current_user.can_view('PLAZAS') %}
+                    {{ detail.label_value('Última plaza ID', persona.ultimo_plaza_id, url_for('plazas.detail', plaza_id=persona.ultimo_plaza_id))}}
+                {% else %}
+                    {{ detail.label_value('Última plaza ID', persona.ultimo_plaza_id)}}
+                {% endif %}
+                {% if current_user.can_view('PUESTOS') %}
+                    {{ detail.label_value('Último puesto ID', persona.ultimo_puesto_id, url_for('puestos.detail', puesto_id=persona.ultimo_puesto_id))}}
+                {% else %}
+                    {{ detail.label_value('Último puesto ID', persona.ultimo_puesto_id)}}
+                {% endif %}
             </div>
             <div class="col-md-6">
                 {{ detail.label_value('No. empleado', persona.num_empleado) }}
@@ -48,7 +63,9 @@
                 {{ detail.label_value('F. ingreso al gobierno', persona.ingreso_gobierno_fecha) }}
                 {{ detail.label_value('F. ingreso P.J.', persona.ingreso_pj_fecha) }}
                 {{ detail.label_value_big('Modelo', persona.MODELOS[persona.modelo]) }}
-                {# detail.label_value('Creado', moment(persona.creado, local=True).format('llll')) #}
+                {{ detail.label_value('Sub. Sis.', persona.sub_sis) }}
+                {{ detail.label_value('Nivel', persona.nivel) }}
+                {{ detail.label_value('Puesto equivalente', persona.puesto_equivalente) }}
             </div>
         </div>
     {% endcall %}
