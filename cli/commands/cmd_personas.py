@@ -22,6 +22,7 @@ from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
+from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
@@ -140,6 +141,123 @@ def actualizar(personas_csv: str):
                     hay_cambios = True
 
             # Si hubo cambios, agregar a la sesión e incrementar el contador
+            if hay_cambios:
+                sesion.add(persona)
+                contador += 1
+                click.echo(click.style("u", fg="cyan"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si no hubo cambios, mostrar mensaje y terminar
+    if contador == 0:
+        click.echo("  AVISO: No hubo cambios.")
+        sys.exit(0)
+
+    # Guardar cambios
+    sesion.commit()
+    sesion.close()
+
+    # Si hubo errores, mostrarlos
+    if len(errores) > 0:
+        click.echo(click.style(f"  Hubo {len(errores)} errores:", fg="red"))
+        click.echo(click.style(f"  {', '.join(errores)}", fg="red"))
+
+    # Mensaje de termino
+    click.echo(f"  Personas: {contador} actualizadas.")
+
+
+@click.command()
+@click.option("--personas-csv", default=PERSONAS_CSV, help="Archivo CSV con los datos de las Personas")
+def actualizar_nuevas_columnas(personas_csv: str):
+    """Actualizar nuevas columnas de las Personas en base a su RFC a partir de un archivo CSV"""
+
+    # Validar archivo
+    ruta = Path(personas_csv)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Inicializar contadores y mensajes
+    contador = 0
+    errores = []
+
+    # Leer el archivo CSV
+    click.echo("Actualizar Personas: ", nl=False)
+    with open(ruta, newline="", encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+
+            # Consultar la persona
+            persona = Persona.query.filter_by(rfc=safe_rfc(row["RFC"])).first()
+            if persona is None:
+                errores.append(f"RFC {row['RFC']}: Persona no encontrada")
+                continue
+
+            # Consultar la plaza
+            plaza = Plaza.query.filter_by(clave=safe_clave(row["PLAZA"], max_len=24)).first()
+            if plaza is None:
+                errores.append(f"Plaza {row['PLAZA']}: Plaza no encontrada")
+                continue
+
+            # Tomar Sub Sis
+            try:
+                sub_sis = int(row["SUB_SIS"])
+            except ValueError:
+                errores.append(f"Sub Sis {row['SUB_SIS']}: Sub Sis inválido")
+                continue
+
+            # Consultar el Puesto
+            puesto = Puesto.query.filter_by(clave=safe_clave(row["PUESTO"], max_len=24)).first()
+            if puesto is None:
+                errores.append(f"Puesto {row['PUESTO']}: Puesto no encontrado")
+                continue
+
+            # Tomar nivel
+            try:
+                nivel = int(row["NIVEL"])
+            except ValueError:
+                errores.append(f"Nivel {row['NIVEL']}: Nivel inválido")
+                continue
+
+            # Tomar el puesto equivalente
+            puesto_equivalente = safe_clave(row["PUESTO EQUIVALENTE"])
+
+            # Bandera si hubo cambios
+            hay_cambios = False
+
+            # Si es diferente la plaza, actualizar
+            if persona.ultimo_plaza_id != plaza.id:
+                persona.ultimo_plaza_id = plaza.id
+                hay_cambios = True
+
+            # Si es diferente el sub_sis, actualizar
+            if persona.sub_sis != sub_sis:
+                persona.sub_sis = sub_sis
+                hay_cambios = True
+
+            # Si es diferente el puesto, actualizar
+            if persona.ultimo_puesto_id != puesto.id:
+                persona.ultimo_puesto_id = puesto.id
+                hay_cambios = True
+
+            # Si es diferente el nivel, actualizar
+            if persona.nivel != nivel:
+                persona.nivel = nivel
+                hay_cambios = True
+
+            # Si es diferente el puesto_equivalente, actualizar
+            if persona.puesto_equivalente != puesto_equivalente:
+                persona.puesto_equivalente = puesto_equivalente
+                hay_cambios = True
+
+            # Si hay cambios, agregar a la sesión e incrementar el contador
             if hay_cambios:
                 sesion.add(persona)
                 contador += 1
@@ -799,6 +917,7 @@ def sincronizar():
 
 
 cli.add_command(actualizar)
+cli.add_command(actualizar_nuevas_columnas)
 cli.add_command(actualizar_tabuladores)
 cli.add_command(actualizar_curp_cp_fiscal_fechas_ingreso)
 cli.add_command(cambiar_tabulador)
