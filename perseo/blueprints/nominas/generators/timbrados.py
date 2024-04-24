@@ -35,6 +35,7 @@ from perseo.blueprints.nominas.generators.common import (
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.tabuladores.models import Tabulador
 
@@ -358,9 +359,10 @@ def crear_timbrados(
 
         # Consultar la clave de la plaza a partir de persona.ultimo_plaza_id
         plaza_clave = ""
-        plaza = plaza.query.filter_by(id=nomina.persona.ultimo_plaza_id).first()
-        if plaza is not None:
-            plaza_clave = plaza.clave
+        if nomina.persona.ultimo_plaza_id:
+            plaza = Plaza.query.filter_by(id=nomina.persona.ultimo_plaza_id).first()
+            if plaza is not None:
+                plaza_clave = plaza.clave
 
         # Fila parte 3
         fila_parte_3 = [
