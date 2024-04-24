@@ -214,6 +214,9 @@ def crear_timbrados(
         "MONTO DEL RECURSO",
         "CODIGO POSTAL FISCAL",
         "MODELO",
+        "PUESTO EQUIVALENTE",
+        "PLAZA",
+        "NIVEL",
     ]
 
     # Agregar la fila con las cabeceras de las columnas
@@ -353,12 +356,21 @@ def crear_timbrados(
         if nomina.persona.codigo_postal_fiscal:
             codigo_postal_fiscal = str(nomina.persona.codigo_postal_fiscal).zfill(5)
 
+        # Consultar la clave de la plaza a partir de persona.ultimo_plaza_id
+        plaza_clave = ""
+        plaza = plaza.query.filter_by(id=nomina.persona.ultimo_plaza_id).first()
+        if plaza is not None:
+            plaza_clave = plaza.clave
+
         # Fila parte 3
         fila_parte_3 = [
             "IP",  # ORIGEN RECURSO
             "100",  # MONTO DEL RECURSO
             codigo_postal_fiscal,  # CODIGO POSTAL FISCAL
             nomina.persona.modelo,  # MODELO
+            nomina.persona.puesto_equivalente,  # PUESTO EQUIVALENTE
+            plaza_clave,  # PLAZA
+            nomina.persona.nivel,  # NIVEL
         ]
 
         # Agregar la fila
