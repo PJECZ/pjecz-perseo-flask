@@ -29,6 +29,30 @@
     {% endcall %}
     {% if current_user.can_view('AUTORIDADES') %}
         {% call detail.card('Autoridades') %}
+            <!-- Filtros autoridades -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosAutoridades.buscar(); return false;">
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                                <label for="filtroClave">Clave</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroDescripcion" type="text" class="form-control" aria-label="Descripcion" style="text-transform: uppercase;">
+                                <label for="filtroDescripcion">Descripción</label>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosAutoridades.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosAutoridades.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Datatable autoridades -->
             <table id="autoridades_datatable" class="table display nowrap" style="width:100%">
                 <thead>
                     <tr>
@@ -48,9 +72,13 @@
         {% if distrito.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + distrito.nombre + '?') }}{% endif %}
     {% endif %}
     {{ detail.moment_js(moment) }}
-    {{ detail.config_datatable() }}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
     {% if current_user.can_view('AUTORIDADES') %}
         <script>
+            // DataTable autoridades
+            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDataTable = constructorDataTable.config();
             configDataTable['ajax']['url'] = '/autoridades/datatable_json';
             configDataTable['ajax']['data'] = { 'estatus': "A", 'distrito_id': {{ distrito.id}} };
             configDataTable['columns'] = [
@@ -67,7 +95,11 @@
                     }
                 }
             ];
-            $('#autoridades_datatable').DataTable(configDataTable);
+            // Filtros autoridades
+            const filtrosAutoridades = new FiltrosDataTable('#autoridades_datatable', configDataTable);
+            filtrosAutoridades.agregarInput('filtroClave', 'clave');
+            filtrosAutoridades.agregarInput('filtroDescripcion', 'descripcion');
+            filtrosAutoridades.precargar();
         </script>
     {% endif %}
 {% endblock %}

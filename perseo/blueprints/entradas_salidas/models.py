@@ -1,7 +1,6 @@
 """
 Entradas-Salidas
 """
-from collections import OrderedDict
 
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
@@ -13,12 +12,10 @@ from perseo.extensions import database
 class EntradaSalida(database.Model, UniversalMixin):
     """Entrada-Salida"""
 
-    TIPOS = OrderedDict(
-        [
-            ("INGRESO", "Ingresó"),
-            ("SALIO", "Salió"),
-        ]
-    )
+    TIPOS = {
+        "INGRESO": "Ingresó",
+        "SALIO": "Salió",
+    }
 
     # Nombre de la tabla
     __tablename__ = "entradas_salidas"
