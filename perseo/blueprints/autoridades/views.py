@@ -45,7 +45,7 @@ def datatable_json():
         consulta = consulta.filter_by(distrito_id=request.form["distrito_id"])
     if "clave" in request.form:
         try:
-            clave = safe_clave(request.form["clave"], max_len=24)
+            clave = safe_clave(request.form["clave"])
             if clave != "":
                 consulta = consulta.filter(Autoridad.clave.contains(clave))
         except ValueError:
