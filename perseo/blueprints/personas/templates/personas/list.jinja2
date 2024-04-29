@@ -52,8 +52,16 @@
                     </div>
                     <div class="col-2">
                         <div class="form-floating">
-                            <input id="filtroCodigoPostalFiscal" type="text" class="form-control" aria-label="Codigo Postal fiscal">
-                            <label for="filtroCodigoPostalFiscal">C.P.</label>
+                            <select id="filtroModelo" class="form-select" aria-label="Modelo">
+                                <option selected value="">Todos</option>
+                                <option value="1">1) CONFIANZA</option>
+                                <option value="2">2) SINDICALIZADO</option>
+                                <option value="3">3) PENSIONADO</option>
+                                <option value="4">4) BENEFICIARIO PENSION ALIMENTICIA</option>
+                                <option value="5">5) ASIMILADO A SALARIOS</option>
+                                <option value="6">6) EXTRAORDINARIO</option>
+                            </select>
+                            <label for="filtroModelo">Modelo</label>
                         </div>
                     </div>
                     <div class="col-2 text-end">
@@ -114,7 +122,7 @@
         filtrosPersonas.agregarInput('filtroNombres', 'nombres');
         filtrosPersonas.agregarInput('filtroApellidoPrimero', 'apellido_primero');
         filtrosPersonas.agregarInput('filtroApellidoSegundo', 'apellido_segundo');
-        filtrosPersonas.agregarInput('filtroCodigoPostalFiscal', 'codigo_postal_fiscal');
+        filtrosPersonas.agregarInput('filtroModelo', 'modelo');
         filtrosPersonas.precargar();
     </script>
 {% endblock %}

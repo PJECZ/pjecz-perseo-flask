@@ -23,6 +23,9 @@
                     {% call f.form_group(form.curp) %}{% endcall %}
                     {% call f.form_group(form.nacimiento_fecha) %}{% endcall %}
                     {% call f.form_group(form.codigo_postal_fiscal) %}{% endcall %}
+                    {% call f.form_group(form.ultimo_centro_trabajo, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.ultimo_plaza, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.ultimo_puesto, readonly=true) %}{% endcall %}
                 </div>
                 <div class="col-md-6">
                     {% call f.form_group(form.num_empleado) %}{% endcall %}
@@ -30,6 +33,9 @@
                     {% call f.form_group(form.ingreso_gobierno_fecha) %}{% endcall %}
                     {% call f.form_group(form.ingreso_pj_fecha) %}{% endcall %}
                     {% call f.form_group(form.modelo) %}{% endcall %}
+                    {% call f.form_group(form.sub_sis) %}{% endcall %}
+                    {% call f.form_group(form.nivel) %}{% endcall %}
+                    {% call f.form_group(form.puesto_equivalente) %}{% endcall %}
                 </div>
             </div>
             {% call f.form_group(form.guardar) %}{% endcall %}

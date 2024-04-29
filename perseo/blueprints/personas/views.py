@@ -1,6 +1,7 @@
 """
 Personas, vistas
 """
+
 import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -9,10 +10,12 @@ from flask_login import current_user, login_required
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_curp, safe_message, safe_rfc, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.forms import PersonaForm
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.blueprints.usuarios.decorators import permission_required
@@ -56,6 +59,12 @@ def datatable_json():
             codigo_postal_fiscal = int(request.form["codigo_postal_fiscal"])
             if codigo_postal_fiscal >= 0:
                 consulta = consulta.filter_by(codigo_postal_fiscal=str(codigo_postal_fiscal).zfill(5))
+        except ValueError:
+            pass
+    if "modelo" in request.form:
+        try:
+            modelo = int(request.form["modelo"])
+            consulta = consulta.filter_by(modelo=modelo)
         except ValueError:
             pass
     # Ordenar y paginar
@@ -242,6 +251,12 @@ def edit(persona_id):
             persona.nacimiento_fecha = form.nacimiento_fecha.data
             persona.codigo_postal_fiscal = form.codigo_postal_fiscal.data
             persona.seguridad_social = form.seguridad_social.data
+            persona.ultimo_centro_trabajo_id = form.ultimo_centro_trabajo_id.data
+            persona.ultimo_plaza_id = form.ultimo_plaza_id.data
+            persona.ultimo_puesto_id = form.ultimo_puesto_id.data
+            persona.sub_sis = form.sub_sis.data
+            persona.nivel = form.nivel.data
+            persona.puesto_equivalente = form.puesto_equivalente.data
             persona.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -264,6 +279,12 @@ def edit(persona_id):
     form.nacimiento_fecha.data = persona.nacimiento_fecha
     form.codigo_postal_fiscal.data = persona.codigo_postal_fiscal
     form.seguridad_social.data = persona.seguridad_social
+    form.ultimo_centro_trabajo.data = persona.ultimo_centro_trabajo.clave  # Read only
+    form.ultimo_plaza.data = persona.ultimo_plaza.clave  # Read only
+    form.ultimo_puesto.data = persona.ultimo_puesto.clave  # Read only
+    form.sub_sis.data = persona.sub_sis
+    form.nivel.data = persona.nivel
+    form.puesto_equivalente.data = persona.puesto_equivalente
     return render_template("personas/edit.jinja2", form=form, persona=persona)
 
 
