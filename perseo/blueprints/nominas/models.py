@@ -18,6 +18,7 @@ class Nomina(database.Model, UniversalMixin):
         "DESPENSA": "DESPENSA",
         "SALARIO": "SALARIO",
         "EXTRAORDINARIO": "EXTRAORDINARIO",
+        "PENSION ALIMENTICIA": "PENSION ALIMENTICIA",
     }
 
     # Nombre de la tabla

@@ -13,7 +13,7 @@ class ConceptoForm(FlaskForm):
     """Formulario Concepto"""
 
     clave = StringField(
-        "Clave (P o D seguido de 2 o 3 números y/o letras)", validators=[DataRequired(), Regexp(CONCEPTO_REGEXP)]
+        "Clave (P o D seguido de 2 a 4 números y/o letras)", validators=[DataRequired(), Regexp(CONCEPTO_REGEXP)]
     )
     descripcion = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
     guardar = SubmitField("Guardar")
