@@ -36,22 +36,22 @@ def datatable_json():
     # Tomar parámetros de Datatables
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
-    consulta = Nomina.query
+    consulta = Nomina.query.join(Quincena)  # Para ordenar por Quincena.clave.desc()
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Nomina.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Nomina.estatus == "A")
     if "centro_trabajo_id" in request.form:
-        consulta = consulta.filter_by(centro_trabajo_id=request.form["centro_trabajo_id"])
+        consulta = consulta.filter(Nomina.centro_trabajo_id == request.form["centro_trabajo_id"])
     if "persona_id" in request.form:
-        consulta = consulta.filter_by(persona_id=request.form["persona_id"])
+        consulta = consulta.filter(Nomina.persona_id == request.form["persona_id"])
     if "plaza_id" in request.form:
-        consulta = consulta.filter_by(plaza_id=request.form["plaza_id"])
+        consulta = consulta.filter(Nomina.plaza_id == request.form["plaza_id"])
     if "quincena_id" in request.form:
-        consulta = consulta.filter_by(quincena_id=request.form["quincena_id"])
+        consulta = consulta.filter(Nomina.quincena_id == request.form["quincena_id"])
     if "tipo" in request.form and request.form["tipo"] != "":
-        consulta = consulta.filter_by(tipo=request.form["tipo"])
+        consulta = consulta.filter(Nomina.tipo == request.form["tipo"])
     if "tfd" in request.form and request.form["tfd"] == "1":
         consulta = consulta.filter(Nomina.timbrado_id != None)
     if "tfd" in request.form and request.form["tfd"] == "-1":
@@ -60,7 +60,6 @@ def datatable_json():
     if "quincena_clave" in request.form:
         try:
             quincena_clave = safe_quincena(request.form["quincena_clave"])
-            consulta = consulta.join(Quincena)
             consulta = consulta.filter(Quincena.clave == quincena_clave)
         except ValueError:
             pass
@@ -84,7 +83,7 @@ def datatable_json():
             Persona.apellido_segundo.contains(safe_string(request.form["persona_apellido_segundo"], save_enie=True))
         )
     # Ordenar y paginar
-    registros = consulta.order_by(Nomina.id.desc()).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Quincena.clave.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []

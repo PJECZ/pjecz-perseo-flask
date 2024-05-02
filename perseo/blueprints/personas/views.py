@@ -190,6 +190,9 @@ def new():
                 nacimiento_fecha=form.nacimiento_fecha.data,
                 codigo_postal_fiscal=form.codigo_postal_fiscal.data,
                 seguridad_social=form.seguridad_social.data,
+                sub_sis=form.sub_sis.data,
+                nivel=form.nivel.data,
+                puesto_equivalente=form.puesto_equivalente.data,
                 tabulador=tabulador,
             )
             persona.save()
@@ -251,9 +254,6 @@ def edit(persona_id):
             persona.nacimiento_fecha = form.nacimiento_fecha.data
             persona.codigo_postal_fiscal = form.codigo_postal_fiscal.data
             persona.seguridad_social = form.seguridad_social.data
-            persona.ultimo_centro_trabajo_id = form.ultimo_centro_trabajo_id.data
-            persona.ultimo_plaza_id = form.ultimo_plaza_id.data
-            persona.ultimo_puesto_id = form.ultimo_puesto_id.data
             persona.sub_sis = form.sub_sis.data
             persona.nivel = form.nivel.data
             persona.puesto_equivalente = form.puesto_equivalente.data

@@ -39,14 +39,16 @@ from perseo.extensions import database
 
 load_dotenv()
 
+EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
+EXTRAORDINARIOS_BASE_DIR = os.getenv("EXTRAORDINARIOS_BASE_DIR", "")
+PENSIONES_ALIMENTICIAS_BASE_DIR = os.getenv("PENSIONES_ALIMENTICIAS_BASE_DIR", "")
+
 AGUINALDOS_FILENAME_XLS = "Aguinaldos.XLS"
 APOYOS_FILENAME_XLS = "Apoyos.XLS"
 BONOS_FILENAME_XLS = "Bonos.XLS"
 COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
 COMPANIA_RFC = "PJE901211TI9"
 COMPANIA_CP = "25000"
-EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
-EXTRAORDINARIOS_BASE_DIR = os.getenv("EXTRAORDINARIOS_BASE_DIR", "")
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 PATRON_RFC = "PJE901211TI9"
 SERICA_FILENAME_XLSX = "SERICA.xlsx"
@@ -1142,7 +1144,7 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
             click.echo(click.style("[desde]", fg="yellow"))
             continue
 
-        # Validar desde y hasta
+        # Validar hasta
         try:
             hasta_clave = crear_clave_quincena(hasta_dt.date())
             hasta_dt = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
@@ -1230,6 +1232,227 @@ def alimentar_extraordinarios(archivo_xlsx: str, probar: bool = False):
         click.echo(click.style(f"Alimentar Extraordinarios: modo PROBAR {contador} pueden insertarse.", fg="green"))
     else:
         click.echo(click.style(f"Alimentar Extraordinarios: {contador} insertados.", fg="green"))
+
+
+@click.command()
+@click.argument("archivo_xlsx", type=str)
+@click.argument("quincena_clave", type=str)
+@click.option("--tipo", type=click.Choice(["AGUINALDO", "APOYO ANUAL", "SALARIO"]), default="SALARIO")
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def alimentar_pensiones_alimenticias(
+    archivo_xlsx: str,
+    quincena_clave: str,
+    tipo: str,
+    probar: bool = True,
+):
+    """Alimentar pensiones alimenticias"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Validar el directorio donde espera encontrar los archivos
+    if PENSIONES_ALIMENTICIAS_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno PENSIONES_ALIMENTICIAS_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(PENSIONES_ALIMENTICIAS_BASE_DIR, archivo_xlsx)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Consultar la quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if quincena is None:
+        click.echo("ERROR: Quincena no encontrada.")
+        sys.exit(1)
+
+    # Consultar el concepto con clave P62, si no se encuentra, error
+    concepto_p62 = Concepto.query.filter_by(clave="P62").first()
+    if concepto_p62 is None:
+        click.echo("ERROR: No existe el concepto con clave P62")
+        sys.exit(1)
+
+    # Consultar el concepto con clave P62A, si no se encuentra, error
+    concepto_p62a = Concepto.query.filter_by(clave="P62A").first()
+    if concepto_p62a is None:
+        click.echo("ERROR: No existe el concepto con clave P62A")
+        sys.exit(1)
+
+    # Consultar el concepto con clave P62B, si no se encuentra, error
+    concepto_p62b = Concepto.query.filter_by(clave="P62B").first()
+    if concepto_p62b is None:
+        click.echo("ERROR: No existe el concepto con clave P62B")
+        sys.exit(1)
+
+    # De acuerdo al TIPO es el concepto que se usara
+    conceptos = {
+        "SALARIO": concepto_p62,
+        "AGUINALDO": concepto_p62a,
+        "APOYO ANUAL": concepto_p62b,
+    }
+
+    # El archivo debe tener los siguientes encabezados
+    # 00: RFC
+    # 01: QUINCENA
+    # 02: CENTRO DE TRABAJO
+    # 03: PLAZA
+    # 04: DESDE
+    # 05: HASTA
+    # 06: TIPO
+    # 07: PERCEPCION
+    # 08: DEDUCCION
+    # 09: IMPORTE
+    # 10: NO. CHEQUE
+    # 11: FECHA DE PAGO
+    # 12: CONCEPTO (P62 si TIPO es SALARIO, P62A si es AGUINALDO, P62B si es APOYO ANUAL)
+
+    # Leer archivo_xlsx con openpyxl
+    workbook = load_workbook(filename=ruta, read_only=True, data_only=True)
+
+    # Inicializar listado de personas NO encontradas
+    personas_no_encontradas = []
+
+    # Inicializar desde no validos
+    desde_no_validos = []
+
+    # Inicializar hasta no validos
+    hasta_no_validos = []
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Bucle por los renglones de la hoja
+    contador = 0
+    click.echo("Alimentando Pensiones Alimenticias:")
+    for row in workbook.active.iter_rows(min_row=2, max_col=16, max_row=3000):
+        # Juntar todas las celdas de la fila en una lista
+        fila = [celda.value for celda in row]
+
+        # Si el primer elemento de la fila es vacio, se rompe el ciclo
+        if str(fila[0]).strip() == "" or fila[0] is None or fila[0] == "None":
+            break
+
+        # Tomar los valores de la fila
+        rfc = safe_rfc(fila[0])
+        centro_trabajo_clave = safe_clave(fila[2], max_len=10)
+        plaza_clave = safe_clave(fila[3], max_len=24)
+        desde_clave = str(fila[4])
+        hasta_clave = str(fila[5])
+        percepcion = fila[7]
+        deduccion = fila[8]
+        importe = fila[9]
+        num_cheque = fila[10]
+        fecha_pago = fila[11]
+        importe_concepto = fila[12]
+
+        # Consultar la persona a partir del rfc, si no se encuentra, se omite
+        persona = Persona.query.filter_by(rfc=rfc).first()
+        if persona is None:
+            personas_no_encontradas.append(rfc)
+            continue
+
+        # Consultar el centro de trabajo a partir de la clave, si no se encuentra, se usa el ND
+        centro_trabajo = CentroTrabajo.query.filter_by(clave=centro_trabajo_clave).first()
+        if centro_trabajo is None:
+            centro_trabajo = CentroTrabajo.query.filter_by(clave="ND").first()
+
+        # Consultar la plaza a partir de la clave, si no se encuentra, se usa el ND
+        plaza = Plaza.query.filter_by(clave=plaza_clave).first()
+        if plaza is None:
+            plaza = Plaza.query.filter_by(clave="ND").first()
+
+        # Validar desde
+        try:
+            desde_dt = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+        except ValueError:
+            desde_no_validos.append(desde_clave)
+            continue
+
+        # Validar hasta
+        try:
+            hasta_dt = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+        except ValueError:
+            hasta_no_validos.append(hasta_clave)
+            continue
+
+        # Si tiene importe_concepto, alimentar registro en PercepcionDeduccion
+        if importe_concepto > 0:
+            concepto = conceptos[tipo]
+            if probar is False:
+                percepcion_deduccion = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=importe_concepto,
+                    tipo=tipo,
+                )
+                sesion.add(percepcion_deduccion)
+                click.echo(click.style("p", fg="green"), nl=False)
+            else:
+                click.echo(click.style(f"{concepto.clave}: {importe_concepto}, ", fg="green"), nl=False)
+
+        # Si probar es falso
+        if probar is False:
+            # Alimentar nomina
+            nomina = Nomina(
+                centro_trabajo=centro_trabajo,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                desde=desde_dt,
+                desde_clave=desde_clave,
+                hasta=hasta_dt,
+                hasta_clave=hasta_clave,
+                percepcion=percepcion,
+                deduccion=deduccion,
+                importe=importe,
+                tipo="PENSION ALIMENTICIA",
+                fecha_pago=fecha_pago,
+                num_cheque=num_cheque,
+            )
+            sesion.add(nomina)
+            click.echo(click.style("n", fg="cyan"), nl=False)
+        else:
+            click.echo(click.style(f"{rfc}: {importe}, ", fg="cyan"), nl=False)
+
+        # Incrementar contador
+        contador += 1
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Cerrar la sesion para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Si hubo personas_no_encontradas, mostrarlos
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} Personas no encontradas.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_no_encontradas)}", fg="yellow"))
+
+    # Si hubo desde_no_validos, mostrarlos
+    if len(desde_no_validos) > 0:
+        click.echo(click.style(f"  Hubo {len(desde_no_validos)} Desde no validos.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(desde_no_validos)}", fg="yellow"))
+
+    # Si hubo hasta_no_validos, mostrarlos
+    if len(hasta_no_validos) > 0:
+        click.echo(click.style(f"  Hubo {len(hasta_no_validos)} Hasta no validos.", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(hasta_no_validos)}", fg="yellow"))
+
+    # Mensaje termino
+    if probar:
+        click.echo(click.style(f"Alimentar Pensiones Alimenticias: modo PROBAR {contador} pueden insertarse.", fg="green"))
+    else:
+        click.echo(click.style(f"Alimentar Pensiones Alimenticias: {contador} insertados.", fg="green"))
 
 
 @click.command()
@@ -1521,6 +1744,7 @@ cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
 cli.add_command(alimentar_extraordinarios)
+cli.add_command(alimentar_pensiones_alimenticias)
 cli.add_command(generar_issste)
 cli.add_command(crear_dispersiones_pensionados)
 cli.add_command(crear_monederos)
