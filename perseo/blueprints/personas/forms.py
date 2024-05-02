@@ -36,7 +36,7 @@ class PersonaForm(FlaskForm):
     ultimo_centro_trabajo = StringField("Último centro de trabajo")  # Read only
     ultimo_plaza = StringField("Última plaza")  # Read only
     ultimo_puesto = StringField("Último puesto")  # Read only
-    sub_sis = IntegerField("Subsistema", validators=[DataRequired()], default=0)
-    nivel = IntegerField("Nivel", validators=[DataRequired()], default=0)
-    puesto_equivalente = StringField("Puesto equivalente", validators=[DataRequired(), Length(max=16)], default="")
+    sub_sis = IntegerField("Subsistema", validators=[Optional()], default=0)
+    nivel = IntegerField("Nivel", validators=[Optional()], default=0)
+    puesto_equivalente = StringField("Puesto equivalente", validators=[Optional(), Length(max=16)], default="")
     guardar = SubmitField("Guardar")

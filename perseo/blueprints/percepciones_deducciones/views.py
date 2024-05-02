@@ -1,6 +1,7 @@
 """
 Percepciones Deducciones, vistas
 """
+
 import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -36,27 +37,26 @@ def datatable_json():
     # Tomar parámetros de Datatables
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
-    consulta = PercepcionDeduccion.query
+    consulta = PercepcionDeduccion.query.join(Quincena)  # Para ordenar por Quincena.clave.desc()
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(PercepcionDeduccion.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(PercepcionDeduccion.estatus == "A")
     if "centro_trabajo_id" in request.form:
-        consulta = consulta.filter_by(centro_trabajo_id=request.form["centro_trabajo_id"])
+        consulta = consulta.filter(PercepcionDeduccion.centro_trabajo_id == request.form["centro_trabajo_id"])
     if "concepto_id" in request.form:
-        consulta = consulta.filter_by(concepto_id=request.form["concepto_id"])
+        consulta = consulta.filter(PercepcionDeduccion.concepto_id == request.form["concepto_id"])
     if "persona_id" in request.form:
-        consulta = consulta.filter_by(persona_id=request.form["persona_id"])
+        consulta = consulta.filter(PercepcionDeduccion.persona_id == request.form["persona_id"])
     if "plaza_id" in request.form:
-        consulta = consulta.filter_by(plaza_id=request.form["plaza_id"])
+        consulta = consulta.filter(PercepcionDeduccion.plaza_id == request.form["plaza_id"])
     if "quincena_id" in request.form:
-        consulta = consulta.filter_by(quincena_id=request.form["quincena_id"])
+        consulta = consulta.filter(PercepcionDeduccion.quincena_id == request.form["quincena_id"])
     # Luego filtrar por columnas de otras tablas
     if "quincena_clave" in request.form:
         try:
             quincena_clave = request.form["quincena_clave"]
-            consulta = consulta.join(Quincena)
             consulta = consulta.filter(Quincena.clave == quincena_clave)
         except ValueError:
             pass
@@ -67,7 +67,7 @@ def datatable_json():
         consulta = consulta.join(Persona)
         consulta = consulta.filter(Persona.rfc.contains(safe_rfc(request.form["persona_rfc"], search_fragment=True)))
     # Ordenar y paginar
-    registros = consulta.order_by(PercepcionDeduccion.id.desc()).offset(start).limit(rows_per_page).all()
+    registros = consulta.order_by(Quincena.clave.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()
     # Elaborar datos para DataTable
     data = []
