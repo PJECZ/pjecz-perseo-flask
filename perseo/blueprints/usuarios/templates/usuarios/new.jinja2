@@ -13,6 +13,7 @@
 {% block content %}
     {% call f.card() %}
         {% call f.form_tag('usuarios.new', fid='usuario_form') %}
+            {% call f.form_group(form.distrito) %}{% endcall %}
             {% call f.form_group(form.autoridad) %}{% endcall %}
             {% call f.form_group(form.email) %}{% endcall %}
             {% call f.form_group(form.nombres) %}{% endcall %}
@@ -23,4 +24,40 @@
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script>
+        // Llamar a /distritos/select_json para cargar el select distrito
+        fetch('/distritos/select_json')
+            .then(response => response.json())
+            .then(data => {
+                const distritoSelect = document.getElementById('distrito');
+                data.forEach(distrito => {
+                    const option = document.createElement('option');
+                    option.value = distrito.id;
+                    option.text = distrito.nombre;
+                    distritoSelect.appendChild(option);
+                });
+                // Seleccionar el estado NO DEFINIDO, por defecto
+                document.getElementById('distrito').value = 19; // NO DEFINIDO
+                document.getElementById('distrito').dispatchEvent(new Event('change'));
+            });
+        // Llamar a /autoridades/select_json para cargar el select autoridad, si el distrito cambia
+        document.getElementById('distrito').addEventListener('change', () => {
+            const distritoId = document.getElementById('distrito').value;
+            fetch(`/autoridades/select_json/${distritoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const autoridadSelect = document.getElementById('autoridad');
+                    autoridadSelect.innerHTML = '';
+                    data.forEach(autoridad => {
+                        const option = document.createElement('option');
+                        option.value = autoridad.id;
+                        option.text = autoridad.descripcion_corta;
+                        autoridadSelect.appendChild(option);
+                    });
+                });
+        });
+    </script>
 {% endblock %}
