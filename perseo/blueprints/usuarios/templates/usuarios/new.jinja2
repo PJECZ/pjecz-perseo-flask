@@ -39,8 +39,8 @@
                     option.text = distrito.nombre;
                     distritoSelect.appendChild(option);
                 });
-                // Seleccionar el estado NO DEFINIDO, por defecto
-                document.getElementById('distrito').value = 19; // NO DEFINIDO
+                // Seleccionar el distrito por defecto
+                document.getElementById('distrito').value = 14; // NO DEFINIDO
                 document.getElementById('distrito').dispatchEvent(new Event('change'));
             });
         // Llamar a /autoridades/select_json para cargar el select autoridad, si el distrito cambia
