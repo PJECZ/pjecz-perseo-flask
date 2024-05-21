@@ -2,18 +2,6 @@
 
 Es un sistema web hecho con Flask para administrar la nómina.
 
-## Docker
-
-Ejecutar con contenedores **Docker** en la raíz del proyecto.
-
-```bash
-docker-compose up
-```
-
-Levantará los servicios de **Flask**, **PostgreSQL** y **Redis**.
-
-Lea el archivo [docker-compose.yml](docker-compose.yml) para más información.
-
 ## Requerimientos
 
 Los requerimientos son
@@ -23,18 +11,6 @@ Los requerimientos son
 - Redis
 
 ## Instalación
-
-Bajar una copia del repositorio
-
-```bash
-git clone https://github.com/PJECZ/pjecz-perseo-flask.git
-```
-
-Cambiar al directorio del proyecto
-
-```bash
-cd pjecz-perseo-flask
-```
 
 Crear el entorno virtual
 
@@ -83,12 +59,12 @@ poetry install
 Crear un archivo `.env` en la raíz del proyecto con las variables, establecer sus propios SECRET_KEY, DB_PASS, CLOUD_STORAGE_DEPOSITO y SALT.
 
 ```bash
-# Flask
+# Flask, para SECRET_KEY use openssl rand -hex 24
 FLASK_APP=perseo.app
 FLASK_DEBUG=1
 SECRET_KEY=XXXXXXXX
 
-# Database
+# Base de datos
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_NAME=pjecz_perseo
@@ -97,16 +73,16 @@ DB_PASS=XXXXXXXX
 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://adminpjeczperseo:XXXXXXXX@127.0.0.1:5432/pjecz_perseo"
 
 # Google Cloud Storage
-CLOUD_STORAGE_DEPOSITO=XXXXXXXX
+CLOUD_STORAGE_DEPOSITO=
 
 # Host
-HOST=http://localhost:5000
+HOST=http://127.0.0.1:5000
 
 # Redis
 REDIS_URL=redis://127.0.0.1:6379
 TASK_QUEUE=pjecz_perseo
 
-# Salt sirve para cifrar el ID con HashID
+# Salt sirve para cifrar el ID con HashID, debe ser igual en la API
 SALT=XXXXXXXX
 
 # Si esta en PRODUCTION se evita reiniciar la base de datos
@@ -116,11 +92,11 @@ DEPLOYMENT_ENVIRONMENT=develop
 RRHH_PERSONAL_URL=
 RRHH_PERSONAL_API_KEY=
 
-# Directorio donde se encuentran las quincenas y sus respectivos archivos de explotacion
-EXPLOTACION_BASE_DIR=/home/USUARIO/Downloads/NOMINAS
-
-# Directorio donde se encuentran los archivos de timbrado
-TIMBRADOS_BASE_DIR=/home/USUARIO/Downloads/TIMBRADOS
+# Directorios
+EXPLOTACION_BASE_DIR="/home/USER/Downloads/NOMINAS"
+EXTRAORDINARIOS_BASE_DIR="/home/USER/Downloads/EXTRAORDINARIOS"
+PENSIONES_ALIMENTICIAS_BASE_DIR="/home/USER/Downloads/PENSIONES ALIMENTICIAS"
+TIMBRADOS_BASE_DIR="/home/USER/Downloads/TIMBRADOS"
 
 # Datos del CFDI que deben aparecer en cada XML
 CFDI_EMISOR_RFC=
@@ -147,6 +123,7 @@ echo
 if [ -f .env ]
 then
     echo "-- Variables de entorno"
+    # export $(grep -v '^#' .env | xargs)
     source .env && export $(sed '/^#/d' .env | cut -d= -f1)
     echo "   CFDI_EMISOR_RFC: ${CFDI_EMISOR_RFC}"
     echo "   CFDI_EMISOR_NOMBRE: ${CFDI_EMISOR_NOMBRE}"
@@ -158,7 +135,6 @@ then
     echo "   DB_USER: ${DB_USER}"
     echo "   DB_PASS: ${DB_PASS}"
     echo "   DEPLOYMENT_ENVIRONMENT: ${DEPLOYMENT_ENVIRONMENT}"
-    echo "   EXPLOTACION_BASE_DIR: ${EXPLOTACION_BASE_DIR}"
     echo "   FLASK_APP: ${FLASK_APP}"
     echo "   HOST: ${HOST}"
     echo "   REDIS_URL: ${REDIS_URL}"
@@ -168,13 +144,18 @@ then
     echo "   SECRET_KEY: ${SECRET_KEY}"
     echo "   SQLALCHEMY_DATABASE_URI: ${SQLALCHEMY_DATABASE_URI}"
     echo "   TASK_QUEUE: ${TASK_QUEUE}"
-    echo "   TIMBRADOS_BASE_DIR: ${TIMBRADOS_BASE_DIR}"
     echo
     export PGHOST=$DB_HOST
     export PGPORT=$DB_PORT
     export PGDATABASE=$DB_NAME
     export PGUSER=$DB_USER
     export PGPASSWORD=$DB_PASS
+    echo "-- Variables de entorno, directorios"
+    echo "   EXPLOTACION_BASE_DIR: ${EXPLOTACION_BASE_DIR}"
+    echo "   EXTRAORDINARIOS_BASE_DIR: ${EXTRAORDINARIOS_BASE_DIR}"
+    echo "   PENSIONES_ALIMENTICIAS_BASE_DIR: ${PENSIONES_ALIMENTICIAS_BASE_DIR}"
+    echo "   TIMBRADOS_BASE_DIR: ${TIMBRADOS_BASE_DIR}"
+    echo
 fi
 
 if [ -d .venv ]
@@ -246,12 +227,12 @@ then
 fi
 ```
 
-## Cargar las variables de entorno y el entorno virtual
+## Arrancar
 
 Antes de usar el CLI o de arrancar el servidor de **Flask** debe cargar las variables de entorno y el entorno virtual.
 
 ```bash
-. .bashrc
+source .bashrc
 ```
 
 Tendrá el alias al **Command Line Interface**
@@ -260,30 +241,14 @@ Tendrá el alias al **Command Line Interface**
 cli --help
 ```
 
-## Tareas en el fondo
-
-Abrir una terminal _Bash_, cargar el `.bashrc` y ejecutar
+Para hacer tareas en el fondo, abrir una terminal, cargar `source .bashrc` y ejecutar
 
 ```bash
 fondear
 ```
 
-Así se ejecutarán las tareas en el fondo con **RQ Worker**.
-
-## Arrancar
-
-Abrir otra terminal _Bash_, cargar el `.bashrc` y ejecutar
+Para lanzar el front-end Flask, abrir una terminal, cargar `source .bashrc` y ejecutar
 
 ```bash
 arrancar
-```
-
-Así se arrancará el servidor de **Flask**.
-
-## Actualizar requirements.txt
-
-Como se usa _poetry_ al cambiar las dependencias debe crear un nuevo `requirements.txt` con:
-
-```bash
-poetry export -f requirements.txt --output requirements.txt --without-hashes
 ```

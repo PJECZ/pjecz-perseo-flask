@@ -293,7 +293,6 @@ def edit(usuario_id):
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
-    form.autoridad.data = usuario.autoridad_id  # Usa id porque es un SelectField
     form.email.data = usuario.email
     form.nombres.data = usuario.nombres
     form.apellido_primero.data = usuario.apellido_primero

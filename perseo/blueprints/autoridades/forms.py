@@ -13,9 +13,9 @@ class AutoridadForm(FlaskForm):
     """Formulario Autoridad"""
 
     distrito = SelectField("Distrito", coerce=int, validators=[DataRequired()])
+    clave = StringField("Clave (hasta 16 caracteres)", validators=[DataRequired(), Regexp(CLAVE_REGEXP)])
     descripcion = StringField("Descripción", validators=[DataRequired(), Length(max=256)])
     descripcion_corta = StringField("Descripción corta (máximo 64 caracteres)", validators=[DataRequired(), Length(max=64)])
-    clave = StringField("Clave (hasta 16 caracteres)", validators=[DataRequired(), Regexp(CLAVE_REGEXP)])
     es_extinto = BooleanField("Es Extinto", validators=[Optional()])
     guardar = SubmitField("Guardar")
 

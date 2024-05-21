@@ -14,6 +14,7 @@
     {% call f.card() %}
         {% set form_kwargs = {'usuario_id': usuario.id} %}
         {% call f.form_tag('usuarios.edit', fid='usuario_form', **form_kwargs) %}
+            {% call f.form_group(form.distrito) %}{% endcall %}
             {% call f.form_group(form.autoridad) %}{% endcall %}
             {% call f.form_group(form.email) %}{% endcall %}
             {% call f.form_group(form.nombres) %}{% endcall %}
@@ -24,4 +25,42 @@
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script>
+        // Llamar a /distritos/select_json para cargar el select distrito
+        fetch('/distritos/select_json')
+            .then(response => response.json())
+            .then(data => {
+                const distritoSelect = document.getElementById('distrito');
+                data.forEach(distrito => {
+                    const option = document.createElement('option');
+                    option.value = distrito.id;
+                    option.text = distrito.nombre;
+                    distritoSelect.appendChild(option);
+                });
+                // Seleccionar el distrito del usuario
+                document.getElementById('distrito').value = {{ usuario.autoridad.distrito_id }};
+                document.getElementById('distrito').dispatchEvent(new Event('change'));
+            });
+        // Llamar a /autoridades/select_json para cargar el select autoridad, si el distrito cambia
+        document.getElementById('distrito').addEventListener('change', () => {
+            const distritoId = document.getElementById('distrito').value;
+            fetch(`/autoridades/select_json/${distritoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const autoridadSelect = document.getElementById('autoridad');
+                    autoridadSelect.innerHTML = '';
+                    data.forEach(autoridad => {
+                        const option = document.createElement('option');
+                        option.value = autoridad.id;
+                        option.text = autoridad.descripcion_corta;
+                        autoridadSelect.appendChild(option);
+                    });
+                    // Seleccionar la autoridad del usuario
+                    document.getElementById('autoridad').value = {{ usuario.autoridad_id }};
+                });
+        });
+    </script>
 {% endblock %}

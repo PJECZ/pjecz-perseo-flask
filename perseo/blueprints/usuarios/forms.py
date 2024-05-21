@@ -1,12 +1,12 @@
 """
 Usuarios, formularios
 """
+
 from flask_wtf import FlaskForm
 from wtforms import HiddenField, PasswordField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, Optional, Regexp
 
 from lib.safe_string import CONTRASENA_REGEXP
-from perseo.blueprints.autoridades.models import Autoridad
 
 CONTRASENA_MENSAJE = "De 8 a 48 caracteres con al menos una mayúscula, una minúscula y un número. No acentos, ni eñe."
 
@@ -28,7 +28,8 @@ class AccesoForm(FlaskForm):
 class UsuarioForm(FlaskForm):
     """Formulario Usuario"""
 
-    autoridad = SelectField("Autoridad", coerce=int, validators=[DataRequired()])
+    distrito = SelectField("Distrito", choices=None, validate_choice=False)  # Las opciones se agregan con JS
+    autoridad = SelectField("Autoridad", choices=None, validate_choice=False)  # Las opciones se agregan con JS
     email = StringField("e-mail", validators=[DataRequired(), Email()])
     nombres = StringField("Nombres", validators=[DataRequired(), Length(max=256)])
     apellido_primero = StringField("Apellido primero", validators=[DataRequired(), Length(max=256)])
@@ -36,11 +37,3 @@ class UsuarioForm(FlaskForm):
     curp = StringField("CURP", validators=[Optional(), Length(max=256)])
     puesto = StringField("Puesto", validators=[Optional(), Length(max=256)])
     guardar = SubmitField("Guardar")
-
-    def __init__(self, *args, **kwargs):
-        """Inicializar y cargar opciones para autoridad"""
-        super().__init__(*args, **kwargs)
-        self.autoridad.choices = [
-            (d.id, d.clave + " - " + d.descripcion_corta)
-            for d in Autoridad.query.filter_by(estatus="A").order_by(Autoridad.clave).all()
-        ]
