@@ -20,6 +20,7 @@ from lib.safe_next_url import safe_next_url
 from lib.safe_string import CONTRASENA_REGEXP, EMAIL_REGEXP, TOKEN_REGEXP, safe_email, safe_message, safe_string
 from perseo.blueprints.autoridades.models import Autoridad
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.distritos.models import Distrito
 from perseo.blueprints.entradas_salidas.models import EntradaSalida
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
@@ -255,7 +256,13 @@ def new():
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    return render_template("usuarios/new.jinja2", form=form)
+    # Consultar el distrito con clave ND para el select por defecto
+    distrito_por_defecto_id = 1
+    distrito_por_defecto = Distrito.query.filter_by(clave="ND").first()
+    if distrito_por_defecto is not None:
+        distrito_por_defecto_id = distrito_por_defecto.id
+    # Entregar
+    return render_template("usuarios/new.jinja2", form=form, distrito_por_defecto_id=distrito_por_defecto_id)
 
 
 @usuarios.route("/usuarios/edicion/<int:usuario_id>", methods=["GET", "POST"])

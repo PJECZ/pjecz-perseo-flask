@@ -40,7 +40,7 @@
                     distritoSelect.appendChild(option);
                 });
                 // Seleccionar el distrito por defecto
-                document.getElementById('distrito').value = 14; // NO DEFINIDO
+                document.getElementById('distrito').value = {{ distrito_por_defecto_id }};
                 document.getElementById('distrito').dispatchEvent(new Event('change'));
             });
         // Llamar a /autoridades/select_json para cargar el select autoridad, si el distrito cambia
