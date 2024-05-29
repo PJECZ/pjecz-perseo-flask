@@ -256,7 +256,7 @@ def new():
         bitacora.save()
         flash(bitacora.descripcion, "success")
         return redirect(bitacora.url)
-    # Consultar el distrito con clave ND para el select por defecto
+    # Consultar el distrito por defecto
     distrito_por_defecto_id = 1
     distrito_por_defecto = Distrito.query.filter_by(clave="ND").first()
     if distrito_por_defecto is not None:

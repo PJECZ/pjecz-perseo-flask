@@ -138,7 +138,12 @@ def new_with_rol(rol_id):
         descripcion = f"{usuario.email} en {rol.nombre}"
         usuario_rol_existente = UsuarioRol.query.filter(UsuarioRol.usuario == usuario).filter(UsuarioRol.rol == rol).first()
         if usuario_rol_existente is not None:
-            flash(f"CONFLICTO: Ya existe {rol.nombre} en {usuario.email}.", "warning")
+            if usuario_rol_existente.estatus == "B":
+                usuario_rol_existente.estatus = "A"
+                usuario_rol_existente.save()
+                flash(f"Se ha recuperado {rol.nombre} en {usuario.email}.", "success")
+            else:
+                flash(f"Ya existe {rol.nombre} en {usuario.email}. Nada por hacer.", "warning")
             return redirect(url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol_existente.id))
         usuario_rol = UsuarioRol(
             rol=rol,
@@ -175,7 +180,12 @@ def new_with_usuario(usuario_id):
         descripcion = f"{usuario.email} en {rol.nombre}"
         usuario_rol_existente = UsuarioRol.query.filter(UsuarioRol.usuario == usuario).filter(UsuarioRol.rol == rol).first()
         if usuario_rol_existente is not None:
-            flash(f"CONFLICTO: Ya existe {rol.nombre} en {usuario.email}.", "warning")
+            if usuario_rol_existente.estatus == "B":
+                usuario_rol_existente.estatus = "A"
+                usuario_rol_existente.save()
+                flash(f"Se ha recuperado {rol.nombre} en {usuario.email}.", "success")
+            else:
+                flash(f"Ya existe {rol.nombre} en {usuario.email}. Nada por hacer.", "warning")
             return redirect(url_for("usuarios_roles.detail", usuario_rol_id=usuario_rol_existente.id))
         usuario_rol = UsuarioRol(
             rol=rol,
