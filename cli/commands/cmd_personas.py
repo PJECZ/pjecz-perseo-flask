@@ -24,6 +24,7 @@ from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.puestos.models import Puesto
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.tabuladores.models import Tabulador
 from perseo.extensions import database
 
@@ -610,6 +611,93 @@ def actualizar_tabuladores(quincena_clave: str):
 
 
 @click.command()
+@click.argument("quincena_clave", type=str)
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def actualizar_ultimos(quincena_clave: str, probar: bool = False):
+    """Actualizar ultimos centros de trabajos, plazas y puestos"""
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Consultar la quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+    if quincena is None:
+        click.echo("ERROR: Quincena no encontrada.")
+        sys.exit(1)
+
+    # Inicializar contadores
+    actualizaciones_centros_trabajos_contador = 0
+    actualizaciones_plazas_contador = 0
+    actualizaciones_puestos_contador = 0
+    actualizaciones_contador = 0
+
+    # Bucle por las nominas de la quincena
+    click.echo("Actualizar los ultimos centros de trabajos, plazas y puestos de las Personas: ", nl=False)
+    for nomina in Nomina.query.filter_by(quincena_id=quincena.id).all():
+        hay_cambios = False
+
+        # Consultar a la persona
+        persona = Persona.query.get(nomina.persona_id)
+
+        # Si el centro de trabajo de la persona es diferente, hay cambios
+        if persona.ultimo_centro_trabajo_id != nomina.centro_trabajo_id:
+            persona.ultimo_centro_trabajo_id = nomina.centro_trabajo_id
+            actualizaciones_centros_trabajos_contador += 1
+            hay_cambios = True
+
+        # Si la plaza de la persona es diferente, hay cambios
+        if persona.ultimo_plaza_id != nomina.plaza_id:
+            persona.ultimo_plaza_id = nomina.plaza_id
+            actualizaciones_plazas_contador += 1
+            hay_cambios = True
+
+        # Cada persona esta relacionada con un tabulador
+        # A su vez, el tabulador esta relacionado con un puesto
+        # Si el puesto de la persona es diferente, hay cambios
+        # if persona.ultimo_puesto_id != nomina.puesto_id:
+        #     persona.ultimo_puesto_id = nomina.puesto_id
+        #     actualizaciones_puestos_contador += 1
+        #     hay_cambios = True
+
+        # Si hay cambios
+        if hay_cambios:
+            actualizaciones_contador += 1
+            # Si NO es modo PROBAR, agregar a la sesion
+            if not probar:
+                sesion.add(persona)
+            click.echo(click.style("u", fg="blue"), nl=False)
+
+    # Si NO es modo PROBAR, cerrar la sesion para que se guarden todos los datos en la base de datos
+    if not probar:
+        sesion.commit()
+        sesion.close()
+    click.echo("")
+
+    # Si hubo actualizaciones_centros_trabajos_contador
+    if actualizaciones_centros_trabajos_contador > 0:
+        click.echo(f"  Centros de Trabajos: {actualizaciones_centros_trabajos_contador} cambios.")
+
+    # Si hubo actualizaciones_plazas_contador
+    if actualizaciones_plazas_contador > 0:
+        click.echo(f"  Plazas: {actualizaciones_plazas_contador} cambios.")
+
+    # Si hubo actualizaciones_puestos_contador
+    if actualizaciones_puestos_contador > 0:
+        click.echo(f"  Puestos: {actualizaciones_puestos_contador} cambios.")
+
+    # Mensaje termino
+    if probar:
+        click.echo(click.style(f"Actualizar ultimos: modo PROBAR {actualizaciones_contador} pueden actualizarse.", fg="green"))
+    else:
+        click.echo(click.style(f"Actualizar ultimos: {actualizaciones_contador} actualizados.", fg="green"))
+
+
+@click.command()
 @click.argument("rfc", type=str)
 @click.argument("tabulador_id", type=int)
 def cambiar_tabulador(rfc: str, tabulador_id: int):
@@ -920,6 +1008,7 @@ cli.add_command(actualizar)
 cli.add_command(actualizar_nuevas_columnas)
 cli.add_command(actualizar_tabuladores)
 cli.add_command(actualizar_curp_cp_fiscal_fechas_ingreso)
+cli.add_command(actualizar_ultimos)
 cli.add_command(cambiar_tabulador)
 cli.add_command(cambiar_tabulador_a_todos)
 cli.add_command(exportar_xlsx)

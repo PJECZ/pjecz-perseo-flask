@@ -10,11 +10,13 @@ from flask_login import current_user, login_required
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.safe_string import safe_message, safe_quincena, safe_rfc, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.modulos.models import Modulo
-from perseo.blueprints.nominas.forms import NominaEditForm
+from perseo.blueprints.nominas.forms import NominaEditForm, NominaExtraordinarioNewForm
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.usuarios.decorators import permission_required
 
@@ -218,3 +220,66 @@ def recover(nomina_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("nominas.detail", nomina_id=nomina.id))
+
+
+@nominas.route("/nominas/nuevo_extraordinario/<int:persona_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def new_extraordinario(persona_id):
+    """Nueva Nomina Extraordinaria"""
+    persona = Persona.query.get_or_404(persona_id)
+    form = NominaExtraordinarioNewForm()
+    if form.validate_on_submit():
+        nomina = Nomina(
+            persona=persona,
+            centro_trabajo=persona.centro_trabajo,
+            plaza=persona.plaza,
+            quincena=Quincena.query.filter_by(clave=form.quincena.data).first(),
+            desde_clave=form.desde_clave.data,
+            hasta_clave=form.hasta_clave.data,
+            tipo="EXTRAORDINARIO",
+            percepcion=0,
+            deduccion=0,
+            importe=0,
+            num_cheque=safe_string(form.num_cheque.data),
+            fecha_pago=form.fecha_pago.data,
+            p30=form.p30.data,
+            pgn=form.pgn.data,
+            pga=form.pga.data,
+            p22=form.p22.data,
+            pvd=form.pvd.data,
+            pgp=form.pgp.data,
+            p20=form.p20.data,
+            pam=form.pam.data,
+            ps3=form.ps3.data,
+            p07=form.p07.data,
+            p7g=form.p7g.data,
+            phr=form.phr.data,
+        )
+        nomina.save()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Nueva Nomina Extraordinaria {nomina.id}"),
+            url=url_for("nominas.detail", nomina_id=nomina.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    # Definir el contenido del campo de la persona
+    form.persona_texto.data = f"{persona.rfc} - {persona.nombre_completo}"
+    # Definir el contenido del campo del centro de trabajo
+    if persona.ultimo_centro_trabajo_id:
+        centro_trabajo = CentroTrabajo.query.get(persona.ultimo_centro_trabajo_id)
+    else:
+        centro_trabajo = CentroTrabajo.query.filter_by(clave="ND").first()
+    form.centro_trabajo_texto.data = f"{centro_trabajo.clave} - {centro_trabajo.descripcion}"
+    # Definir el contenido del campo de la plaza
+    if persona.ultimo_plaza_id:
+        plaza = Plaza.query.get(persona.ultimo_plaza_id)
+    else:
+        plaza = Plaza.query.filter_by(clave="ND").first()
+    form.plaza_texto.data = f"{plaza.clave} - {plaza.descripcion}"
+    # Definir el contenido del campo tipo
+    form.tipo.data = "EXTRAORDINARIO"
+    # Entregar el formulario
+    return render_template("nominas/new_extraordinario.jinja2", form=form, persona=persona)
