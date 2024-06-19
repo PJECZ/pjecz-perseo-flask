@@ -1,0 +1,72 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Nueva Nómina Extraordinaria{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Nueva Nómina Extraordinaria') %}
+        {{ topbar.button_cancel() }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'persona_id': persona.id} %}
+        {% call f.form_tag('nominas.new_extraordinario', fid='registro_form', **form_kwargs) %}
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    {% call f.form_group(form.persona_texto, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.centro_trabajo_texto, readonly=true) %}{% endcall %}
+                    {% call f.form_group(form.plaza_texto, readonly=true) %}{% endcall %}
+                </div>
+                <div class="col-md-6">
+                    {% call f.form_group(form.quincena) %}{% endcall %}
+                    {% call f.form_group(form.desde_clave) %}{% endcall %}
+                    {% call f.form_group(form.hasta_clave) %}{% endcall %}
+                    {# call f.form_group(form.tipo, readonly=true) %}{% endcall #}
+                    {% call f.form_group(form.fecha_pago) %}{% endcall %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Percepciones</h3>
+                    {# P30 PRIMA DE ANTIGUEDAD (EXCENTA) #}
+                    {% call f.form_group(form.p30) %}{% endcall %}
+                    {# PGN PRIMA DE ANTIGUEDAD (GRAVABLE) #}
+                    {% call f.form_group(form.pgn) %}{% endcall %}
+                    {# PGA AGUINALDO (GRAVABLE) #}
+                    {% call f.form_group(form.pga) %}{% endcall %}
+                    {# P22 AGUINALDO (EXCENTO) #}
+                    {% call f.form_group(form.p22) %}{% endcall %}
+                    {# PVD VACACIONES NO DISFRUTADAS #}
+                    {% call f.form_group(form.pvd) %}{% endcall %}
+                    {# PGP PRIMA VACACIONAL (GRAVABLE) #}
+                    {% call f.form_group(form.pgp) %}{% endcall %}
+                    {# P20 PRIMA VACACIONAL (EXCENTA) #}
+                    {% call f.form_group(form.p20) %}{% endcall %}
+                    {# PAM EMOLUMENTO SUPERNUMERARIO #}
+                    {% call f.form_group(form.pam) %}{% endcall %}
+                    {# PS3 APOYO CASUISTICO #}
+                    {% call f.form_group(form.ps3) %}{% endcall %}
+                    {# P07 PENSION VITALICIA (EXENTO) #}
+                    {% call f.form_group(form.p07) %}{% endcall %}
+                    {# P7G PENSION VITALICIA (GRAVABLE) #}
+                    {% call f.form_group(form.p7g) %}{% endcall %}
+                    {# PHR HABER POR RETIRO #}
+                    {% call f.form_group(form.phr) %}{% endcall %}
+                    {# PFB APOYO FUNERARIO Y BECAS #}
+                    {% call f.form_group(form.pfb) %}{% endcall %}
+                </div>
+                <div class="col-md-6">
+                    <h3>Deducciones</h3>
+                    {# D01 IMPUESTO FEDERAL RETENIDO ISR #}
+                    {% call f.form_group(form.d01) %}{% endcall %}
+                    {# D1A IMPUESTO FEDERAL RETENIDO (ISR) PENSION VITALICIA #}
+                    {% call f.form_group(form.d1a) %}{% endcall %}
+                </div>
+            </div>
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
