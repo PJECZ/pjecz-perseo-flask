@@ -2,11 +2,17 @@
 Tabuladores, modelos
 """
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric
-from sqlalchemy.orm import relationship
+from datetime import date
+from decimal import Decimal, getcontext
+from typing import List
+
+from sqlalchemy import ForeignKey, Integer, Numeric
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
+
+getcontext().prec = 4  # Cuatro decimales en los cálculos monetarios
 
 
 class Tabulador(database.Model, UniversalMixin):
@@ -16,43 +22,43 @@ class Tabulador(database.Model, UniversalMixin):
     __tablename__ = "tabuladores"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    puesto_id = Column(Integer, ForeignKey("puestos.id"), index=True, nullable=False)
-    puesto = relationship("Puesto", back_populates="tabuladores")
+    puesto_id: Mapped[int] = mapped_column(Integer, ForeignKey("puestos.id"), index=True)
+    puesto: Mapped["Puesto"] = relationship("Puesto", back_populates="tabuladores")
 
     # Columnas que junto con el Puesto hacen una combinación única
-    modelo = Column(Integer, nullable=False)
-    nivel = Column(Integer, nullable=False)
-    quinquenio = Column(Integer, nullable=False)
+    modelo: Mapped[int]
+    nivel: Mapped[int]
+    quinquenio: Mapped[int]
 
     # Columnas independientes
-    fecha = Column(Date(), nullable=False)
-    sueldo_base = Column(Numeric(precision=24, scale=4), nullable=False)
-    incentivo = Column(Numeric(precision=24, scale=4), nullable=False)
-    monedero = Column(Numeric(precision=24, scale=4), nullable=False)
-    rec_cul_dep = Column(Numeric(precision=24, scale=4), nullable=False)
-    sobresueldo = Column(Numeric(precision=24, scale=4), nullable=False)
-    rec_dep_cul_gravado = Column(Numeric(precision=24, scale=4), nullable=False)
-    rec_dep_cul_excento = Column(Numeric(precision=24, scale=4), nullable=False)
-    ayuda_transp = Column(Numeric(precision=24, scale=4), nullable=False)
-    monto_quinquenio = Column(Numeric(precision=24, scale=4), nullable=False)
-    total_percepciones = Column(Numeric(precision=24, scale=4), nullable=False)
-    salario_diario = Column(Numeric(precision=24, scale=4), nullable=False)
-    prima_vacacional_mensual = Column(Numeric(precision=24, scale=4), nullable=False)
-    aguinaldo_mensual = Column(Numeric(precision=24, scale=4), nullable=False)
-    prima_vacacional_mensual_adicional = Column(Numeric(precision=24, scale=4), nullable=False)
-    total_percepciones_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
-    salario_diario_integrado = Column(Numeric(precision=24, scale=4), nullable=False)
+    fecha: Mapped[date]
+    sueldo_base: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    incentivo: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    monedero: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    rec_cul_dep: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    sobresueldo: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    rec_dep_cul_gravado: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    rec_dep_cul_excento: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    ayuda_transp: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    monto_quinquenio: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    total_percepciones: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    salario_diario: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    prima_vacacional_mensual: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    aguinaldo_mensual: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    prima_vacacional_mensual_adicional: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    total_percepciones_integrado: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    salario_diario_integrado: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
 
     # Columnas para pensionados
-    pension_vitalicia_excento = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (EXENTO)
-    pension_vitalicia_gravable = Column(Numeric(precision=24, scale=4), nullable=False)  # PENSION VITALICIA (GRAVABLE)
-    pension_bonificacion = Column(Numeric(precision=24, scale=4), nullable=False)  # BONIFICACION
+    pension_vitalicia_excento: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    pension_vitalicia_gravable: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
+    pension_bonificacion: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
 
     # Hijos
-    personas = relationship("Persona", back_populates="tabulador", lazy="noload")
+    personas: Mapped[List["Persona"]] = relationship("Persona", back_populates="tabulador")
 
     def __repr__(self):
         """Representación"""

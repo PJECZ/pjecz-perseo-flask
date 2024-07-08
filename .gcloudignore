@@ -6,6 +6,7 @@
 .DS_Store
 .~lock.*
 
+*.code-workspace
 *.py[cod]
 *.egg-info/
 *.log
@@ -18,6 +19,7 @@
 *.XLSX
 
 __pycache__/
+/.idea
 /.git
 /.github
 /.venv

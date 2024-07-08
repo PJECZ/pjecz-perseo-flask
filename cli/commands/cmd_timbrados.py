@@ -359,7 +359,6 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
         # Bucle por las nominas encontradas
         nomina = None
         for nomina_a_revisar in nominas:
-
             # Si nomina.importe es CERO, se omite esta nomina
             if nomina_a_revisar.importe == 0:
                 continue

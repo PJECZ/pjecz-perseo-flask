@@ -1,9 +1,13 @@
 """
 Universal Mixin
 """
+
+from datetime import datetime
+
 from hashids import Hashids
-from sqlalchemy import Column, DateTime, String
-from sqlalchemy.sql import func
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql.functions import now
+from sqlalchemy.types import CHAR
 
 from config.settings import get_settings
 from perseo.extensions import database
@@ -15,9 +19,9 @@ hashids = Hashids(salt=settings.SALT, min_length=8)
 class UniversalMixin:
     """Columnas y metodos universales"""
 
-    creado = Column(DateTime, default=func.now(), nullable=False)
-    modificado = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
-    estatus = Column(String(1), default="A", nullable=False)
+    creado: Mapped[datetime] = mapped_column(default=now(), server_default=now())
+    modificado: Mapped[datetime] = mapped_column(default=now(), onupdate=now(), server_default=now())
+    estatus: Mapped[str] = mapped_column(CHAR, default="A", server_default="A")
 
     def delete(self):
         """Eliminar registro"""

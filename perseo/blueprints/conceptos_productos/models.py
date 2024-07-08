@@ -1,8 +1,9 @@
 """
 Conceptos-Productos, modelos
 """
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -15,16 +16,16 @@ class ConceptoProducto(database.Model, UniversalMixin):
     __tablename__ = "conceptos_productos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    concepto_id = Column(Integer, ForeignKey("conceptos.id"), index=True, nullable=False)
-    concepto = relationship("Concepto", back_populates="conceptos_productos")
-    producto_id = Column(Integer, ForeignKey("productos.id"), index=True, nullable=False)
-    producto = relationship("Producto", back_populates="conceptos_productos")
+    concepto_id: Mapped[int] = mapped_column(ForeignKey("conceptos.id"), index=True)
+    concepto: Mapped["Concepto"] = relationship(back_populates="conceptos_productos")
+    producto_id: Mapped[int] = mapped_column(ForeignKey("productos.id"), index=True)
+    producto: Mapped["Producto"] = relationship(back_populates="conceptos_productos")
 
     # Columnas
-    descripcion = Column(String(256), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(256))
 
     def __repr__(self):
         """Representación"""

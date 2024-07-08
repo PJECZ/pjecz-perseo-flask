@@ -2,8 +2,10 @@
 Centros de Trabajo, modelos
 """
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+from typing import List
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -16,15 +18,15 @@ class CentroTrabajo(database.Model, UniversalMixin):
     __tablename__ = "centros_trabajos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    clave = Column(String(16), unique=True, nullable=False)
-    descripcion = Column(String(256), nullable=False)
+    clave: Mapped[str] = mapped_column(String(16), unique=True)
+    descripcion: Mapped[str] = mapped_column(String(256))
 
     # Hijos
-    nominas = relationship("Nomina", back_populates="centro_trabajo", lazy="noload")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="centro_trabajo", lazy="noload")
+    nominas: Mapped[List["Nomina"]] = relationship(back_populates="centro_trabajo")
+    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(back_populates="centro_trabajo")
 
     def __repr__(self):
         """Representación"""

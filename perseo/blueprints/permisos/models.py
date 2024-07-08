@@ -1,8 +1,9 @@
 """
 Permisos
 """
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -27,17 +28,17 @@ class Permiso(database.Model, UniversalMixin):
     __tablename__ = "permisos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Claves foráneas
-    rol_id = Column(Integer, ForeignKey("roles.id"), index=True, nullable=False)
-    rol = relationship("Rol", back_populates="permisos")
-    modulo_id = Column(Integer, ForeignKey("modulos.id"), index=True, nullable=False)
-    modulo = relationship("Modulo", back_populates="permisos")
+    rol_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
+    rol: Mapped["Rol"] = relationship(back_populates="permisos")
+    modulo_id: Mapped[int] = mapped_column(ForeignKey("modulos.id"))
+    modulo: Mapped["Modulo"] = relationship(back_populates="permisos")
 
     # Columnas
-    nombre = Column(String(256), nullable=False, unique=True)
-    nivel = Column(Integer(), nullable=False)
+    nombre: Mapped[str] = mapped_column(String(256), unique=True)
+    nivel: Mapped[int]
 
     @property
     def rol_nombre(self):

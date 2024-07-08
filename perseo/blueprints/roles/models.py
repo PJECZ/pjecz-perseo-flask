@@ -1,8 +1,11 @@
 """
 Roles
 """
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+
+from typing import List
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -15,14 +18,14 @@ class Rol(database.Model, UniversalMixin):
     __tablename__ = "roles"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    nombre = Column(String(256), unique=True, nullable=False)
+    nombre: Mapped[str] = mapped_column(String(256), unique=True)
 
     # Hijos
-    permisos = relationship("Permiso", back_populates="rol")
-    usuarios_roles = relationship("UsuarioRol", back_populates="rol")
+    permisos: Mapped[List["Permiso"]] = relationship("Permiso", back_populates="rol")
+    usuarios_roles: Mapped[List["UsuarioRol"]] = relationship("UsuarioRol", back_populates="rol")
 
     def __repr__(self):
         """Representación"""

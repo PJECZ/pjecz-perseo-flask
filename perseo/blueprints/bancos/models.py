@@ -2,8 +2,10 @@
 Bancos, modelos
 """
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+from typing import List
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -16,18 +18,18 @@ class Banco(database.Model, UniversalMixin):
     __tablename__ = "bancos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    clave = Column(String(2), unique=True, nullable=False)
-    clave_dispersion_pensionados = Column(String(3), unique=True, nullable=False)
-    nombre = Column(String(256), unique=True, nullable=False)
-    consecutivo = Column(Integer, nullable=False, default=0)
-    consecutivo_generado = Column(Integer, nullable=False, default=0)
+    clave: Mapped[str] = mapped_column(String(2), unique=True)
+    clave_dispersion_pensionados: Mapped[str] = mapped_column(String(2), unique=True)
+    nombre: Mapped[str] = mapped_column(String(256), unique=True)
+    consecutivo: Mapped[int] = mapped_column(default=0)
+    consecutivo_generado: Mapped[int] = mapped_column(default=0)
 
     # Hijos
-    beneficiarios_cuentas = relationship("BeneficiarioCuenta", back_populates="banco")
-    cuentas = relationship("Cuenta", back_populates="banco")
+    beneficiarios_cuentas: Mapped[List["BeneficiarioCuenta"]] = relationship(back_populates="banco")
+    cuentas: Mapped[List["Cuenta"]] = relationship(back_populates="banco")
 
     def __repr__(self):
         """Representación"""

@@ -1,8 +1,9 @@
 """
 Beneficiarios Cuentas, modelos
 """
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -15,16 +16,16 @@ class BeneficiarioCuenta(database.Model, UniversalMixin):
     __tablename__ = "beneficiarios_cuentas"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    banco_id = Column(Integer, ForeignKey("bancos.id"), index=True, nullable=False)
-    banco = relationship("Banco", back_populates="beneficiarios_cuentas")
-    beneficiario_id = Column(Integer, ForeignKey("beneficiarios.id"), index=True, nullable=False)
-    beneficiario = relationship("Beneficiario", back_populates="beneficiarios_cuentas")
+    banco_id: Mapped[int] = mapped_column(ForeignKey("bancos.id"))
+    banco: Mapped["Banco"] = relationship(back_populates="beneficiarios_cuentas")
+    beneficiario_id: Mapped[int] = mapped_column(ForeignKey("beneficiarios.id"))
+    beneficiario: Mapped["Beneficiario"] = relationship(back_populates="beneficiarios_cuentas")
 
     # Columnas
-    num_cuenta = Column(String(24), nullable=False)
+    num_cuenta: Mapped[str] = mapped_column(String(24))
 
     def __repr__(self):
         """Representación"""

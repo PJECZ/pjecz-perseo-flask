@@ -1,8 +1,9 @@
 """
 Beneficiarios Quincenas, modelos
 """
-from sqlalchemy import Column, ForeignKey, Integer, Numeric, String
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import ForeignKey, Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -15,17 +16,17 @@ class BeneficiarioQuincena(database.Model, UniversalMixin):
     __tablename__ = "beneficiarios_quincenas"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    beneficiario_id = Column(Integer, ForeignKey("beneficiarios.id"), index=True, nullable=False)
-    beneficiario = relationship("Beneficiario", back_populates="beneficiarios_quincenas")
-    quincena_id = Column(Integer, ForeignKey("quincenas.id"), index=True, nullable=False)
-    quincena = relationship("Quincena", back_populates="beneficiarios_quincenas")
+    beneficiario_id: Mapped[int] = mapped_column(ForeignKey("beneficiarios.id"), index=True)
+    beneficiario: Mapped["Beneficiario"] = relationship(back_populates="beneficiarios_quincenas")
+    quincena_id: Mapped[int] = mapped_column(ForeignKey("quincenas.id"), index=True)
+    quincena: Mapped["Quincena"] = relationship(back_populates="beneficiarios_quincenas")
 
     # Columnas
-    importe = Column(Numeric(precision=24, scale=4), nullable=False)
-    num_cheque = Column(String(24), nullable=False, default="", server_default="")
+    importe: Mapped[float] = mapped_column(Numeric(precision=24, scale=4))
+    num_cheque: Mapped[str] = mapped_column(String(24), default="", server_default="")
 
     def __repr__(self):
         """Representación"""

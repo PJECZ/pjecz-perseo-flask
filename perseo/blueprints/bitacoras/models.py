@@ -1,8 +1,9 @@
 """
 Bitácora
 """
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -15,18 +16,18 @@ class Bitacora(database.Model, UniversalMixin):
     __tablename__ = "bitacoras"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Claves foráneas
-    modulo_id = Column(Integer, ForeignKey("modulos.id"), index=True, nullable=False)
-    modulo = relationship("Modulo", back_populates="bitacoras")
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), index=True, nullable=False)
-    usuario = relationship("Usuario", back_populates="bitacoras")
+    modulo_id: Mapped[int] = mapped_column(ForeignKey("modulos.id"))
+    modulo: Mapped["Modulo"] = relationship(back_populates="bitacoras")
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
+    usuario: Mapped["Usuario"] = relationship(back_populates="bitacoras")
 
     # Columnas
-    descripcion = Column(String(256), nullable=False)
-    url = Column(String(512), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(256))
+    url: Mapped[str] = mapped_column(String(512))
 
     def __repr__(self):
         """Representación"""
-        return f"<Bitacora {self.creado} {self.descripcion}>"
+        return f"<Bitacora {self.id}>"

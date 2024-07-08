@@ -2,8 +2,8 @@
 Quincenas, modelos
 """
 
-from sqlalchemy import Boolean, Column, Enum, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Enum, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -21,19 +21,19 @@ class Quincena(database.Model, UniversalMixin):
     __tablename__ = "quincenas"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    clave = Column(String(6), unique=True, nullable=False)
-    estado = Column(Enum(*ESTADOS, name="quincenas_estados"), nullable=False)
-    tiene_aguinaldos = Column(Boolean, nullable=False, default=False)
-    tiene_apoyos_anuales = Column(Boolean, nullable=False, default=False)
+    clave: Mapped[str] = mapped_column(String(6), unique=True)
+    estado: Mapped[str] = mapped_column(Enum(*ESTADOS, name="quincenas_estados"), index=True)
+    tiene_aguinaldos: Mapped[bool] = mapped_column(Boolean, default=False)
+    tiene_apoyos_anuales: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Hijos
-    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="quincena", lazy="noload")
-    quincenas_productos = relationship("QuincenaProducto", back_populates="quincena", lazy="noload")
-    nominas = relationship("Nomina", back_populates="quincena", lazy="noload")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="quincena", lazy="noload")
+    beneficiarios_quincenas: Mapped["BeneficiarioQuincena"] = relationship("BeneficiarioQuincena", back_populates="quincena")
+    quincenas_productos: Mapped["QuincenaProducto"] = relationship("QuincenaProducto", back_populates="quincena")
+    nominas: Mapped["Nomina"] = relationship("Nomina", back_populates="quincena")
+    percepciones_deducciones: Mapped["PercepcionDeduccion"] = relationship("PercepcionDeduccion", back_populates="quincena")
 
     def __repr__(self):
         """Representación"""

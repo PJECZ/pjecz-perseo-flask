@@ -1,11 +1,12 @@
 """
 Tareas, modelos
 """
+
 import redis
 import rq
 from flask import current_app
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, String, Uuid
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -18,18 +19,18 @@ class Tarea(database.Model, UniversalMixin):
     __tablename__ = "tareas"
 
     # Clave primaria NOTA: El id es string y es el mismo que usa el RQ worker
-    id = Column(String(36), primary_key=True)
+    id: Mapped[str] = mapped_column(Uuid, primary_key=True)
 
     # Clave foránea
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), index=True, nullable=False)
-    usuario = relationship("Usuario", back_populates="tareas")
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
+    usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="tareas")
 
     # Columnas
-    archivo = Column(String(256), nullable=False, default="", server_default="")
-    comando = Column(String(256), nullable=False, index=True)
-    ha_terminado = Column(Boolean, nullable=False, default=False)
-    mensaje = Column(String(1024), nullable=False, default="", server_default="")
-    url = Column(String(512), nullable=False, default="", server_default="")
+    archivo: Mapped[str] = mapped_column(String(256))
+    comando: Mapped[str] = mapped_column(String(256), index=True)
+    ha_terminado: Mapped[bool] = mapped_column(default=False)
+    mensaje: Mapped[str] = mapped_column(String(1024))
+    url: Mapped[str] = mapped_column(String(512))
 
     def get_rq_job(self):
         """Helper method that loads the RQ Job instance"""

@@ -2,8 +2,8 @@
 Quincenas Productos, modelos
 """
 
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Enum, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -28,18 +28,18 @@ class QuincenaProducto(database.Model, UniversalMixin):
     __tablename__ = "quincenas_productos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    quincena_id = Column(Integer, ForeignKey("quincenas.id"), index=True, nullable=False)
-    quincena = relationship("Quincena", back_populates="quincenas_productos")
+    quincena_id: Mapped[int] = mapped_column(ForeignKey("quincenas.id"), index=True)
+    quincena: Mapped["Quincena"] = relationship(back_populates="quincenas_productos")
 
     # Columnas
-    archivo = Column(String(256), nullable=False, default="", server_default="")
-    es_satisfactorio = Column(Boolean, nullable=False, default=False)
-    fuente = Column(Enum(*FUENTES, name="quincenas_productos_fuentes"), index=True, nullable=False)
-    mensajes = Column(Text, default="", server_default="")
-    url = Column(String(512), nullable=False, default="", server_default="")
+    archivo: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    es_satisfactorio: Mapped[bool] = mapped_column(Boolean, default=False)
+    fuente: Mapped[str] = mapped_column(Enum(*FUENTES, name="quincenas_productos_fuentes"), index=True)
+    mensajes: Mapped[str] = mapped_column(Text, default="", server_default="")
+    url: Mapped[str] = mapped_column(String(512), default="", server_default="")
 
     def __repr__(self):
         """Representación"""
