@@ -2,8 +2,11 @@
 Personas, modelos
 """
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from datetime import date
+from typing import List
+
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
@@ -28,42 +31,45 @@ class Persona(database.Model, UniversalMixin):
     __tablename__ = "personas"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Clave foránea
-    tabulador_id = Column(Integer, ForeignKey("tabuladores.id"), index=True, nullable=False)
-    tabulador = relationship("Tabulador", back_populates="personas")
+    tabulador_id: Mapped[int] = mapped_column(ForeignKey("tabuladores.id"))
+    tabulador: Mapped["Tabulador"] = relationship("Tabulador", back_populates="personas")
 
     # Columnas
-    rfc = Column(String(13), nullable=False, unique=True)
-    nombres = Column(String(256), nullable=False, index=True)
-    apellido_primero = Column(String(256), nullable=False, index=True)
-    apellido_segundo = Column(String(256), nullable=False, default="")
-    curp = Column(String(18), nullable=False, default="")
-    num_empleado = Column(Integer)
-    ingreso_gobierno_fecha = Column(Date)
-    ingreso_pj_fecha = Column(Date)
-    nacimiento_fecha = Column(Date)
-    codigo_postal_fiscal = Column(Integer, nullable=False, default=0)
-    seguridad_social = Column(String(24))
+    rfc: Mapped[str] = mapped_column(String(13), unique=True, index=True)
+    nombres: Mapped[str] = mapped_column(String(256), index=True)
+    apellido_primero: Mapped[str] = mapped_column(String(256), index=True)
+    apellido_segundo: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    curp: Mapped[str] = mapped_column(String(18), default="", server_default="")
+    num_empleado: Mapped[int]
+    ingreso_gobierno_fecha: Mapped[date]
+    ingreso_pj_fecha: Mapped[date]
+    nacimiento_fecha: Mapped[date]
+    codigo_postal_fiscal: Mapped[int] = mapped_column(Integer, default=0)
+    seguridad_social: Mapped[str] = mapped_column(String(24))
 
     # Columna modelo es entero del 1 al 6
-    modelo = Column(Integer, nullable=False, index=True)
+    modelo: Mapped[int] = mapped_column(Integer, index=True)
 
-    # Columnas para mantener el ultimo centro_trabajo, plaza y puesto que se actualizan cada vez que se alimiente una quincena
-    ultimo_centro_trabajo_id = Column(Integer, nullable=False, default=137)  # 137 es ND
-    ultimo_plaza_id = Column(Integer, nullable=False, default=2182)  # 2182 es ND
-    ultimo_puesto_id = Column(Integer, nullable=False, default=135)  # 135 es ND
+    # Columnas para mantener el ultimo centro_trabajo, plaza y puesto
+    # que se actualizan cada vez que se alimiente una quincena
+    ultimo_centro_trabajo_id: Mapped[int] = mapped_column(Integer, default=137)
+    ultimo_plaza_id: Mapped[int] = mapped_column(Integer, default=2182)
+    ultimo_puesto_id: Mapped[int] = mapped_column(Integer, default=135)
 
-    # Columnas nuevas
-    sub_sis = Column(Integer, nullable=False, default=0)
-    nivel = Column(Integer, nullable=False, default=0)
-    puesto_equivalente = Column(String(16), nullable=False, default="")
+    # Columnas para sindicalizados
+    sub_sis: Mapped[int] = mapped_column(Integer, default=0)
+    nivel: Mapped[int] = mapped_column(Integer, default=0)
+    puesto_equivalente: Mapped[str] = mapped_column(String(16), default="")
 
     # Hijos
-    cuentas = relationship("Cuenta", back_populates="persona")  # Sin lazy="noload" para elaborar el timbrado
-    nominas = relationship("Nomina", back_populates="persona", lazy="noload")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="persona", lazy="noload")
+    cuentas: Mapped[List["Cuenta"]] = relationship("Cuenta", back_populates="persona")
+    nominas: Mapped[List["Nomina"]] = relationship("Nomina", back_populates="persona")
+    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(
+        "PercepcionDeduccion", back_populates="persona"
+    )
 
     @property
     def nombre_completo(self):

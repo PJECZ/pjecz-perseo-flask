@@ -2,8 +2,10 @@
 Conceptos, modelos
 """
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+from typing import List
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -16,15 +18,15 @@ class Concepto(database.Model, UniversalMixin):
     __tablename__ = "conceptos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    clave = Column(String(16), unique=True, nullable=False)
-    descripcion = Column(String(256), nullable=False)
+    clave: Mapped[str] = mapped_column(String(16), unique=True)
+    descripcion: Mapped[str] = mapped_column(String(256))
 
     # Hijos
-    conceptos_productos = relationship("ConceptoProducto", back_populates="concepto", lazy="noload")
-    percepciones_deducciones = relationship("PercepcionDeduccion", back_populates="concepto", lazy="noload")
+    conceptos_productos: Mapped[List["ConceptoProducto"]] = relationship(back_populates="concepto")
+    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(back_populates="concepto")
 
     def __repr__(self):
         """Representación"""

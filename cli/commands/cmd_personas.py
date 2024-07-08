@@ -194,7 +194,6 @@ def actualizar_nuevas_columnas(personas_csv: str):
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-
             # Consultar la persona
             persona = Persona.query.filter_by(rfc=safe_rfc(row["RFC"])).first()
             if persona is None:
@@ -612,7 +611,7 @@ def actualizar_tabuladores(quincena_clave: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+@click.option("--probar", is_flag=True, help="Modo de pruebas, solo muestra los cambios que se harían")
 def actualizar_ultimos(quincena_clave: str, probar: bool = False):
     """Actualizar ultimos centros de trabajos, plazas y puestos"""
 

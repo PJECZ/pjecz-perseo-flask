@@ -2,8 +2,10 @@
 Puestos, modelos
 """
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+from typing import List
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -16,14 +18,14 @@ class Puesto(database.Model, UniversalMixin):
     __tablename__ = "puestos"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    clave = Column(String(16), unique=True, nullable=False)
-    descripcion = Column(String(256), nullable=False)
+    clave: Mapped[str] = mapped_column(String(16), unique=True)
+    descripcion: Mapped[str] = mapped_column(String(256))
 
     # Hijos
-    tabuladores = relationship("Tabulador", back_populates="puesto", lazy="noload")
+    tabuladores: Mapped[List["Tabulador"]] = relationship("Tabulador", back_populates="puesto")
 
     def __repr__(self):
         """Representación"""

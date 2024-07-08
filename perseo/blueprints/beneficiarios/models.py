@@ -1,8 +1,12 @@
 """
 Beneficiarios, modelos
 """
-from sqlalchemy import Column, Date, Integer, String
-from sqlalchemy.orm import relationship
+
+from datetime import date
+from typing import List
+
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
@@ -21,25 +25,20 @@ class Beneficiario(database.Model, UniversalMixin):
     __tablename__ = "beneficiarios"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Columnas
-    rfc = Column(String(13), nullable=False, unique=True)
-    nombres = Column(String(256), nullable=False, index=True)
-    apellido_primero = Column(String(256), nullable=False, index=True)
-    apellido_segundo = Column(String(256), nullable=False, default="", server_default="")
-    curp = Column(String(18), nullable=False, default="", server_default="")
-    nacimiento_fecha = Column(Date)
-
-    # Columna modelo en Beneficiario
-    # 4: Beneficiario
-    # 5: Consejero
-    # 6: Escolta
-    modelo = Column(Integer, nullable=False, default=0, index=True)
+    rfc: Mapped[str] = mapped_column(String(13), unique=True)
+    nombres: Mapped[str] = mapped_column(String(256))
+    apellido_primero: Mapped[str] = mapped_column(String(256))
+    apellido_segundo: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    nacimiento_fecha: Mapped[date] = mapped_column(default=None)
+    curp: Mapped[str] = mapped_column(String(18), default="", server_default="")
+    modelo: Mapped[int] = mapped_column(default=0, index=True)
 
     # Hijos
-    beneficiarios_cuentas = relationship("BeneficiarioCuenta", back_populates="beneficiario")
-    beneficiarios_quincenas = relationship("BeneficiarioQuincena", back_populates="beneficiario")
+    beneficiarios_cuentas: Mapped[List["BeneficiarioCuenta"]] = relationship(back_populates="beneficiario")
+    beneficiarios_quincenas: Mapped[List["BeneficiarioQuincena"]] = relationship(back_populates="beneficiario")
 
     @property
     def nombre_completo(self):

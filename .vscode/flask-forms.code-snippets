@@ -62,7 +62,7 @@
     "scope": "python",
     "prefix": "fforms_class_selectfield",
     "body": [
-      "from perseo.blueprints.${1:rel_plural}.models import ${2:RelClase}",
+      "from citas_admin.blueprints.${1:rel_plural}.models import ${2:RelClase}",
       "",
       "class ${3:Clase}Form(FlaskForm):",
       "\t\"\"\" Formulario ${4:Clases} \"\"\"",
@@ -78,20 +78,6 @@
       "\t\t\t(d.id, d.clave + \" - \" + d.nombre_corto)",
       "\t\t\tfor d in ${2:RelClase}.query.filter_by(estatus=\"A\").order_by(${2:RelClase}.clave).all()",
       "\t\t]",
-      ""
-    ],
-    "description": "Formulario para buscar"
-  },
-  "Flask forms class SearchForm": {
-    "scope": "python",
-    "prefix": "fforms_class_search",
-    "body": [
-      "class ${1:Clase}SearchForm(FlaskForm):",
-      "\t\"\"\" Formulario para buscar ${2:Clases} \"\"\"",
-      "\tclave = StringField('Clave', validators=[DataRequired(), Length(max=16)])",
-      "\tdescripcion = StringField('Descripción', validators=[DataRequired(), Length(max=256)])",
-      "\tbuscar = SubmitField('Buscar')",
-      "",
       ""
     ],
     "description": "Formulario para buscar"

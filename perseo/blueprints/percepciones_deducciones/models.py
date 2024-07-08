@@ -2,11 +2,15 @@
 Percepciones Deducciones, modelos
 """
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer, Numeric
-from sqlalchemy.orm import relationship
+from decimal import Decimal, getcontext
+
+from sqlalchemy import Enum, ForeignKey, Numeric
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.extensions import database
+
+getcontext().prec = 4  # Cuatro decimales en los cálculos monetarios
 
 
 class PercepcionDeduccion(database.Model, UniversalMixin):
@@ -24,23 +28,23 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
     __tablename__ = "percepciones_deducciones"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Claves foráneas
-    centro_trabajo_id = Column(Integer, ForeignKey("centros_trabajos.id"), index=True, nullable=False)
-    centro_trabajo = relationship("CentroTrabajo", back_populates="percepciones_deducciones")
-    concepto_id = Column(Integer, ForeignKey("conceptos.id"), index=True, nullable=False)
-    concepto = relationship("Concepto", back_populates="percepciones_deducciones")
-    persona_id = Column(Integer, ForeignKey("personas.id"), index=True, nullable=False)
-    persona = relationship("Persona", back_populates="percepciones_deducciones")
-    plaza_id = Column(Integer, ForeignKey("plazas.id"), index=True, nullable=False)
-    plaza = relationship("Plaza", back_populates="percepciones_deducciones")
-    quincena_id = Column(Integer, ForeignKey("quincenas.id"), index=True, nullable=False)
-    quincena = relationship("Quincena", back_populates="percepciones_deducciones")
+    centro_trabajo_id: Mapped[int] = mapped_column(ForeignKey("centros_trabajos.id"))
+    centro_trabajo: Mapped["CentroTrabajo"] = relationship(back_populates="percepciones_deducciones")
+    concepto_id: Mapped[int] = mapped_column(ForeignKey("conceptos.id"))
+    concepto: Mapped["Concepto"] = relationship(back_populates="percepciones_deducciones")
+    persona_id: Mapped[int] = mapped_column(ForeignKey("personas.id"))
+    persona: Mapped["Persona"] = relationship(back_populates="percepciones_deducciones")
+    plaza_id: Mapped[int] = mapped_column(ForeignKey("plazas.id"))
+    plaza: Mapped["Plaza"] = relationship(back_populates="percepciones_deducciones")
+    quincena_id: Mapped[int] = mapped_column(ForeignKey("quincenas.id"))
+    quincena: Mapped["Quincena"] = relationship(back_populates="percepciones_deducciones")
 
     # Columnas
-    tipo = Column(Enum(*TIPOS, name="percepciones_deducciones_tipos"), nullable=False, index=True)
-    importe = Column(Numeric(precision=24, scale=4), nullable=False)
+    tipo: Mapped[str] = mapped_column(Enum(*TIPOS, name="percepciones_deducciones_tipos"), index=True)
+    importe: Mapped[Decimal] = mapped_column(Numeric(precision=24, scale=4))
 
     def __repr__(self):
         """Representación"""

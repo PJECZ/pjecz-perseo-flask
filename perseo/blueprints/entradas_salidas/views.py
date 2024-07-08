@@ -5,8 +5,8 @@ Entradas-Salidas
 from flask import Blueprint, render_template, request, url_for
 from flask_login import login_required
 
-from lib.safe_string import safe_email
 from lib.datatables import get_datatable_parameters, output_datatable_json
+from lib.safe_string import safe_email
 from perseo.blueprints.entradas_salidas.models import EntradaSalida
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import permission_required

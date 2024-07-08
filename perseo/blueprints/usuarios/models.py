@@ -1,10 +1,14 @@
 """
 Usuarios, modelos
 """
+
+from datetime import datetime
+from typing import List, Optional
+
 from flask import current_app
 from flask_login import UserMixin
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
 from perseo.blueprints.permisos.models import Permiso
@@ -20,30 +24,28 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     __tablename__ = "usuarios"
 
     # Clave primaria
-    id = Column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
     # Claves foráneas
-    autoridad_id = Column(Integer, ForeignKey("autoridades.id"), index=True, nullable=False)
-    autoridad = relationship("Autoridad", back_populates="usuarios")
+    autoridad_id: Mapped[int] = mapped_column(ForeignKey("autoridades.id"))
+    autoridad: Mapped["Autoridad"] = relationship("Autoridad", back_populates="usuarios")
 
     # Columnas
-    email = Column(String(256), nullable=False, unique=True, index=True)
-    nombres = Column(String(256), nullable=False)
-    apellido_primero = Column(String(256), nullable=False)
-    apellido_segundo = Column(String(256))
-    curp = Column(String(18), default="", server_default="")
-    puesto = Column(String(256), default="", server_default="")
-
-    # Columnas que no deben ser expuestas
-    api_key = Column(String(128), nullable=False)
-    api_key_expiracion = Column(DateTime(), nullable=False)
-    contrasena = Column(String(256), nullable=False)
+    email: Mapped[str] = mapped_column(String(256), unique=True, index=True)
+    nombres: Mapped[str] = mapped_column(String(256))
+    apellido_primero: Mapped[str] = mapped_column(String(256))
+    apellido_segundo: Mapped[str] = mapped_column(String(256))
+    curp: Mapped[str] = mapped_column(String(18))
+    puesto: Mapped[str] = mapped_column(String(256))
+    api_key: Mapped[Optional[str]] = mapped_column(String(128))
+    api_key_expiracion: Mapped[Optional[datetime]]
+    contrasena: Mapped[Optional[str]] = mapped_column(String(256))
 
     # Hijos
-    bitacoras = relationship("Bitacora", back_populates="usuario", lazy="noload")
-    entradas_salidas = relationship("EntradaSalida", back_populates="usuario", lazy="noload")
-    tareas = relationship("Tarea", back_populates="usuario")
-    usuarios_roles = relationship("UsuarioRol", back_populates="usuario")
+    bitacoras: Mapped[List["Bitacora"]] = relationship("Bitacora", back_populates="usuario")
+    entradas_salidas: Mapped[List["EntradaSalida"]] = relationship("EntradaSalida", back_populates="usuario")
+    tareas: Mapped[List["Tarea"]] = relationship("Tarea", back_populates="usuario")
+    usuarios_roles: Mapped[List["UsuarioRol"]] = relationship("UsuarioRol", back_populates="usuario")
 
     # Propiedades
     modulos_menu_principal_consultados = []

@@ -229,7 +229,6 @@ def crear_timbrados(
 
     # Bucle para crear cada fila del archivo XLSX
     for nomina in nominas:
-
         # Si modelos no es None y el modelo de la persona NO esta en modelos, se omite
         # if modelos is not None and nomina.persona.modelo not in modelos:
         #     continue
