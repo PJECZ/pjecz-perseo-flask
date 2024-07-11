@@ -51,6 +51,7 @@ COMPANIA_RFC = "PJE901211TI9"
 COMPANIA_CP = "25000"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 PATRON_RFC = "PJE901211TI9"
+PRIMAS_FILENAME_XLS = "PrimasVacacionales.XLS"
 SERICA_FILENAME_XLSX = "SERICA.xlsx"
 
 app = create_app()
@@ -178,7 +179,7 @@ def alimentar(quincena_clave: str, fecha_pago_str: str, probar: bool = False):
         sys.exit(1)
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
-    if EXPLOTACION_BASE_DIR is None:
+    if EXPLOTACION_BASE_DIR == "":
         click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
         sys.exit(1)
 
@@ -572,7 +573,7 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str, probar: bool 
     sesion = database.session
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
-    if EXPLOTACION_BASE_DIR is None:
+    if EXPLOTACION_BASE_DIR == "":
         click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
         sys.exit(1)
 
@@ -749,7 +750,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
     sesion = database.session
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
-    if EXPLOTACION_BASE_DIR is None:
+    if EXPLOTACION_BASE_DIR == "":
         click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
         sys.exit(1)
 
@@ -1457,6 +1458,374 @@ def alimentar_pensiones_alimenticias(
 
 @click.command()
 @click.argument("quincena_clave", type=str)
+@click.argument("fecha_pago_str", type=str)
+@click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
+def alimentar_primas_vacacionales(quincena_clave: str, fecha_pago_str: str, probar: bool = False):
+    """Alimentar primas vacacionales"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Definir la fecha_final con base en la clave de la quincena
+    try:
+        fecha_final = quincena_to_fecha(quincena_clave, dame_ultimo_dia=True)
+    except ValueError:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Validar fecha_pago
+    try:
+        fecha_pago = datetime.strptime(fecha_pago_str, "%Y-%m-%d")
+    except ValueError:
+        click.echo("ERROR: Fecha de pago inválida")
+        sys.exit(1)
+
+    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    sesion = database.session
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR == "":
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, PRIMAS_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = sesion.query(Quincena).filter_by(clave=quincena_clave).first()
+
+    # Si existe la quincena, pero no esta ABIERTA, entonces se termina
+    if quincena and quincena.estado != "ABIERTA":
+        click.echo(f"ERROR: Quincena {quincena_clave} no esta ABIERTA.")
+        sys.exit(1)
+
+    # Si existe la quincena, pero ha sido eliminada, entonces se termina
+    if quincena and quincena.estatus != "A":
+        click.echo(f"ERROR: Quincena {quincena_clave} esta sido eliminada.")
+        sys.exit(1)
+
+    # Si no existe la quincena, se agrega
+    if quincena is None:
+        quincena = Quincena(clave=quincena_clave, estado="ABIERTA")
+        sesion.add(quincena)
+        sesion.commit()
+
+    # Consultar el concepto con clave P20, si no se encuentra, error
+    concepto_p20 = sesion.query(Concepto).filter_by(clave="P20").first()
+    if concepto_p20 is None:
+        click.echo("ERROR: No existe el concepto con clave P20")
+        sys.exit(1)
+
+    # Consultar el concepto con clave PGP, si no se encuentra, error
+    concepto_pgp = sesion.query(Concepto).filter_by(clave="PGP").first()
+    if concepto_pgp is None:
+        click.echo("ERROR: No existe el concepto con clave PGP")
+        sys.exit(1)
+
+    # Consultar el concepto con clave PGV, si no se encuentra, error
+    concepto_pgv = sesion.query(Concepto).filter_by(clave="PGV").first()
+    if concepto_pgv is None:
+        click.echo("ERROR: No existe el concepto con clave PGV")
+        sys.exit(1)
+
+    # Consultar el concepto con clave D1R, si no se encuentra, error
+    concepto_d1r = sesion.query(Concepto).filter_by(clave="D1R").first()
+    if concepto_d1r is None:
+        click.echo("ERROR: No existe el concepto con clave D1R")
+        sys.exit(1)
+
+    # Consultar el concepto con clave D62, si no se encuentra, error
+    concepto_d62 = sesion.query(Concepto).filter_by(clave="D62").first()
+    if concepto_d62 is None:
+        click.echo("ERROR: No existe el concepto con clave D62")
+        sys.exit(1)
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Iniciar contadores
+    contador = 0
+    centros_trabajos_inexistentes = []
+    nominas_existentes = []
+    personas_inexistentes = []
+    plazas_inexistentes = []
+
+    # Bucle por cada fila
+    click.echo("Alimentando Nominas de Primas: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        # Columna 00 UNIDAD_DIS
+        centro_trabajo_clave = hoja.cell_value(fila, 1).strip().upper()  # Columna 01 CLAVE_CT
+        rfc = hoja.cell_value(fila, 2).strip().upper()  # Columna 02 RFC
+        # Columna 03 NOMBRE
+        # Columna 04 MUNICIPIO
+        # Columna 05 ZONA_ESCO
+        # Columna 06 LOCALIDAD
+        # Columna 07 SOB_SUELDO
+        plaza_clave = hoja.cell_value(fila, 8).strip().upper()  # Columna 08 PLAZA
+        # Columna 09 NIVP
+        # Columna 10 PROG_SUBP
+        # Columna 11 URESP_PLA
+        percepcion = int(hoja.cell_value(fila, 12)) / 100.0  # Columna 12 PERCEPCION
+        deduccion = int(hoja.cell_value(fila, 13)) / 100.0  # Columna 13 DEDUCCION
+        impte = int(hoja.cell_value(fila, 14)) / 100.0  # Columna 14 IMPTE
+        # Columna 15 NO_CHEQUE
+        desde_s = str(int(hoja.cell_value(fila, 16)))  # Columna 16 DESDE_S
+        hasta_s = str(int(hoja.cell_value(fila, 17)))  # Columna 17 HASTA_S
+
+        # Validar desde y hasta
+        try:
+            desde_clave = safe_quincena(desde_s)
+            desde = quincena_to_fecha(desde_clave, dame_ultimo_dia=False)
+            hasta_clave = safe_quincena(hasta_s)
+            hasta = quincena_to_fecha(hasta_clave, dame_ultimo_dia=True)
+        except ValueError:
+            click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
+            sys.exit(1)
+
+        # Consultar la persona
+        persona = sesion.query(Persona).filter_by(rfc=rfc).first()
+
+        # Si NO existe, se agrega a la lista de personas_inexistentes y se salta
+        if persona is None:
+            personas_inexistentes.append(rfc)
+            continue
+
+        # Consultar el Centro de Trabajo
+        centro_trabajo = sesion.query(CentroTrabajo).filter_by(clave=centro_trabajo_clave).first()
+
+        # Si NO existe se agrega a la lista de centros_trabajos_inexistentes y se salta
+        if centro_trabajo is None:
+            centros_trabajos_inexistentes.append(centro_trabajo_clave)
+            continue
+
+        # Consultar la Plaza
+        plaza = sesion.query(Plaza).filter_by(clave=plaza_clave).first()
+
+        # Si NO existe se agrega a la lista de plazas_inexistentes y se salta
+        if plaza is None:
+            plazas_inexistentes.append(plaza_clave)
+            continue
+
+        # Revisar que en nominas no exista una nomina con la misma persona, quincena y tipo APOYO ANUAL, si existe se omite
+        # nominas_posibles = (
+        #     sesion.query(Nomina).filter_by(persona_id=persona.id)
+        #     .filter_by(quincena_id=quincena.id)
+        #     .filter_by(tipo="PRIMA VACACIONAL")
+        #     .filter_by(estatus="A")
+        #     .all()
+        # )
+        # if len(nominas_posibles) > 0:
+        #     nominas_existentes.append(rfc)
+        #     continue
+
+        # Inicializar los importes de las percepciones y deducciones
+        impt_concepto_p20 = 0.0
+        impt_concepto_pgp = 0.0
+        impt_concepto_pgv = 0.0
+        impt_concepto_d1r = 0.0
+        impt_concepto_d62 = 0.0
+
+        # Buscar percepciones y deducciones
+        col_num = 26
+        while True:
+            # Tomar 'P' o 'D', primero
+            p_o_d = safe_string(hoja.cell_value(fila, col_num))
+
+            # Si 'P' o 'D' es un texto vacio, se rompe el ciclo
+            if p_o_d == "":
+                break
+
+            # Tomar los dos caracteres adicionales del concepto
+            conc = safe_string(hoja.cell_value(fila, col_num + 1))
+
+            # Definir la clave del concepto
+            concepto_clave = f"{p_o_d}{conc}"
+
+            # Si la clave del concepto NO es P20, PGP, PGV, D1R o D62, se omite
+            if concepto_clave not in ["P20", "PGP", "PGV", "D1R", "D62"]:
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                col_num += 6
+                continue
+
+            # Tomar el importe
+            try:
+                impt = int(hoja.cell_value(fila, col_num + 3)) / 100.0
+            except ValueError:
+                impt = 0.0
+
+            # Asignar el importe al concepto correspondiente
+            if concepto_clave == "P20":
+                impt_concepto_p20 = impt
+            elif concepto_clave == "PGP":
+                impt_concepto_pgp = impt
+            elif concepto_clave == "PGV":
+                impt_concepto_pgv = impt
+            elif concepto_clave == "D1R":
+                impt_concepto_d1r = impt
+            elif concepto_clave == "D62":
+                impt_concepto_d62 = impt
+
+            # Incrementar col_num en SEIS
+            col_num += 6
+
+            # Romper el ciclo cuando se acaban las columnas a leer
+            if col_num > 236:
+                break
+
+        # Alimentar percepcion en PercepcionDeduccion, con concepto P20
+        if impt_concepto_p20 > 0:
+            if probar is False:
+                percepcion_deduccion_p20 = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_p20,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impt_concepto_p20,
+                    tipo="PRIMA VACACIONAL",
+                )
+                sesion.add(percepcion_deduccion_p20)
+            click.echo(click.style("[P20]", fg="blue"), nl=False)
+
+        # Alimentar percepcion en PercepcionDeduccion, con concepto PGP
+        if impt_concepto_pgp > 0:
+            if probar is False:
+                percepcion_deduccion_pgp = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_pgp,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impt_concepto_pgp,
+                    tipo="PRIMA VACACIONAL",
+                )
+                sesion.add(percepcion_deduccion_pgp)
+            click.echo(click.style("[PGP]", fg="blue"), nl=False)
+
+        # Alimentar percepcion en PercepcionDeduccion, con concepto PGV
+        if impt_concepto_pgv > 0:
+            if probar is False:
+                percepcion_deduccion_pgv = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_pgv,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impt_concepto_pgv,
+                    tipo="PRIMA VACACIONAL",
+                )
+                sesion.add(percepcion_deduccion_pgv)
+            click.echo(click.style("[PGV]", fg="blue"), nl=False)
+
+        # Alimentar percepcion en PercepcionDeduccion, con concepto D1R
+        if impt_concepto_d1r > 0:
+            if probar is False:
+                percepcion_deduccion_d1r = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_d1r,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impt_concepto_d1r,
+                    tipo="PRIMA VACACIONAL",
+                )
+                sesion.add(percepcion_deduccion_d1r)
+            click.echo(click.style("[D1R]", fg="blue"), nl=False)
+
+        # Alimentar percepcion en PercepcionDeduccion, con concepto D62
+        if impt_concepto_d62 > 0:
+            if probar is False:
+                percepcion_deduccion_d62 = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_d62,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impt_concepto_d62,
+                    tipo="PRIMA VACACIONAL",
+                )
+                sesion.add(percepcion_deduccion_d62)
+            click.echo(click.style("[D62]", fg="blue"), nl=False)
+
+        # Alimentar registro en Nomina
+        if probar is False:
+            nomina = Nomina(
+                centro_trabajo=centro_trabajo,
+                persona=persona,
+                plaza=plaza,
+                quincena=quincena,
+                desde=desde,
+                desde_clave=desde_clave,
+                hasta=hasta,
+                hasta_clave=hasta_clave,
+                percepcion=percepcion,
+                deduccion=deduccion,
+                importe=impte,
+                tipo="PRIMA VACACIONAL",
+                fecha_pago=fecha_pago,
+            )
+            sesion.add(nomina)
+        click.echo(click.style("+", fg="green"), nl=False)
+
+        # Cerrar la sesion para que se guarden todos los datos en la base de datos
+        sesion.commit()
+        sesion.close()
+
+        # Incrementar contador
+        contador += 1
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si contador es cero, mostrar mensaje de error y terminar
+    if contador == 0:
+        click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
+        sys.exit(1)
+
+    # Actualizar la quincena para poner en verdadero el campo tiene_apoyos_anuales
+    quincena.tiene_primas = True
+    quincena.save()
+
+    # Si hubo centros_trabajos_inexistentes, mostrarlos
+    if len(centros_trabajos_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(centros_trabajos_inexistentes)} C. de T. que no existen. Se omiten:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(centros_trabajos_inexistentes)}", fg="yellow"))
+
+    # Si hubo plazas_inexistentes, mostrarlos
+    if len(plazas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(plazas_inexistentes)} Plazas que no existen. Se omiten:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(plazas_inexistentes)}", fg="yellow"))
+
+    # Si hubo personas_inexistentes, mostrar contador
+    if len(personas_inexistentes) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_inexistentes)} Personas que no existen. Se omiten:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(personas_inexistentes)}", fg="yellow"))
+
+    # Si hubo nominas_existentes, mostrarlos
+    if len(nominas_existentes) > 0:
+        click.echo(click.style(f"  Hubo {len(nominas_existentes)} Primas que ya existen. Se omiten:", fg="yellow"))
+        click.echo(click.style(f"  {', '.join(nominas_existentes)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(
+        click.style(f"  Alimentar Primas Vacacionales: {contador} insertadas en la quincena {quincena_clave}.", fg="green")
+    )
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
 @click.option("--serica-xlsx", default=SERICA_FILENAME_XLSX, help="Archivo XLSX con los datos")
 @click.option("--output-txt", default="SERICA.txt", help="Archivo TXT de salida")
 def generar_issste(quincena_clave, serica_xlsx, output_txt):
@@ -1745,6 +2114,7 @@ cli.add_command(alimentar_aguinaldos)
 cli.add_command(alimentar_apoyos_anuales)
 cli.add_command(alimentar_extraordinarios)
 cli.add_command(alimentar_pensiones_alimenticias)
+cli.add_command(alimentar_primas_vacacionales)
 cli.add_command(generar_issste)
 cli.add_command(crear_dispersiones_pensionados)
 cli.add_command(crear_monederos)

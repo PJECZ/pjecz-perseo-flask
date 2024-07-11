@@ -22,6 +22,7 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
         "DESPENSA": "DESPENSA",
         "SALARIO": "SALARIO",
         "EXTRAORDINARIO": "EXTRAORDINARIO",
+        "PRIMA VACACIONAL": "PRIMA VACACIONAL",
     }
 
     # Nombre de la tabla
