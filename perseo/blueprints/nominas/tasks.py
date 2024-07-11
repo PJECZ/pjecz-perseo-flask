@@ -10,6 +10,7 @@ from perseo.blueprints.nominas.generators.dispersiones_pensionados import crear_
 from perseo.blueprints.nominas.generators.monederos import crear_monederos
 from perseo.blueprints.nominas.generators.nominas import crear_nominas
 from perseo.blueprints.nominas.generators.pensionados import crear_pensionados
+from perseo.blueprints.nominas.generators.primas_vacacionales import crear_primas_vacacionales
 from perseo.blueprints.nominas.generators.timbrados import crear_timbrados
 
 
@@ -62,6 +63,26 @@ def lanzar_generar_pensionados(quincena_clave: str, quincena_producto_id: int) -
     # Ejecutar el creador
     try:
         mensaje_termino = crear_pensionados(quincena_clave, quincena_producto_id)
+    except MyAnyError as error:
+        mensaje_error = str(error)
+        set_task_error(mensaje_error)
+        bitacora.error(mensaje_error)
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino)
+    return mensaje_termino
+
+
+def lanzar_generar_primas_vacacionales(quincena_clave: str, quincena_producto_id: int) -> str:
+    """Tarea en el fondo para crear un archivo XLSX con las primas vacacionales de una quincena"""
+
+    # Iniciar la tarea en el fondo
+    set_task_progress(0, f"Generar archivo XLSX con las primas vacacionales de {quincena_clave}...")
+
+    # Ejecutar el creador
+    try:
+        mensaje_termino = crear_primas_vacacionales(quincena_clave, quincena_producto_id)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)

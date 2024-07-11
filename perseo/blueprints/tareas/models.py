@@ -5,7 +5,7 @@ Tareas, modelos
 import redis
 import rq
 from flask import current_app
-from sqlalchemy import ForeignKey, String, Uuid
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -19,18 +19,18 @@ class Tarea(database.Model, UniversalMixin):
     __tablename__ = "tareas"
 
     # Clave primaria NOTA: El id es string y es el mismo que usa el RQ worker
-    id: Mapped[str] = mapped_column(Uuid, primary_key=True)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
 
     # Clave foránea
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="tareas")
 
     # Columnas
-    archivo: Mapped[str] = mapped_column(String(256))
+    archivo: Mapped[str] = mapped_column(String(256), default="")
     comando: Mapped[str] = mapped_column(String(256), index=True)
     ha_terminado: Mapped[bool] = mapped_column(default=False)
     mensaje: Mapped[str] = mapped_column(String(1024))
-    url: Mapped[str] = mapped_column(String(512))
+    url: Mapped[str] = mapped_column(String(512), default="")
 
     def get_rq_job(self):
         """Helper method that loads the RQ Job instance"""
