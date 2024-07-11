@@ -28,6 +28,7 @@
                 {{ detail.label_value('Estado', quincena.estado) }}
                 {{ detail.label_value_boolean('Tiene aguinaldos', quincena.tiene_aguinaldos) }}
                 {{ detail.label_value_boolean('Tiene apoyos anuales', quincena.tiene_apoyos_anuales) }}
+                {{ detail.label_value_boolean('Tiene primas vacacionales', quincena.tiene_primas_vacacionales) }}
                 {# detail.label_value('Creado', moment(quincena.creado).format('llll')) #}
             {% endcall %}
         </div>
@@ -535,6 +536,7 @@
                                 <option value="SALARIO">SALARIO</option>
                                 <option value="EXTRAORDINARIO">EXTRAORDINARIO</option>
                                 <option value="PENSION ALIMENTICIA">PENSION ALIMENTICIA</option>
+                                <option value="PRIMA VACACIONAL">PRIMA VACACIONAL</option>
                             </select>
                             <select id="filtroTimbrado" class="form-select" aria-label="Tipo">
                                 <option selected value="">Filtro TFD</option>
