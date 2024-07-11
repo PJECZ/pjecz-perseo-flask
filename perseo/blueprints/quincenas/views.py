@@ -117,6 +117,13 @@ def detail(quincena_id):
         .first()
     )
 
+    # Consultar el ultimo producto de quincenas con fuente PRIMAS VACACIONALES
+    quincena_producto_primas_vacacionales = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="PRIMAS VACACIONALES", estatus="A")
+        .order_by(QuincenaProducto.id.desc())
+        .first()
+    )
+
     # Consultar el ultimo producto de quincenas con fuente TIMBRADOS
     quincena_producto_timbrados_empleados_activos = (
         QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS EMPLEADOS ACTIVOS", estatus="A")
@@ -159,6 +166,7 @@ def detail(quincena_id):
         quincena_producto_nominas=quincena_producto_nominas,
         quincena_producto_monederos=quincena_producto_monederos,
         quincena_producto_pensionados=quincena_producto_pensionados,
+        quincena_producto_primas_vacacionales=quincena_producto_primas_vacacionales,
         quincena_producto_timbrados_empleados_activos=quincena_producto_timbrados_empleados_activos,
         quincena_producto_timbrados_pensionados=quincena_producto_timbrados_pensionados,
         quincena_producto_timbrados_aguinaldos=quincena_producto_timbrados_aguinaldos,
@@ -303,7 +311,7 @@ def generate_nominas(quincena_id):
     mensaje = f"Crear un archivo XLSX con las nominas de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="NOMINAS",
@@ -339,7 +347,7 @@ def generate_monederos(quincena_id):
     mensaje = f"Crear un archivo XLSX con los monederos de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="MONEDEROS",
@@ -375,7 +383,7 @@ def generate_pensionados(quincena_id):
     mensaje = f"Crear un archivo XLSX con los pensionados de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="PENSIONADOS",
@@ -386,6 +394,42 @@ def generate_pensionados(quincena_id):
     # Lanzar la tarea en el fondo
     current_user.launch_task(
         comando="nominas.tasks.lanzar_generar_pensionados",
+        mensaje=mensaje,
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_primas_vacacionales/<int:quincena_id>")
+@permission_required(MODULO, Permiso.CREAR)
+def generate_primas_vacacionales(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con las primas vacacionales de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Definir mensaje de inicio
+    mensaje = f"Crear un archivo XLSX con las primas vacacionales de {quincena.clave}..."
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena_id=quincena.id,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="PRIMAS VACACIONALES",
+        mensajes=mensaje,
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.lanzar_generar_primas_vacacionales",
         mensaje=mensaje,
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
@@ -411,7 +455,7 @@ def generate_dispersiones_pensionados(quincena_id):
     mensaje = f"Crear un archivo XLSX con las dispersiones pensionados de {quincena.clave}..."
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="DISPERSIONES PENSIONADOS",
@@ -442,7 +486,7 @@ def generate_timbrados_empleados_activos(quincena_id):
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="TIMBRADOS EMPLEADOS ACTIVOS",
@@ -474,7 +518,7 @@ def generate_timbrados_pensionados(quincena_id):
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="TIMBRADOS PENSIONADOS",
@@ -512,7 +556,7 @@ def generate_timbrados_aguinaldos(quincena_id):
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="TIMBRADOS AGUINALDOS",
@@ -549,7 +593,7 @@ def generate_timbrados_apoyos_anuales(quincena_id):
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Agregar producto
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         archivo="",
         es_satisfactorio=False,
         fuente="TIMBRADOS APOYOS ANUALES",

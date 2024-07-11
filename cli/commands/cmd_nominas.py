@@ -19,13 +19,12 @@ from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_rfc
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.nominas.generators.dispersiones_pensionados import (
-    crear_dispersiones_pensionados as task_crear_dispersiones_pensionados,
-)
-from perseo.blueprints.nominas.generators.monederos import crear_monederos as task_crear_monederos
-from perseo.blueprints.nominas.generators.nominas import crear_nominas as task_crear_nominas
-from perseo.blueprints.nominas.generators.pensionados import crear_pensionados as task_crear_pensionados
-from perseo.blueprints.nominas.generators.timbrados import crear_timbrados as task_crear_timbrados
+from perseo.blueprints.nominas.generators.dispersiones_pensionados import crear_dispersiones_pensionados
+from perseo.blueprints.nominas.generators.monederos import crear_monederos
+from perseo.blueprints.nominas.generators.nominas import crear_nominas
+from perseo.blueprints.nominas.generators.pensionados import crear_pensionados
+from perseo.blueprints.nominas.generators.primas_vacacionales import crear_primas_vacacionales
+from perseo.blueprints.nominas.generators.timbrados import crear_timbrados
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
@@ -1880,7 +1879,7 @@ def generar_issste(quincena_clave, serica_xlsx, output_txt):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_dispersiones_pensionados(quincena_clave):
+def crear_archivo_xlsx_dispersiones_pensionados(quincena_clave):
     """Crear archivo XLSX con las dispersiones para pensionados"""
 
     # Validar quincena_clave
@@ -1898,15 +1897,15 @@ def crear_dispersiones_pensionados(quincena_clave):
 
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         fuente="DISPERSIONES PENSIONADOS",
         mensajes="Crear archivo XLSX con las dispersiones para pensionados",
     )
     quincena_producto.save()
 
-    # Ejecutar tarea en el fondo crear_dispersiones_pensionados
+    # Ejecutar crear_dispersiones_pensionados
     try:
-        mensaje_termino = task_crear_dispersiones_pensionados(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_dispersiones_pensionados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1917,7 +1916,7 @@ def crear_dispersiones_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_monederos(quincena_clave):
+def crear_archivo_xlsx_monederos(quincena_clave):
     """Crear archivo XLSX con los monederos de una quincena"""
 
     # Validar quincena_clave
@@ -1935,15 +1934,15 @@ def crear_monederos(quincena_clave):
 
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         fuente="MONEDEROS",
         mensajes="Crear archivo XLSX con los monederos de una quincena",
     )
     quincena_producto.save()
 
-    # Ejecutar tarea en el fondo crear_monederos
+    # Ejecutar crear_monederos
     try:
-        mensaje_termino = task_crear_monederos(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_monederos(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1954,7 +1953,7 @@ def crear_monederos(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_nominas(quincena_clave):
+def crear_archivo_xlsx_nominas(quincena_clave):
     """Crear archivo XLSX con las nominas de una quincena"""
 
     # Validar quincena_clave
@@ -1972,15 +1971,15 @@ def crear_nominas(quincena_clave):
 
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
-        fuente="MONEDEROS",
+        quincena_id=quincena.id,
+        fuente="NOMINAS",
         mensajes="Crear archivo XLSX con las nominas de una quincena",
     )
     quincena_producto.save()
 
-    # Ejecutar tarea en el fondo crear_nominas
+    # Ejecutar crear_nominas
     try:
-        mensaje_termino = task_crear_nominas(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_nominas(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -1991,7 +1990,7 @@ def crear_nominas(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_pensionados(quincena_clave):
+def crear_archivo_xlsx_pensionados(quincena_clave):
     """Crear archivo XLSX con los pensionados de una quincena"""
 
     # Validar quincena_clave
@@ -2009,15 +2008,15 @@ def crear_pensionados(quincena_clave):
 
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         fuente="PENSIONADOS",
         mensajes="Crear archivo XLSX con los pensionados de una quincena",
     )
     quincena_producto.save()
 
-    # Ejecutar tarea en el fondo crear_pensionados
+    # Ejecutar crear_pensionados
     try:
-        mensaje_termino = task_crear_pensionados(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_pensionados(quincena_clave, quincena_producto.id)
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -2028,7 +2027,44 @@ def crear_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_timbrados_empleados_activos(quincena_clave):
+def crear_archivo_xlsx_primas_vacacionales(quincena_clave):
+    """Crear archivo XLSX con las primas vacacionales de una quincena"""
+
+    # Validar quincena_clave
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo(click.style("ERROR: Clave de la quincena inválida.", fg="red"))
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena o ha sido eliminada, causa error
+    if quincena is None or quincena.estatus != "A":
+        click.echo(click.style("ERROR: No existe o ha sido eliminada la quincena.", fg="red"))
+        sys.exit(1)
+
+    # Crear un producto para la quincena
+    quincena_producto = QuincenaProducto(
+        quincena_id=quincena.id,
+        fuente="PRIMAS VACACIONALES",
+        mensajes="Crear archivo XLSX con las primas vacacionales",
+    )
+    quincena_producto.save()
+
+    # Ejecutar crear_primas_vacacionales
+    try:
+        mensaje_termino = crear_primas_vacacionales(quincena_clave, quincena_producto.id)
+    except MyAnyError as error:
+        click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
+        sys.exit(1)
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
+def crear_archivo_xlsx_timbrados_empleados_activos(quincena_clave):
     """Crear archivo XLSX con los timbrados de los empleados activos"""
 
     # Validar quincena_clave
@@ -2046,15 +2082,15 @@ def crear_timbrados_empleados_activos(quincena_clave):
 
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         fuente="TIMBRADOS EMPLEADOS ACTIVOS",
         mensajes="Crear archivo XLSX con los timbrados de los empleados activos...",
     )
     quincena_producto.save()
 
-    # Ejecutar tarea en el fondo crear_timbrados con Personas con modelos 1: "CONFIANZA" y 2: "SINDICALIZADO"
+    # Ejecutar crear_timbrados con Personas con modelos 1: "CONFIANZA" y 2: "SINDICALIZADO"
     try:
-        mensaje_termino = task_crear_timbrados(
+        mensaje_termino = crear_timbrados(
             quincena_clave=quincena_clave,
             quincena_producto_id=quincena_producto.id,
             modelos=[1, 2],
@@ -2069,7 +2105,7 @@ def crear_timbrados_empleados_activos(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_timbrados_pensionados(quincena_clave):
+def crear_archivo_xlsx_timbrados_pensionados(quincena_clave):
     """Crear archivo XLSX con los timbrados de los pensionados"""
 
     # Validar quincena_clave
@@ -2087,15 +2123,15 @@ def crear_timbrados_pensionados(quincena_clave):
 
     # Crear un producto para la quincena
     quincena_producto = QuincenaProducto(
-        quincena=quincena,
+        quincena_id=quincena.id,
         fuente="TIMBRADOS PENSIONADOS",
         mensajes="Crear archivo XLSX con los timbrados de los pensionados",
     )
     quincena_producto.save()
 
-    # Ejecutar tarea en el fondo crear_timbrados con Personas con modelo 3: "PENSIONADO"
+    # Ejecutar crear_timbrados con Personas con modelo 3: "PENSIONADO"
     try:
-        mensaje_termino = task_crear_timbrados(
+        mensaje_termino = crear_timbrados(
             quincena_clave=quincena_clave,
             quincena_producto_id=quincena_producto.id,
             modelos=[3],
@@ -2116,9 +2152,10 @@ cli.add_command(alimentar_extraordinarios)
 cli.add_command(alimentar_pensiones_alimenticias)
 cli.add_command(alimentar_primas_vacacionales)
 cli.add_command(generar_issste)
-cli.add_command(crear_dispersiones_pensionados)
-cli.add_command(crear_monederos)
-cli.add_command(crear_nominas)
-cli.add_command(crear_pensionados)
-cli.add_command(crear_timbrados_empleados_activos)
-cli.add_command(crear_timbrados_pensionados)
+cli.add_command(crear_archivo_xlsx_dispersiones_pensionados)
+cli.add_command(crear_archivo_xlsx_monederos)
+cli.add_command(crear_archivo_xlsx_nominas)
+cli.add_command(crear_archivo_xlsx_pensionados)
+cli.add_command(crear_archivo_xlsx_primas_vacacionales)
+cli.add_command(crear_archivo_xlsx_timbrados_empleados_activos)
+cli.add_command(crear_archivo_xlsx_timbrados_pensionados)

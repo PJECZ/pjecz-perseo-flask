@@ -222,6 +222,60 @@
                 {% endcall %}
             {% endif %}
         </div>
+        {# Primas Vacacionales #}
+        <div class="col-md-3">
+            {% set title = '<span class="iconify" data-icon="mdi:folder"></span> Primas Vacacionales' %}
+            {% if quincena_producto_primas_vacacionales %}
+                {% if quincena_producto_primas_vacacionales.es_satisfactorio %}
+                    {% set border_class='border-success' %}
+                    {% set text_class='text-success' %}
+                {% else %}
+                    {% set border_class='border-danger' %}
+                    {% set text_class='text-danger' %}
+                {% endif %}
+                {% call detail.card(title=title, border_class=border_class, text_class=text_class) %}
+                    <ul>
+                        {% if quincena_producto_primas_vacacionales.mensajes %}
+                            {% set list = quincena_producto_primas_vacacionales.mensajes.split("\n") %}
+                            {% for msg in list %}<li><span title="{{ msg }}">{{ msg | truncate(64) }}</span></li>{% endfor %}
+                        {% endif %}
+                        <li>{{ moment(quincena_producto_primas_vacacionales.creado).format('DD MMM YYYY HH:mm') }}</li>
+                    </ul>
+                    {% if quincena_producto_primas_vacacionales.url %}
+                        {{ detail.button_md(
+                            label='Descargar XLSX',
+                            url=url_for('quincenas_productos.download_xlsx', quincena_producto_id=quincena_producto_primas_vacacionales.id),
+                            icon='mdi:download',
+                            target='_blank')
+                        }}
+                    {% endif %}
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
+                        {{ modals.button_modal_sm(
+                            label='Eliminar',
+                            url=url_for('quincenas_productos.delete', quincena_producto_id=quincena_producto_primas_vacacionales.id),
+                            id='DeletePrimasVacacionales',
+                            icon='mdi:delete',
+                            message="¿Eliminar el archivo XLSX para primas vacacionales?",
+                            color_class='btn-outline-danger')
+                        }}
+                    {% endif %}
+                {% endcall %}
+            {% else %}
+                {% call detail.card(title=title) %}
+                    <p class="lead text-center">No hay archivo</p>
+                    {% if current_user.can_insert('QUINCENAS PRODUCTOS') and quincena.estado == 'ABIERTA' %}
+                        {{ modals.button_modal_md(
+                            label='Generar XLSX',
+                            url=url_for('quincenas.generate_primas_vacacionales', quincena_id=quincena.id),
+                            id='GeneratePrimasVacacionales',
+                            icon='mdi:play',
+                            message="¿Generar un nuevo archivo XLSX para primas vacacionales?",
+                            color_class='btn-outline-success')
+                        }}
+                    {% endif %}
+                {% endcall %}
+            {% endif %}
+        </div>
     </div>
     {# Generar, descargar y eliminar timbrados #}
     <div class="row mb-2">
@@ -671,6 +725,8 @@
     {{ modals.custom_javascript('Eliminar Monederos', '', 'DeleteMonederos') }}
     {{ modals.custom_javascript('Generar Pensionados', '', 'GeneratePensionados') }}
     {{ modals.custom_javascript('Eliminar Pensionados', '', 'DeletePensionados') }}
+    {{ modals.custom_javascript('Generar Primas Vacacionales', '', 'GeneratePrimasVacacionales') }}
+    {{ modals.custom_javascript('Eliminar Primas Vacacionales', '', 'DeletePrimasVacacionales') }}
     {{ modals.custom_javascript('Generar Timbrados Empleados Activos', '', 'GenerateTimbradosEmpleadosActivos') }}
     {{ modals.custom_javascript('Eliminar Timbrados Empleados Activos', '', 'DeleteTimbradosEmpleadosActivos') }}
     {{ modals.custom_javascript('Generar Timbrados Pensionados', '', 'GenerateTimbradosPensionados') }}
