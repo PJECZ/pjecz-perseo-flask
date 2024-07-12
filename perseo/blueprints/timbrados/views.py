@@ -1,15 +1,18 @@
 """
 Timbrados, vistas
 """
+
 import json
 
 from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
 from lib.exceptions import MyAnyError
 from lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
-from lib.safe_string import safe_quincena, safe_rfc
+from lib.safe_string import safe_message, safe_quincena, safe_rfc
+from perseo.blueprints.bitacoras.models import Bitacora
+from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.personas.models import Persona
@@ -175,3 +178,39 @@ def download_xml(timbrado_id):
     response.headers["Content-Type"] = "text/xml"
     response.headers["Content-Disposition"] = f"attachment; filename={descarga_nombre}"
     return response
+
+
+@timbrados.route("/timbrados/eliminar/<int:timbrado_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def delete(timbrado_id):
+    """Eliminar un Timbrado"""
+    timbrado = Timbrado.query.get_or_404(timbrado_id)
+    if timbrado.estatus == "A":
+        timbrado.delete()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Eliminado Timbrado {timbrado.id}"),
+            url=url_for("timbrados.detail", timbrado_id=timbrado.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
+
+
+@timbrados.route("/timbrados/recuperar/<int:timbrado_id>")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def recover(timbrado_id):
+    """Recuperar un Timbrado"""
+    timbrado = Timbrado.query.get_or_404(timbrado_id)
+    if timbrado.estatus == "B":
+        timbrado.recover()
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(f"Recuperado Timbrado {timbrado.id}"),
+            url=url_for("timbrados.detail", timbrado_id=timbrado.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+    return redirect(url_for("timbrados.detail", timbrado_id=timbrado.id))
