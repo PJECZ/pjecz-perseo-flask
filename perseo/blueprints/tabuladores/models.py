@@ -26,7 +26,7 @@ class Tabulador(database.Model, UniversalMixin):
 
     # Clave foránea
     puesto_id: Mapped[int] = mapped_column(Integer, ForeignKey("puestos.id"), index=True)
-    puesto: Mapped["Puesto"] = relationship("Puesto", back_populates="tabuladores")
+    puesto: Mapped["Puesto"] = relationship(back_populates="tabuladores")
 
     # Columnas que junto con el Puesto hacen una combinación única
     modelo: Mapped[int]

@@ -1,6 +1,7 @@
 """
 Quincenas Productos, vistas
 """
+
 import json
 
 from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for

@@ -30,7 +30,7 @@ class Timbrado(database.Model, UniversalMixin):
 
     # Clave foránea
     nomina_id: Mapped[int] = mapped_column(Integer, ForeignKey("nominas.id"), index=True)
-    nomina: Mapped["Nomina"] = relationship("Nomina", back_populates="timbrados")
+    nomina: Mapped["Nomina"] = relationship(back_populates="timbrados")
 
     # Columnas
     estado: Mapped[str] = mapped_column(Enum(*ESTADOS, name="timbrados_estados"), index=True)

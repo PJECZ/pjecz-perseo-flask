@@ -1,6 +1,7 @@
 """
 Respaldar Autoridades
 """
+
 import csv
 from pathlib import Path
 

@@ -20,9 +20,9 @@ class Cuenta(database.Model, UniversalMixin):
 
     # Claves foráneas
     banco_id: Mapped[int] = mapped_column(ForeignKey("bancos.id"), index=True)
-    banco: Mapped["Banco"] = relationship("Banco", back_populates="cuentas")
+    banco: Mapped["Banco"] = relationship(back_populates="cuentas")
     persona_id: Mapped[int] = mapped_column(ForeignKey("personas.id"), index=True)
-    persona: Mapped["Persona"] = relationship("Persona", back_populates="cuentas")
+    persona: Mapped["Persona"] = relationship(back_populates="cuentas")
 
     # Columnas
     num_cuenta: Mapped[str] = mapped_column(String(24))

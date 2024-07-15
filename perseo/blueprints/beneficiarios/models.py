@@ -37,8 +37,12 @@ class Beneficiario(database.Model, UniversalMixin):
     modelo: Mapped[int] = mapped_column(default=0, index=True)
 
     # Hijos
-    beneficiarios_cuentas: Mapped[List["BeneficiarioCuenta"]] = relationship(back_populates="beneficiario")
-    beneficiarios_quincenas: Mapped[List["BeneficiarioQuincena"]] = relationship(back_populates="beneficiario")
+    beneficiarios_cuentas: Mapped[List["BeneficiarioCuenta"]] = relationship(
+        "BeneficiarioCuenta", back_populates="beneficiario"
+    )
+    beneficiarios_quincenas: Mapped[List["BeneficiarioQuincena"]] = relationship(
+        "BeneficiarioQuincena", back_populates="beneficiario"
+    )
 
     @property
     def nombre_completo(self):

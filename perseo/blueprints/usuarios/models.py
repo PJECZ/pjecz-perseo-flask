@@ -28,7 +28,7 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
 
     # Claves foráneas
     autoridad_id: Mapped[int] = mapped_column(ForeignKey("autoridades.id"))
-    autoridad: Mapped["Autoridad"] = relationship("Autoridad", back_populates="usuarios")
+    autoridad: Mapped["Autoridad"] = relationship(back_populates="usuarios")
 
     # Columnas
     email: Mapped[str] = mapped_column(String(256), unique=True, index=True)

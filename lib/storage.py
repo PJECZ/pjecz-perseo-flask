@@ -108,6 +108,7 @@ Tenga en cuenta que...
             bitacora.warning(mensaje, str(error))
 
 """
+
 import datetime
 import locale
 import re

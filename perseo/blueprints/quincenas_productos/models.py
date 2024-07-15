@@ -2,7 +2,7 @@
 Quincenas Productos, modelos
 """
 
-from sqlalchemy import Boolean, Enum, ForeignKey, String, Text
+from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -37,7 +37,7 @@ class QuincenaProducto(database.Model, UniversalMixin):
 
     # Columnas
     archivo: Mapped[str] = mapped_column(String(256), default="", server_default="")
-    es_satisfactorio: Mapped[bool] = mapped_column(Boolean, default=False)
+    es_satisfactorio: Mapped[bool] = mapped_column(default=False)
     fuente: Mapped[str] = mapped_column(Enum(*FUENTES, name="quincenas_productos_fuentes"), index=True)
     mensajes: Mapped[str] = mapped_column(Text, default="", server_default="")
     url: Mapped[str] = mapped_column(String(512), default="", server_default="")

@@ -25,8 +25,10 @@ class Concepto(database.Model, UniversalMixin):
     descripcion: Mapped[str] = mapped_column(String(256))
 
     # Hijos
-    conceptos_productos: Mapped[List["ConceptoProducto"]] = relationship(back_populates="concepto")
-    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(back_populates="concepto")
+    conceptos_productos: Mapped[List["ConceptoProducto"]] = relationship("ConceptoProducto", back_populates="concepto")
+    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(
+        "PercepcionDeduccion", back_populates="concepto"
+    )
 
     def __repr__(self):
         """Representación"""

@@ -1,6 +1,7 @@
 """
 CLI Beneficiarios
 """
+
 import csv
 import re
 import sys

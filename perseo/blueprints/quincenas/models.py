@@ -2,7 +2,9 @@
 Quincenas, modelos
 """
 
-from sqlalchemy import Boolean, Enum, String
+from typing import List
+
+from sqlalchemy import Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lib.universal_mixin import UniversalMixin
@@ -26,29 +28,18 @@ class Quincena(database.Model, UniversalMixin):
     # Columnas
     clave: Mapped[str] = mapped_column(String(6), unique=True)
     estado: Mapped[str] = mapped_column(Enum(*ESTADOS, name="quincenas_estados"), index=True)
-    tiene_aguinaldos: Mapped[bool] = mapped_column(Boolean(), default=False)
-    tiene_apoyos_anuales: Mapped[bool] = mapped_column(Boolean(), default=False)
-    tiene_primas_vacacionales: Mapped[bool] = mapped_column(Boolean(), default=False)
+    tiene_aguinaldos: Mapped[bool] = mapped_column(default=False)
+    tiene_apoyos_anuales: Mapped[bool] = mapped_column(default=False)
+    tiene_primas_vacacionales: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
-    beneficiarios_quincenas: Mapped["BeneficiarioQuincena"] = relationship(
-        "BeneficiarioQuincena",
-        back_populates="quincena",
-        lazy="noload",
+    beneficiarios_quincenas: Mapped[List["BeneficiarioQuincena"]] = relationship(
+        "BeneficiarioQuincena", back_populates="quincena"
     )
-    quincenas_productos: Mapped["QuincenaProducto"] = relationship(
-        "QuincenaProducto",
-        back_populates="quincena",
-    )
-    nominas: Mapped["Nomina"] = relationship(
-        "Nomina",
-        back_populates="quincena",
-        lazy="noload",
-    )
-    percepciones_deducciones: Mapped["PercepcionDeduccion"] = relationship(
-        "PercepcionDeduccion",
-        back_populates="quincena",
-        lazy="noload",
+    quincenas_productos: Mapped[List["QuincenaProducto"]] = relationship("QuincenaProducto", back_populates="quincena")
+    nominas: Mapped[List["Nomina"]] = relationship("Nomina", back_populates="quincena")
+    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(
+        "PercepcionDeduccion", back_populates="quincena"
     )
 
     def __repr__(self):

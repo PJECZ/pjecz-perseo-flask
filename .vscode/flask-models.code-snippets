@@ -54,7 +54,7 @@
   "Flask models child": {
     "scope": "python",
     "prefix": "fmodels_hijo",
-    "body": "${1:plural_hijos}: Mapped[List[\"${2:Clase_hijo}\"]] = relationship(back_populates=\"${3:singular_esta_clase}\")",
+    "body": "${1:plural_hijos}: Mapped[List[\"${2:Clase_hijo}\"]] = relationship(\"${2:Clase_hijo}\", back_populates=\"${3:singular_esta_clase}\")",
     "description": "Hijo"
   }
 }

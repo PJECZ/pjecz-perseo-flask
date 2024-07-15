@@ -1,6 +1,7 @@
 """
 Autoridades, formularios
 """
+
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired, Length, Optional, Regexp

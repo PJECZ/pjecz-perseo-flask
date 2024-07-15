@@ -1,6 +1,7 @@
 """
 Quincenas, tareas en el fondo
 """
+
 import logging
 
 from lib.exceptions import MyAnyError, MyNotExistsError
