@@ -2,6 +2,7 @@
 Prueba quinquenio
     Para hacer la prueba ejecute el comando `pytest` en la raíz del proyecto
 """
+
 import unittest
 from datetime import date
 

@@ -1,6 +1,7 @@
 """
 CLI Plazas
 """
+
 import sys
 
 import click

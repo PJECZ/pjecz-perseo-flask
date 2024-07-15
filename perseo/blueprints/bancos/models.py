@@ -28,8 +28,8 @@ class Banco(database.Model, UniversalMixin):
     consecutivo_generado: Mapped[int] = mapped_column(default=0)
 
     # Hijos
-    beneficiarios_cuentas: Mapped[List["BeneficiarioCuenta"]] = relationship(back_populates="banco")
-    cuentas: Mapped[List["Cuenta"]] = relationship(back_populates="banco")
+    beneficiarios_cuentas: Mapped[List["BeneficiarioCuenta"]] = relationship("BeneficiarioCuenta", back_populates="banco")
+    cuentas: Mapped[List["Cuenta"]] = relationship("Cuenta", back_populates="banco")
 
     def __repr__(self):
         """Representación"""

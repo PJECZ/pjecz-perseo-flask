@@ -35,7 +35,7 @@ class Persona(database.Model, UniversalMixin):
 
     # Clave foránea
     tabulador_id: Mapped[int] = mapped_column(ForeignKey("tabuladores.id"))
-    tabulador: Mapped["Tabulador"] = relationship("Tabulador", back_populates="personas")
+    tabulador: Mapped["Tabulador"] = relationship(back_populates="personas")
 
     # Columnas
     rfc: Mapped[str] = mapped_column(String(13), unique=True, index=True)

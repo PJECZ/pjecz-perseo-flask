@@ -1,6 +1,7 @@
 """
 CLI usuarios
 """
+
 import sys
 from datetime import datetime, timedelta
 

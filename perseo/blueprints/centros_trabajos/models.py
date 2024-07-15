@@ -25,8 +25,10 @@ class CentroTrabajo(database.Model, UniversalMixin):
     descripcion: Mapped[str] = mapped_column(String(256))
 
     # Hijos
-    nominas: Mapped[List["Nomina"]] = relationship(back_populates="centro_trabajo")
-    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(back_populates="centro_trabajo")
+    nominas: Mapped[List["Nomina"]] = relationship("Nomina", back_populates="centro_trabajo")
+    percepciones_deducciones: Mapped[List["PercepcionDeduccion"]] = relationship(
+        "PercepcionDeduccion", back_populates="centro_trabajo"
+    )
 
     def __repr__(self):
         """Representación"""

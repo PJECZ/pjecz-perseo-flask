@@ -1,6 +1,7 @@
 """
 Beneficiarios Quincenas, formularios
 """
+
 from flask_wtf import FlaskForm
 from wtforms import FloatField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired

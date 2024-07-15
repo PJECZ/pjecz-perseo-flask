@@ -31,7 +31,7 @@ class Autoridad(database.Model, UniversalMixin):
     es_extinto: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
-    usuarios: Mapped[List["Usuario"]] = relationship(back_populates="autoridad")
+    usuarios: Mapped[List["Usuario"]] = relationship("Usuario", back_populates="autoridad")
 
     def __repr__(self):
         """Representación"""

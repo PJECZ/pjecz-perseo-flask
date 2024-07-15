@@ -1,6 +1,7 @@
 """
 Conceptos-Productos, vistas
 """
+
 import json
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -57,16 +58,20 @@ def datatable_json():
                 },
                 "concepto": {
                     "clave": resultado.concepto.clave,
-                    "url": url_for("conceptos.detail", concepto_id=resultado.concepto_id)
-                    if current_user.can_view("CONCEPTOS")
-                    else "",
+                    "url": (
+                        url_for("conceptos.detail", concepto_id=resultado.concepto_id)
+                        if current_user.can_view("CONCEPTOS")
+                        else ""
+                    ),
                 },
                 "concepto_descripcion": resultado.concepto.descripcion,
                 "producto": {
                     "clave": resultado.producto.clave,
-                    "url": url_for("productos.detail", producto_id=resultado.producto_id)
-                    if current_user.can_view("PRODUCTOS")
-                    else "",
+                    "url": (
+                        url_for("productos.detail", producto_id=resultado.producto_id)
+                        if current_user.can_view("PRODUCTOS")
+                        else ""
+                    ),
                 },
                 "producto_descripcion": resultado.producto.descripcion,
             }

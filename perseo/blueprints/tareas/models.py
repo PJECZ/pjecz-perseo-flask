@@ -23,7 +23,7 @@ class Tarea(database.Model, UniversalMixin):
 
     # Clave foránea
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"))
-    usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="tareas")
+    usuario: Mapped["Usuario"] = relationship(back_populates="tareas")
 
     # Columnas
     archivo: Mapped[str] = mapped_column(String(256), default="")

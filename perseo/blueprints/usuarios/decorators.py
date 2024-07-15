@@ -1,6 +1,7 @@
 """
 Usuarios, decoradores
 """
+
 from functools import wraps
 
 from flask import abort, redirect

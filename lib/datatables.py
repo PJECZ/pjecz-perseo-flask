@@ -1,6 +1,7 @@
 """
 Datatables
 """
+
 from flask import request
 
 
