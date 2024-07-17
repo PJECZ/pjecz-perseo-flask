@@ -37,6 +37,7 @@
                     <th>Estado</th>
                     <th>Aguinaldos</th>
                     <th>Apoyos Anuales</th>
+                    <th>Primas Vacacionales</th>
                 </tr>
             </thead>
         </table>
@@ -71,7 +72,8 @@
             { data: 'detalle' },
             { data: 'estado' },
             { data: 'tiene_aguinaldos' },
-            { data: 'tiene_apoyos_anuales' }
+            { data: 'tiene_apoyos_anuales' },
+            { data: 'tiene_primas_vacacionales' }
         ];
         configDataTable['columnDefs'] = [
             {
@@ -82,7 +84,7 @@
                 }
             },
             {
-                targets: [2, 3], // tiene_aguinaldos, tiene_apoyos_anuales
+                targets: [2, 3, 4], // tiene_aguinaldos, tiene_apoyos_anuales
                 data: null,
                 render: function(data, type, row, meta) {
                     if (data) {

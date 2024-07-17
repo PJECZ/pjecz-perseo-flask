@@ -73,7 +73,7 @@ def crear_timbrados(
                 raise MyNotValidParamError(f"El modelo {modelo} no es valido")
 
     # Validar el tipo
-    if tipo not in ["APOYO ANUAL", "AGUINALDO", "SALARIO"]:
+    if tipo not in ["APOYO ANUAL", "AGUINALDO", "PRIMA VACACIONAL", "SALARIO"]:
         raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Por defecto fuente es TIMBRADOS para el tipo SALARIO
@@ -82,6 +82,9 @@ def crear_timbrados(
         fuente = "TIMBRADOS AGUINALDOS"
     elif tipo == "APOYO ANUAL":
         fuente = "TIMBRADOS APOYOS ANUALES"
+    elif tipo == "PRIMA VACACIONAL":
+        fuente = "TIMBRADOS PRIMAS VACACIONALES"
+        modelos = [1, 2, 3]
     elif modelos == [3]:
         fuente = "TIMBRADOS PENSIONADOS"
     elif modelos == [1, 2]:
@@ -123,6 +126,16 @@ def crear_timbrados(
         conceptos_dict = {
             "PAZ": None,  # Percepcion de Apoyo Anual
             "DAZ": None,  # Deduccion ISR Apoyo Anual
+            "D62": None,  # Deduccion Pension Alimenticia
+        }
+
+    # Si el tipo es PRIMA VACACIONAL armar un diccionario con P20, PGP, PGV, D1R y D62
+    if tipo == "PRIMA VACACIONAL":
+        conceptos_dict = {
+            "P20": None,  # Percepcion de Prima Vacacional Excenta
+            "PGP": None,  # Percepcion de Prima Vacacional Gravable
+            "PGV": None,  # Percepcion de Prima Vacacional Adicional Gravable
+            "D1R": None,  # Deduccion Impuesto Federal Retenido ISR
             "D62": None,  # Deduccion Pension Alimenticia
         }
 
@@ -350,6 +363,62 @@ def crear_timbrados(
                 .first()
             )
             fila_parte_2.append(percepcion_deduccion_d62.importe if percepcion_deduccion_d62 is not None else 0)
+        elif tipo == "PRIMA VACACIONAL":
+            # Consultar la PercepcionDeduccion con concepto P20
+            percepcion_deduccion_p20 = (
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
+                .filter(PercepcionDeduccion.tipo == "PRIMA VACACIONAL")
+                .filter(Concepto.clave == "P20")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_p20.importe if percepcion_deduccion_p20 is not None else 0)
+            # Consultar la PercepcionDeduccion con concepto PGP
+            percepcion_deduccion_pgp = (
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
+                .filter(PercepcionDeduccion.tipo == "PRIMA VACACIONAL")
+                .filter(Concepto.clave == "PGP")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_pgp.importe if percepcion_deduccion_pgp is not None else 0)
+            # Consultar la PercepcionDeduccion con concepto PGV
+            percepcion_deduccion_pgv = (
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
+                .filter(PercepcionDeduccion.tipo == "PRIMA VACACIONAL")
+                .filter(Concepto.clave == "PGV")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_pgv.importe if percepcion_deduccion_pgv is not None else 0)
+            # Consultar la PercepcionDeduccion con concepto D1R
+            percepcion_deduccion_d1r = (
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
+                .filter(PercepcionDeduccion.tipo == "PRIMA VACACIONAL")
+                .filter(Concepto.clave == "D1R")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_d1r.importe if percepcion_deduccion_d1r is not None else 0)
+            # Consultar la PercepcionDeduccion con concepto D62
+            percepcion_deduccion_d62 = (
+                session.query(PercepcionDeduccion)
+                .join(Concepto)
+                .filter(PercepcionDeduccion.quincena_id == quincena.id)
+                .filter(PercepcionDeduccion.persona_id == nomina.persona_id)
+                .filter(PercepcionDeduccion.tipo == "PRIMA VACACIONAL")
+                .filter(Concepto.clave == "D62")
+                .first()
+            )
+            fila_parte_2.append(percepcion_deduccion_d62.importe if percepcion_deduccion_d62 is not None else 0)
 
         # Si el codigo postal fiscal es cero, entonces se usa 00000
         codigo_postal_fiscal = "00000"
@@ -391,8 +460,8 @@ def crear_timbrados(
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
 
     # Determinar el nombre del archivo XLSX
+    prefijo = "timbrados"
     if tipo == "SALARIO":
-        prefijo = "timbrados"
         if modelos == [3]:
             prefijo = "timbrados_pensionados"
         elif modelos == [1, 2]:
@@ -401,6 +470,8 @@ def crear_timbrados(
         prefijo = "timbrados_aguinaldos"
     elif tipo == "APOYO ANUAL":
         prefijo = "timbrados_apoyos_anuales"
+    elif tipo == "PRIMA VACACIONAL":
+        prefijo = "timbrados_primas_vacacionales"
     nombre_archivo_xlsx = f"{prefijo}_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
     # Determinar las rutas con directorios con el año y el número de mes en dos digitos

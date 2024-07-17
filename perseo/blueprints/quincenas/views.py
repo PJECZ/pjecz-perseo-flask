@@ -61,6 +61,7 @@ def datatable_json():
                 "estado": resultado.estado,
                 "tiene_aguinaldos": resultado.tiene_aguinaldos,
                 "tiene_apoyos_anuales": resultado.tiene_apoyos_anuales,
+                "tiene_primas_vacacionales": resultado.tiene_primas_vacacionales,
             }
         )
     # Entregar JSON
@@ -152,9 +153,9 @@ def detail(quincena_id):
         .first()
     )
 
-    # Consultar el ultimo producto de quincenas con fuente DISPERSIONES PENSIONADOS
-    quincena_producto_dispersiones_pensionados = (
-        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="DISPERSIONES PENSIONADOS", estatus="A")
+    # Consultar el ultimo producto de quincenas con fuente TIMBRADOS PRIMAS VACACIONALES
+    quincena_producto_timbrados_primas_vacacionales = (
+        QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="TIMBRADOS PRIMAS VACACIONALES", estatus="A")
         .order_by(QuincenaProducto.id.desc())
         .first()
     )
@@ -171,7 +172,7 @@ def detail(quincena_id):
         quincena_producto_timbrados_pensionados=quincena_producto_timbrados_pensionados,
         quincena_producto_timbrados_aguinaldos=quincena_producto_timbrados_aguinaldos,
         quincena_producto_timbrados_apoyos_anuales=quincena_producto_timbrados_apoyos_anuales,
-        quincena_producto_dispersiones_pensionados=quincena_producto_dispersiones_pensionados,
+        quincena_producto_timbrados_primas_vacacionales=quincena_producto_timbrados_primas_vacacionales,
     )
 
 
@@ -502,7 +503,7 @@ def generate_timbrados_empleados_activos(quincena_id):
         quincena_producto_id=quincena_producto.id,
         modelos=[1, 2],  # Modelos en Personas 1: "CONFIANZA", 2: "SINDICALIZADO"
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 4 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -534,7 +535,7 @@ def generate_timbrados_pensionados(quincena_id):
         quincena_producto_id=quincena_producto.id,
         modelos=[3],  # Modelos en Personas 3: "PENSIONADO"
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 4 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -571,7 +572,7 @@ def generate_timbrados_aguinaldos(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 4 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
@@ -608,7 +609,44 @@ def generate_timbrados_apoyos_anuales(quincena_id):
         quincena_clave=quincena.clave,
         quincena_producto_id=quincena_producto.id,
     )
-    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 2 minutos...", "info")
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 4 minutos...", "info")
+    # Redireccionar al detalle del producto
+    return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
+
+
+@quincenas.route("/quincenas/generar_timbrados_primas_vacacionales/<int:quincena_id>")
+@permission_required(MODULO, Permiso.CREAR)
+def generate_timbrados_primas_vacacionales(quincena_id):
+    """Lanzar tarea en el fondo para crear un archivo XLSX con los timbrados primas vacacionales de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.estado != "ABIERTA":
+        flash("Quincena no abierta", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    if quincena.tiene_primas_vacacionales is False:
+        flash("Quincena no tiene primas vacacionales", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Agregar producto
+    quincena_producto = QuincenaProducto(
+        quincena_id=quincena.id,
+        archivo="",
+        es_satisfactorio=False,
+        fuente="TIMBRADOS PRIMAS VACACIONALES",
+        mensajes="Lanzando nominas.tasks.lanzar_generar_timbrados_primas_vacacionales...",
+        url="",
+    )
+    quincena_producto.save()
+    # Lanzar la tarea en el fondo
+    current_user.launch_task(
+        comando="nominas.tasks.lanzar_generar_timbrados_primas_vacacionales",
+        mensaje=f"Crear un archivo XLSX con los timbrados primas vacacionales de {quincena.clave}...",
+        quincena_clave=quincena.clave,
+        quincena_producto_id=quincena_producto.id,
+    )
+    flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 4 minutos...", "info")
     # Redireccionar al detalle del producto
     return redirect(url_for("quincenas_productos.detail", quincena_producto_id=quincena_producto.id))
 
