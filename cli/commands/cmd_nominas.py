@@ -2144,6 +2144,52 @@ def crear_archivo_xlsx_timbrados_pensionados(quincena_clave):
     click.echo(click.style(mensaje_termino, fg="green"))
 
 
+@click.command()
+@click.argument("quincena_clave", type=str)
+def crear_archivo_xlsx_timbrados_primas_vacacionales(quincena_clave):
+    """Crear archivo XLSX con los timbrados de las primas vacacionales"""
+
+    # Validar quincena_clave
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo(click.style("ERROR: Clave de la quincena inválida.", fg="red"))
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena o ha sido eliminada, causa error
+    if quincena is None or quincena.estatus != "A":
+        click.echo(click.style("ERROR: No existe o ha sido eliminada la quincena.", fg="red"))
+        sys.exit(1)
+
+    # Validar que la quincena tenga primas vacacionales
+    if quincena.tiene_primas_vacacionales is False:
+        click.echo(click.style("ERROR: La quincena no tiene primas vacacionales.", fg="red"))
+        sys.exit(1)
+
+    # Crear un producto para la quincena
+    quincena_producto = QuincenaProducto(
+        quincena_id=quincena.id,
+        fuente="TIMBRADOS PRIMAS VACACIONALES",
+        mensajes="Crear archivo XLSX con los timbrados de las primas vacacionales",
+    )
+    quincena_producto.save()
+
+    # Ejecutar crear_timbrados con el tipo "PRIMA VACACIONAL"
+    try:
+        mensaje_termino = crear_timbrados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            tipo="PRIMA VACACIONAL",
+        )
+    except MyAnyError as error:
+        click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
+        sys.exit(1)
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
+
+
 cli.add_command(actualizar_timbrados)
 cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
@@ -2159,3 +2205,4 @@ cli.add_command(crear_archivo_xlsx_pensionados)
 cli.add_command(crear_archivo_xlsx_primas_vacacionales)
 cli.add_command(crear_archivo_xlsx_timbrados_empleados_activos)
 cli.add_command(crear_archivo_xlsx_timbrados_pensionados)
+cli.add_command(crear_archivo_xlsx_timbrados_primas_vacacionales)
