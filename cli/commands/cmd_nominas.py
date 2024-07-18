@@ -2,6 +2,7 @@
 CLI Nominas
 """
 
+import csv
 import os
 import re
 import sys
@@ -49,6 +50,7 @@ COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
 COMPANIA_RFC = "PJE901211TI9"
 COMPANIA_CP = "25000"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
+NOMINAS_TIPOS = ["SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL", "PRIMA VACACIONAL"]
 PATRON_RFC = "PJE901211TI9"
 PRIMAS_FILENAME_XLS = "PrimasVacacionales.XLS"
 SERICA_FILENAME_XLSX = "SERICA.xlsx"
@@ -61,6 +63,106 @@ database.app = app
 @click.group()
 def cli():
     """Nominas"""
+
+
+@cli.command()
+@click.argument("quincena_clave", type=str)
+@click.argument("archivo_csv", type=str)
+@click.option("--tipo", type=click.Choice(NOMINAS_TIPOS), default="SALARIO")
+@click.option("--vaciar_primero", is_flag=True, default=False, help="Primero pone textos vacios.")
+@click.option("--probar", is_flag=True, help="Solo probar sin cambiar la base de datos.")
+def actualizar_numeros_cheque(quincena_clave: str, archivo_csv: str, tipo: str, vaciar_primero: bool, probar: bool = False):
+    """Actualizar los numeros de cheque a partir de un CSV con 'RFC' y 'NO DE CHEQUE'"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena, se termina
+    if quincena is None:
+        click.echo(f"ERROR: Quincena {quincena_clave} no existe.")
+        sys.exit(1)
+
+    # Validar archivo CSV
+    ruta = Path(archivo_csv)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Si se pide vaciar_primero todos los numeros de cheque
+    actualizados_contador = 0
+    if vaciar_primero is True:
+        if probar is True:
+            click.echo("[PROBAR] ", nl=False)
+        click.echo(f"Poniendo en texto vacio el numero de cheque de TODAS las nominas {quincena_clave} y {tipo}: ", nl=False)
+        nominas = (
+            Nomina.query.join(Quincena)
+            .filter(Quincena.clave == quincena_clave)
+            .filter(Nomina.tipo == tipo)
+            .filter(Nomina.estatus == "A")
+            .all()
+        )
+        for nomina in nominas:
+            if nomina.num_cheque != "":
+                nomina.num_cheque = ""
+                actualizados_contador += 1
+                if probar is False:
+                    nomina.save()
+                click.echo(click.style("u", fg="cyan"), nl=False)
+        click.echo()
+        if probar is True:
+            click.echo("[PROBAR] ", nl=False)
+        click.echo(click.style(f"  Se pusieron en texto vacio {actualizados_contador} numeros de cheque", fg="green"))
+
+    # Leer el archivo CSV
+    actualizados_contador = 0
+    no_encontrados_contador = 0
+    if probar is True:
+        click.echo("[PROBAR] ", nl=False)
+    click.echo(f"Actualizando los numeros de cheque las nominas {quincena_clave} y {tipo}: ", nl=False)
+    with open(ruta, encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            rfc = safe_rfc(row["RFC"])
+            num_cheque = row["NO DE CHEQUE"]
+            # Consultar la Nomina
+            nomina = (
+                Nomina.query.join(Persona)
+                .filter(Persona.rfc == rfc)
+                .filter(Nomina.quincena_id == quincena.id)
+                .filter(Nomina.tipo == tipo)
+                .first()
+            )
+            # Si existe la Nomina, se actualiza el numero de cheque
+            if nomina is not None:
+                if nomina.num_cheque != num_cheque:
+                    nomina.num_cheque = num_cheque
+                    actualizados_contador += 1
+                    if probar is False:
+                        nomina.save()
+                    click.echo(click.style(".", fg="cyan"), nl=False)
+            else:
+                no_encontrados_contador += 1
+                click.echo(click.style("X", fg="yellow"), nl=False)
+        click.echo()
+
+    # Si no_encontrados_contador es mayor a cero, mostrar
+    if no_encontrados_contador > 0:
+        if probar is True:
+            click.echo("[PROBAR] ", nl=False)
+        click.echo(click.style(f"  No se encontraron {no_encontrados_contador} RFCs", fg="yellow"))
+
+    # Mensaje termino
+    if probar is True:
+        click.echo("[PROBAR] ", nl=False)
+    click.echo(click.style(f"  Se actualizaron {actualizados_contador} numeros de cheque", fg="green"))
 
 
 @cli.command()
