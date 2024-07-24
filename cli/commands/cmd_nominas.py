@@ -50,7 +50,6 @@ COMPANIA_NOMBRE = "PODER JUDICIAL DEL ESTADO DE COAHUILA DE ZARAGOZA"
 COMPANIA_RFC = "PJE901211TI9"
 COMPANIA_CP = "25000"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
-NOMINAS_TIPOS = ["SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL", "PRIMA VACACIONAL"]
 PATRON_RFC = "PJE901211TI9"
 PRIMAS_FILENAME_XLS = "PrimasVacacionales.XLS"
 SERICA_FILENAME_XLSX = "SERICA.xlsx"
@@ -68,7 +67,7 @@ def cli():
 @cli.command()
 @click.argument("quincena_clave", type=str)
 @click.argument("archivo_csv", type=str)
-@click.option("--tipo", type=click.Choice(NOMINAS_TIPOS), default="SALARIO")
+@click.option("--tipo", type=str, default="SALARIO")
 @click.option("--vaciar_primero", is_flag=True, default=False, help="Primero pone textos vacios.")
 @click.option("--probar", is_flag=True, help="Solo probar sin cambiar la base de datos.")
 def actualizar_numeros_cheque(quincena_clave: str, archivo_csv: str, tipo: str, vaciar_primero: bool, probar: bool = False):
@@ -94,6 +93,12 @@ def actualizar_numeros_cheque(quincena_clave: str, archivo_csv: str, tipo: str, 
         sys.exit(1)
     if not ruta.is_file():
         click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Validar tipo
+    tipo = safe_string(tipo)
+    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
+        click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
     # Si se pide vaciar_primero todos los numeros de cheque

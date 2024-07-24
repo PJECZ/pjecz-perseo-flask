@@ -48,7 +48,7 @@ def cli():
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-@click.argument("tipo", type=str, default="SALARIO")
+@click.option("--tipo", type=str, default="SALARIO")
 @click.option("--poner_en_ceros", is_flag=True, default=False, help="Poner en ceros el campo timbrado_id")
 @click.option("--sobreescribir", is_flag=True, default=False, help="Sin importar el valor de timbrado_id")
 @click.option("--subdir", type=str, default=None)
@@ -67,7 +67,7 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
 
     # Validar tipo
     tipo = safe_string(tipo)
-    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "EXTRAORDINARIO"]:
+    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
@@ -75,15 +75,20 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
     directorio = quincena_clave
     archivo_sufijo = ""
 
+    # Si el tipo es AGUINALDO, el directorio es <quincena_clave>Aguinaldo
+    if tipo == "AGUINALDO":
+        directorio = f"{quincena_clave}Aguinaldos"
+        archivo_sufijo = "aguinaldo"
+
     # Si el tipo es APOYO ANUAL, el directorio es <quincena_clave>ApoyoAnual
     if tipo == "APOYO ANUAL":
         directorio = f"{quincena_clave}ApoyosAnuales"
         archivo_sufijo = "apoyo-anual"
 
     # Si el tipo es AGUINALDO, el directorio es <quincena_clave>Aguinaldo
-    if tipo == "AGUINALDO":
-        directorio = f"{quincena_clave}Aguinaldos"
-        archivo_sufijo = "aguinaldo"
+    if tipo == "PRIMA VACACIONAL":
+        directorio = f"{quincena_clave}PrimasVacacionales"
+        archivo_sufijo = "prima-vacacional"
 
     # Validar que exista el directorio
     if subdir == "":
