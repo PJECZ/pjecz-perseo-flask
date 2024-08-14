@@ -25,6 +25,7 @@ from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.quincenas.models import Quincena
 from perseo.extensions import database
 
 GCS_BASE_DIRECTORY = "personas"
@@ -57,14 +58,38 @@ def actualizar_ultimos(persona_id: int = None) -> tuple[str, str, str]:
     else:
         personas = Persona.query.filter_by(estatus="A").all()
 
+    # Iniciar listado con los mensajes
+    mensajes = []
+
+    # Tomar la última Quinena
+    quincena = Quincena.query.order_by(Quincena.clave.desc()).first()
+    mensajes.append(f"Se tomará la Quincena {quincena.clave}")
+
     # Bucle por las Personas
     contador = 0
+    activos_contador = 0
+    inactivos_contador = 0
     for persona in personas:
         # Incrementar el contador
         contador += 1
 
+        # Consultar la última nómina de la Persona y de la Quincena tomada
+        nomina = Nomina.query.filter(Nomina.persona_id == persona.id, Nomina.quincena_id == quincena.id).first()
+
+        # Si no hay nómina, entonces debe desactivarse
+        if nomina is None:
+            inactivos_contador += 1
+            mensajes.append(f"Se desactivó la Persona {persona.rfc}")
+        else:
+            activos_contador += 1
+
+    # Agregar mensajes con los contadores
+    mensajes.append(f"Hay {activos_contador} personas activas")
+    mensajes.append(f"Hay {inactivos_contador} personas inactivas")
+    mensajes.append(f"Se actualizaron centro de trabajo, plaza y puesto de {contador} Personas")
+
     # Entregar mensaje de termino, el nombre del archivo XLSX y la URL publica
-    mensaje_termino = f"Se actualizaron centro de trabajo, plaza y puesto de {contador} Personas"
+    mensaje_termino = "\n".join(mensajes)
     nombre_archivo_xlsx = ""
     public_url = ""
     return mensaje_termino, nombre_archivo_xlsx, public_url
