@@ -76,21 +76,6 @@ class Persona(database.Model, UniversalMixin):
         """Nombre completo"""
         return f"{self.nombres} {self.apellido_primero} {self.apellido_segundo}"
 
-    @property
-    def ultimo_centro_trabajo(self):
-        """Último centro de trabajo"""
-        return CentroTrabajo.query.get(self.ultimo_centro_trabajo_id)
-
-    @property
-    def ultimo_plaza(self):
-        """Última plaza"""
-        return Plaza.query.get(self.ultimo_plaza_id)
-
-    @property
-    def ultimo_puesto(self):
-        """Último puesto"""
-        return Puesto.query.get(self.ultimo_puesto_id)
-
     def __repr__(self):
         """Representación"""
         return f"<Persona {self.rfc}>"

@@ -28,8 +28,8 @@
                 {{ detail.label_value('Apellido primero', persona.apellido_primero) }}
                 {{ detail.label_value('Apellido segundo', persona.apellido_segundo) }}
                 {{ detail.label_value('CURP', persona.curp) }}
-                {{ detail.label_value('F. nacimiento', persona.nacimiento_fecha) }}
-                {{ detail.label_value('Código Postal fiscal', persona.codigo_postal_fiscal) }}
+                {{ detail.label_value('F. Nac.', persona.nacimiento_fecha) }}
+                {{ detail.label_value('C. P. fiscal', persona.codigo_postal_fiscal) }}
                 {# Inicia tabulador de la persona #}
                 {% set tabulador_str = 'Puesto ' + persona.tabulador.puesto.clave + ', ' %}
                 {% set tabulador_str = tabulador_str + 'Modelo ' + persona.tabulador.modelo | string + ', ' %}
@@ -41,21 +41,30 @@
                     {{ detail.label_value('Tabulador', tabulador_str) }}
                 {% endif %}
                 {# Termina tabulador de la persona #}
+                {# Inicia ultimo centro de trabajo de la persona #}
+                {% set ultimo_centro_trabajo_str = ultimo_centro_trabajo.descripcion + ' (' + ultimo_centro_trabajo.clave + ')' %}
                 {% if current_user.can_view('CENTROS TRABAJOS') %}
-                    {{ detail.label_value('Ú. centro de trabajo', persona.ultimo_centro_trabajo.clave, url_for('centros_trabajos.detail', centro_trabajo_id=persona.ultimo_centro_trabajo_id))}}
+                    {{ detail.label_value('Centro de trabajo', ultimo_centro_trabajo_str, url_for('centros_trabajos.detail', centro_trabajo_id=ultimo_centro_trabajo.id))}}
                 {% else %}
-                    {{ detail.label_value('Ú. centro de trabajo', persona.ultimo_centro_trabajo.clave) }}
+                    {{ detail.label_value('Centro de trabajo', ultimo_centro_trabajo_str) }}
                 {% endif %}
+                {# Termina ultimo centro de trabajo de la persona #}
+                {# Inicia ultima plaza de la persona #}
+                {% set ultimo_plaza_str = ultimo_plaza.descripcion + ' (' + ultimo_plaza.clave + ')' %}
                 {% if current_user.can_view('PLAZAS') %}
-                    {{ detail.label_value('Ú. plaza', persona.ultimo_plaza.clave, url_for('plazas.detail', plaza_id=persona.ultimo_plaza_id))}}
+                    {{ detail.label_value('Plaza', ultimo_plaza_str, url_for('plazas.detail', plaza_id=ultimo_plaza.id))}}
                 {% else %}
-                    {{ detail.label_value('Ú. plaza', persona.ultimo_plaza.clave) }}
+                    {{ detail.label_value('Plaza', ultimo_plaza_str) }}
                 {% endif %}
+                {# Termina ultima plaza de la persona #}
+                {# Inicia ultimo puesto de la persona #}
+                {% set ultimo_puesto_str = ultimo_puesto.descripcion + ' (' + ultimo_puesto.clave + ')' %}
                 {% if current_user.can_view('PUESTOS') %}
-                    {{ detail.label_value('Ú. puesto', persona.ultimo_puesto.clave, url_for('puestos.detail', puesto_id=persona.ultimo_puesto_id))}}
+                    {{ detail.label_value('Puesto', ultimo_puesto_str, url_for('puestos.detail', puesto_id=ultimo_puesto.id))}}
                 {% else %}
-                    {{ detail.label_value('Ú. puesto', persona.ultimo_puesto.clave) }}
+                    {{ detail.label_value('Puesto', ultimo_puesto_str) }}
                 {% endif %}
+                {# Termina ultimo puesto de la persona #}
             </div>
             <div class="col-md-6">
                 {{ detail.label_value('No. empleado', persona.num_empleado) }}

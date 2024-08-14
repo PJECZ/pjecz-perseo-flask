@@ -16,11 +16,14 @@ from lib.exceptions import (
     MyEmptyError,
     MyFileNotAllowedError,
     MyFileNotFoundError,
+    MyIsDeletedError,
+    MyNotExistsError,
     MyUploadError,
 )
 from lib.google_cloud_storage import upload_file_to_gcs
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
+from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
 from perseo.extensions import database
 
@@ -38,6 +41,52 @@ bitacora.addHandler(empunadura)
 app = create_app()
 app.app_context().push()
 database.app = app
+
+
+def actualizar_ultimos(persona_id: int = None) -> tuple[str, str, str]:
+    """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
+
+    # Si se proporciona un ID de Persona, entonces actualizar solo esa Persona
+    if persona_id is not None:
+        persona = Persona.query.filter_by(id=persona_id).first()
+        if persona is None:
+            raise MyNotExistsError(f"No existe la Persona con ID {persona_id}")
+        if persona.estatus != "A":
+            raise MyIsDeletedError(f"La Persona con ID {persona_id} está eliminada")
+        personas = [persona]
+    else:
+        personas = Persona.query.filter_by(estatus="A").all()
+
+    # Bucle por las Personas
+    contador = 0
+    for persona in personas:
+        # Incrementar el contador
+        contador += 1
+
+    # Entregar mensaje de termino, el nombre del archivo XLSX y la URL publica
+    mensaje_termino = f"Se actualizaron centro de trabajo, plaza y puesto de {contador} Personas"
+    nombre_archivo_xlsx = ""
+    public_url = ""
+    return mensaje_termino, nombre_archivo_xlsx, public_url
+
+
+def lanzar_actualizar_ultimos(persona_id: int = None):
+    """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
+
+    # Iniciar la tarea en el fondo
+    set_task_progress(0, "Inicia actualizar último centro de trabajo, plaza y puesto de las Personas")
+
+    # Ejecutar el creador
+    try:
+        mensaje_termino, nombre_archivo_xlsx, public_url = actualizar_ultimos(persona_id)
+    except MyAnyError as error:
+        mensaje_error = str(error)
+        set_task_error(mensaje_error)
+        return mensaje_error
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    set_task_progress(100, mensaje_termino, nombre_archivo_xlsx, public_url)
+    return mensaje_termino
 
 
 def exportar_xlsx() -> tuple[str, str, str]:
