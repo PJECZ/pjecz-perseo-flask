@@ -21,6 +21,7 @@ from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
+from perseo.blueprints.personas.tasks import actualizar_ultimos_xlsx as task_actualizar_ultimos
 from perseo.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.puestos.models import Puesto
@@ -49,8 +50,130 @@ def cli():
 
 
 @click.command()
+@click.argument("quincena_clave", type=str)
+def actualizar_datos_fiscales(quincena_clave: str):
+    """Actualizar los CURPs, CP fiscal y las fechas de ingreso de las personas a partir de los archivos de explotacion de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida")
+        sys.exit(1)
+
+    # Validar el directorio donde espera encontrar los archivos de explotacion
+    if EXPLOTACION_BASE_DIR is None:
+        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
+        sys.exit(1)
+
+    # Validar si existe el archivo
+    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, EMPLEADOS_ALFABETICO_FILENAME_XLS)
+    if not ruta.exists():
+        click.echo(f"ERROR: {str(ruta)} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
+        sys.exit(1)
+
+    # Abrir el archivo XLS con xlrd
+    libro = xlrd.open_workbook(str(ruta))
+
+    # Obtener la primera hoja
+    hoja = libro.sheet_by_index(0)
+
+    # Inicializar los listados con las anomalias
+    personas_no_encontradas = []
+
+    # Inicializar contador de personas actualizadas
+    personas_actualizadas_contador = 0
+
+    # Bucle por cada fila
+    click.echo("Actualizando las Personas: ", nl=False)
+    for fila in range(1, hoja.nrows):
+        # Tomar las columnas
+        rfc = hoja.cell_value(fila, 0)
+        quincena_ingreso_pj_fecha_str = str(int(hoja.cell_value(fila, 7)))
+        quincena_ingreso_gobierno_fecha_str = str(int(hoja.cell_value(fila, 8)))
+
+        # Validar el CURP
+        try:
+            curp = safe_curp(hoja.cell_value(fila, 17))
+        except ValueError:
+            click.echo(f"ERROR: {hoja.cell_value(fila, 17)} no es CURP VALIDO.")
+            continue
+
+        # Si la celda de CP fiscal es vacia, tomar el valor 0
+        if hoja.cell_value(fila, 21) == "":
+            cp_fiscal = 0
+        else:
+            cp_fiscal = int(hoja.cell_value(fila, 21))
+
+        # Convertir la quincena_ingreso_pj_fecha_str a fecha
+        try:
+            ingreso_pj_fecha = quincena_to_fecha(quincena_ingreso_pj_fecha_str)
+        except ValueError:
+            # ingreso_pj_fecha = None
+            click.echo(f"ERROR: {quincena_ingreso_pj_fecha_str} no es VALIDO.")
+            sys.exit(1)
+
+        # Convertir la quincena_entro_gob_str a fecha
+        try:
+            ingreso_gobierno_fecha = quincena_to_fecha(quincena_ingreso_gobierno_fecha_str)
+        except ValueError:
+            # ingreso_gobierno_fecha = None
+            click.echo(f"ERROR: {quincena_ingreso_gobierno_fecha_str} no es VALIDO.")
+            sys.exit(1)
+
+        # Consultar a la persona
+        persona = Persona.query.filter_by(rfc=rfc).first()
+
+        # Si no se encuentra, agregar a la lista de anomalias y saltar
+        if persona is None:
+            personas_no_encontradas.append(rfc)
+            continue
+
+        # Inicializar la bandera de cambios
+        hay_cambios = False
+
+        # Si persona.ingreso_pj_fecha es diferente, actualizar
+        if persona.ingreso_pj_fecha != ingreso_pj_fecha:
+            persona.ingreso_pj_fecha = ingreso_pj_fecha
+            hay_cambios = True
+
+        # Si persona.ingreso_gobierno_fecha es diferente, actualizar
+        if persona.ingreso_gobierno_fecha != ingreso_gobierno_fecha:
+            persona.ingreso_gobierno_fecha = ingreso_gobierno_fecha
+            hay_cambios = True
+
+        # Si la persona NO tiene CURP, actualizar
+        if persona.curp == "":
+            persona.curp = curp
+            hay_cambios = True
+
+        # Si la persona NO tiene CP fiscal, actualizar
+        if persona.codigo_postal_fiscal == 0 and cp_fiscal > 0:
+            persona.codigo_postal_fiscal = cp_fiscal
+            hay_cambios = True
+
+        # Si hay cambios, agregar a la sesion e incrementar el contador
+        if hay_cambios is True:
+            persona.save()
+            personas_actualizadas_contador += 1
+            click.echo(click.style("u", fg="green"), nl=False)
+
+    # Poner avance de linea
+    click.echo("")
+
+    # Si hubo personas_no_encontradas, mostrarlas
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} personas que no se encontraron:", fg="yellow"))
+        click.echo(click.style(f"  {','.join(personas_no_encontradas)}", fg="yellow"))
+
+    # Mensaje termino
+    click.echo(click.style(f"  Actualizar fechas de ingreso de las personas: {personas_actualizadas_contador}", fg="green"))
+
+
+@click.command()
 @click.option("--personas-csv", default=PERSONAS_CSV, help="Archivo CSV con los datos de las Personas")
-def actualizar(personas_csv: str):
+def actualizar_datos_personales(personas_csv: str):
     """Actualizar los Nombres, Apellido Primero, Apellido Segundo, CP, CURP y/o NSS de las Personas en base a su RFC a partir de un archivo CSV"""
 
     # Validar archivo
@@ -286,128 +409,6 @@ def actualizar_nuevas_columnas(personas_csv: str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def actualizar_curp_cp_fiscal_fechas_ingreso(quincena_clave: str):
-    """Actualizar los CURPs, CP fiscal y las fechas de ingreso de las personas a partir de los archivos de explotacion de una quincena"""
-
-    # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("ERROR: Quincena inválida")
-        sys.exit(1)
-
-    # Validar el directorio donde espera encontrar los archivos de explotacion
-    if EXPLOTACION_BASE_DIR is None:
-        click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
-        sys.exit(1)
-
-    # Validar si existe el archivo
-    ruta = Path(EXPLOTACION_BASE_DIR, quincena_clave, EMPLEADOS_ALFABETICO_FILENAME_XLS)
-    if not ruta.exists():
-        click.echo(f"ERROR: {str(ruta)} no se encontró.")
-        sys.exit(1)
-    if not ruta.is_file():
-        click.echo(f"ERROR: {str(ruta)} no es un archivo.")
-        sys.exit(1)
-
-    # Abrir el archivo XLS con xlrd
-    libro = xlrd.open_workbook(str(ruta))
-
-    # Obtener la primera hoja
-    hoja = libro.sheet_by_index(0)
-
-    # Inicializar los listados con las anomalias
-    personas_no_encontradas = []
-
-    # Inicializar contador de personas actualizadas
-    personas_actualizadas_contador = 0
-
-    # Bucle por cada fila
-    click.echo("Actualizando las Personas: ", nl=False)
-    for fila in range(1, hoja.nrows):
-        # Tomar las columnas
-        rfc = hoja.cell_value(fila, 0)
-        quincena_ingreso_pj_fecha_str = str(int(hoja.cell_value(fila, 7)))
-        quincena_ingreso_gobierno_fecha_str = str(int(hoja.cell_value(fila, 8)))
-
-        # Validar el CURP
-        try:
-            curp = safe_curp(hoja.cell_value(fila, 17))
-        except ValueError:
-            click.echo(f"ERROR: {hoja.cell_value(fila, 17)} no es CURP VALIDO.")
-            continue
-
-        # Si la celda de CP fiscal es vacia, tomar el valor 0
-        if hoja.cell_value(fila, 21) == "":
-            cp_fiscal = 0
-        else:
-            cp_fiscal = int(hoja.cell_value(fila, 21))
-
-        # Convertir la quincena_ingreso_pj_fecha_str a fecha
-        try:
-            ingreso_pj_fecha = quincena_to_fecha(quincena_ingreso_pj_fecha_str)
-        except ValueError:
-            # ingreso_pj_fecha = None
-            click.echo(f"ERROR: {quincena_ingreso_pj_fecha_str} no es VALIDO.")
-            sys.exit(1)
-
-        # Convertir la quincena_entro_gob_str a fecha
-        try:
-            ingreso_gobierno_fecha = quincena_to_fecha(quincena_ingreso_gobierno_fecha_str)
-        except ValueError:
-            # ingreso_gobierno_fecha = None
-            click.echo(f"ERROR: {quincena_ingreso_gobierno_fecha_str} no es VALIDO.")
-            sys.exit(1)
-
-        # Consultar a la persona
-        persona = Persona.query.filter_by(rfc=rfc).first()
-
-        # Si no se encuentra, agregar a la lista de anomalias y saltar
-        if persona is None:
-            personas_no_encontradas.append(rfc)
-            continue
-
-        # Inicializar la bandera de cambios
-        hay_cambios = False
-
-        # Si persona.ingreso_pj_fecha es diferente, actualizar
-        if persona.ingreso_pj_fecha != ingreso_pj_fecha:
-            persona.ingreso_pj_fecha = ingreso_pj_fecha
-            hay_cambios = True
-
-        # Si persona.ingreso_gobierno_fecha es diferente, actualizar
-        if persona.ingreso_gobierno_fecha != ingreso_gobierno_fecha:
-            persona.ingreso_gobierno_fecha = ingreso_gobierno_fecha
-            hay_cambios = True
-
-        # Si la persona NO tiene CURP, actualizar
-        if persona.curp == "":
-            persona.curp = curp
-            hay_cambios = True
-
-        # Si la persona NO tiene CP fiscal, actualizar
-        if persona.codigo_postal_fiscal == 0 and cp_fiscal > 0:
-            persona.codigo_postal_fiscal = cp_fiscal
-            hay_cambios = True
-
-        # Si hay cambios, agregar a la sesion e incrementar el contador
-        if hay_cambios is True:
-            persona.save()
-            personas_actualizadas_contador += 1
-            click.echo(click.style("u", fg="green"), nl=False)
-
-    # Poner avance de linea
-    click.echo("")
-
-    # Si hubo personas_no_encontradas, mostrarlas
-    if len(personas_no_encontradas) > 0:
-        click.echo(click.style(f"  Hubo {len(personas_no_encontradas)} personas que no se encontraron:", fg="yellow"))
-        click.echo(click.style(f"  {','.join(personas_no_encontradas)}", fg="yellow"))
-
-    # Mensaje termino
-    click.echo(click.style(f"  Actualizar fechas de ingreso de las personas: {personas_actualizadas_contador}", fg="green"))
-
-
-@click.command()
-@click.argument("quincena_clave", type=str)
 def actualizar_tabuladores(quincena_clave: str):
     """Actualizar los tabuladores de las personas a partir de los archivos de explotacion de una quincena"""
 
@@ -610,90 +611,18 @@ def actualizar_tabuladores(quincena_clave: str):
 
 
 @click.command()
-@click.argument("quincena_clave", type=str)
-@click.option("--probar", is_flag=True, help="Modo de pruebas, solo muestra los cambios que se harían")
-def actualizar_ultimos(quincena_clave: str, probar: bool = False):
-    """Actualizar ultimos centros de trabajos, plazas y puestos"""
+def actualizar_ultimos_xlsx():
+    """Actualizar el último centro de trabajo, plaza y puesto de las Personas a partir de la última nomina"""
 
-    # Iniciar sesión con la base de datos para que la alimentación sea rápida
-    sesion = database.session
-
-    # Validar quincena
-    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
-        click.echo("ERROR: Quincena inválida")
+    # Ejecutar la tarea
+    try:
+        mensaje_termino, _, _ = task_actualizar_ultimos()
+    except MyAnyError as error:
+        click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
-    # Consultar la quincena
-    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
-    if quincena is None:
-        click.echo("ERROR: Quincena no encontrada.")
-        sys.exit(1)
-
-    # Inicializar contadores
-    actualizaciones_centros_trabajos_contador = 0
-    actualizaciones_plazas_contador = 0
-    actualizaciones_puestos_contador = 0
-    actualizaciones_contador = 0
-
-    # Bucle por las nominas de la quincena
-    click.echo("Actualizar los ultimos centros de trabajos, plazas y puestos de las Personas: ", nl=False)
-    for nomina in Nomina.query.filter_by(quincena_id=quincena.id).all():
-        hay_cambios = False
-
-        # Consultar a la persona
-        persona = Persona.query.get(nomina.persona_id)
-
-        # Si el centro de trabajo de la persona es diferente, hay cambios
-        if persona.ultimo_centro_trabajo_id != nomina.centro_trabajo_id:
-            persona.ultimo_centro_trabajo_id = nomina.centro_trabajo_id
-            actualizaciones_centros_trabajos_contador += 1
-            hay_cambios = True
-
-        # Si la plaza de la persona es diferente, hay cambios
-        if persona.ultimo_plaza_id != nomina.plaza_id:
-            persona.ultimo_plaza_id = nomina.plaza_id
-            actualizaciones_plazas_contador += 1
-            hay_cambios = True
-
-        # Cada persona esta relacionada con un tabulador
-        # A su vez, el tabulador esta relacionado con un puesto
-        # Si el puesto de la persona es diferente, hay cambios
-        # if persona.ultimo_puesto_id != nomina.puesto_id:
-        #     persona.ultimo_puesto_id = nomina.puesto_id
-        #     actualizaciones_puestos_contador += 1
-        #     hay_cambios = True
-
-        # Si hay cambios
-        if hay_cambios:
-            actualizaciones_contador += 1
-            # Si NO es modo PROBAR, agregar a la sesion
-            if not probar:
-                sesion.add(persona)
-            click.echo(click.style("u", fg="blue"), nl=False)
-
-    # Si NO es modo PROBAR, cerrar la sesion para que se guarden todos los datos en la base de datos
-    if not probar:
-        sesion.commit()
-        sesion.close()
-    click.echo("")
-
-    # Si hubo actualizaciones_centros_trabajos_contador
-    if actualizaciones_centros_trabajos_contador > 0:
-        click.echo(f"  Centros de Trabajos: {actualizaciones_centros_trabajos_contador} cambios.")
-
-    # Si hubo actualizaciones_plazas_contador
-    if actualizaciones_plazas_contador > 0:
-        click.echo(f"  Plazas: {actualizaciones_plazas_contador} cambios.")
-
-    # Si hubo actualizaciones_puestos_contador
-    if actualizaciones_puestos_contador > 0:
-        click.echo(f"  Puestos: {actualizaciones_puestos_contador} cambios.")
-
-    # Mensaje termino
-    if probar:
-        click.echo(click.style(f"Actualizar ultimos: modo PROBAR {actualizaciones_contador} pueden actualizarse.", fg="green"))
-    else:
-        click.echo(click.style(f"Actualizar ultimos: {actualizaciones_contador} actualizados.", fg="green"))
+    # Mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
 
 
 @click.command()
@@ -895,7 +824,7 @@ def migrar_eliminar_rfc(rfc_origen: str, rfc_destino: str, eliminar: bool):
 
 
 @click.command()
-def sincronizar():
+def sincronizar_con_rrhh_personal():
     """Sincronizar las Personas consultando la API de RRHH Personal"""
     click.echo("Sincronizando Personas...")
 
@@ -1003,13 +932,13 @@ def sincronizar():
     click.echo(f"Personas: {contador} sincronizados.")
 
 
-cli.add_command(actualizar)
+cli.add_command(actualizar_datos_fiscales)
+cli.add_command(actualizar_datos_personales)
 cli.add_command(actualizar_nuevas_columnas)
 cli.add_command(actualizar_tabuladores)
-cli.add_command(actualizar_curp_cp_fiscal_fechas_ingreso)
-cli.add_command(actualizar_ultimos)
+cli.add_command(actualizar_ultimos_xlsx)
 cli.add_command(cambiar_tabulador)
 cli.add_command(cambiar_tabulador_a_todos)
 cli.add_command(exportar_xlsx)
 cli.add_command(migrar_eliminar_rfc)
-cli.add_command(sincronizar)
+cli.add_command(sincronizar_con_rrhh_personal)

@@ -122,18 +122,44 @@ def list_inactive():
 @personas.route("/personas/<int:persona_id>")
 def detail(persona_id):
     """Detalle de una Persona"""
+    # Consultar a la persona
     persona = Persona.query.get_or_404(persona_id)
-    return render_template("personas/detail.jinja2", persona=persona)
+    # Consultar ltimo centro de trabajo
+    ultimo_centro_trabajo = CentroTrabajo.query.get(persona.ultimo_centro_trabajo_id)
+    # Consultar ultima plaza
+    ultimo_plaza = Plaza.query.get(persona.ultimo_plaza_id)
+    # Consultar ultimo puesto
+    ultimo_puesto = Puesto.query.get(persona.ultimo_puesto_id)
+    return render_template(
+        "personas/detail.jinja2",
+        persona=persona,
+        ultimo_centro_trabajo=ultimo_centro_trabajo,
+        ultimo_plaza=ultimo_plaza,
+        ultimo_puesto=ultimo_puesto,
+    )
+
+
+@personas.route("/personas/actualizar_ultimos_xlsx")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def actualizar_ultimos_xlsx():
+    """Actualizar último centro de trabajo, plaza y puesto de la Persona"""
+    tarea = current_user.launch_task(
+        comando="personas.tasks.lanzar_actualizar_ultimos_xlsx",
+        mensaje="Actualizando activos, los últimos centros de trabajo, las plazas y bajar un archivo XLSX...",
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
 @personas.route("/personas/exportar_xlsx")
+@permission_required(MODULO, Permiso.VER)
 def exportar_xlsx():
     """Lanzar tarea en el fondo para exportar las Personas a un archivo XLSX"""
     tarea = current_user.launch_task(
         comando="personas.tasks.lanzar_exportar_xlsx",
         mensaje="Exportando las Personas a un archivo XLSX...",
     )
-    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
