@@ -166,8 +166,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
 
         # Si se va a actualizar
         if se_va_a_actualizar:
-            # database.session.add(persona)
-            # database.session.commit()
+            persona.save()
             actualizaciones_contador += 1
 
         # Si el ultimo centro de trabajo NO es NO DEFINIDO, se consulta
