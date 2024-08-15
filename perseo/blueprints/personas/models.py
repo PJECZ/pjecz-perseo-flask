@@ -65,7 +65,7 @@ class Persona(database.Model, UniversalMixin):
     puesto_equivalente: Mapped[str] = mapped_column(String(16), default="")
 
     # Columna es_activo que indica si la persona está activa o inactiva
-    es_activo: Mapped[bool] = mapped_column(default=False)
+    es_activa: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
     cuentas: Mapped[List["Cuenta"]] = relationship("Cuenta", back_populates="persona")

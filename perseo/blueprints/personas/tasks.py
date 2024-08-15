@@ -137,13 +137,13 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             # Entonces los ultimos seran no definidos y se desactiva
             ultimo_centro_trabajo_id = centro_trabajo_no_definido.id
             ultimo_plaza_id = plaza_no_definida.id
-            activo_o_inactivo = False
+            es_activa_o_inactiva = False
             inactivos_contador += 1
         else:
             # De lo contrario, se toman los valores de la nómina
             ultimo_centro_trabajo_id = nomina.centro_trabajo_id
             ultimo_plaza_id = nomina.plaza_id
-            activo_o_inactivo = True
+            es_activa_o_inactiva = True
             activos_contador += 1
 
         # Iniciar bandera para saber si se va a actualizar
@@ -160,8 +160,8 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             se_va_a_actualizar = True
 
         # Si cambia es_activo
-        if persona.es_activo != activo_o_inactivo:
-            persona.es_activo = activo_o_inactivo
+        if persona.es_activa != es_activa_o_inactiva:
+            persona.es_activa = es_activa_o_inactiva
             se_va_a_actualizar = True
 
         # Si se va a actualizar
@@ -185,7 +185,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         # Agregar la fila con los datos
         hoja.append(
             [
-                int(persona.es_activo),
+                int(persona.es_activa),
                 persona.rfc,
                 persona.nombres,
                 persona.apellido_primero,
