@@ -139,25 +139,27 @@ def detail(persona_id):
     )
 
 
-@personas.route("/personas/actualizar")
-def actualizar():
+@personas.route("/personas/actualizar_ultimos_xlsx")
+@permission_required(MODULO, Permiso.ADMINISTRAR)
+def actualizar_ultimos_xlsx():
     """Actualizar último centro de trabajo, plaza y puesto de la Persona"""
     tarea = current_user.launch_task(
-        comando="personas.tasks.actualizar_ultimos",
-        mensaje="Actualizando último centro de trabajo, plaza y puesto de la Persona...",
+        comando="personas.tasks.lanzar_actualizar_ultimos_xlsx",
+        mensaje="Actualizando activos, los últimos centros de trabajo, las plazas y bajar un archivo XLSX...",
     )
-    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 
 @personas.route("/personas/exportar_xlsx")
+@permission_required(MODULO, Permiso.VER)
 def exportar_xlsx():
     """Lanzar tarea en el fondo para exportar las Personas a un archivo XLSX"""
     tarea = current_user.launch_task(
         comando="personas.tasks.lanzar_exportar_xlsx",
         mensaje="Exportando las Personas a un archivo XLSX...",
     )
-    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 10 segundos...", "info")
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
     return redirect(url_for("tareas.detail", tarea_id=tarea.id))
 
 

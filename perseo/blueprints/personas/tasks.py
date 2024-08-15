@@ -46,7 +46,7 @@ app.app_context().push()
 database.app = app
 
 
-def actualizar_ultimos(persona_id: int = None) -> tuple[str, str, str]:
+def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
     """Actualizar último centro de trabajo y plaza de las Personas"""
     bitacora.info("Inicia actualizar último centro de trabajo y plaza de las Personas")
 
@@ -202,13 +202,13 @@ def actualizar_ultimos(persona_id: int = None) -> tuple[str, str, str]:
         )
 
     # Agregar mensajes
-    mensaje = f"Hay {activos_contador} personas activas"
+    mensaje = f"Ahora hay un total de {activos_contador} personas activas."
     bitacora.info(mensaje)
     mensajes.append(mensaje)
-    mensaje = f"Hay {inactivos_contador} personas inactivas"
+    mensaje = f"Ahora hay un total de {inactivos_contador} personas inactivas."
     bitacora.info(mensaje)
     mensajes.append(mensaje)
-    mensaje = f"Se actualizaron {actualizaciones_contador} centro de trabajo, plaza y puesto de Personas"
+    mensaje = f"Se actualizaron {actualizaciones_contador} registros."
     bitacora.info(mensaje)
     mensajes.append(mensaje)
 
@@ -241,11 +241,11 @@ def actualizar_ultimos(persona_id: int = None) -> tuple[str, str, str]:
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     data=archivo.read(),
                 )
-                mensaje = f"Se subio el archivo XLSX a GCS {public_url}"
+                mensaje = f"Se subió el archivo XLSX a GCS {public_url}"
                 bitacora.info(mensaje)
                 mensajes.append(mensaje)
             except (MyEmptyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError) as error:
-                mensaje = f"Falló al subir el archivo XLSX a GCS: {str(error)}"
+                mensaje = f"Falló el subir el archivo XLSX a GCS: {str(error)}"
                 bitacora.warning(mensaje)
                 mensajes.append(mensaje)
 
@@ -254,7 +254,7 @@ def actualizar_ultimos(persona_id: int = None) -> tuple[str, str, str]:
     return mensaje_termino, nombre_archivo_xlsx, public_url
 
 
-def lanzar_actualizar_ultimos(persona_id: int = None):
+def lanzar_actualizar_ultimos_xlsx(persona_id: int = None):
     """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
 
     # Iniciar la tarea en el fondo
@@ -262,7 +262,7 @@ def lanzar_actualizar_ultimos(persona_id: int = None):
 
     # Ejecutar el creador
     try:
-        mensaje_termino, nombre_archivo_xlsx, public_url = actualizar_ultimos(persona_id)
+        mensaje_termino, nombre_archivo_xlsx, public_url = actualizar_ultimos_xlsx(persona_id)
     except MyAnyError as error:
         mensaje_error = str(error)
         set_task_error(mensaje_error)

@@ -21,7 +21,7 @@ from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.personas.tasks import actualizar_ultimos as task_actualizar_ultimos
+from perseo.blueprints.personas.tasks import actualizar_ultimos_xlsx as task_actualizar_ultimos
 from perseo.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.blueprints.plazas.models import Plaza
 from perseo.blueprints.puestos.models import Puesto
@@ -611,7 +611,7 @@ def actualizar_tabuladores(quincena_clave: str):
 
 
 @click.command()
-def actualizar_ultimos():
+def actualizar_ultimos_xlsx():
     """Actualizar el último centro de trabajo, plaza y puesto de las Personas a partir de la última nomina"""
 
     # Ejecutar la tarea
@@ -934,10 +934,9 @@ def sincronizar_con_rrhh_personal():
 
 cli.add_command(actualizar_datos_fiscales)
 cli.add_command(actualizar_datos_personales)
-cli.add_command(actualizar_ultimos)
 cli.add_command(actualizar_nuevas_columnas)
 cli.add_command(actualizar_tabuladores)
-cli.add_command(actualizar_ultimos)
+cli.add_command(actualizar_ultimos_xlsx)
 cli.add_command(cambiar_tabulador)
 cli.add_command(cambiar_tabulador_a_todos)
 cli.add_command(exportar_xlsx)

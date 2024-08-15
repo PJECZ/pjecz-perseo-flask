@@ -19,50 +19,10 @@ def start():
         # Consultar la ultima quincena
         quincena = Quincena.query.order_by(Quincena.clave.desc()).first()
 
-        # Inicializar variables
-        quincena_producto_nominas = None
-        quincena_producto_monederos = None
-        quincena_producto_pensionados = None
-        quincena_producto_dispersiones_pensionados = None
-
-        # Si existe la ultima quincena
-        if quincena:
-            # Consultar el ultimo producto de quincenas con fuente NOMINAS
-            quincena_producto_nominas = (
-                QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="NOMINAS", estatus="A")
-                .order_by(QuincenaProducto.id.desc())
-                .first()
-            )
-
-            # Consultar el ultimo producto de quincenas con fuente MONEDEROS
-            quincena_producto_monederos = (
-                QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="MONEDEROS", estatus="A")
-                .order_by(QuincenaProducto.id.desc())
-                .first()
-            )
-
-            # Consultar el ultimo producto de quincenas con fuente PENSIONADOS
-            quincena_producto_pensionados = (
-                QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="PENSIONADOS", estatus="A")
-                .order_by(QuincenaProducto.id.desc())
-                .first()
-            )
-
-            # Consultar el ultimo producto de quincenas con fuente DISPERSIONES PENSIONADOS
-            quincena_producto_dispersiones_pensionados = (
-                QuincenaProducto.query.filter_by(quincena_id=quincena.id, fuente="DISPERSIONES PENSIONADOS", estatus="A")
-                .order_by(QuincenaProducto.id.desc())
-                .first()
-            )
-
         # Mostrar start.jinja2
         return render_template(
             "sistemas/start.jinja2",
             quincena=quincena,
-            quincena_producto_nominas=quincena_producto_nominas,
-            quincena_producto_monederos=quincena_producto_monederos,
-            quincena_producto_pensionados=quincena_producto_pensionados,
-            quincena_producto_dispersiones_pensionados=quincena_producto_dispersiones_pensionados,
         )
 
     # No está autenticado, debe de iniciar sesión
