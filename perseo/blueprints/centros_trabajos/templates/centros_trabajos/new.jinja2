@@ -5,9 +5,7 @@
 {% block title %}Nuevo Centro de Trabajo{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Nuevo Centro de Trabajo') %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Nuevo Centro de Trabajo') }}
 {% endblock %}
 
 {% block content %}

@@ -72,6 +72,10 @@
     {{ button(label, url, 'mdi:map-marker') }}
 {%- endmacro -%}
 
+{%- macro button_dashboard(label, url) -%}
+    {{ button(label, url, 'mdi:view-dashboard') }}
+{%- endmacro -%}
+
 {# Button modal executes a javascript function #}
 {%- macro button_modal(label, onclick_js, icon) -%}
     <a class="btn btn-sm btn-outline-secondary" href="javascript:void(0)" onclick="{{ onclick_js }}"><span class="iconify" data-icon="{{ icon }}"></span> {{ label }}</a>

@@ -5,9 +5,7 @@
 {% block title %}Editar Permiso {{ permiso.id }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar Permiso ' + permiso.id | string) %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Editar Permiso ' + permiso.id | string) }}
 {% endblock %}
 
 {% block content %}

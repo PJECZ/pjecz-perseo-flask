@@ -5,9 +5,7 @@
 {% block title %}Nuevo Rol{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Nuevo Rol') %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Nuevo Rol') }}
 {% endblock %}
 
 {% block content %}

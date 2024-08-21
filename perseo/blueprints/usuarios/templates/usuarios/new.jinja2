@@ -5,9 +5,7 @@
 {% block title %}Nuevo Usuario{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Nuevo Usuario') %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Nuevo Usuario') }}
 {% endblock %}
 
 {% block content %}
