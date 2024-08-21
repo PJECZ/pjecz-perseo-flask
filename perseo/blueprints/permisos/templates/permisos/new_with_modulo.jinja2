@@ -5,9 +5,7 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons(titulo) %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page(titulo) }}
 {% endblock %}
 
 {% block content %}

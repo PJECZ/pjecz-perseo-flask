@@ -5,9 +5,7 @@
 {% block title %}Editar Percepción Deducción {{ percepcion_deduccion.id }}{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Editar Percepción-Deducción ' + percepcion_deduccion.id | string) %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Editar Percepción-Deducción ' + percepcion_deduccion.id | string) }}
 {% endblock %}
 
 {% block content %}

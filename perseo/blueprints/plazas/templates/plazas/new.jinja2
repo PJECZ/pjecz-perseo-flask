@@ -5,9 +5,7 @@
 {% block title %}Nueva Plaza{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Nueva Plaza') %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Nueva Plaza') }}
 {% endblock %}
 
 {% block content %}

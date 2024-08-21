@@ -33,9 +33,6 @@ class PersonaForm(FlaskForm):
     nacimiento_fecha = DateField("F. nacimiento", validators=[Optional()])
     codigo_postal_fiscal = IntegerField("Código Postal fiscal", validators=[DataRequired(), NumberRange(0, 99999)], default=0)
     seguridad_social = StringField("NSS", validators=[Optional(), Length(max=24)])
-    ultimo_centro_trabajo = StringField("Último centro de trabajo")  # Read only
-    ultimo_plaza = StringField("Última plaza")  # Read only
-    ultimo_puesto = StringField("Último puesto")  # Read only
     sub_sis = IntegerField("Subsistema", validators=[Optional()], default=0)
     nivel = IntegerField("Nivel", validators=[Optional()], default=0)
     puesto_equivalente = StringField("Puesto equivalente", validators=[Optional(), Length(max=16)], default="")

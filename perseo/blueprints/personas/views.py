@@ -139,6 +139,12 @@ def detail(persona_id):
     )
 
 
+@personas.route("/personas/tablero")
+def dashboard():
+    """Tablero de Persona"""
+    return render_template("personas/dashboard.jinja2")
+
+
 @personas.route("/personas/actualizar_ultimos_xlsx")
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def actualizar_ultimos_xlsx():
@@ -305,9 +311,6 @@ def edit(persona_id):
     form.nacimiento_fecha.data = persona.nacimiento_fecha
     form.codigo_postal_fiscal.data = persona.codigo_postal_fiscal
     form.seguridad_social.data = persona.seguridad_social
-    form.ultimo_centro_trabajo.data = persona.ultimo_centro_trabajo.clave  # Read only
-    form.ultimo_plaza.data = persona.ultimo_plaza.clave  # Read only
-    form.ultimo_puesto.data = persona.ultimo_puesto.clave  # Read only
     form.sub_sis.data = persona.sub_sis
     form.nivel.data = persona.nivel
     form.puesto_equivalente.data = persona.puesto_equivalente

@@ -2,12 +2,10 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Nuevo Persona{% endblock %}
+{% block title %}Nueva Persona{% endblock %}
 
 {% block topbar_actions %}
-    {% call topbar.page_buttons('Nuevo Persona') %}
-        {{ topbar.button_cancel() }}
-    {% endcall %}
+    {{ topbar.page('Nueva Persona') }}
 {% endblock %}
 
 {% block content %}
@@ -22,9 +20,6 @@
                     {% call f.form_group(form.curp) %}{% endcall %}
                     {% call f.form_group(form.nacimiento_fecha) %}{% endcall %}
                     {% call f.form_group(form.codigo_postal_fiscal) %}{% endcall %}
-                    {% call f.form_group(form.ultimo_centro_trabajo, readonly=true) %}{% endcall %}
-                    {% call f.form_group(form.ultimo_plaza, readonly=true) %}{% endcall %}
-                    {% call f.form_group(form.ultimo_puesto, readonly=true) %}{% endcall %}
                 </div>
                 <div class="col-md-6">
                     {% call f.form_group(form.num_empleado) %}{% endcall %}

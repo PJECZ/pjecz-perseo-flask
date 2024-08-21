@@ -91,10 +91,11 @@
         {{ caller () }}
         </div>
     {% elif f.type == 'SubmitField' %}
-        <div class="form-group mb-2">
+        <div class="form-group d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-2">
         {{ field(f, **kwargs) }}
         {{ field_errors(f) }}
         {{ caller () }}
+        <a class="btn btn-outline-danger" href="javascript:history.back()">Cancelar</a>
         </div>
     {% else %}
         <div class="form-group mb-2">
