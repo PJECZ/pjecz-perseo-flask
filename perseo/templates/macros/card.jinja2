@@ -1,0 +1,54 @@
+{# Bootstrap container #}
+{%- macro container() -%}
+    <div class="container text-center">
+        {{ caller () }}
+    </div>
+{%- endmacro -%}
+
+{# Bootstrap container_row #}
+{%- macro container_row() -%}
+    <div class="row">
+        {{ caller () }}
+    </div>
+{%- endmacro -%}
+
+{# Bootstrap col_md_4 #}
+{%- macro col_md(denominador=4) -%}
+    <div class="col-md-{{ denominador }}">
+        {{ caller () }}
+    </div>
+{%- endmacro -%}
+
+{# Bootstrap card #}
+{%- macro card(title='') -%}
+    <div class="card mb-4 rounded-3 shadow-sm text-center border-dark">
+        {% if title %}<div class="card-header py-3 text-bg-primary border-dark">
+            <h4 class="my-0 fw-normal">{{ title }}</h4>
+        </div>{% endif %}
+        <div class="card-body">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Bootstrap card body #}
+{%- macro card_body(title='', button_text='', button_url='#') -%}
+    {% if title %}<h1 class="card-title">
+        <small class="text-body-secondary fw-light">
+            {{ title }}
+        </small>
+    </h1>{% endif %}
+    {{ caller () }}
+    {% if button_text %}<a href="{{ button_url }}" type="button" class="w-100 btn btn-lg btn-outline-primary mt-2">
+        {{ button_text }}
+    </a>{% endif %}
+{%- endmacro -%}
+
+{# Bootstrap #}
+{%- macro list_unstyled() -%}
+    <ul class="list-unstyled mt-3 mb-4">
+        <li>
+            {{ caller () }}
+        </li>
+    </ul>
+{%- endmacro -%}

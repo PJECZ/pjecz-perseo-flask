@@ -128,7 +128,8 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         nomina = (
             Nomina.query.filter(Nomina.persona_id == persona.id)
             .filter(Nomina.quincena_id == quincena.id)
-            .filter_by(tipo="SALARIO")
+            .filter(Nomina.tipo == "SALARIO")
+            .filter(Nomina.importe > 0)
             .first()
         )
 

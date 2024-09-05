@@ -157,6 +157,7 @@ def crear_timbrados(
         .filter(Nomina.tipo == tipo)
         .filter(Nomina.estatus == "A")
         .filter(Persona.modelo.in_(modelos))
+        .filter(Nomina.importe > 0)
         .order_by(Persona.rfc)
         .all()
     )
