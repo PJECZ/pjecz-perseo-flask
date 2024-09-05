@@ -27,6 +27,7 @@ from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
+from perseo.blueprints.puestos.models import Puesto
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.extensions import database
 
@@ -47,7 +48,7 @@ database.app = app
 
 
 def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
-    """Actualizar último centro de trabajo y plaza de las Personas"""
+    """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
     bitacora.info("Inicia actualizar último centro de trabajo y plaza de las Personas")
 
     # Si se proporciona un ID de Persona, entonces actualizar solo esa Persona
@@ -76,6 +77,13 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
     plaza_no_definida = Plaza.query.filter_by(clave="ND").first()
     if plaza_no_definida is None:
         mensaje_error = "No existe la Plaza con clave ND"
+        bitacora.error(mensaje_error)
+        raise MyNotExistsError(mensaje_error)
+
+    # Definir la instancia con el puesto "NO DEFINIDO"
+    puesto_no_definido = Puesto.query.filter_by(clave="ND").first()
+    if puesto_no_definido is None:
+        mensaje_error = "No existe el Puesto con clave ND"
         bitacora.error(mensaje_error)
         raise MyNotExistsError(mensaje_error)
 
@@ -133,18 +141,37 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             .first()
         )
 
-        # Si no hay nómina..
+        # Si NO hay nómina..
         if nomina is None:
             # Entonces los ultimos seran no definidos y se desactiva
             ultimo_centro_trabajo_id = centro_trabajo_no_definido.id
             ultimo_plaza_id = plaza_no_definida.id
-            es_activa_o_inactiva = False
+            ultimo_puesto_id = puesto_no_definido.id
+            # Es persona inactiva
+            es_activa = False
             inactivos_contador += 1
         else:
             # De lo contrario, se toman los valores de la nómina
             ultimo_centro_trabajo_id = nomina.centro_trabajo_id
             ultimo_plaza_id = nomina.plaza_id
-            es_activa_o_inactiva = True
+            ultimo_puesto_id = puesto_no_definido.id  # Por defecto es ND
+            # De la clave la plaza se toma la clave del puesto
+            ultimo_plaza = Plaza.query.get(ultimo_plaza_id)
+            try:
+                # Si el modelo de la persona es 2, se toman cuatro caracteres
+                if persona.modelo == 2:
+                    ultimo_puesto_clave = ultimo_plaza.clave[6:10]
+                else:
+                    ultimo_puesto_clave = ultimo_plaza.clave[6:13]
+                ultimo_puesto = Puesto.query.filter_by(clave=ultimo_puesto_clave).first()
+                if ultimo_puesto is not None:
+                    ultimo_puesto_id = ultimo_puesto.id
+                else:
+                    bitacora.warning(f"No existe el Puesto con clave {ultimo_puesto_clave}")
+            except IndexError:
+                pass  # Se queda el puesto ND
+            # Es persona activa
+            es_activa = True
             activos_contador += 1
 
         # Iniciar bandera para saber si se va a actualizar
@@ -160,9 +187,14 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             persona.ultimo_plaza_id = ultimo_plaza_id
             se_va_a_actualizar = True
 
+        # Si cambia el último puesto
+        if persona.ultimo_puesto_id != ultimo_puesto_id:
+            persona.ultimo_puesto_id = ultimo_puesto_id
+            se_va_a_actualizar = True
+
         # Si cambia es_activo
-        if persona.es_activa != es_activa_o_inactiva:
-            persona.es_activa = es_activa_o_inactiva
+        if persona.es_activa != es_activa:
+            persona.es_activa = es_activa
             se_va_a_actualizar = True
 
         # Si se va a actualizar
