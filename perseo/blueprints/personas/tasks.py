@@ -49,7 +49,7 @@ database.app = app
 
 def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
     """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
-    bitacora.info("Inicia actualizar último centro de trabajo y plaza de las Personas")
+    bitacora.info("Inicia actualizar último centro de trabajo, plaza y puesto de las Personas")
 
     # Si se proporciona un ID de Persona, entonces actualizar solo esa Persona
     if persona_id is not None:
@@ -91,7 +91,14 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
     mensajes = []
 
     # Tomar la última Quinena
-    quincena = Quincena.query.order_by(Quincena.clave.desc()).filter_by(estatus="A").first()
+    quincena = (
+        Quincena.query.filter_by(estatus="A")
+        .filter_by(tiene_aguinaldos=False)
+        .filter_by(tiene_apoyos_anuales=False)
+        .filter_by(tiene_primas_vacacionales=False)
+        .order_by(Quincena.clave.desc())
+        .first()
+    )
     if quincena is None:
         raise MyNotExistsError("No hay Quincenas")
     mensaje = f"Se tomará la Quincena {quincena.clave}"
