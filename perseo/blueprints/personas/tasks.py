@@ -341,6 +341,8 @@ def exportar_xlsx() -> tuple[str, str, str]:
             "INGRESO GOBIERNO FECHA",
             "INGRESO PJ FECHA",
             "NACIMIENTO FECHA",
+            "PUESTO EQUIVALENTE",
+            "NIVEL",
         ]
     )
 
@@ -365,6 +367,8 @@ def exportar_xlsx() -> tuple[str, str, str]:
                 persona.ingreso_gobierno_fecha,
                 persona.ingreso_pj_fecha,
                 persona.nacimiento_fecha,
+                persona.puesto_equivalente,
+                persona.nivel,
             ]
         )
 
