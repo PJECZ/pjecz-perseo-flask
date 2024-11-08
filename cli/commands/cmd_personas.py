@@ -558,6 +558,10 @@ def actualizar_tabuladores(quincena_clave: str):
                 f"{rfc} {persona.nombre_completo}: Tabulador: {persona.tabulador_id} -> {tabulador.id}"
             )
             persona.tabulador_id = tabulador.id
+            # Tenemos el puesto en tabulador.puesto.clave y tabulador.puesto.descripcion
+            # Necesitamos definir puesto_equivalente
+            # Pero NO solo hay que hacer persona.puesto_equivalente = tabulador.puesto.clave
+            # Porque depende del modelo de la persona
             hay_cambios = True
 
         # Revisar si hay que actualizar el modelo a la Persona
