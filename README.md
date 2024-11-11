@@ -24,10 +24,11 @@ Ingresar al entorno virtual
 source venv/bin/activate
 ```
 
-Actualizar el gestor de paquetes **pip**
+Actualizar el gestor de paquetes **pip** y **setuptools**
 
 ```bash
 pip install --upgrade pip
+pip install --upgrade setuptools
 ```
 
 Instalar el paquete **wheel** para compilar las dependencias
