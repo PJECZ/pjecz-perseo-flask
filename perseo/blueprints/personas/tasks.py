@@ -126,6 +126,9 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             "CENTRO DE TRABAJO DESCRIPCION",
             "PLAZA CLAVE",
             "PLAZA DESCRIPCION",
+            "PUESTO",
+            "PUESTO EQUIVALENTE",
+            "NIVEL",
             "FUE ACTUALIZADO",
         ]
     )
@@ -221,6 +224,9 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         else:
             ultimo_plaza = plaza_no_definida
 
+        # Consultar el ultimo puesto de la persona
+        ultimo_puesto = Puesto.query.get(persona.ultimo_puesto_id)
+
         # Agregar la fila con los datos
         hoja.append(
             [
@@ -236,6 +242,9 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
                 ultimo_centro_trabajo.descripcion,
                 ultimo_plaza.clave,
                 ultimo_plaza.descripcion,
+                ultimo_puesto.clave,
+                persona.puesto_equivalente,
+                persona.nivel,
                 int(se_va_a_actualizar),
             ]
         )
