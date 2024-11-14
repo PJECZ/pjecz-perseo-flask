@@ -64,7 +64,7 @@ def cli():
     """Nominas"""
 
 
-@cli.command()
+@click.command()
 @click.argument("quincena_clave", type=str)
 @click.argument("archivo_csv", type=str)
 @click.option("--tipo", type=str, default="SALARIO")
@@ -170,7 +170,7 @@ def actualizar_numeros_cheque(quincena_clave: str, archivo_csv: str, tipo: str, 
     click.echo(click.style(f"  Se actualizaron {actualizados_contador} numeros de cheque", fg="green"))
 
 
-@cli.command()
+@click.command()
 @click.argument("quincena_clave", type=str)
 @click.option("--probar", is_flag=True, help="Solo probar la lectura del archivo.")
 def actualizar_timbrados(quincena_clave: str, probar: bool = False):
@@ -1986,6 +1986,72 @@ def generar_issste(quincena_clave, serica_xlsx, output_txt):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
+@click.argument("tipo", type=str)
+@click.argument("fecha_pago_str", type=str)
+def cambiar_fecha_pago(quincena_clave, tipo, fecha_pago_str):
+    """Cambiar las fechas de pago de una quincena y de un tipo de nómina dado"""
+
+    # Validar quincena_clave
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo(click.style("ERROR: Clave de la quincena inválida.", fg="red"))
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena o ha sido eliminada, causa error
+    if quincena is None or quincena.estatus != "A":
+        click.echo(click.style("ERROR: No existe o ha sido eliminada la quincena.", fg="red"))
+        sys.exit(1)
+
+    # Validar tipo
+    tipo = safe_string(tipo)
+    if tipo not in Nomina.TIPOS:
+        click.echo(click.style("ERROR: Tipo de nómina inválido.", fg="red"))
+        sys.exit(1)
+
+    # Consultar las nóminas de la quincena y del tipo
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id).filter_by(tipo=tipo).all()
+
+    # Si no hay nóminas, terminar
+    if len(nominas) == 0:
+        click.echo(click.style("ERROR: No hay nóminas para cambiar la fecha de pago.", fg="red"))
+        sys.exit(1)
+
+    # Validar fecha_pago
+    try:
+        fecha_pago = datetime.strptime(fecha_pago_str, "%Y-%m-%d").date()
+    except ValueError:
+        click.echo(click.style("ERROR: Fecha de pago inválida.", fg="red"))
+        sys.exit(1)
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Bucle por las nóminas para cambiar la fecha de pago
+    contador = 0
+    click.echo("Cambiando las fecha de pago: ", nl=False)
+    for nomina in nominas:
+        if nomina.fecha_pago == fecha_pago:
+            continue
+        nomina.fecha_pago = fecha_pago
+        sesion.add(nomina)
+        click.echo(click.style(".", fg="cyan"), nl=False)
+        contador += 1
+
+    # Cerrar la sesión para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Poner avance de línea
+    click.echo("")
+
+    # Mensaje de termino
+    click.echo(click.style(f"Se cambiaron {contador} fechas de pago.", fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
 def crear_archivo_xlsx_dispersiones_pensionados(quincena_clave):
     """Crear archivo XLSX con las dispersiones para pensionados"""
 
@@ -2305,6 +2371,7 @@ cli.add_command(alimentar_extraordinarios)
 cli.add_command(alimentar_pensiones_alimenticias)
 cli.add_command(alimentar_primas_vacacionales)
 cli.add_command(generar_issste)
+cli.add_command(cambiar_fecha_pago)
 cli.add_command(crear_archivo_xlsx_dispersiones_pensionados)
 cli.add_command(crear_archivo_xlsx_monederos)
 cli.add_command(crear_archivo_xlsx_nominas)

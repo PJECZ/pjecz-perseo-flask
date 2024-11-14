@@ -51,7 +51,7 @@
         {{ detail.label_value_currency('Deducción', nomina.deduccion) }}
         {{ detail.label_value_currency('Importe', nomina.importe) }}
         {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
-        {{ detail.label_value('Fecha de pago', moment(nomina.fecha_pago).format('DD MMM YYYY')) }}
+        {{ detail.label_value('Fecha de pago', nomina.fecha_pago) }}
         {# detail.label_value('Creado', moment(nomina.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
