@@ -43,21 +43,27 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Modales -->
     {% if current_user.can_admin('MODULOS') %}
         {% if modulo.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + modulo.nombre + '?') }}{% endif %}
         {% if modulo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + modulo.nombre + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
-    {{ detail.config_datatable() }}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
     {% if current_user.can_view('PERMISOS') and modulo.estatus == 'A' %}
         <script>
-            configDataTable['ajax']['url'] = '/permisos/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'modulo_id': {{ modulo.id}} };
-            configDataTable['columns'] = [
+            let configDTPermisos = constructorDataTable.config();
+            configDTPermisos['ajax']['url'] = '/permisos/datatable_json';
+            configDTPermisos['ajax']['data'] = { 'estatus': "A", 'modulo_id': {{ modulo.id}} };
+            configDTPermisos['columns'] = [
                 { data: "detalle" },
                 { data: "rol" }
             ];
-            configDataTable['columnDefs'] = [
+            configDTPermisos['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -69,7 +75,7 @@
                     targets: 1, // rol
                     data: null,
                     render: function(data, type, row, meta) {
-                        if (data.url == '') {
+                        if (data.url === '') {
                             return data.nombre;
                         } else {
                             return '<a href="' + data.url + '">' + data.nombre + '</a>';
@@ -77,7 +83,8 @@
                     }
                 }
             ];
-            $('#permisos_datatable').DataTable(configDataTable);
+            const filtrosPermisos = new FiltrosDataTable('#permisos_datatable', configDTPermisos);
+            filtrosPermisos.precargar();
         </script>
     {% endif %}
 {% endblock %}

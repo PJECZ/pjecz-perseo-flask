@@ -87,13 +87,17 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('PLAZAS') %}
+        {% if plaza.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + plaza.clave + '?') }}{% endif %}
+        {% if plaza.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + plaza.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Nominas de la Plaza -->
     {% if current_user.can_view('NOMINAS') %}
         <script>
             // DataTable Nominas
@@ -163,11 +167,4 @@
             filtrosNominas.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('PLAZAS') %}
-        {% if plaza.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + plaza.clave + '?') }}{% endif %}
-        {% if plaza.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + plaza.clave + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

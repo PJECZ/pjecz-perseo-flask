@@ -45,5 +45,4 @@
         {% if quincena_producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ID ' + quincena_producto.id | string + '?') }}{% endif %}
         {% if quincena_producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ID ' + quincena_producto.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

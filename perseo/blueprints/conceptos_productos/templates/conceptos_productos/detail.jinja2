@@ -37,5 +37,4 @@
         {% if concepto_producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto_producto.descripcion + '?') }}{% endif %}
         {% if concepto_producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto_producto.descripcion + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

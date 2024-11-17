@@ -646,13 +646,36 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
+    {{ modals.custom_javascript('Eliminar Nóminas', '', 'DeleteNominas') }}
+    {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
+    {{ modals.custom_javascript('Eliminar Monederos', '', 'DeleteMonederos') }}
+    {{ modals.custom_javascript('Generar Pensionados', '', 'GeneratePensionados') }}
+    {{ modals.custom_javascript('Eliminar Pensionados', '', 'DeletePensionados') }}
+    {{ modals.custom_javascript('Generar Primas Vacacionales', '', 'GeneratePrimasVacacionales') }}
+    {{ modals.custom_javascript('Eliminar Primas Vacacionales', '', 'DeletePrimasVacacionales') }}
+    {{ modals.custom_javascript('Generar Timbrados Empleados Activos', '', 'GenerateTimbradosEmpleadosActivos') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Empleados Activos', '', 'DeleteTimbradosEmpleadosActivos') }}
+    {{ modals.custom_javascript('Generar Timbrados Pensionados', '', 'GenerateTimbradosPensionados') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Pensionados', '', 'DeleteTimbradosPensionados') }}
+    {{ modals.custom_javascript('Generar Timbrados Aguinaldos', '', 'GenerateTimbradosAguinaldos') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Aguinaldos', '', 'DeleteTimbradosAguinaldos') }}
+    {{ modals.custom_javascript('Generar Timbrados Apoyos Anuales', '', 'GenerateTimbradosApoyosAnuales') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Apoyos Anuales', '', 'DeleteTimbradosApoyosAnuales') }}
+    {{ modals.custom_javascript('Generar Timbrados Primas Vacacionales', '', 'GenerateTimbradosPrimasVacacionales') }}
+    {{ modals.custom_javascript('Eliminar Timbrados Primas Vacacionales', '', 'DeleteTimbradosPrimasVacacionales') }}
+    {{ modals.custom_javascript('Generar Todos', '', 'GenerateTodos') }}
+    {% if current_user.can_admin('QUINCENA') %}
+        {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.clave + '?') }}{% endif %}
+        {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Nominas en la Quincena-->
     {% if current_user.can_view('NOMINAS') %}
         <script>
             // DataTable Nominas
@@ -734,30 +757,4 @@
             filtrosNominas.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {{ modals.custom_javascript('Generar Nóminas', '', 'GenerateNominas') }}
-    {{ modals.custom_javascript('Eliminar Nóminas', '', 'DeleteNominas') }}
-    {{ modals.custom_javascript('Generar Monederos', '', 'GenerateMonederos') }}
-    {{ modals.custom_javascript('Eliminar Monederos', '', 'DeleteMonederos') }}
-    {{ modals.custom_javascript('Generar Pensionados', '', 'GeneratePensionados') }}
-    {{ modals.custom_javascript('Eliminar Pensionados', '', 'DeletePensionados') }}
-    {{ modals.custom_javascript('Generar Primas Vacacionales', '', 'GeneratePrimasVacacionales') }}
-    {{ modals.custom_javascript('Eliminar Primas Vacacionales', '', 'DeletePrimasVacacionales') }}
-    {{ modals.custom_javascript('Generar Timbrados Empleados Activos', '', 'GenerateTimbradosEmpleadosActivos') }}
-    {{ modals.custom_javascript('Eliminar Timbrados Empleados Activos', '', 'DeleteTimbradosEmpleadosActivos') }}
-    {{ modals.custom_javascript('Generar Timbrados Pensionados', '', 'GenerateTimbradosPensionados') }}
-    {{ modals.custom_javascript('Eliminar Timbrados Pensionados', '', 'DeleteTimbradosPensionados') }}
-    {{ modals.custom_javascript('Generar Timbrados Aguinaldos', '', 'GenerateTimbradosAguinaldos') }}
-    {{ modals.custom_javascript('Eliminar Timbrados Aguinaldos', '', 'DeleteTimbradosAguinaldos') }}
-    {{ modals.custom_javascript('Generar Timbrados Apoyos Anuales', '', 'GenerateTimbradosApoyosAnuales') }}
-    {{ modals.custom_javascript('Eliminar Timbrados Apoyos Anuales', '', 'DeleteTimbradosApoyosAnuales') }}
-    {{ modals.custom_javascript('Generar Timbrados Primas Vacacionales', '', 'GenerateTimbradosPrimasVacacionales') }}
-    {{ modals.custom_javascript('Eliminar Timbrados Primas Vacacionales', '', 'DeleteTimbradosPrimasVacacionales') }}
-    {{ modals.custom_javascript('Generar Todos', '', 'GenerateTodos') }}
-    {% if current_user.can_admin('QUINCENA') %}
-        {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.clave + '?') }}{% endif %}
-        {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.clave + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

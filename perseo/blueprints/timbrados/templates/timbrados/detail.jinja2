@@ -89,11 +89,8 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Modales -->
     {% if current_user.can_admin('TIMBRADOS') %}
         {% if timbrado.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar este timbrado?') }}{% endif %}
         {% if timbrado.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar este timbrado?') }}{% endif %}
     {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

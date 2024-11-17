@@ -40,5 +40,4 @@
         {% if cuenta.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + cuenta.num_cuenta + '?') }}{% endif %}
         {% if cuenta.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + cuenta.num_cuenta + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

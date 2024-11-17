@@ -40,5 +40,4 @@
         {% if beneficiario_cuenta.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ID ' + beneficiario_cuenta.id | string + '?') }}{% endif %}
         {% if beneficiario_cuenta.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ID ' + beneficiario_cuenta.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

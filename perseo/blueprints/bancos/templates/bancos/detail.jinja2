@@ -130,13 +130,17 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('BANCOS') %}
+        {% if banco.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + banco.clave + '?') }}{% endif %}
+        {% if banco.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + banco.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Cuentas de las Persona -->
     {% if current_user.can_view('CUENTAS') %}
         <script>
             // DataTable Cuentas
@@ -167,7 +171,6 @@
             filtrosPersonas.precargar();
         </script>
     {% endif %}
-    <!-- Cuentas de los Beneficiarios -->
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
         <script>
             // DataTable Cuentas de los Beneficiarios
@@ -198,11 +201,4 @@
             filtrosBeneficiarios.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('BANCOS') %}
-        {% if banco.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + banco.clave + '?') }}{% endif %}
-        {% if banco.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + banco.clave + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

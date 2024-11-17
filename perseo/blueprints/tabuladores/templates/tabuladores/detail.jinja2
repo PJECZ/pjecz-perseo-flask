@@ -70,13 +70,17 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('TABULADORES') %}
+        {% if tabulador.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + tabulador.id | string + '?') }}{% endif %}
+        {% if tabulador.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + tabulador.id | string + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Personas en el Tabulador -->
     {% if current_user.can_view('PERSONAS') %}
         <script>
             // DataTable Personas
@@ -104,11 +108,4 @@
             $('#personas_datatable').DataTable(configDTPersonas);
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('TABULADORES') %}
-        {% if tabulador.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + tabulador.id | string + '?') }}{% endif %}
-        {% if tabulador.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + tabulador.id | string + '?') }}{% endif %}
-    {% endif %}
-    <!-- Momento -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

@@ -22,7 +22,6 @@
       "{% endblock %}",
       "",
       "{% block custom_javascript %}",
-      "\t{{ detail.moment_js(moment) }}",
       "{% endblock %}",
       ""
     ],
@@ -65,7 +64,6 @@
       "\t\t{% if ${2:instancia}.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ${2:instancia}.${3:clave} + '?') }}{% endif %}",
       "\t\t{% if ${2:instancia}.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ${2:instancia}.${3:clave} + '?') }}{% endif %}",
       "\t{% endif %}",
-      "\t{{ detail.moment_js(moment) }}",
       "{% endblock %}",
       ""
     ],
@@ -108,7 +106,6 @@
       "\t\t{% if ${2:instancia}.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ${2:instancia}.${3:clave} + '?') }}{% endif %}",
       "\t\t{% if ${2:instancia}.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ${2:instancia}.${3:clave} + '?') }}{% endif %}",
       "\t{% endif %}",
-      "\t{{ detail.moment_js(moment) }}",
       "{% endblock %}",
       ""
     ],

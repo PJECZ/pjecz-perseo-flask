@@ -60,5 +60,4 @@
         {% if nomina.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar nómina ' + nomina.id | string + '?') }}{% endif %}
         {% if nomina.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar nómina ' + nomina.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}
