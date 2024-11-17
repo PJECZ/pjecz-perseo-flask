@@ -23,7 +23,6 @@
     {% call detail.card(estatus=puesto.estatus) %}
         {{ detail.label_value_big('Clave', puesto.clave) }}
         {{ detail.label_value('Descripción', puesto.descripcion) }}
-        {# detail.label_value('Creado', moment(puesto.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Tabuladores del Puesto -->
     {% if current_user.can_view('TABULADORES') %}

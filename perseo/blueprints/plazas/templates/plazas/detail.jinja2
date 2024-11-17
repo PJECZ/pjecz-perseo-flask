@@ -21,7 +21,6 @@
     {% call detail.card(estatus=plaza.estatus) %}
         {{ detail.label_value('Clave', plaza.clave) }}
         {{ detail.label_value('Descripción', plaza.descripcion) }}
-        {# detail.label_value('Creado', moment(plaza.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Nominas de la Plaza -->
     {% if current_user.can_view('NOMINAS') %}

@@ -19,7 +19,7 @@
 {% endblock %}
 
 {% block content %}
-    {# Detalle de la quincena y egenerar archivos finales #}
+    {# Detalle de la quincena y generar archivos finales #}
     <div class="row mb-2">
         <div class="col-md-6">
             {# Detalle de la quincena #}
@@ -29,7 +29,6 @@
                 {{ detail.label_value_boolean('Tiene aguinaldos', quincena.tiene_aguinaldos) }}
                 {{ detail.label_value_boolean('Tiene apoyos anuales', quincena.tiene_apoyos_anuales) }}
                 {{ detail.label_value_boolean('Tiene primas vacacionales', quincena.tiene_primas_vacacionales) }}
-                {# detail.label_value('Creado', moment(quincena.creado).format('llll')) #}
             {% endcall %}
         </div>
         {% if current_user.can_insert('QUINCENAS PRODUCTOS') %}

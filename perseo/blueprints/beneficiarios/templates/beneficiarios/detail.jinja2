@@ -27,7 +27,6 @@
         {{ detail.label_value('Apellido segundo', beneficiario.apellido_segundo) }}
         {{ detail.label_value('CURP', beneficiario.curp) }}
         {{ detail.label_value('Modelo', beneficiario.modelo) }}
-        {# detail.label_value('Creado', moment(beneficiario.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Cuentas del beneficiario -->
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}

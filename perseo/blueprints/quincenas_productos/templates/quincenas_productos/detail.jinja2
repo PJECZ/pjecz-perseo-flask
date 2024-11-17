@@ -30,7 +30,6 @@
             {{ detail.label_value_big('Quincena', quincena_producto.quincena.clave) }}
         {% endif %}
         {{ detail.label_value('Fuente', quincena_producto.fuente) }}
-        {# detail.label_value('Creado', moment(quincena_producto.creado, local=True).format('llll')) #}
         {{ detail.label_value_pre('Mensajes', quincena_producto.mensajes) }}
         {% if quincena_producto.archivo %}
             <a type="button" class="w-100 btn btn-lg btn-success my-2" href="{{ quincena_producto.url }}" target="_blank">

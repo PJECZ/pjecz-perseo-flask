@@ -23,7 +23,6 @@
     {% call detail.card(estatus=centro_trabajo.estatus) %}
         {{ detail.label_value_big('Clave', centro_trabajo.clave) }}
         {{ detail.label_value('Descripción', centro_trabajo.descripcion) }}
-        {# detail.label_value('Creado', moment(centro_trabajo.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Nominas del Centro de Trabajo -->
     {% if current_user.can_view('NOMINAS') %}

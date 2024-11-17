@@ -24,9 +24,8 @@
         {{ detail.label_value('Icono', modulo.icono) }}
         {{ detail.label_value('Ruta', modulo.ruta) }}
         {{ detail.label_value_boolean('En menú de navegación', modulo.en_navegacion) }}
-        {# detail.label_value('Creado', moment(modulo.creado).format('llll')) #}
     {% endcall %}
-    {% if current_user.can_view('PERMISOS') %}
+    {% if current_user.can_view('PERMISOS') and modulo.estatus == 'A' %}
         {% call detail.card('Permisos') %}
             <table id="permisos_datatable" class="table display nowrap" style="width:100%">
                 <thead>
@@ -50,7 +49,7 @@
     {% endif %}
     {{ detail.moment_js(moment) }}
     {{ detail.config_datatable() }}
-    {% if current_user.can_view('PERMISOS') %}
+    {% if current_user.can_view('PERMISOS') and modulo.estatus == 'A' %}
         <script>
             configDataTable['ajax']['url'] = '/permisos/datatable_json';
             configDataTable['ajax']['data'] = { 'estatus': "A", 'modulo_id': {{ modulo.id}} };
