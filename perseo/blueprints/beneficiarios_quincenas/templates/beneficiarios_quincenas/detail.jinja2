@@ -34,7 +34,6 @@
         {% endif %}
         {{ detail.label_value_currency('Importe', beneficiario_quincena.importe) }}
         {{ detail.label_value('No. de Cheque', beneficiario_quincena.num_cheque) }}
-        {# detail.label_value('Creado', moment(beneficiario_quincena.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
 
@@ -43,5 +42,4 @@
         {% if beneficiario_quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ID ' + beneficiario_quincena.id | string + '?') }}{% endif %}
         {% if beneficiario_quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ID ' + beneficiario_quincena.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

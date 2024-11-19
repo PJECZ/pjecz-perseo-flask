@@ -23,7 +23,6 @@
     {% call detail.card(estatus=centro_trabajo.estatus) %}
         {{ detail.label_value_big('Clave', centro_trabajo.clave) }}
         {{ detail.label_value('Descripción', centro_trabajo.descripcion) }}
-        {# detail.label_value('Creado', moment(centro_trabajo.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Nominas del Centro de Trabajo -->
     {% if current_user.can_view('NOMINAS') %}
@@ -90,13 +89,17 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('CENTROS TRABAJOS') %}
+        {% if centro_trabajo.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + centro_trabajo.clave + '?') }}{% endif %}
+        {% if centro_trabajo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + centro_trabajo.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Nominas del Centro de Trabajo -->
     {% if current_user.can_view('NOMINAS') %}
         <script>
             // DataTable Nominas
@@ -166,11 +169,4 @@
             filtrosNominas.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('CENTROS TRABAJOS') %}
-        {% if centro_trabajo.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + centro_trabajo.clave + '?') }}{% endif %}
-        {% if centro_trabajo.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + centro_trabajo.clave + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

@@ -51,7 +51,6 @@
             {{ detail.label_value('Concepto', concepto_texto) }}
         {% endif %}
         {{ detail.label_value_currency('Importe', percepcion_deduccion.importe) }}
-        {# detail.label_value('Creado', moment(percepcion_deduccion.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
 
@@ -60,5 +59,4 @@
         {% if percepcion_deduccion.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar percepción deducción ' + percepcion_deduccion.id | string + '?') }}{% endif %}
         {% if percepcion_deduccion.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar percepción deducción ' + percepcion_deduccion.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

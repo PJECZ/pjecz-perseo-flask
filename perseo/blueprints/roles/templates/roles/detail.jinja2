@@ -19,7 +19,12 @@
 {% endblock %}
 
 {% block content %}
-    {% if current_user.can_view('PERMISOS') %}
+    {% if rol.estatus == 'B' %}
+        {% call detail.card(estatus=rol.estatus) %}
+            {{ detail.label_value('Nombre', rol.nombre) }}
+        {% endcall %}
+    {% endif %}
+    {% if current_user.can_view('PERMISOS') and rol.estatus == 'A' %}
         {% call detail.card('Permisos') %}
             <!-- Filtros permisos -->
             <div class="row">
@@ -68,7 +73,7 @@
             {% endif %}
         {% endcall %}
     {% endif %}
-    {% if current_user.can_view('USUARIOS ROLES') %}
+    {% if current_user.can_view('USUARIOS ROLES') and rol.estatus == 'A' %}
         {% call detail.card('Usuarios') %}
             <!-- Filtros usuarios-roles -->
             <div class="row">
@@ -118,16 +123,18 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Modales -->
     {% if current_user.can_admin('ROLES') %}
         {% if rol.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + rol.nombre + '?') }}{% endif %}
         {% if rol.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + rol.nombre + '?') }}{% endif %}
     {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    {% if current_user.can_view('PERMISOS') %}
+    {% if current_user.can_view('PERMISOS') and rol.estatus == 'A' %}
         <script>
             // DataTable permisos
             let configDTPermisos = constructorDataTable.config();
@@ -166,7 +173,7 @@
             filtrosPermisos.precargar();
         </script>
     {% endif %}
-    {% if current_user.can_view('USUARIOS ROLES') %}
+    {% if current_user.can_view('USUARIOS ROLES') and rol.estatus == 'A' %}
         <script>
             // DataTable usuarios-roles
             let configDTUsuarios = constructorDataTable.config();
@@ -213,5 +220,4 @@
             filtrosUsuarios.precargar();
         </script>
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

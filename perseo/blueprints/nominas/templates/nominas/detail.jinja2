@@ -52,7 +52,6 @@
         {{ detail.label_value_currency('Importe', nomina.importe) }}
         {{ detail.label_value('No. de Cheque', nomina.num_cheque) }}
         {{ detail.label_value('Fecha de pago', nomina.fecha_pago) }}
-        {# detail.label_value('Creado', moment(nomina.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
 
@@ -61,5 +60,4 @@
         {% if nomina.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar nómina ' + nomina.id | string + '?') }}{% endif %}
         {% if nomina.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar nómina ' + nomina.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

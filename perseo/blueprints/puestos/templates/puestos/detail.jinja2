@@ -23,7 +23,6 @@
     {% call detail.card(estatus=puesto.estatus) %}
         {{ detail.label_value_big('Clave', puesto.clave) }}
         {{ detail.label_value('Descripción', puesto.descripcion) }}
-        {# detail.label_value('Creado', moment(puesto.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Tabuladores del Puesto -->
     {% if current_user.can_view('TABULADORES') %}
@@ -46,13 +45,17 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('PUESTOS') %}
+        {% if puesto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + puesto.clave + '?') }}{% endif %}
+        {% if puesto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + puesto.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Tabuladores en el Puesto -->
     {% if current_user.can_view('TABULADORES') %}
         <script>
             // DataTable Tabuladores
@@ -85,11 +88,4 @@
             $('#tabuladores_datatable').DataTable(configDTTabuladores);
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('PUESTOS') %}
-        {% if puesto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + puesto.clave + '?') }}{% endif %}
-        {% if puesto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + puesto.clave + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

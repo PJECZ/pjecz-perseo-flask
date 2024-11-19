@@ -25,9 +25,8 @@
         {{ detail.label_value('Nombre corto', distrito.nombre_corto) }}
         {{ detail.label_value_boolean('Es Distrito (geográfico)', distrito.es_distrito) }}
         {{ detail.label_value_boolean('Es Jurisdiccional', distrito.es_jurisdiccional) }}
-        {# detail.label_value('Creado', moment(distrito.creado).format('llll')) #}
     {% endcall %}
-    {% if current_user.can_view('AUTORIDADES') %}
+    {% if current_user.can_view('AUTORIDADES') and distrito.estatus == 'A' %}
         {% call detail.card('Autoridades') %}
             <!-- Filtros autoridades -->
             <div class="row">
@@ -67,14 +66,15 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Modales -->
     {% if current_user.can_admin('DISTRITOS') %}
         {% if distrito.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + distrito.nombre + '?') }}{% endif %}
         {% if distrito.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + distrito.nombre + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
-    {% if current_user.can_view('AUTORIDADES') %}
+    {% if current_user.can_view('AUTORIDADES') and distrito.estatus == 'A' %}
         <script>
             // DataTable autoridades
             const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );

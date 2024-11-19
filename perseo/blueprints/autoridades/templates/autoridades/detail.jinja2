@@ -29,9 +29,8 @@
         {{ detail.label_value('Descripción', autoridad.descripcion) }}
         {{ detail.label_value('Descripción corta', autoridad.descripcion_corta) }}
         {{ detail.label_value_boolean('Es Extinto', autoridad.es_extinto) }}
-        {# detail.label_value('Creado', moment(autoridad.creado).format('llll')) #}
     {% endcall %}
-    {% if current_user.can_view('USUARIOS') %}
+    {% if current_user.can_view('USUARIOS') and autoridad.estatus == 'A' %}
         {% call detail.card('Usuarios') %}
             <table id="usuarios_datatable" class="table display nowrap" style="width:100%">
                 <thead>
@@ -47,22 +46,28 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Modales -->
     {% if current_user.can_edit('AUTORIDADES') %}
         {% if autoridad.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + autoridad.clave + '?') }}{% endif %}
         {% if autoridad.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + autoridad.clave + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
-    {{ detail.config_datatable() }}
-    {% if current_user.can_view('USUARIOS') %}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    {% if current_user.can_view('USUARIOS') and autoridad.estatus == 'A' %}
         <script>
-            configDataTable['ajax']['url'] = '/usuarios/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'autoridad_id': {{ autoridad.id}} };
-            configDataTable['columns'] = [
+            let configDTUsuarios = constructorDataTable.config();
+            configDTUsuarios['ajax']['url'] = '/usuarios/datatable_json';
+            configDTUsuarios['ajax']['data'] = { 'estatus': "A", 'autoridad_id': {{ autoridad.id}} };
+            configDTUsuarios['columns'] = [
                 { data: "detalle" },
                 { data: "nombre" },
                 { data: "puesto" }
             ];
-            configDataTable['columnDefs'] = [
+            configDTUsuarios['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -74,11 +79,12 @@
                     targets: [1, 2], // nombre, puesto
                     data: null,
                     render: function(data, type, row, meta) {
-                        return (data.length > 32 ? data.substr(0, 32) + '…' : data);
+                        return (data.length > 32 ? data.substring(0, 32) + '…' : data);
                     }
                 }
             ];
-            $('#usuarios_datatable').DataTable(configDataTable);
+            const filtrosUsuarios = new FiltrosDataTable('#usuarios_datatable', configDTUsuarios);
+            filtrosUsuarios.precargar();
         </script>
     {% endif %}
 {% endblock %}

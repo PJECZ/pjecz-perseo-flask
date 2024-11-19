@@ -21,10 +21,9 @@
     {% call detail.card(estatus=concepto.estatus) %}
         {{ detail.label_value('Clave', concepto.clave) }}
         {{ detail.label_value('Descripción', concepto.descripcion) }}
-        {# detail.label_value('Creado', moment(concepto.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Percepciones-Deducciones del Concepto -->
-    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') and concepto.estatus == 'A' %}
         {% call detail.card('Percepciones-Deducciones') %}
             <!-- Filtros Percepciones-Deducciones -->
             <div class="row">
@@ -67,9 +66,9 @@
         {% endcall %}
     {% endif %}
     <!-- Productos del Concepto -->
-    {% if current_user.can_view('PRODUCTOS') %}
+    {% if current_user.can_view('PRODUCTOS') and concepto.estatus == 'A' %}
         {% call detail.card('Productos') %}
-            <table id="conceptos_productos" class="table display nowrap" style="width:100%">
+            <table id="conceptos_productos_datatable" class="table display nowrap" style="width:100%">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -86,14 +85,18 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('CONCEPTOS') %}
+        {% if concepto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto.clave + '?') }}{% endif %}
+        {% if concepto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Percepciones-Deducciones del concepto -->
-    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') and concepto.estatus == 'A' %}
         <script>
             let configDTPerDed = constructorDataTable.config();
             configDTPerDed['ajax']['url'] = '/percepciones_deducciones/datatable_json';
@@ -140,15 +143,13 @@
                     className: "dt-body-right",
                 }
             ];
-            // Filtros Percepciones-Deducciones
             const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPerDed);
             filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
             filtrosPercepcionesDeducciones.agregarInput('filtroPersonaRFC', 'persona_rfc');
             filtrosPercepcionesDeducciones.precargar();
         </script>
     {% endif %}
-    <!-- Productos del concepto -->
-    {% if current_user.can_view('PRODUCTOS') %}
+    {% if current_user.can_view('PRODUCTOS') and concepto.estatus == 'A' %}
         <script>
             let configDTProductos = constructorDataTable.config();
             configDTProductos['ajax']['url'] = '/conceptos_productos/datatable_json';
@@ -174,14 +175,8 @@
                     }
                 }
             ];
-            $('#conceptos_productos').DataTable(configDTProductos);
+            const filtrosProductos = new FiltrosDataTable('#conceptos_productos_datatable', configDTProductos);
+            filtrosProductos.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('CONCEPTOS') %}
-        {% if concepto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto.clave + '?') }}{% endif %}
-        {% if concepto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto.clave + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

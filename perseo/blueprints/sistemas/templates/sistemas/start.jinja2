@@ -15,7 +15,6 @@
         {% if quincena %}
             {{ detail.label_value_big('Quincena', quincena.clave, url_for('quincenas.detail', quincena_id=quincena.id)) }}
             {{ detail.label_value('Estado', quincena.estado) }}
-            {# detail.label_value('Creado', moment(quincena.creado, local=True).format('llll')) #}
         {% else %}
             <p class="lead text-center">No hay una última quincena</p>
         {% endif %}
@@ -23,6 +22,4 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

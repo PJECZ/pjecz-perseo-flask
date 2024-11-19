@@ -29,7 +29,6 @@
             {{ detail.label_value('Producto clave', concepto_producto.producto.clave) }}
         {% endif %}
         {{ detail.label_value('Producto descripción', concepto_producto.producto.descripcion) }}
-        {# detail.label_value('Creado', moment(concepto_producto.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
 
@@ -38,5 +37,4 @@
         {% if concepto_producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto_producto.descripcion + '?') }}{% endif %}
         {% if concepto_producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto_producto.descripcion + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

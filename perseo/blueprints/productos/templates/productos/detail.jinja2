@@ -20,9 +20,8 @@
     {% call detail.card(estatus=producto.estatus) %}
         {{ detail.label_value('Clave', producto.clave) }}
         {{ detail.label_value('Descripción', producto.descripcion) }}
-        {# detail.label_value('Creado', moment(producto.creado, local=True).format('llll')) #}
     {% endcall %}
-    {% if current_user.can_view('CONCEPTOS') %}
+    {% if current_user.can_view('CONCEPTOS PRODUCTOS') and producto.estatus == 'A' %}
         {% call detail.card('Conceptos') %}
             <table id="conceptos_productos_datatable" class="table display nowrap" style="width:100%">
                 <thead>
@@ -41,17 +40,28 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ detail.config_datatable() }}
-    {% if current_user.can_view('CONCEPTOS') %}
+    <!-- Modales -->
+    {% if current_user.can_admin('PRODUCTOS') %}
+        {% if producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + producto.clave + '?') }}{% endif %}
+        {% if producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + producto.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    {% if current_user.can_view('CONCEPTOS PRODUCTOS') and producto.estatus == 'A' %}
         <script>
-            configDataTable['ajax']['url'] = '/conceptos_productos/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'producto_id': {{ producto.id}} };
-            configDataTable['columns'] = [
+            let configDTConceptosProductos = constructorDataTable.config();
+            configDTConceptosProductos['ajax']['url'] = '/conceptos_productos/datatable_json';
+            configDTConceptosProductos['ajax']['data'] = { 'estatus': "A", 'producto_id': {{ producto.id}} };
+            configDTConceptosProductos['columns'] = [
                 { data: 'detalle' },
                 { data: 'concepto' },
                 { data: 'concepto_descripcion' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTConceptosProductos['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -67,12 +77,8 @@
                     }
                 }
             ];
-            $('#conceptos_productos_datatable').DataTable(configDataTable);
+            const filtrosConceptosProductos = new FiltrosDataTable('#conceptos_productos_datatable', configDTConceptosProductos);
+            filtrosConceptosProductos.precargar();
         </script>
     {% endif %}
-    {% if current_user.can_admin('PRODUCTOS') %}
-        {% if producto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + producto.clave + '?') }}{% endif %}
-        {% if producto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + producto.clave + '?') }}{% endif %}
-    {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

@@ -32,7 +32,6 @@
             {{ detail.label_value('Banco', beneficiario_cuenta.banco.nombre) }}
         {% endif %}
         {{ detail.label_value_big('No. cuenta', beneficiario_cuenta.num_cuenta) }}
-        {# detail.label_value('Creado', moment(beneficiario_cuenta.creado, local=True).format('llll')) #}
     {% endcall %}
 {% endblock %}
 
@@ -41,5 +40,4 @@
         {% if beneficiario_cuenta.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ID ' + beneficiario_cuenta.id | string + '?') }}{% endif %}
         {% if beneficiario_cuenta.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ID ' + beneficiario_cuenta.id | string + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
 {% endblock %}

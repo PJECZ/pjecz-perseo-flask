@@ -203,13 +203,17 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    <!-- Constructor de DataTables -->
+    <!-- Modales -->
+    {% if current_user.can_admin('PERSONAS') %}
+        {% if persona.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + persona.rfc + '?') }}{% endif %}
+        {% if persona.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + persona.rfc + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
     <script src="/static/js/datatables-constructor.js"></script>
     <script src="/static/js/datatables-filtros.js"></script>
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- Cuentas de la persona -->
     {% if current_user.can_view('CUENTAS') %}
         <script>
             // DataTable Cuentas
@@ -233,7 +237,6 @@
             $('#cuentas_datatable').DataTable(configDTCuentas);
         </script>
     {% endif %}
-    <!-- Nominas de la persona -->
     {% if current_user.can_view('NOMINAS') %}
         <script>
             // DataTable Nominas
@@ -295,7 +298,6 @@
             filtrosNominas.precargar();
         </script>
     {% endif %}
-    <!-- Percepciones-Deducciones de la Persona -->
     {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
         <script>
             // DataTable Percepciones-Deducciones
@@ -342,11 +344,4 @@
             filtrosPD.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('PERSONAS') %}
-        {% if persona.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + persona.rfc + '?') }}{% endif %}
-        {% if persona.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + persona.rfc + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}

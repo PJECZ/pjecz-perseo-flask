@@ -34,9 +34,8 @@
             {{ detail.label_value('Autoridad', usuario.autoridad.descripcion) }}
         {% endif %}
         {{ detail.label_value('Puesto', usuario.puesto) }}
-        {# detail.label_value('Creado', moment(usuario.creado).format('llll')) #}
     {% endcall %}
-    {% if current_user.can_view('USUARIOS ROLES') %}
+    {% if current_user.can_view('USUARIOS ROLES') and usuario.estatus == 'A' %}
         {% call detail.card('Roles') %}
             <table id="usuarios_roles_datatable" class="table display nowrap" style="width:100%">
                 <thead>
@@ -54,21 +53,27 @@
 {% endblock %}
 
 {% block custom_javascript %}
+    <!-- Modales -->
     {% if current_user.can_admin('USUARIOS') %}
         {% if usuario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + usuario.nombre + '?') }}{% endif %}
         {% if usuario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + usuario.nombre + '?') }}{% endif %}
     {% endif %}
-    {{ detail.moment_js(moment) }}
-    {{ detail.config_datatable() }}
-    {% if current_user.can_view('USUARIOS ROLES') %}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    {% if current_user.can_view('USUARIOS ROLES') and usuario.estatus == 'A' %}
         <script>
-            configDataTable['ajax']['url'] = '/usuarios_roles/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'usuario_id': {{ usuario.id}} };
-            configDataTable['columns'] = [
+            let configDTUsuariosRoles = constructorDataTable.config();
+            configDTUsuariosRoles['ajax']['url'] = '/usuarios_roles/datatable_json';
+            configDTUsuariosRoles['ajax']['data'] = { 'estatus': "A", 'usuario_id': {{ usuario.id}} };
+            configDTUsuariosRoles['columns'] = [
                 { data: "detalle" },
                 { data: "rol" }
             ];
-            configDataTable['columnDefs'] = [
+            configDTUsuariosRoles['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -80,7 +85,7 @@
                     targets: 1, // rol
                     data: null,
                     render: function(data, type, row, meta) {
-                        if (data.url == '') {
+                        if (data.url === '') {
                             return data.nombre;
                         } else {
                             return '<a href="' + data.url + '">' + data.nombre + '</a>';
@@ -88,7 +93,8 @@
                     }
                 }
             ];
-            $('#usuarios_roles_datatable').DataTable(configDataTable);
+            const filtrosUsuariosRoles = new FiltrosDataTable('#usuarios_roles_datatable', configDTUsuariosRoles);
+            filtrosUsuariosRoles.precargar();
         </script>
     {% endif %}
 {% endblock %}

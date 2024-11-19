@@ -27,7 +27,6 @@
         {{ detail.label_value('Apellido segundo', beneficiario.apellido_segundo) }}
         {{ detail.label_value('CURP', beneficiario.curp) }}
         {{ detail.label_value('Modelo', beneficiario.modelo) }}
-        {# detail.label_value('Creado', moment(beneficiario.creado, local=True).format('llll')) #}
     {% endcall %}
     <!-- Cuentas del beneficiario -->
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
@@ -67,18 +66,28 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ detail.config_datatable() }}
-    <!-- Cuentas del beneficiario -->
+    <!-- Modales -->
+    {% if current_user.can_admin('BENEFICIARIOS') %}
+        {% if beneficiario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario.rfc + '?') }}{% endif %}
+        {% if beneficiario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario.rfc + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
     {% if current_user.can_view('BENEFICIARIOS CUENTAS') %}
         <script>
-            configDataTable['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
-            configDataTable['columns'] = [
+            let configDTBeneficiariosCuentas = constructorDataTable.config();
+            configDTBeneficiariosCuentas['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
+            configDTBeneficiariosCuentas['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
+            configDTBeneficiariosCuentas['columns'] = [
                 { data: 'detalle' },
                 { data: 'banco_nombre' },
                 { data: 'num_cuenta' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTBeneficiariosCuentas['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -87,21 +96,22 @@
                     }
                 }
             ];
-            $('#beneficiarios_cuentas_datatable').DataTable(configDataTable);
+            const filtrosBeneficiariosCuentas = new FiltrosDataTable('#beneficiarios_cuentas_datatable', configDTBeneficiariosCuentas);
+            filtrosBeneficiariosCuentas.precargar();
         </script>
     {% endif %}
-    <!-- Quincenas del beneficiario -->
     {% if current_user.can_view('BENEFICIARIOS QUINCENAS') %}
         <script>
-            configDataTable['ajax']['url'] = '/beneficiarios_quincenas/datatable_json';
-            configDataTable['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
-            configDataTable['columns'] = [
+            let configDTBeneficiariosQuincenas = constructorDataTable.config();
+            configDTBeneficiariosQuincenas['ajax']['url'] = '/beneficiarios_quincenas/datatable_json';
+            configDTBeneficiariosQuincenas['ajax']['data'] = { 'estatus': "A", 'beneficiario_id': {{ beneficiario.id}} };
+            configDTBeneficiariosQuincenas['columns'] = [
                 { data: 'detalle' },
                 { data: 'quincena_clave' },
                 { data: 'num_cheque' },
                 { data: 'importe' }
             ];
-            configDataTable['columnDefs'] = [
+            configDTBeneficiariosQuincenas['columnDefs'] = [
                 {
                     targets: 0, // detalle
                     data: null,
@@ -115,14 +125,8 @@
                     className: "dt-body-right",
                 }
             ];
-            $('#beneficiarios_quincenas_datatable').DataTable(configDataTable);
+            const filtrosBeneficiariosQuincenas = new FiltrosDataTable('#beneficiarios_quincenas_datatable', configDTBeneficiariosQuincenas);
+            filtrosBeneficiariosQuincenas.precargar();
         </script>
     {% endif %}
-    <!-- Modales -->
-    {% if current_user.can_admin('BENEFICIARIOS') %}
-        {% if beneficiario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + beneficiario.rfc + '?') }}{% endif %}
-        {% if beneficiario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + beneficiario.rfc + '?') }}{% endif %}
-    {% endif %}
-    <!-- Moment.js -->
-    {{ detail.moment_js(moment) }}
 {% endblock %}
