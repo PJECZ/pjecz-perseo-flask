@@ -16,6 +16,7 @@ import click
 import xlrd
 from dotenv import load_dotenv
 
+from lib.exceptions import MyAnyError
 from lib.safe_string import QUINCENA_REGEXP
 from perseo.app import create_app
 from perseo.blueprints.bancos.models import Banco
@@ -23,6 +24,7 @@ from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
 from perseo.blueprints.conceptos_productos.models import ConceptoProducto
 from perseo.blueprints.cuentas.models import Cuenta
+from perseo.blueprints.cuentas.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
 from perseo.blueprints.personas.models import Persona
@@ -345,6 +347,22 @@ def agregar_cuentas_faltantes():
     click.echo(click.style(f"  Agregar Cuentas Faltantes: {contador} cuentas en SANTANDER con ochos", fg="green"))
 
 
+@click.command()
+def exportar_xlsx():
+    """Exportar Personas a un archivo XLSX"""
+
+    # Ejecutar la tarea
+    try:
+        mensaje_termino, _, _ = task_exportar_xlsx()
+    except MyAnyError as error:
+        click.echo(click.style(str(error), fg="red"))
+        sys.exit(1)
+
+    # Mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
+
+
 cli.add_command(alimentar_bancarias)
 cli.add_command(alimentar_monederos)
 cli.add_command(agregar_cuentas_faltantes)
+cli.add_command(exportar_xlsx)
