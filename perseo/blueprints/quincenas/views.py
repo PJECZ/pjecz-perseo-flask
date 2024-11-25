@@ -8,7 +8,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_message, safe_quincena
+from lib.safe_string import safe_message, safe_quincena, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
 from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
@@ -672,3 +672,28 @@ def generate_todos(quincena_id):
     flash("Se ha lanzado la tarea en el fondo. Esta página se va a recargar en 60 segundos...", "info")
     # Redireccionar al detalle de la quincena
     return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+
+
+@quincenas.route("/quincenas/exportar_timbrados/<nomina_tipo>/<int:quincena_id>")
+@permission_required(MODULO, Permiso.VER)
+def export_timbrados(nomina_tipo, quincena_id):
+    """Exportar el archivo XLSX de los timbrados de una quincena"""
+    # Consultar y validar la quincena
+    quincena = Quincena.query.get_or_404(quincena_id)
+    if quincena.estatus != "A":
+        flash("Quincena no activa", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Validar el tipo de nómina
+    nomina_tipo = safe_string(nomina_tipo)
+    if not nomina_tipo in ["AGUINALDO", "APOYO ANUAL", "SALARIO", "PRIMA VACACIONAL"]:
+        flash("Tipo de nómina no valido", "warning")
+        return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
+    # Lanzar la tarea en el fondo
+    tarea = current_user.launch_task(
+        comando="timbrados.tasks.lanzar_exportar_xlsx",
+        mensaje=f"Exportando los Timbrados de la quincena {quincena.clave} y del tipo {nomina_tipo} a un archivo XLSX...",
+        quincena_clave=quincena.clave,
+        nomina_tipo=nomina_tipo,
+    )
+    flash("Se ha lanzado esta tarea en el fondo. Esta página se va a recargar en 30 segundos...", "info")
+    return redirect(url_for("tareas.detail", tarea_id=tarea.id))
