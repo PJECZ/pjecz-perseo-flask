@@ -567,6 +567,55 @@
             </div>
         {% endif %}
     </div>
+    {# Exportar timbrados #}
+    {% if quincena.estado == 'CERRADA' %}
+    <div class="row mb-2">
+        {# Timbrados con tipo salario #}
+        {% set title = '<span class="iconify" data-icon="mdi:file-document"></span> Datos en los XML de los Timbrados' %}
+        <div class="col-md-3">
+            {% call detail.card(title=title) %}
+                {{ modals.button_modal_sm(
+                    label='Exportar SALARIO a XLSX',
+                    url=url_for('quincenas.export_timbrados', nomina_tipo='SALARIO', quincena_id=quincena.id),
+                    id='ExportarXLSXTimbradosSalarios',
+                    icon='mdi:play',
+                    message="¿Exportar a un archivo XLSX los datos de los timbrados del tipo de nómina SALARIO?",
+                    color_class='btn-outline-primary')
+                }}
+                {% if quincena.tiene_apoyos_anuales %}
+                {{ modals.button_modal_sm(
+                    label='Exportar APOYO ANUAL a XLSX',
+                    url=url_for('quincenas.export_timbrados', nomina_tipo='APOYO ANUAL', quincena_id=quincena.id),
+                    id='ExportarXLSXTimbradosAguinaldos',
+                    icon='mdi:play',
+                    message="¿Exportar a un archivo XLSX los datos de los timbrados del tipo de nómina APOYO ANUAL?",
+                    color_class='btn-outline-primary')
+                }}
+                {% endif %}
+                {% if quincena.tiene_aguinaldos %}
+                {{ modals.button_modal_sm(
+                    label='Exportar AGUINALDO a XLSX',
+                    url=url_for('quincenas.export_timbrados', nomina_tipo='AGUINALDO', quincena_id=quincena.id),
+                    id='ExportarXLSXTimbradosAguinaldos',
+                    icon='mdi:play',
+                    message="¿Exportar a un archivo XLSX los datos de los timbrados del tipo de nómina AGUINALDO?",
+                    color_class='btn-outline-primary')
+                }}
+                {% endif %}
+                {% if quincena.tiene_primas_vacacionales %}
+                {{ modals.button_modal_sm(
+                    label='Exportar PRIMA VACACIONAL a XLSX',
+                    url=url_for('quincenas.export_timbrados', nomina_tipo='PRIMA VACACIONAL', quincena_id=quincena.id),
+                    id='ExportarXLSXTimbradosAguinaldos',
+                    icon='mdi:play',
+                    message="¿Exportar a un archivo XLSX los datos de los timbrados del tipo de nómina PRIMA VACACIONAL?",
+                    color_class='btn-outline-primary')
+                }}
+                {% endif %}
+            {% endcall %}
+        </div>
+    </div>
+    {% endif %}
     {# Datatable con las nominas de la Quincena #}
     {% if current_user.can_view('NOMINAS') %}
         {% call detail.card('Nóminas') %}
@@ -666,6 +715,8 @@
     {{ modals.custom_javascript('Generar Timbrados Primas Vacacionales', '', 'GenerateTimbradosPrimasVacacionales') }}
     {{ modals.custom_javascript('Eliminar Timbrados Primas Vacacionales', '', 'DeleteTimbradosPrimasVacacionales') }}
     {{ modals.custom_javascript('Generar Todos', '', 'GenerateTodos') }}
+    {{ modals.custom_javascript('Exportar tipo SALARIO a XLSX', '', 'ExportarXLSXTimbradosSalarios') }}
+    {{ modals.custom_javascript('Exportar tipo AGUINALDO a XLSX', '', 'ExportarXLSXTimbradosAguinaldos') }}
     {% if current_user.can_admin('QUINCENA') %}
         {% if quincena.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + quincena.clave + '?') }}{% endif %}
         {% if quincena.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + quincena.clave + '?') }}{% endif %}

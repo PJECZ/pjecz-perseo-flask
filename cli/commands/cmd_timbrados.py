@@ -13,7 +13,7 @@ from pathlib import Path
 import click
 from dotenv import load_dotenv
 
-from lib.exceptions import MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
+from lib.exceptions import MyAnyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
 from lib.google_cloud_storage import check_file_exists_from_gcs, get_public_url_from_gcs, upload_file_to_gcs
 from lib.safe_string import QUINCENA_REGEXP, safe_string
 from perseo.app import create_app
@@ -21,6 +21,7 @@ from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.timbrados.models import Timbrado
+from perseo.blueprints.timbrados.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.extensions import database
 
 CARPETA = "timbrados"
@@ -715,4 +716,22 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
     click.echo(click.style(f"  Se procesaron {procesados_contador} archivos XML.", fg="green"))
 
 
+@click.command()
+@click.argument("quincena_clave", type=str)
+@click.argument("nomina_tipo", type=str)
+def exportar_xlsx(quincena_clave, nomina_tipo):
+    """Exportar Timbrados (con datos particulares dentro de los XML) a un archivo XLSX"""
+
+    # Ejecutar la tarea
+    try:
+        mensaje_termino, _, _ = task_exportar_xlsx(quincena_clave, nomina_tipo)
+    except MyAnyError as error:
+        click.echo(click.style(str(error), fg="red"))
+        sys.exit(1)
+
+    # Mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
+
+
 cli.add_command(actualizar)
+cli.add_command(exportar_xlsx)
