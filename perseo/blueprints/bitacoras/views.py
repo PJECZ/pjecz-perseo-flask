@@ -2,13 +2,13 @@
 Bitácoras
 """
 
+import json
+
 from flask import Blueprint, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from lib.datatables import get_datatable_parameters, output_datatable_json
-from lib.safe_string import safe_email, safe_string
 from perseo.blueprints.bitacoras.models import Bitacora
-from perseo.blueprints.modulos.models import Modulo
 from perseo.blueprints.permisos.models import Permiso
 from perseo.blueprints.usuarios.decorators import permission_required
 from perseo.blueprints.usuarios.models import Usuario
@@ -38,19 +38,15 @@ def datatable_json():
     else:
         consulta = consulta.filter_by(estatus="A")
     if "modulo_id" in request.form:
-        consulta = consulta.filter_by(modulo_id=request.form["modulo_id"])
-    if "usuario_id" in request.form:
-        consulta = consulta.filter_by(usuario_id=request.form["usuario_id"])
-    # Luego filtrar por columnas de otras tablas
-    if "modulo_nombre" in request.form:
-        modulo_nombre = safe_string(request.form["modulo_nombre"], save_enie=True)
-        if modulo_nombre != "":
-            consulta = consulta.join(Modulo).filter(Modulo.nombre.contains(modulo_nombre))
-    if "usuario_email" in request.form:
         try:
-            usuario_email = safe_email(request.form["usuario_email"], search_fragment=True)
-            if usuario_email != "":
-                consulta = consulta.join(Usuario).filter(Usuario.email.contains(usuario_email))
+            modulo_id = int(request.form["modulo_id"])
+            consulta = consulta.filter(Bitacora.modulo_id == modulo_id)
+        except ValueError:
+            pass
+    if "usuario_id" in request.form:
+        try:
+            usuario_id = int(request.form["usuario_id"])
+            consulta = consulta.filter(Bitacora.usuario_id == usuario_id)
         except ValueError:
             pass
     # Ordenar y paginar
@@ -85,4 +81,20 @@ def datatable_json():
 @bitacoras.route("/bitacoras")
 def list_active():
     """Listado de Bitácoras activas"""
-    return render_template("bitacoras/list.jinja2")
+    # Valores por defecto
+    filtros = {"estatus": "A"}
+    titulo = "Bitácoras"
+    # Si viene usuario_id en la URL, agregar a los filtros
+    try:
+        usuario_id = int(request.args.get("usuario_id"))
+        usuario = Usuario.query.get_or_404(usuario_id)
+        filtros = {"estatus": "A", "usuario_id": usuario_id}
+        titulo = f"Bitácoras de {usuario.nombre}"
+    except (TypeError, ValueError):
+        pass
+    # Entregar
+    return render_template(
+        "bitacoras/list.jinja2",
+        filtros=json.dumps(filtros),
+        titulo=titulo,
+    )

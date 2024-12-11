@@ -353,3 +353,17 @@ def recover(usuario_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("usuarios.detail", usuario_id=usuario.id))
+
+
+@usuarios.route("/usuarios/select2_json", methods=["POST"])
+def select2_json():
+    """Proporcionar el JSON de usuarios para elegir con un Select2, se usa para filtrar en DataTables"""
+    consulta = Usuario.query.filter(Usuario.estatus == "A")
+    if "searchString" in request.form:
+        email = safe_email(request.form["searchString"], search_fragment=True)
+        if email != "":
+            consulta = consulta.filter(Usuario.email.contains(email))
+    resultados = []
+    for usuario in consulta.order_by(Usuario.email).limit(10).all():
+        resultados.append({"id": usuario.id, "text": usuario.email})
+    return {"results": resultados, "pagination": {"more": False}}
