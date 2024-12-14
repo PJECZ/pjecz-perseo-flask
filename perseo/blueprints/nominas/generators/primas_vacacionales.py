@@ -1,5 +1,5 @@
 """
-Nominas, generadores de primas vacacionales
+Nóminas, generadores de primas vacacionales
 """
 
 from datetime import datetime

@@ -1,5 +1,5 @@
 """
-Nominas, generadores de pensionados
+Nóminas, generadores de pensionados
 """
 
 from datetime import datetime

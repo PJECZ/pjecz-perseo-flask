@@ -1,5 +1,5 @@
 """
-Nominas, generadores de monederos
+Nóminas, generadores de monederos
 """
 
 from datetime import datetime

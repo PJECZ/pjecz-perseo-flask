@@ -1,5 +1,5 @@
 """
-Nominas, comunes para los generadores
+Nóminas, comunes para los generadores
 """
 
 import logging
