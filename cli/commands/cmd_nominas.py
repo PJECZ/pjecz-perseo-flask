@@ -20,6 +20,7 @@ from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_rfc
 from perseo.app import create_app
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
 from perseo.blueprints.conceptos.models import Concepto
+from perseo.blueprints.nominas.generators.aguinaldos import crear_aguinaldos
 from perseo.blueprints.nominas.generators.dispersiones_pensionados import crear_dispersiones_pensionados
 from perseo.blueprints.nominas.generators.monederos import crear_monederos
 from perseo.blueprints.nominas.generators.nominas import crear_nominas
@@ -2052,6 +2053,50 @@ def cambiar_fecha_pago(quincena_clave, tipo, fecha_pago_str):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
+@click.option("--fijar-num-cheque", is_flag=True, help="Definir números de cheque")
+@click.option("--modelos-separados-por-comas", help="Por defecto 1,2", default="1,2")
+def crear_archivo_xlsx_aguinaldos(quincena_clave, fijar_num_cheque, modelos_separados_por_comas):
+    """Crear archivo XLSX con los aguinaldos de una quincena"""
+
+    # Validar quincena_clave
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo(click.style("ERROR: Clave de la quincena inválida.", fg="red"))
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena o ha sido eliminada, causa error
+    if quincena is None or quincena.estatus != "A":
+        click.echo(click.style("ERROR: No existe o ha sido eliminada la quincena.", fg="red"))
+        sys.exit(1)
+
+    # Crear un producto para la quincena
+    quincena_producto = QuincenaProducto(
+        quincena_id=quincena.id,
+        fuente="NOMINAS",
+        mensajes="Crear archivo XLSX con los aguinaldos de una quincena",
+    )
+    quincena_producto.save()
+
+    # Ejecutar crear_aguinaldos
+    try:
+        mensaje_termino = crear_aguinaldos(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            fijar_num_cheque=fijar_num_cheque,
+            modelos_separados_por_comas=modelos_separados_por_comas,
+        )
+    except MyAnyError as error:
+        click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
+        sys.exit(1)
+
+    # Terminar la tarea en el fondo y entregar el mensaje de termino
+    click.echo(click.style(mensaje_termino, fg="green"))
+
+
+@click.command()
+@click.argument("quincena_clave", type=str)
 def crear_archivo_xlsx_dispersiones_pensionados(quincena_clave):
     """Crear archivo XLSX con las dispersiones para pensionados"""
 
@@ -2078,7 +2123,10 @@ def crear_archivo_xlsx_dispersiones_pensionados(quincena_clave):
 
     # Ejecutar crear_dispersiones_pensionados
     try:
-        mensaje_termino = crear_dispersiones_pensionados(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_dispersiones_pensionados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+        )
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -2089,7 +2137,8 @@ def crear_archivo_xlsx_dispersiones_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_archivo_xlsx_monederos(quincena_clave):
+@click.option("--fijar-num-cheque", is_flag=True, help="Definir números de cheque")
+def crear_archivo_xlsx_monederos(quincena_clave, fijar_num_cheque):
     """Crear archivo XLSX con los monederos de una quincena"""
 
     # Validar quincena_clave
@@ -2115,7 +2164,11 @@ def crear_archivo_xlsx_monederos(quincena_clave):
 
     # Ejecutar crear_monederos
     try:
-        mensaje_termino = crear_monederos(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_monederos(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            fijar_num_cheque=fijar_num_cheque,
+        )
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -2126,7 +2179,8 @@ def crear_archivo_xlsx_monederos(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_archivo_xlsx_nominas(quincena_clave):
+@click.option("--fijar-num-cheque", is_flag=True, help="Definir números de cheque")
+def crear_archivo_xlsx_nominas(quincena_clave, fijar_num_chque):
     """Crear archivo XLSX con las nominas de una quincena"""
 
     # Validar quincena_clave
@@ -2152,7 +2206,11 @@ def crear_archivo_xlsx_nominas(quincena_clave):
 
     # Ejecutar crear_nominas
     try:
-        mensaje_termino = crear_nominas(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_nominas(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            fijar_num_cheque=fijar_num_chque,
+        )
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -2163,7 +2221,8 @@ def crear_archivo_xlsx_nominas(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_archivo_xlsx_pensionados(quincena_clave):
+@click.option("--fijar-num-cheque", is_flag=True, help="Definir números de cheque")
+def crear_archivo_xlsx_pensionados(quincena_clave, fijar_num_cheque):
     """Crear archivo XLSX con los pensionados de una quincena"""
 
     # Validar quincena_clave
@@ -2189,7 +2248,11 @@ def crear_archivo_xlsx_pensionados(quincena_clave):
 
     # Ejecutar crear_pensionados
     try:
-        mensaje_termino = crear_pensionados(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_pensionados(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            fijar_num_cheque=fijar_num_cheque,
+        )
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -2200,7 +2263,8 @@ def crear_archivo_xlsx_pensionados(quincena_clave):
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-def crear_archivo_xlsx_primas_vacacionales(quincena_clave):
+@click.option("--fijar-num-cheque", is_flag=True, help="Definir números de cheque")
+def crear_archivo_xlsx_primas_vacacionales(quincena_clave, fijar_num_cheque):
     """Crear archivo XLSX con las primas vacacionales de una quincena"""
 
     # Validar quincena_clave
@@ -2226,7 +2290,11 @@ def crear_archivo_xlsx_primas_vacacionales(quincena_clave):
 
     # Ejecutar crear_primas_vacacionales
     try:
-        mensaje_termino = crear_primas_vacacionales(quincena_clave, quincena_producto.id)
+        mensaje_termino = crear_primas_vacacionales(
+            quincena_clave=quincena_clave,
+            quincena_producto_id=quincena_producto.id,
+            fijar_num_cheque=fijar_num_cheque,
+        )
     except MyAnyError as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
@@ -2363,6 +2431,68 @@ def crear_archivo_xlsx_timbrados_primas_vacacionales(quincena_clave):
     click.echo(click.style(mensaje_termino, fg="green"))
 
 
+@click.command()
+@click.argument("quincena_clave", type=str)
+@click.option("--tipo", help="Tipo de nómina", default="")
+def limpiar_num_cheque(quincena_clave: str, tipo: str):
+    """Limpiar los números de cheque de una quincena"""
+
+    # Validar quincena_clave
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo(click.style("ERROR: Clave de la quincena inválida.", fg="red"))
+        sys.exit(1)
+
+    # Consultar quincena
+    quincena = Quincena.query.filter_by(clave=quincena_clave).first()
+
+    # Si no existe la quincena o ha sido eliminada, causa error
+    if quincena is None or quincena.estatus != "A":
+        click.echo(click.style("ERROR: No existe o ha sido eliminada la quincena.", fg="red"))
+        sys.exit(1)
+
+    # Validar tipo
+    if tipo != "":
+        tipo = safe_string(tipo)
+        if tipo not in Nomina.TIPOS:
+            click.echo(click.style("ERROR: Tipo de nómina inválido.", fg="red"))
+            sys.exit(1)
+
+    # Consultar las nóminas de la quincena
+    nominas = Nomina.query.filter_by(quincena_id=quincena.id)
+    if tipo != "":
+        nominas = nominas.filter_by(tipo=tipo)
+    nominas = nominas.order_by(Nomina.id).all()
+
+    # Si no hay nóminas, terminar
+    if len(nominas) == 0:
+        click.echo(click.style("ERROR: No hay nóminas para limpiar los números de cheque.", fg="red"))
+        sys.exit(1)
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Bucle por las nóminas para cambiar la fecha de pago
+    contador = 0
+    click.echo("Limpiando los números de cheque: ", nl=False)
+    for nomina in nominas:
+        if nomina.num_cheque == "":
+            continue
+        nomina.num_cheque = ""
+        sesion.add(nomina)
+        click.echo(click.style(".", fg="cyan"), nl=False)
+        contador += 1
+
+    # Cerrar la sesión para que se guarden todos los datos en la base de datos
+    sesion.commit()
+    sesion.close()
+
+    # Poner avance de línea
+    click.echo("")
+
+    # Mensaje de termino
+    click.echo(click.style(f"Se limpiaron {contador} números de cheque.", fg="green"))
+
+
 cli.add_command(actualizar_timbrados)
 cli.add_command(alimentar)
 cli.add_command(alimentar_aguinaldos)
@@ -2372,6 +2502,7 @@ cli.add_command(alimentar_pensiones_alimenticias)
 cli.add_command(alimentar_primas_vacacionales)
 cli.add_command(generar_issste)
 cli.add_command(cambiar_fecha_pago)
+cli.add_command(crear_archivo_xlsx_aguinaldos)
 cli.add_command(crear_archivo_xlsx_dispersiones_pensionados)
 cli.add_command(crear_archivo_xlsx_monederos)
 cli.add_command(crear_archivo_xlsx_nominas)
@@ -2380,3 +2511,4 @@ cli.add_command(crear_archivo_xlsx_primas_vacacionales)
 cli.add_command(crear_archivo_xlsx_timbrados_empleados_activos)
 cli.add_command(crear_archivo_xlsx_timbrados_pensionados)
 cli.add_command(crear_archivo_xlsx_timbrados_primas_vacacionales)
+cli.add_command(limpiar_num_cheque)

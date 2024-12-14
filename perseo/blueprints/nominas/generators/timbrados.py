@@ -1,5 +1,5 @@
 """
-Nominas, generadores de timbrados
+Nóminas, generadores de timbrados
 """
 
 from datetime import datetime

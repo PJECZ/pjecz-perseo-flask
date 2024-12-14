@@ -1,5 +1,5 @@
 """
-Nominas, generadores de nominas
+Nóminas, generadores de nóminas
 """
 
 from datetime import datetime
@@ -40,22 +40,22 @@ def crear_nominas(
     fijar_num_cheque: bool = False,
     tipo: str = "SALARIO",
 ) -> str:
-    """Crear archivo XLSX con las nominas de una quincena"""
+    """Crear archivo XLSX con las nóminas de una quincena"""
 
     # Validar el tipo
     if tipo not in ["SALARIO", "AGUINALDO"]:
         raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Consultar y validar quincena
-    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepcion
+    quincena = consultar_validar_quincena(quincena_clave)  # Puede provocar una excepción
 
-    # Mandar mensaje de inicio a la bitacora
+    # Mandar mensaje de inicio a la bitácora
     bitacora.info("Inicia crear nominas %s %s", quincena_clave, tipo)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
     sesion = database.session
 
-    # Consultar las nominas de la quincena
+    # Consultar las nóminas de la quincena
     nominas = (
         Nomina.query.join(Persona)
         .filter(Nomina.quincena_id == quincena.id)
@@ -67,7 +67,7 @@ def crear_nominas(
 
     # Si no hay registros, provocar error
     if len(nominas) == 0:
-        mensaje = f"No hay registros en nominas de tipo {tipo}"
+        mensaje = f"No hay registros en nóminas de tipo {tipo}"
         actualizar_quincena_producto(quincena_producto_id, quincena.id, FUENTE, [mensaje])
         raise MyEmptyError(mensaje)
 
@@ -124,7 +124,7 @@ def crear_nominas(
             personas_sin_cuentas.append(nomina.persona)
             continue
 
-        # Validar que no haya otra persona con el mismo banco y numero de cuenta
+        # Validar que no haya otra persona con el mismo banco y número de cuenta
         hay_cuenta_duplicada = False
         for posible_cuenta_duplicada in (
             Cuenta.query.filter_by(banco_id=su_cuenta.banco_id)
@@ -141,10 +141,10 @@ def crear_nominas(
         # Tomar el banco de la cuenta de la persona
         su_banco = su_cuenta.banco
 
-        # Incrementar la consecutivo del banco
+        # Incrementar el consecutivo del banco
         su_banco.consecutivo_generado += 1
 
-        # Elaborar el numero de cheque, juntando la clave del banco y la consecutivo, siempre de 9 digitos
+        # Elaborar el número de cheque, juntando la clave del banco y el consecutivo, siempre de 9 digitos
         num_cheque = f"{su_cuenta.banco.clave.zfill(2)}{su_banco.consecutivo_generado:07}"
 
         # Agregar la fila
@@ -165,7 +165,7 @@ def crear_nominas(
             ]
         )
 
-        # Si fijar_num_cheque es verdadero, entonces actualizar el registro de la nominas con el numero de cheque
+        # Si fijar_num_cheque es verdadero, entonces actualizar el registro de la nómina con el número de cheque
         if fijar_num_cheque:
             nomina.num_cheque = num_cheque
             sesion.add(nomina)
@@ -186,7 +186,7 @@ def crear_nominas(
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
     nombre_archivo_xlsx = f"nominas_{quincena_clave}_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
 
-    # Determinar las rutas con directorios con el año y el número de mes en dos digitos
+    # Determinar las rutas con directorios con el año y el número de mes en dos dígitos
     ruta_local = Path(LOCAL_BASE_DIRECTORY, ahora.strftime("%Y"), ahora.strftime("%m"))
     ruta_gcs = Path(GCS_BASE_DIRECTORY, ahora.strftime("%Y"), ahora.strftime("%m"))
 
@@ -225,14 +225,14 @@ def crear_nominas(
         mensajes.append(f"AVISO: Hubo {len(personas_sin_cuentas)} personas sin cuentas:")
         mensajes += [f"- {p.rfc} {p.nombre_completo}" for p in personas_sin_cuentas]
 
-    # Si hubo mensajes, entonces no es satifactorio
+    # Si hubo mensajes, entonces no es satisfactorio
     es_satisfactorio = True
     if len(mensajes) > 0:
         es_satisfactorio = False
         for m in mensajes:
             bitacora.warning(m)
 
-    # Agregar el ultimo mensaje con la cantidad de filas en el archivo XLSX
+    # Agregar el último mensaje con la cantidad de filas en el archivo XLSX
     mensaje_termino = f"Se generaron {contador} filas"
     mensajes.append(mensaje_termino)
 
