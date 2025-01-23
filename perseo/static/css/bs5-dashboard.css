@@ -10,6 +10,24 @@ body {
   background-color: #eee;
 }
 
+/* Google Fonts Roboto */
+
+.roboto-regular {
+  font-family: "Roboto", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+.roboto-medium {
+  font-family: "Roboto", system-ui;
+  font-weight: 500;
+  font-style: normal;
+}
+.roboto-bold {
+  font-family: "Roboto", system-ui;
+  font-weight: 700;
+  font-style: normal;
+}
+
 /* Color de fondo del menu izquierdo */
 .bg-dark {
   background-color: #123622 !important;

@@ -49,7 +49,7 @@ def cli():
 def alimentar(quincena_clave: str, tipo: str):
     """Alimentar percepciones-deducciones"""
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
     sesion = database.session
 
     # Validar quincena
@@ -115,13 +115,13 @@ def alimentar(quincena_clave: str, tipo: str):
     # Iniciar listado de conceptos que no existen
     conceptos_no_existentes = []
 
-    # Definir el puesto generico al que se van a relacionar las personas que no tengan su puesto
+    # Definir el puesto genérico al que se van a relacionar las personas que no tengan su puesto
     puesto_generico = Puesto.query.filter_by(clave="ND").first()
     if puesto_generico is None:
         click.echo("ERROR: Falta el puesto con clave ND.")
         sys.exit(1)
 
-    # Definir el tabulador generico al que se van a relacionar los puestos que no tengan su tabulador
+    # Definir el tabulador genérico al que se van a relacionar los puestos que no tengan su tabulador
     tabulador_generico = Tabulador.query.filter_by(puesto_id=puesto_generico.id).first()
     if tabulador_generico is None:
         click.echo("ERROR: Falta el tabulador del puesto con clave ND.")
@@ -203,7 +203,7 @@ def alimentar(quincena_clave: str, tipo: str):
                 if conc not in ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]:
                     col_num += 6
                     continue
-                # Tomar el tercer caracter del concepto y convertirlo a entero porque es la cantidad de quinquenios
+                # Tomar el tercer carácter del concepto y convertirlo a entero porque es la cantidad de quinquenios
                 quinquenios = int(conc[1])
                 break
 
