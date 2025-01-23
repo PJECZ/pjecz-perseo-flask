@@ -676,10 +676,10 @@ def alimentar_aguinaldos(quincena_clave: str, fecha_pago_str: str, probar: bool 
         click.echo("ERROR: Fecha de pago inválida")
         sys.exit(1)
 
-    # Iniciar sesion con la base de datos para que la alimentacion sea rapida
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
     sesion = database.session
 
-    # Validar el directorio donde espera encontrar los archivos de explotacion
+    # Validar el directorio donde espera encontrar los archivos de explotación
     if EXPLOTACION_BASE_DIR == "":
         click.echo("ERROR: Variable de entorno EXPLOTACION_BASE_DIR no definida.")
         sys.exit(1)
@@ -889,22 +889,40 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
         sesion.add(quincena)
         sesion.commit()
 
-    # Consultar el concepto con clave PAZ que es APOYO ANUAL, si no se encuentra, error
+    # Consultar el concepto con clave PAZ, si no se encuentra, error
     concepto_paz = Concepto.query.filter_by(clave="PAZ").first()
     if concepto_paz is None:
         click.echo("ERROR: No existe el concepto con clave PAZ")
         sys.exit(1)
 
-    # Consultar el concepto con clave DAZ que es ISR DE APOYO DE FIN DE AÑO, si no se encuentra, error
-    concepto_daz = Concepto.query.filter_by(clave="DAZ").first()
-    if concepto_daz is None:
-        click.echo("ERROR: No existe el concepto con clave DAZ")
+    # Consultar el concepto con clave DPL, si no se encuentra, error
+    concepto_dpl = Concepto.query.filter_by(clave="DPL").first()
+    if concepto_dpl is None:
+        click.echo("ERROR: No existe el concepto con clave DPL")
         sys.exit(1)
 
-    # Consultar el concepto con clave D62 que es PENSION ALIMENTICIA, si no se encuentra, error
+    # Consultar el concepto con clave D62, si no se encuentra, error
     concepto_d62 = Concepto.query.filter_by(clave="D62").first()
     if concepto_d62 is None:
         click.echo("ERROR: No existe el concepto con clave D62")
+        sys.exit(1)
+
+    # Consultar el concepto con clave DPA, si no se encuentra, error
+    concepto_dpa = Concepto.query.filter_by(clave="DPA").first()
+    if concepto_dpa is None:
+        click.echo("ERROR: No existe el concepto con clave DPA")
+        sys.exit(1)
+
+    # Consultar el concepto con clave DPJ, si no se encuentra, error
+    concepto_dpj = Concepto.query.filter_by(clave="DPJ").first()
+    if concepto_dpj is None:
+        click.echo("ERROR: No existe el concepto con clave DPJ")
+        sys.exit(1)
+
+    # Consultar el concepto con clave DAZ, si no se encuentra, error
+    concepto_daz = Concepto.query.filter_by(clave="DAZ").first()
+    if concepto_daz is None:
+        click.echo("ERROR: No existe el concepto con clave DAZ")
         sys.exit(1)
 
     # Abrir el archivo XLS con xlrd
@@ -924,14 +942,15 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
     click.echo("Alimentando Nominas de Apoyos Anuales: ", nl=False)
     for fila in range(1, hoja.nrows):
         # Tomar las columnas
-        rfc = hoja.cell_value(fila, 0).strip().upper()
-        centro_trabajo_clave = hoja.cell_value(fila, 1).strip().upper()
-        plaza_clave = hoja.cell_value(fila, 2).strip().upper()
-        percepcion = float(hoja.cell_value(fila, 4))
-        deduccion = float(hoja.cell_value(fila, 5))
-        impte = float(hoja.cell_value(fila, 6))
-        desde_s = str(int(hoja.cell_value(fila, 8)))
-        hasta_s = str(int(hoja.cell_value(fila, 9)))
+        rfc = hoja.cell_value(fila, 2).strip().upper()
+        centro_trabajo_clave = hoja.cell_value(fila, 3).strip().upper()
+        plaza_clave = hoja.cell_value(fila, 4).strip().upper()
+        percepcion = float(hoja.cell_value(fila, 7))
+        deduccion = float(hoja.cell_value(fila, 8))
+        impte = float(hoja.cell_value(fila, 9))
+        desde_s = str(int(hoja.cell_value(fila, 5)))
+        hasta_s = str(int(hoja.cell_value(fila, 6)))
+        fecha_pago_en_hoja = hoja.cell_value(fila, 10)  # Debe ser una fecha
 
         # Validar desde y hasta
         try:
@@ -943,11 +962,45 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
             click.echo(click.style(f"ERROR: Quincena inválida en '{desde_s}' o '{hasta_s}'", fg="red"))
             sys.exit(1)
 
+        # Si viene la fecha de pago en la hoja se toma, de lo contrario se usa el parámetro de la fecha de pago
+        if isinstance(fecha_pago_en_hoja, datetime):
+            fecha_pago = fecha_pago_en_hoja
+
+        # Tomar el importe del concepto PAZ, si no esta presente sera cero
+        try:
+            impte_concepto_paz = float(hoja.cell_value(fila, 11))
+        except ValueError:
+            impte_concepto_paz = 0.0
+
+        # Tomar el importe del concepto DPL, si no esta presente sera cero
+        try:
+            impte_concepto_dpl = float(hoja.cell_value(fila, 12))
+        except ValueError:
+            impte_concepto_dpl = 0.0
+
         # Tomar el importe del concepto D62, si no esta presente sera cero
         try:
-            impte_concepto_d62 = float(hoja.cell_value(fila, 10))
+            impte_concepto_d62 = float(hoja.cell_value(fila, 13))
         except ValueError:
             impte_concepto_d62 = 0.0
+
+        # Tomar el importe del concepto DPA, si no esta presente sera cero
+        try:
+            impte_concepto_dpa = float(hoja.cell_value(fila, 14))
+        except ValueError:
+            impte_concepto_dpa = 0.0
+
+        # Tomar el importe del concepto DPJ, si no esta presente sera cero
+        try:
+            impte_concepto_dpj = float(hoja.cell_value(fila, 15))
+        except ValueError:
+            impte_concepto_dpj = 0.0
+
+        # Tomar el importe del concepto DAZ, si no esta presente sera cero
+        try:
+            impte_concepto_daz = float(hoja.cell_value(fila, 16))
+        except ValueError:
+            impte_concepto_daz = 0.0
 
         # Consultar la persona
         persona = Persona.query.filter_by(rfc=rfc).first()
@@ -985,34 +1038,41 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
             nominas_existentes.append(rfc)
             continue
 
-        # Alimentar percepcion en PercepcionDeduccion, con concepto PAZ
-        if probar is False:
-            percepcion_deduccion_paz = PercepcionDeduccion(
-                centro_trabajo=centro_trabajo,
-                concepto=concepto_paz,
-                persona=persona,
-                plaza=plaza,
-                quincena=quincena,
-                importe=percepcion,
-                tipo="APOYO ANUAL",
-            )
-            sesion.add(percepcion_deduccion_paz)
+        # Constante tipo
+        TIPO = "APOYO ANUAL"
 
-        # Alimentar deduccion en PercepcionDeduccion, con concepto DAZ
-        if probar is False:
-            percepcion_deduccion_daz = PercepcionDeduccion(
-                centro_trabajo=centro_trabajo,
-                concepto=concepto_daz,
-                persona=persona,
-                plaza=plaza,
-                quincena=quincena,
-                importe=deduccion,
-                tipo="APOYO ANUAL",
-            )
-            sesion.add(percepcion_deduccion_daz)
+        # Alimentar impte_concepto_paz, con concepto PAZ
+        if impte_concepto_paz != 0.0:
+            if probar is False:
+                percepcion_deduccion_paz = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_paz,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impte_concepto_paz,
+                    tipo=TIPO,
+                )
+                sesion.add(percepcion_deduccion_paz)
+            click.echo(click.style("p", fg="cyan"), nl=False)
 
-        # Si tiene concepto_d62, alimentar registro en PercepcionDeduccion
-        if impte_concepto_d62 > 0:
+        # Alimentar impte_concepto_dpl, con concepto DPL
+        if impte_concepto_dpl != 0.0:
+            if probar is False:
+                percepcion_deduccion_paz = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_dpl,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impte_concepto_dpl,
+                    tipo=TIPO,
+                )
+                sesion.add(percepcion_deduccion_paz)
+            click.echo(click.style("d", fg="blue"), nl=False)
+
+        # Alimentar impte_concepto_d62, con concepto D62
+        if impte_concepto_d62 != 0.0:
             if probar is False:
                 percepcion_deduccion_d62 = PercepcionDeduccion(
                     centro_trabajo=centro_trabajo,
@@ -1021,12 +1081,55 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
                     plaza=plaza,
                     quincena=quincena,
                     importe=impte_concepto_d62,
-                    tipo="APOYO ANUAL",
+                    tipo=TIPO,
                 )
                 sesion.add(percepcion_deduccion_d62)
+            click.echo(click.style("d", fg="blue"), nl=False)
 
-            # Sumar a deduccion el impte_concepto_d62
-            deduccion += impte_concepto_d62
+        # Alimentar impte_concepto_dpa, con concepto DPA
+        if impte_concepto_dpa != 0.0:
+            if probar is False:
+                percepcion_deduccion_dpa = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_dpa,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impte_concepto_dpa,
+                    tipo=TIPO,
+                )
+                sesion.add(percepcion_deduccion_dpa)
+            click.echo(click.style("d", fg="blue"), nl=False)
+
+        # Alimentar impte_concepto_dpj, con concepto DPJ
+        if impte_concepto_dpj != 0.0:
+            if probar is False:
+                percepcion_deduccion_dpj = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_dpj,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impte_concepto_dpj,
+                    tipo=TIPO,
+                )
+                sesion.add(percepcion_deduccion_dpj)
+            click.echo(click.style("d", fg="blue"), nl=False)
+
+        # Alimentar impte_concepto_daz, con concepto DAZ
+        if impte_concepto_daz != 0.0:
+            if probar is False:
+                percepcion_deduccion_daz = PercepcionDeduccion(
+                    centro_trabajo=centro_trabajo,
+                    concepto=concepto_daz,
+                    persona=persona,
+                    plaza=plaza,
+                    quincena=quincena,
+                    importe=impte_concepto_daz,
+                    tipo=TIPO,
+                )
+                sesion.add(percepcion_deduccion_daz)
+            click.echo(click.style("d", fg="blue"), nl=False)
 
         # Alimentar registro en Nomina
         if probar is False:
@@ -1042,15 +1145,14 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
                 percepcion=percepcion,
                 deduccion=deduccion,
                 importe=impte,
-                tipo="APOYO ANUAL",
+                tipo=TIPO,
                 fecha_pago=fecha_pago,
             )
             sesion.add(nomina)
+        click.echo(click.style("a", fg="green"), nl=False)
 
         # Incrementar contador
         contador += 1
-        if contador % 100 == 0:
-            click.echo(click.style(".", fg="cyan"), nl=False)
 
     # Poner avance de linea
     click.echo("")
