@@ -49,7 +49,7 @@ database.app = app
 
 def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
     """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
-    bitacora.info("Inicia actualizar último centro de trabajo, plaza y puesto de las Personas")
+    bitacora.info("Inicia actualizar último centro de trabajo, plaza, puesto y puesto equivalente de las Personas")
 
     # Si se proporciona un ID de Persona, entonces actualizar solo esa Persona
     if persona_id is not None:
@@ -201,6 +201,28 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         if persona.ultimo_puesto_id != ultimo_puesto_id:
             persona.ultimo_puesto_id = ultimo_puesto_id
             se_va_a_actualizar = True
+
+        # Si el modelo es 1, 2 o 3
+        if persona.modelo in [1, 2, 3]:
+            # Si cambia el puesto equivalente
+            ultimo_puesto = Puesto.query.get(ultimo_puesto_id)
+            if persona.puesto_equivalente != ultimo_puesto.clave:
+                if persona.modelo == 2:
+                    if persona.nivel == 1:
+                        persona.puesto_equivalente = ultimo_puesto.clave
+                        se_va_a_actualizar = True
+                    elif persona.nivel > 1:
+                        clave_sin_ultimos_dos = ultimo_puesto.clave[:-2]
+                        clave_ultimos_dos = ultimo_puesto.clave[-2:]
+                        try:
+                            numero = int(clave_ultimos_dos) + persona.nivel - 1
+                            persona.puesto_equivalente = f"{clave_sin_ultimos_dos}{numero:02d}"
+                            se_va_a_actualizar = True
+                        except ValueError:
+                            pass
+                else:
+                    persona.puesto_equivalente = ultimo_puesto.clave
+                    se_va_a_actualizar = True
 
         # Si cambia es_activo
         if persona.es_activa != es_activa:
