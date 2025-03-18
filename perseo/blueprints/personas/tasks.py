@@ -116,6 +116,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         [
             "ES ACTIVO",
             "RFC",
+            "CP FISCAL",
             "NOMBRES",
             "APELLIDO PRIMERO",
             "APELLIDO SEGUNDO",
@@ -254,6 +255,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             [
                 int(persona.es_activa),
                 persona.rfc,
+                persona.codigo_postal_fiscal,
                 persona.nombres,
                 persona.apellido_primero,
                 persona.apellido_segundo,
