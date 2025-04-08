@@ -203,6 +203,11 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             persona.ultimo_puesto_id = ultimo_puesto_id
             se_va_a_actualizar = True
 
+        # Si cambia el nivel
+        if persona.nivel != persona.tabulador.nivel:
+            persona.nivel = persona.tabulador.nivel
+            se_va_a_actualizar = True
+
         # Si el modelo es 1, 2 o 3
         if persona.modelo in [1, 2, 3]:
             # Si cambia el puesto equivalente
