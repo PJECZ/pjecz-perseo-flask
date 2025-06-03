@@ -3,7 +3,7 @@ Personas, formularios
 """
 
 from flask_wtf import FlaskForm
-from wtforms import DateField, IntegerField, RadioField, StringField, SubmitField
+from wtforms import BooleanField, DateField, IntegerField, RadioField, StringField, SubmitField
 from wtforms.validators import DataRequired, Length, NumberRange, Optional, Regexp
 
 from lib.safe_string import CURP_REGEXP, RFC_REGEXP
@@ -12,9 +12,7 @@ MODELOS = [
     (1, "1) CONFIANZA"),
     (2, "2) SINDICALIZADO"),
     (3, "3) PENSIONADO"),
-    (4, "4) BENEFICIARIO PENSION ALIMENTICIA"),
-    (5, "5) ASIMILADO A SALARIOS"),
-    (6, "6) EXTRAORDINARIO"),
+    (4, "4) NO ES EMPLEADO"),
 ]
 
 
@@ -36,4 +34,8 @@ class PersonaForm(FlaskForm):
     sub_sis = IntegerField("Subsistema", validators=[Optional()], default=0)
     nivel = IntegerField("Nivel", validators=[Optional()], default=0)
     puesto_equivalente = StringField("Puesto equivalente", validators=[Optional(), Length(max=16)], default="")
+    fue_asimilado = BooleanField("Fue asimilado", validators=[Optional()], default=False)
+    fue_beneficiario_pension_alimenticia = BooleanField(
+        "Fue beneficiario pensión alimenticia", validators=[Optional()], default=False
+    )
     guardar = SubmitField("Guardar")

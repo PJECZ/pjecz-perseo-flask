@@ -21,6 +21,7 @@ class Nomina(database.Model, UniversalMixin):
     TIPOS = {
         "AGUINALDO": "AGUINALDO",
         "APOYO ANUAL": "APOYO ANUAL",
+        "ASIMILADO": "ASIMILADO",
         "DESPENSA": "DESPENSA",
         "SALARIO": "SALARIO",
         "EXTRAORDINARIO": "EXTRAORDINARIO",

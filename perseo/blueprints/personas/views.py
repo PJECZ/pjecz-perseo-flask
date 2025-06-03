@@ -226,6 +226,8 @@ def new():
                 nivel=form.nivel.data,
                 puesto_equivalente=form.puesto_equivalente.data,
                 tabulador=tabulador,
+                fue_asimilado=form.fue_asimilado.data,
+                fue_beneficiario_pension_alimenticia=form.fue_beneficiario_pension_alimenticia.data,
             )
             persona.save()
             bitacora = Bitacora(
@@ -289,6 +291,8 @@ def edit(persona_id):
             persona.sub_sis = form.sub_sis.data
             persona.nivel = form.nivel.data
             persona.puesto_equivalente = form.puesto_equivalente.data
+            persona.fue_asimilado = form.fue_asimilado.data
+            persona.fue_beneficiario_pension_alimenticia = form.fue_beneficiario_pension_alimenticia.data
             persona.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -314,6 +318,8 @@ def edit(persona_id):
     form.sub_sis.data = persona.sub_sis
     form.nivel.data = persona.nivel
     form.puesto_equivalente.data = persona.puesto_equivalente
+    form.fue_asimilado.data = persona.fue_asimilado
+    form.fue_beneficiario_pension_alimenticia.data = persona.fue_beneficiario_pension_alimenticia
     return render_template("personas/edit.jinja2", form=form, persona=persona)
 
 
