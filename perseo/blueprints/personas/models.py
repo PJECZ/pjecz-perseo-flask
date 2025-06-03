@@ -22,9 +22,7 @@ class Persona(database.Model, UniversalMixin):
         1: "CONFIANZA",
         2: "SINDICALIZADO",
         3: "PENSIONADO",
-        4: "BENEFICIARIO PENSION ALIMENTICIA",
-        5: "ASIMILADO A SALARIOS",
-        6: "EXTRAORDINARIO",
+        4: "NO ES EMPLEADO",
     }
 
     # Nombre de la tabla
@@ -66,6 +64,8 @@ class Persona(database.Model, UniversalMixin):
 
     # Columna es_activo que indica si la persona está activa o inactiva
     es_activa: Mapped[bool] = mapped_column(default=False)
+    fue_asimilado: Mapped[bool] = mapped_column(default=False)
+    fue_beneficiario_pension_alimenticia: Mapped[bool] = mapped_column(default=False)
 
     # Hijos
     cuentas: Mapped[List["Cuenta"]] = relationship("Cuenta", back_populates="persona")

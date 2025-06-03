@@ -76,6 +76,8 @@
                 {{ detail.label_value('Sub. Sis.', persona.sub_sis) }}
                 {{ detail.label_value('Nivel', persona.nivel) }}
                 {{ detail.label_value('Puesto equivalente', persona.puesto_equivalente) }}
+                {{ detail.label_value_boolean('Fue asimilado', persona.fue_asimilado) }}
+                {{ detail.label_value_boolean('Fue beneficiario pensión alimenticia', persona.fue_beneficiario_pension_alimenticia) }}
             </div>
         </div>
     {% endcall %}
