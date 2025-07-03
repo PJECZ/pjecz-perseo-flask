@@ -50,7 +50,7 @@ app.app_context().push()
 database.app = app
 
 # Definir la constante con los tipos de nóminas que se pueden exportar
-NOMINAS_TIPOS = ["AGUINALDO", "APOYO ANUAL", "SALARIO", "PRIMA VACACIONAL"]
+NOMINAS_TIPOS = ["AGUINALDO", "APOYO ANUAL", "APOYO DIA DE LA MADRE", "SALARIO", "PRIMA VACACIONAL"]
 
 # Definir la constante con el espacio de nombres del XML
 NAMESPACES = {
