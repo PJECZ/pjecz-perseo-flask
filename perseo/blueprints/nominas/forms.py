@@ -11,6 +11,7 @@ from lib.safe_string import QUINCENA_REGEXP
 TIPOS = [
     ("AGUINALDO", "AGUINALDO"),
     ("APOYO ANUAL", "APOYO ANUAL"),
+    ("APOYO DIA DE LA MADRE", "APOYO DIA DE LA MADRE"),
     ("ASIMILADOS", "ASIMILADOS"),
     ("DESPENSA", "DESPENSA"),
     ("SALARIO", "SALARIO"),

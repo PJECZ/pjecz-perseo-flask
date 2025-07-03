@@ -685,7 +685,7 @@ def export_timbrados(nomina_tipo, quincena_id):
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Validar el tipo de nómina
     nomina_tipo = safe_string(nomina_tipo)
-    if not nomina_tipo in ["AGUINALDO", "APOYO ANUAL", "SALARIO", "PRIMA VACACIONAL"]:
+    if not nomina_tipo in ["AGUINALDO", "APOYO ANUAL", "APOYO DIA DE LA MADRE", "SALARIO", "PRIMA VACACIONAL"]:
         flash("Tipo de nómina no valido", "warning")
         return redirect(url_for("quincenas.detail", quincena_id=quincena.id))
     # Lanzar la tarea en el fondo

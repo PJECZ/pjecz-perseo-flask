@@ -68,7 +68,7 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
 
     # Validar tipo
     tipo = safe_string(tipo)
-    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
+    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "APOYO DIA DE LA MADRE", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
@@ -85,6 +85,11 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
     if tipo == "APOYO ANUAL":
         directorio = f"{quincena_clave}ApoyosAnuales"
         archivo_sufijo = "apoyo-anual"
+
+    # Si el tipo es "APOYO DIA DE LA MADRE", el directorio es <quincena_clave>ApoyoAnual
+    if tipo == "APOYO DIA DE LA MADRE":
+        directorio = f"{quincena_clave}ApoyosDiaDeLaMadre"
+        archivo_sufijo = "apoyo-dia-de-la-madre"
 
     # Si el tipo es AGUINALDO, el directorio es <quincena_clave>Aguinaldo
     if tipo == "PRIMA VACACIONAL":

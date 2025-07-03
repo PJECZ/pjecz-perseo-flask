@@ -73,7 +73,7 @@ def crear_timbrados(
                 raise MyNotValidParamError(f"El modelo {modelo} no es valido")
 
     # Validar el tipo
-    if tipo not in ["APOYO ANUAL", "AGUINALDO", "PRIMA VACACIONAL", "SALARIO"]:
+    if tipo not in ["APOYO ANUAL", "APOYO DIA DE LA MADRE", "AGUINALDO", "PRIMA VACACIONAL", "SALARIO"]:
         raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Por defecto fuente es TIMBRADOS para el tipo SALARIO
@@ -82,6 +82,8 @@ def crear_timbrados(
         fuente = "TIMBRADOS AGUINALDOS"
     elif tipo == "APOYO ANUAL":
         fuente = "TIMBRADOS APOYOS ANUALES"
+    elif tipo == "APOYO DIA DE LA MADRE":
+        fuente = "TIMBRADOS APOYOS APOYO DIA DE LA MADRE"
     elif tipo == "PRIMA VACACIONAL":
         fuente = "TIMBRADOS PRIMAS VACACIONALES"
         modelos = [1, 2, 3]
@@ -125,6 +127,14 @@ def crear_timbrados(
     if tipo == "APOYO ANUAL":
         conceptos_dict = {
             "PAZ": None,  # Percepcion de Apoyo Anual
+            "DAZ": None,  # Deduccion ISR Apoyo Anual
+            "D62": None,  # Deduccion Pension Alimenticia
+        }
+
+    # Si el tipo es APOYO ANUAL armar un diccionario con PAZ, DAZ y D62
+    if tipo == "APOYO DIA DE LA MADRE":
+        conceptos_dict = {
+            "PA5": None,  # Percepcion de Apoyo para el Dia de la Madre
             "DAZ": None,  # Deduccion ISR Apoyo Anual
             "D62": None,  # Deduccion Pension Alimenticia
         }

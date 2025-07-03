@@ -45,7 +45,9 @@ def cli():
 
 @click.command()
 @click.argument("quincena_clave", type=str)
-@click.option("--tipo", type=click.Choice(["", "SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL"]), default="")
+@click.option(
+    "--tipo", type=click.Choice(["", "SALARIO", "DESPENSA", "AGUINALDO", "APOYO ANUAL", "APOYO DIA DE LA MADRE"]), default=""
+)
 def alimentar(quincena_clave: str, tipo: str):
     """Alimentar percepciones-deducciones"""
 
