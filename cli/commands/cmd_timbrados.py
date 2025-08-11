@@ -639,6 +639,14 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
             # Guardar timbrado
             timbrado.save()
 
+            # Si nomina.timbrado_id tiene un valor diferente a CERO
+            if nomina and nomina.timbrado_id:
+                timbrado_por_eliminar = Timbrado.query.get(nomina.timbrado_id)
+                if timbrado_por_eliminar and timbrado_por_eliminar.estatus == "A":
+                    # Eliminar el timbrado anterior
+                    timbrado_por_eliminar.delete()
+                    click.echo(click.style("x", fg="red"), nl=False)
+
             # Actualizar nomina con el ID del timbrado
             nomina.timbrado_id = timbrado.id
             nomina.save()
