@@ -269,6 +269,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             Cuenta.query.join(Banco)
             .filter(Cuenta.persona_id == persona.id)
             .filter(Banco.clave_dispersion_pensionados != "000")
+            .filter(Cuenta.estatus == "A")
             .all()
         )
 
