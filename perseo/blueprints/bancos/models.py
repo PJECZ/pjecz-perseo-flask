@@ -22,7 +22,7 @@ class Banco(database.Model, UniversalMixin):
 
     # Columnas
     clave: Mapped[str] = mapped_column(String(2), unique=True)
-    clave_dispersion_pensionados: Mapped[str] = mapped_column(String(2), unique=True)
+    clave_dispersion_pensionados: Mapped[str] = mapped_column(String(3), unique=True)
     nombre: Mapped[str] = mapped_column(String(256), unique=True)
     consecutivo: Mapped[int] = mapped_column(default=0)
     consecutivo_generado: Mapped[int] = mapped_column(default=0)

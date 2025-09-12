@@ -23,7 +23,9 @@ from lib.exceptions import (
 from lib.google_cloud_storage import upload_file_to_gcs
 from lib.tasks import set_task_error, set_task_progress
 from perseo.app import create_app
+from perseo.blueprints.bancos.models import Banco
 from perseo.blueprints.centros_trabajos.models import CentroTrabajo
+from perseo.blueprints.cuentas.models import Cuenta
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
 from perseo.blueprints.plazas.models import Plaza
@@ -131,6 +133,9 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             "PUESTO EQUIVALENTE",
             "NIVEL",
             "FUE ACTUALIZADO",
+            "NSS",
+            "CLAVE BANCO SAT",
+            "NUMERO DE CUENTA",
         ]
     )
 
@@ -255,6 +260,29 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         # Consultar el ultimo puesto de la persona
         ultimo_puesto = Puesto.query.get(persona.ultimo_puesto_id)
 
+        # Inicializar las variables con los valores vacíos
+        clave_banco_sat = ""
+        numero_cuenta = ""
+
+        # Consultar las cuentas de la persona, que no sean del banco con clave_dispersion_pensionados 000
+        cuentas = (
+            Cuenta.query.join(Banco)
+            .filter(Cuenta.persona_id == persona.id)
+            .filter(Banco.clave_dispersion_pensionados != "000")
+            .all()
+        )
+
+        # Si SI tiene cuentas
+        if len(cuentas) > 0:
+            # Bucle por las cuentas para juntar las claves y números de cuenta, separados por comas
+            claves_banco_sat_list = []
+            numeros_cuenta_list = []
+            for cuenta in cuentas:
+                claves_banco_sat_list.append(cuenta.banco.clave_dispersion_pensionados)
+                numeros_cuenta_list.append(cuenta.num_cuenta)
+            clave_banco_sat = ",".join(claves_banco_sat_list)
+            numero_cuenta = ",".join(numeros_cuenta_list)
+
         # Agregar la fila con los datos
         hoja.append(
             [
@@ -275,6 +303,9 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
                 persona.puesto_equivalente,
                 persona.nivel,
                 int(se_va_a_actualizar),
+                persona.seguridad_social,
+                clave_banco_sat,
+                numero_cuenta,
             ]
         )
 
