@@ -2,6 +2,7 @@
 CLI Timbrados
 """
 
+import csv
 import os
 import re
 import sys
@@ -11,11 +12,14 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import click
+import pytz
 from dotenv import load_dotenv
+from openpyxl import Workbook
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from lib.exceptions import MyAnyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
 from lib.google_cloud_storage import check_file_exists_from_gcs, get_public_url_from_gcs, upload_file_to_gcs
-from lib.safe_string import QUINCENA_REGEXP, safe_string
+from lib.safe_string import QUINCENA_REGEXP, RFC_REGEXP, safe_string
 from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
 from perseo.blueprints.personas.models import Persona
@@ -23,6 +27,8 @@ from perseo.blueprints.quincenas.models import Quincena
 from perseo.blueprints.timbrados.models import Timbrado
 from perseo.blueprints.timbrados.tasks import exportar_xlsx as task_exportar_xlsx
 from perseo.extensions import database
+
+TIMEZONE = "America/Mexico_City"
 
 CARPETA = "timbrados"
 XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
@@ -746,5 +752,174 @@ def exportar_xlsx(quincena_clave, nomina_tipo):
     click.echo(click.style(mensaje_termino, fg="green"))
 
 
+@click.command()
+@click.argument("auditoria_csv", type=str)
+def exportar_auditoria_xlsx(auditoria_csv):
+    """Exportar Timbrados leyendo un archivo CSV con quincenas y RFCs a un archivo XLSX"""
+
+    # Validar archivo CSV
+    ruta = Path(auditoria_csv)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "QUINCENA",
+            "RFC",
+            "NOMBRE_COMPLETO",
+            "NUM_EMPLEADO",
+            "MODELO",
+            "NOMINA_TIPO",
+            "TFD_UUID",
+        ]
+    )
+
+    # Inicializar contadores
+    quincenas_no_validas = []
+    nominas_multiples_encontradas = []
+    nominas_no_encontradas = []
+    nominas_sin_timbrado = []
+    personas_no_encontradas = []
+    rfc_no_validos = []
+    timbrados_no_encontrados = []
+    tipos_no_validos = []
+    contador = 0
+
+    # Leer el archivo CSV
+    click.echo("Leyendo archivo CSV con quincenas y RFCs: ", nl=False)
+    with open(ruta, newline="", encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Validar QUINCENA
+            quincena_clave = row.get("QUINCENA", "").strip()
+            if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+                quincenas_no_validas.append(quincena_clave)
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+
+            # Validar RFC
+            rfc = row.get("RFC", "").strip().upper()
+            if re.match(RFC_REGEXP, rfc) is None:
+                rfc_no_validos.append(rfc)
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+
+            # Validar TIPO_NOMINA_PERSEO
+            tipo = row.get("TIPO_NOMINA_PERSEO", "").strip().upper()
+            if tipo not in Nomina.TIPOS:
+                tipos_no_validos.append(tipo)
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+
+            # Consultar la nomina, filtrando por la persona con su RFC, el tipo y la quincena
+            nominas = (
+                Nomina.query.join(Persona)
+                .join(Quincena)
+                .filter(Nomina.tipo == tipo)
+                .filter(Persona.rfc == rfc)
+                .filter(Quincena.clave == quincena_clave)
+                .filter(Nomina.estatus == "A")
+                .order_by(Persona.rfc, Nomina.desde_clave)
+                .all()
+            )
+
+            # Si NO se encontraron nominas, se agrega a la lista de no encontradas y se omite
+            if len(nominas) == 0:
+                # Consultar en personas si existe el RFC
+                persona = Persona.query.filter(Persona.rfc == rfc).filter(Persona.estatus == "A").first()
+                if persona is None:
+                    personas_no_encontradas.append(rfc)
+                    click.echo(click.style("P", fg="yellow"), nl=False)
+                    continue
+                # De lo contrario, la persona si existe, pero no tiene nominas en la quincena y tipo indicados
+                nominas_no_encontradas.append(f"{rfc} ({quincena_clave} {tipo})")
+                click.echo(click.style("N", fg="yellow"), nl=False)
+                continue
+
+            # Si se encontraron múltiples nominas, se agrega a la lista de multiples encontradas, PERO se sigue procesando
+            if len(nominas) > 1:
+                nominas_multiples_encontradas.append(f"{rfc} ({quincena_clave} {tipo})")
+                click.echo(click.style("M", fg="cyan"), nl=False)
+
+            # Consultar el (o los) timbrado(s)
+            for nomina in nominas:
+                # Si NO tiene timbrado_id
+                if not nomina.timbrado_id:
+                    nominas_sin_timbrado.append(f"{rfc} ({quincena_clave} {tipo})")
+                    click.echo(click.style("0", fg="yellow"), nl=False)
+                    continue
+                # Consultar el (o los) timbrado(s)
+                try:
+                    timbrado = Timbrado.query.filter(Timbrado.id == nomina.timbrado_id).filter(Timbrado.estatus == "A").one()
+                except (MultipleResultsFound, NoResultFound):
+                    timbrados_no_encontrados.append(f"{rfc} ({quincena_clave} {tipo})")
+                    click.echo(click.style("T", fg="yellow"), nl=False)
+                    continue
+
+                # Agregar la fila
+                hoja.append(
+                    [
+                        nomina.quincena.clave,
+                        nomina.persona.rfc,
+                        nomina.persona.nombre_completo,
+                        nomina.persona.num_empleado,
+                        nomina.persona.modelo,
+                        nomina.tipo,
+                        timbrado.tfd_uuid,
+                    ]
+                )
+
+                # Avance
+                contador += 1
+                click.echo(click.style(".", fg="green"), nl=False)
+
+    # Determinar el nombre del archivo XLSX
+    ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
+    nombre_archivo_xlsx = f"auditoria_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo_xlsx)
+
+    # Mensaje de termino
+    click.echo()
+    if len(quincenas_no_validas) > 0:
+        click.echo(click.style(f"Quincenas NO válidas {len(quincenas_no_validas)}: ", fg="white"), nl=False)
+        click.echo(click.style({", ".join(quincenas_no_validas)}, fg="yellow"))
+    if len(rfc_no_validos) > 0:
+        click.echo(click.style(f"RFCs NO válidos {len(rfc_no_validos)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(rfc_no_validos), fg="yellow"))
+    if len(tipos_no_validos) > 0:
+        click.echo(click.style(f"Tipos de nómina NO válidos {len(tipos_no_validos)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(tipos_no_validos), fg="yellow"))
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"Personas NO encontradas {len(personas_no_encontradas)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(personas_no_encontradas), fg="yellow"))
+    if len(nominas_multiples_encontradas) > 0:
+        click.echo(click.style(f"Nóminas múltiples encontradas {len(nominas_multiples_encontradas)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(nominas_multiples_encontradas), fg="cyan"))
+    if len(nominas_no_encontradas) > 0:
+        click.echo(click.style(f"Nóminas NO encontradas {len(nominas_no_encontradas)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(nominas_no_encontradas), fg="yellow"))
+    if len(nominas_sin_timbrado) > 0:
+        click.echo(click.style(f"Nóminas SIN timbrado {len(nominas_sin_timbrado)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(nominas_sin_timbrado), fg="yellow"))
+    if len(timbrados_no_encontrados) > 0:
+        click.echo(click.style(f"Timbrados NO encontrados {len(timbrados_no_encontrados)}: ", fg="yellow"), nl=False)
+        click.echo(click.style(", ".join(timbrados_no_encontrados), fg="yellow"))
+    click.echo(click.style(f"Archivo XLSX generado con {contador} filas: {nombre_archivo_xlsx}", fg="green"))
+
+
 cli.add_command(actualizar)
 cli.add_command(exportar_xlsx)
+cli.add_command(exportar_auditoria_xlsx)
