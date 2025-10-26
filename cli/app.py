@@ -10,7 +10,7 @@ CMD_FOLDER = os.path.join(os.path.dirname(__file__), "commands")
 CMD_PREFIX = "cmd_"
 
 
-class CLI(click.MultiCommand):
+class CLI(click.Group):
     """Para que cada archivo en commands que empiece con cmd_ sea una orden"""
 
     def list_commands(self, ctx):
