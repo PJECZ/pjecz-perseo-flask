@@ -18,7 +18,7 @@ from openpyxl import Workbook
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from lib.exceptions import MyAnyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
-from lib.google_cloud_storage import check_file_exists_from_gcs, get_public_url_from_gcs, upload_file_to_gcs
+from lib.google_cloud_storage import check_file_exists_from_gcs, get_file_from_gcs, get_public_url_from_gcs, upload_file_to_gcs
 from lib.safe_string import QUINCENA_REGEXP, RFC_REGEXP, safe_string
 from perseo.app import create_app
 from perseo.blueprints.nominas.models import Nomina
@@ -782,8 +782,19 @@ def exportar_auditoria_xlsx(auditoria_csv):
             "MODELO",
             "NOMINA_TIPO",
             "TFD_UUID",
+            "FECHA_PAGO",
+            "FECHA_INICIAL_PAGO",
+            "FECHA_FINAL_PAGO",
+            "TOTAL_PERCEPCIONES",
+            "TOTAL_DEDUCCIONES",
+            "TOTAL_OTROS_PAGOS",
         ]
     )
+
+    # Determinar el directorio y el nombre del archivo XLSX
+    ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
+    auditoria = f"auditoria_{ahora.strftime('%Y-%m-%d_%H%M%S')}"
+    nombre_archivo_xlsx = f"{auditoria}.xlsx"
 
     # Inicializar contadores
     quincenas_no_validas = []
@@ -877,16 +888,47 @@ def exportar_auditoria_xlsx(auditoria_csv):
                         nomina.persona.modelo,
                         nomina.tipo,
                         timbrado.tfd_uuid,
+                        timbrado.nomina12_nomina_fecha_pago,
+                        timbrado.nomina12_nomina_fecha_inicial_pago,
+                        timbrado.nomina12_nomina_fecha_final_pago,
+                        timbrado.nomina12_nomina_total_percepciones,
+                        timbrado.nomina12_nomina_total_deducciones,
+                        timbrado.nomina12_nomina_total_otros_pagos,
                     ]
                 )
 
-                # Avance
-                contador += 1
-                click.echo(click.style(".", fg="green"), nl=False)
+                # Definir el subdirectorio segun el tipo de nomina
+                subdir = quincena_clave
+                if nomina.tipo == "AGUINALDO":
+                    subdir = f"{quincena_clave}Aguinaldos"
+                elif nomina.tipo == "APOYO ANUAL":
+                    subdir = f"{quincena_clave}ApoyosAnuales"
+                elif nomina.tipo == "APOYO DIA DE LA MADRE":
+                    subdir = f"{quincena_clave}ApoyosDiaDeLaMadre"
+                elif nomina.tipo == "PRIMA VACACIONAL":
+                    subdir = f"{quincena_clave}PrimasVacacionales"
 
-    # Determinar el nombre del archivo XLSX
-    ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
-    nombre_archivo_xlsx = f"auditoria_{ahora.strftime('%Y-%m-%d_%H%M%S')}.xlsx"
+                # Definir la ruta a los archivos XML y PDF
+                ruta_pdf = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.pdf")
+                ruta_xml = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.xml")
+
+                # Incrementar el contador
+                contador += 1
+                if ruta_pdf.is_file() and ruta_xml.is_file():
+                    try:
+                        # Crear el directorio auditoria si no existe
+                        auditoria_dir = Path(auditoria)
+                        auditoria_dir.mkdir(parents=True, exist_ok=True)
+                        # Copiar los archivos XML y PDF si existen
+                        destino_pdf = Path(auditoria, f"{timbrado.tfd_uuid}.pdf")
+                        destino_xml = Path(auditoria, f"{timbrado.tfd_uuid}.xml")
+                        destino_pdf.write_bytes(ruta_pdf.read_bytes())
+                        destino_xml.write_bytes(ruta_xml.read_bytes())
+                        click.echo(click.style("+", fg="green"), nl=False)
+                    except Exception:
+                        click.echo(click.style("E", fg="red"), nl=False)
+                else:
+                    click.echo(click.style(".", fg="green"), nl=False)
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo_xlsx)
