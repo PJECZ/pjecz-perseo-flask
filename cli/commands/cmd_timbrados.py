@@ -781,6 +781,7 @@ def exportar_auditoria_xlsx(auditoria_csv):
             "NUM_EMPLEADO",
             "MODELO",
             "NOMINA_TIPO",
+            "TIMBRE_ESTADO",
             "TFD_UUID",
             "FECHA_PAGO",
             "FECHA_INICIAL_PAGO",
@@ -887,6 +888,7 @@ def exportar_auditoria_xlsx(auditoria_csv):
                         nomina.persona.num_empleado,
                         nomina.persona.modelo,
                         nomina.tipo,
+                        timbrado.estado,
                         timbrado.tfd_uuid,
                         timbrado.nomina12_nomina_fecha_pago,
                         timbrado.nomina12_nomina_fecha_inicial_pago,
@@ -920,8 +922,8 @@ def exportar_auditoria_xlsx(auditoria_csv):
                         auditoria_dir = Path(auditoria)
                         auditoria_dir.mkdir(parents=True, exist_ok=True)
                         # Copiar los archivos XML y PDF si existen
-                        destino_pdf = Path(auditoria, f"{timbrado.tfd_uuid}.pdf")
-                        destino_xml = Path(auditoria, f"{timbrado.tfd_uuid}.xml")
+                        destino_pdf = Path(auditoria, f"{nomina.persona.rfc}_{timbrado.tfd_uuid}.pdf")
+                        destino_xml = Path(auditoria, f"{nomina.persona.rfc}_{timbrado.tfd_uuid}.xml")
                         destino_pdf.write_bytes(ruta_pdf.read_bytes())
                         destino_xml.write_bytes(ruta_xml.read_bytes())
                         click.echo(click.style("+", fg="green"), nl=False)
