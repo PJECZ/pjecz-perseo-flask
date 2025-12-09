@@ -6,6 +6,7 @@
 *.csv
 *.html
 *.log
+*.ods
 *.py[cod]
 *.sql
 *.sqlite3

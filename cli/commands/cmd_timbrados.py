@@ -35,6 +35,8 @@ XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
 XML_TAG_TFD_PREFIX = "{http://www.sat.gob.mx/TimbreFiscalDigital}"
 XML_TAG_NOMINA_PREFIX = "{http://www.sat.gob.mx/nomina12}"
 
+GCS_TIMBRADOS_URL_BASE = "https://storage.googleapis.com/pjecz-consultas/timbrados"
+
 load_dotenv()
 
 CFDI_EMISOR_RFC = os.getenv("CFDI_EMISOR_RFC", "")
@@ -56,10 +58,14 @@ def cli():
 @click.command()
 @click.argument("quincena_clave", type=str)
 @click.option("--tipo", type=str, default="SALARIO")
+@click.option("--desde-clave", type=str, default="")
+@click.option("--hasta-clave", type=str, default="")
 @click.option("--poner_en_ceros", is_flag=True, default=False, help="Poner en ceros el campo timbrado_id")
 @click.option("--sobreescribir", is_flag=True, default=False, help="Sin importar el valor de timbrado_id")
 @click.option("--subdir", type=str, default=None)
-def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescribir: bool, subdir: str):
+def actualizar(
+    quincena_clave: str, tipo: str, desde_clave: str, hasta_clave: str, poner_en_ceros: bool, sobreescribir: bool, subdir: str
+):
     """Actualizar los timbrados de una quincena a partir de archivos XML y PDF"""
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
@@ -364,6 +370,14 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
         # Si sobreescribir es falso, se filtra por los registros con timbrado_id igual a CERO
         if sobreescribir is False:
             nominas = nominas.filter(Nomina.timbrado_id == 0)
+
+        # Si viene desde_clave, se filtra
+        if desde_clave != "":
+            nominas = nominas.filter(Nomina.desde_clave == desde_clave)
+
+        # Si viene hasta_clave, se filtra
+        if hasta_clave != "":
+            nominas = nominas.filter(Nomina.hasta_clave == hasta_clave)
 
         # Consultar las nominas, ordenar
         nominas = nominas.filter(Nomina.estatus == "A").order_by(Persona.rfc, Nomina.desde_clave).all()
@@ -899,6 +913,9 @@ def exportar_auditoria_xlsx(auditoria_csv):
                     ]
                 )
 
+                # Incrementar el contador
+                contador += 1
+
                 # Definir el subdirectorio segun el tipo de nomina
                 subdir = quincena_clave
                 if nomina.tipo == "AGUINALDO":
@@ -914,8 +931,7 @@ def exportar_auditoria_xlsx(auditoria_csv):
                 ruta_pdf = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.pdf")
                 ruta_xml = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.xml")
 
-                # Incrementar el contador
-                contador += 1
+                # Si ambos archivos existen, copiarlos
                 if ruta_pdf.is_file() and ruta_xml.is_file():
                     try:
                         # Crear el directorio auditoria si no existe
@@ -993,6 +1009,8 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
             "NUM_EMPLEADO",
             "MODELO",
             "NOMINA_TIPO",
+            "QUINCENA DESDE",
+            "QUINCENA HASTA",
             "TIMBRE_ESTADO",
             "TFD_UUID",
             "FECHA_PAGO",
@@ -1001,15 +1019,17 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
             "TOTAL_PERCEPCIONES",
             "TOTAL_DEDUCCIONES",
             "TOTAL_OTROS_PAGOS",
-            "IMPORTE EXENTO",
-            "IMPORTE GRAVADO",
+            "IMPORTE EXENTO P22",
+            "IMPORTE GRAVADO PGA",
+            "GCS TIMBRADOS URL PDF",
+            "GCS TIMBRADOS URL XML",
         ]
     )
 
-    # Determinar el directorio y el nombre del archivo XLSX
+    # Determinar el nombre del archivo XLSX
     ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
-    nombre_archivo = f"aguinaldos_{ahora.strftime('%Y-%m-%d_%H%M%S')}"
-    nombre_archivo_xlsx = f"{nombre_archivo}.xlsx"
+    exportar_aguinaldos_str = f"aguinaldos_{ahora.strftime('%Y-%m-%d_%H%M%S')}"
+    nombre_archivo_xlsx = f"{exportar_aguinaldos_str}.xlsx"
 
     # Inicializar contadores
     errores_al_parsear_xml = []
@@ -1022,6 +1042,9 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
     timbrados_no_encontrados = []
     tipos_no_validos = []
     contador = 0
+
+    # Listado de RFCs consultados para evitar repetidos
+    rfcs_consultados = []
 
     # Leer el archivo CSV
     click.echo("Leyendo archivo CSV: ", nl=False)
@@ -1049,6 +1072,10 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
                 click.echo(click.style("X", fg="yellow"), nl=False)
                 continue
 
+            # Si ya se consultó este RFC, se omite
+            if rfc in rfcs_consultados:
+                continue
+
             # Consultar la nomina, filtrando por la persona con su RFC, el tipo y la quincena
             nominas = (
                 Nomina.query.join(Persona)
@@ -1060,6 +1087,9 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
                 .order_by(Persona.rfc, Nomina.desde_clave)
                 .all()
             )
+
+            # Agregar el RFC a los consultados
+            rfcs_consultados.append(rfc)
 
             # Si NO se encontraron nominas, se agrega a la lista de no encontradas y se omite
             if len(nominas) == 0:
@@ -1139,6 +1169,17 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
                         ):
                             importe_gravado_aguinaldo = element.attrib.get("ImporteGravado", "0.00")
 
+                # Definir el subdirectorio segun el tipo de nomina
+                subdir = quincena_clave
+                if nomina.tipo == "AGUINALDO":
+                    subdir = f"{quincena_clave}Aguinaldos"
+                elif nomina.tipo == "APOYO ANUAL":
+                    subdir = f"{quincena_clave}ApoyosAnuales"
+                elif nomina.tipo == "APOYO DIA DE LA MADRE":
+                    subdir = f"{quincena_clave}ApoyosDiaDeLaMadre"
+                elif nomina.tipo == "PRIMA VACACIONAL":
+                    subdir = f"{quincena_clave}PrimasVacacionales"
+
                 # Agregar la fila
                 hoja.append(
                     [
@@ -1148,6 +1189,8 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
                         nomina.persona.num_empleado,
                         nomina.persona.modelo,
                         nomina.tipo,
+                        nomina.desde_clave,
+                        nomina.hasta_clave,
                         timbrado.estado,
                         timbrado.tfd_uuid,
                         timbrado.nomina12_nomina_fecha_pago,
@@ -1158,18 +1201,43 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
                         timbrado.nomina12_nomina_total_otros_pagos,
                         float(importe_exento_aguinaldo),
                         float(importe_gravado_aguinaldo),
+                        f"{GCS_TIMBRADOS_URL_BASE}/{exportar_aguinaldos_str}/{nomina.persona.rfc}_{timbrado.tfd_uuid}.pdf",
+                        f"{GCS_TIMBRADOS_URL_BASE}/{exportar_aguinaldos_str}/{nomina.persona.rfc}_{timbrado.tfd_uuid}.xml",
                     ]
                 )
 
-            # Incrementar el contador
-            contador += 1
-            click.echo(click.style(".", fg="green"), nl=False)
+                # Incrementar el contador
+                contador += 1
+
+                # Definir la ruta a los archivos XML y PDF
+                ruta_pdf = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.pdf")
+                ruta_xml = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.xml")
+
+                # Si ambos archivos existen, copiarlos
+                if ruta_pdf.is_file() and ruta_xml.is_file():
+                    try:
+                        # Crear el directorio si no existe
+                        exportar_aguinaldos_dir = Path(exportar_aguinaldos_str)
+                        exportar_aguinaldos_dir.mkdir(parents=True, exist_ok=True)
+                        # Copiar los archivos
+                        destino_pdf = Path(exportar_aguinaldos_str, f"{nomina.persona.rfc}_{timbrado.tfd_uuid}.pdf")
+                        destino_xml = Path(exportar_aguinaldos_str, f"{nomina.persona.rfc}_{timbrado.tfd_uuid}.xml")
+                        destino_pdf.write_bytes(ruta_pdf.read_bytes())
+                        destino_xml.write_bytes(ruta_xml.read_bytes())
+                        click.echo(click.style("+", fg="green"), nl=False)
+                    except Exception:
+                        click.echo(click.style("F", fg="red"), nl=False)
+                else:
+                    click.echo(click.style(".", fg="green"), nl=False)
 
     # Guardar el archivo XLSX
     libro.save(nombre_archivo_xlsx)
 
     # Mensaje de termino
     click.echo()
+    if len(errores_al_parsear_xml) > 0:
+        click.echo(click.style(f"Errores al parsear el XML {len(errores_al_parsear_xml)}: ", fg="white"), nl=False)
+        click.echo(click.style({", ".join(errores_al_parsear_xml)}, fg="yellow"))
     if len(quincenas_no_validas) > 0:
         click.echo(click.style(f"Quincenas NO válidas {len(quincenas_no_validas)}: ", fg="white"), nl=False)
         click.echo(click.style({", ".join(quincenas_no_validas)}, fg="yellow"))
