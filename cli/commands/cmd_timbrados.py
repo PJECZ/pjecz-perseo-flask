@@ -1265,7 +1265,82 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
     click.echo(click.style(f"Archivo XLSX generado con {contador} filas: {nombre_archivo_xlsx}", fg="green"))
 
 
+@click.command()
+@click.argument("quincena_clave", type=str)
+@click.option("--tipo", type=str, default="SALARIO")
+@click.option("--probar", is_flag=True, help="Solo probar sin cambiar la base de datos.")
+def actualizar_timbrados_nominas(quincena_clave: str, tipo: str, probar: bool = False):
+    """Actualizar los nominas_ids de los timbrados de una quincena"""
+
+    # Validar quincena
+    if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+        click.echo("ERROR: Quincena inválida.")
+        sys.exit(1)
+
+    # Validar tipo
+    tipo = safe_string(tipo)
+    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "APOYO DIA DE LA MADRE", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
+        click.echo("ERROR: Tipo inválido.")
+        sys.exit(1)
+
+    # Consultar la nomina
+    nominas = (
+        Nomina.query.join(Quincena)
+        .filter(Nomina.tipo == tipo)
+        .filter(Quincena.clave == quincena_clave)
+        .filter(Nomina.estatus == "A")
+        .all()
+    )
+
+    # Inicializar el contador
+    contador = 0
+
+    # Bucle por las nominas
+    for nomina in nominas:
+        # Si nomina.tibrado_id es nulo, se omite
+        if not nomina.timbrado_id:
+            continue
+
+        # Consultar el timbrado
+        timbrado = Timbrado.query.get(nomina.timbrado_id)
+
+        # Si timbrado no existe, se omite
+        if not timbrado:
+            click.echo(click.style("?", fg="yellow"), nl=False)
+            continue
+
+        # Si timbrado.nomina_id es igual a nomina.id, se omite
+        if timbrado.nomina_id == nomina.id:
+            click.echo(click.style("-", fg="green"), nl=False)
+            continue
+
+        # Si NO esta en modo probar, se actualiza
+        if not probar:
+            # Actualizar timbrado.nomina_id
+            timbrado.nomina_id = nomina.id
+            timbrado.save()
+
+        # Incrementar el contador
+        contador += 1
+        click.echo(click.style(f"[{nomina.id}]", fg="cyan"), nl=False)
+
+    # Mensaje de termino
+    click.echo()
+    if probar:
+        click.echo(
+            click.style(
+                f"Se encontraron {contador} timbrados para actualizar en la quincena {quincena_clave} y tipo {tipo}.",
+                fg="green",
+            )
+        )
+    else:
+        click.echo(
+            click.style(f"Se actualizaron {contador} timbrados para la quincena {quincena_clave} y tipo {tipo}.", fg="green")
+        )
+
+
 cli.add_command(actualizar)
 cli.add_command(exportar_xlsx)
 cli.add_command(exportar_auditoria_xlsx)
 cli.add_command(exportar_aguinaldos_xlsx)
+cli.add_command(actualizar_timbrados_nominas)
