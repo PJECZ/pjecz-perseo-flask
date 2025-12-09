@@ -35,6 +35,8 @@ XML_TAG_CFD_PREFIX = "{http://www.sat.gob.mx/cfd/4}"
 XML_TAG_TFD_PREFIX = "{http://www.sat.gob.mx/TimbreFiscalDigital}"
 XML_TAG_NOMINA_PREFIX = "{http://www.sat.gob.mx/nomina12}"
 
+GCS_TIMBRADOS_URL_BASE = "https://storage.googleapis.com/pjecz-consultas/timbrados"
+
 load_dotenv()
 
 CFDI_EMISOR_RFC = os.getenv("CFDI_EMISOR_RFC", "")
@@ -56,10 +58,14 @@ def cli():
 @click.command()
 @click.argument("quincena_clave", type=str)
 @click.option("--tipo", type=str, default="SALARIO")
+@click.option("--desde-clave", type=str, default="")
+@click.option("--hasta-clave", type=str, default="")
 @click.option("--poner_en_ceros", is_flag=True, default=False, help="Poner en ceros el campo timbrado_id")
 @click.option("--sobreescribir", is_flag=True, default=False, help="Sin importar el valor de timbrado_id")
 @click.option("--subdir", type=str, default=None)
-def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescribir: bool, subdir: str):
+def actualizar(
+    quincena_clave: str, tipo: str, desde_clave: str, hasta_clave: str, poner_en_ceros: bool, sobreescribir: bool, subdir: str
+):
     """Actualizar los timbrados de una quincena a partir de archivos XML y PDF"""
 
     # Validar el directorio donde espera encontrar los archivos de explotacion
@@ -364,6 +370,14 @@ def actualizar(quincena_clave: str, tipo: str, poner_en_ceros: bool, sobreescrib
         # Si sobreescribir es falso, se filtra por los registros con timbrado_id igual a CERO
         if sobreescribir is False:
             nominas = nominas.filter(Nomina.timbrado_id == 0)
+
+        # Si viene desde_clave, se filtra
+        if desde_clave != "":
+            nominas = nominas.filter(Nomina.desde_clave == desde_clave)
+
+        # Si viene hasta_clave, se filtra
+        if hasta_clave != "":
+            nominas = nominas.filter(Nomina.hasta_clave == hasta_clave)
 
         # Consultar las nominas, ordenar
         nominas = nominas.filter(Nomina.estatus == "A").order_by(Persona.rfc, Nomina.desde_clave).all()
@@ -899,6 +913,9 @@ def exportar_auditoria_xlsx(auditoria_csv):
                     ]
                 )
 
+                # Incrementar el contador
+                contador += 1
+
                 # Definir el subdirectorio segun el tipo de nomina
                 subdir = quincena_clave
                 if nomina.tipo == "AGUINALDO":
@@ -914,8 +931,7 @@ def exportar_auditoria_xlsx(auditoria_csv):
                 ruta_pdf = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.pdf")
                 ruta_xml = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.xml")
 
-                # Incrementar el contador
-                contador += 1
+                # Si ambos archivos existen, copiarlos
                 if ruta_pdf.is_file() and ruta_xml.is_file():
                     try:
                         # Crear el directorio auditoria si no existe
@@ -964,6 +980,292 @@ def exportar_auditoria_xlsx(auditoria_csv):
     click.echo(click.style(f"Archivo XLSX generado con {contador} filas: {nombre_archivo_xlsx}", fg="green"))
 
 
+@click.command()
+@click.argument("aguinaldos_csv", type=str)
+def exportar_aguinaldos_xlsx(aguinaldos_csv):
+    """Exportar Timbrados de aguinaldos y crear un reporte XLSX leyendo un archivo CSV"""
+
+    # Validar archivo CSV
+    ruta = Path(aguinaldos_csv)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Iniciar el archivo XLSX
+    libro = Workbook()
+
+    # Tomar la hoja del libro XLSX
+    hoja = libro.active
+
+    # Agregar la fila con las cabeceras de las columnas
+    hoja.append(
+        [
+            "QUINCENA",
+            "RFC",
+            "NOMBRE_COMPLETO",
+            "NUM_EMPLEADO",
+            "MODELO",
+            "NOMINA_TIPO",
+            "QUINCENA DESDE",
+            "QUINCENA HASTA",
+            "TIMBRE_ESTADO",
+            "TFD_UUID",
+            "FECHA_PAGO",
+            "FECHA_INICIAL_PAGO",
+            "FECHA_FINAL_PAGO",
+            "TOTAL_PERCEPCIONES",
+            "TOTAL_DEDUCCIONES",
+            "TOTAL_OTROS_PAGOS",
+            "IMPORTE EXENTO P22",
+            "IMPORTE GRAVADO PGA",
+            "GCS TIMBRADOS URL PDF",
+            "GCS TIMBRADOS URL XML",
+        ]
+    )
+
+    # Determinar el nombre del archivo XLSX
+    ahora = datetime.now(tz=pytz.timezone(TIMEZONE))
+    exportar_aguinaldos_str = f"aguinaldos_{ahora.strftime('%Y-%m-%d_%H%M%S')}"
+    nombre_archivo_xlsx = f"{exportar_aguinaldos_str}.xlsx"
+
+    # Inicializar contadores
+    errores_al_parsear_xml = []
+    nominas_multiples_encontradas = []
+    nominas_no_encontradas = []
+    nominas_sin_timbrado = []
+    personas_no_encontradas = []
+    quincenas_no_validas = []
+    rfc_no_validos = []
+    timbrados_no_encontrados = []
+    tipos_no_validos = []
+    contador = 0
+
+    # Listado de RFCs consultados para evitar repetidos
+    rfcs_consultados = []
+
+    # Leer el archivo CSV
+    click.echo("Leyendo archivo CSV: ", nl=False)
+    with open(ruta, newline="", encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Validar QUINCENA
+            quincena_clave = row.get("QUINCENA", "").strip()
+            if re.match(QUINCENA_REGEXP, quincena_clave) is None:
+                quincenas_no_validas.append(quincena_clave)
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+
+            # Validar RFC
+            rfc = row.get("RFC", "").strip().upper()
+            if re.match(RFC_REGEXP, rfc) is None:
+                rfc_no_validos.append(rfc)
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+
+            # Validar TIPO_NOMINA_PERSEO
+            tipo = row.get("TIPO_NOMINA_PERSEO", "").strip().upper()
+            if tipo not in Nomina.TIPOS:
+                tipos_no_validos.append(tipo)
+                click.echo(click.style("X", fg="yellow"), nl=False)
+                continue
+
+            # Si ya se consultó este RFC, se omite
+            if rfc in rfcs_consultados:
+                continue
+
+            # Consultar la nomina, filtrando por la persona con su RFC, el tipo y la quincena
+            nominas = (
+                Nomina.query.join(Persona)
+                .join(Quincena)
+                .filter(Nomina.tipo == tipo)
+                .filter(Persona.rfc == rfc)
+                .filter(Quincena.clave == quincena_clave)
+                .filter(Nomina.estatus == "A")
+                .order_by(Persona.rfc, Nomina.desde_clave)
+                .all()
+            )
+
+            # Agregar el RFC a los consultados
+            rfcs_consultados.append(rfc)
+
+            # Si NO se encontraron nominas, se agrega a la lista de no encontradas y se omite
+            if len(nominas) == 0:
+                # Consultar en personas si existe el RFC
+                persona = Persona.query.filter(Persona.rfc == rfc).filter(Persona.estatus == "A").first()
+                if persona is None:
+                    personas_no_encontradas.append(rfc)
+                    click.echo(click.style("P", fg="yellow"), nl=False)
+                    continue
+                # De lo contrario, la persona si existe, pero no tiene nominas en la quincena y tipo indicados
+                nominas_no_encontradas.append(f"{rfc} ({quincena_clave} {tipo})")
+                click.echo(click.style("N", fg="yellow"), nl=False)
+                continue
+
+            # Si se encontraron múltiples nominas, se agrega a la lista de multiples encontradas, PERO se sigue procesando
+            if len(nominas) > 1:
+                nominas_multiples_encontradas.append(f"{rfc} ({quincena_clave} {tipo})")
+                click.echo(click.style("M", fg="cyan"), nl=False)
+
+            # Consultar el (o los) timbrado(s)
+            for nomina in nominas:
+                # Si NO tiene timbrado_id
+                if not nomina.timbrado_id:
+                    nominas_sin_timbrado.append(f"{rfc} ({quincena_clave} {tipo})")
+                    click.echo(click.style("0", fg="yellow"), nl=False)
+                    continue
+
+                # Consultar el (o los) timbrado(s)
+                try:
+                    timbrado = Timbrado.query.filter(Timbrado.id == nomina.timbrado_id).filter(Timbrado.estatus == "A").one()
+                except (MultipleResultsFound, NoResultFound):
+                    timbrados_no_encontrados.append(f"{rfc} ({quincena_clave} {tipo})")
+                    click.echo(click.style("T", fg="yellow"), nl=False)
+                    continue
+
+                # Parsear el contenido XML del timbrado
+                tree = ET.ElementTree(ET.fromstring(timbrado.tfd))
+                root = tree.getroot()
+
+                # Validar que el tag raiz sea cfdi:Comprobante
+                if root is None or root.tag != f"{XML_TAG_CFD_PREFIX}Comprobante":
+                    errores_al_parsear_xml.append(f"{rfc} ({quincena_clave} {tipo})")
+                    click.echo(click.style("E", fg="yellow"), nl=False)
+                    continue
+
+                # Estructura del CFDI version 4.0
+                # - cfdi:Comprobante [xmlns:xsi, xmlns:nomina12, xmlns:cfdi, Version, Serie, Folio, Fecha, SubTotal, Descuento, Moneda,
+                #     Total, TipoDeComprobante, Exportacion, MetodoPago, LugarExpedicion, Sello, Certificado, NoCertificado]
+                #   - cfdi:Complemento
+                #     - nomina12:Nomina [Version, TipoNomina, FechaPago, FechaInicialPago, FechaFinalPago, NumDiasPagados,
+                #         TotalPercepciones, TotalDeducciones, TotalOtrosPagos]
+                #       - nomina12:Percepciones [TotalSueldos, TotalGravado, TotalExento]
+                #         - nomina12:Percepcion [TipoPercepcion, Clave, Concepto, ImporteGravado, ImporteExento]
+
+                # Inicializar variables para los importes del aguinaldo
+                importe_exento_aguinaldo = "0.00"
+                importe_gravado_aguinaldo = "0.00"
+
+                # Bucle por los elementos de root
+                for element in root.iter():
+                    # Si es Percepcion
+                    if element.tag == f"{XML_TAG_NOMINA_PREFIX}Percepcion":
+                        # Obtener el importe exento del aguinaldo
+                        if (
+                            "Clave" in element.attrib
+                            and element.attrib["Clave"] == "P22"
+                            and "Concepto" in element.attrib
+                            and element.attrib["Concepto"] == "AGUINALDO EXCENTO"
+                        ):
+                            importe_exento_aguinaldo = element.attrib.get("ImporteExento", "0.00")
+                        # Obtener el importe gravado del aguinaldo
+                        if (
+                            "Clave" in element.attrib
+                            and element.attrib["Clave"] == "PGA"
+                            and "Concepto" in element.attrib
+                            and element.attrib["Concepto"] == "AGUINALDO GRAVABLE"
+                        ):
+                            importe_gravado_aguinaldo = element.attrib.get("ImporteGravado", "0.00")
+
+                # Definir el subdirectorio segun el tipo de nomina
+                subdir = quincena_clave
+                if nomina.tipo == "AGUINALDO":
+                    subdir = f"{quincena_clave}Aguinaldos"
+                elif nomina.tipo == "APOYO ANUAL":
+                    subdir = f"{quincena_clave}ApoyosAnuales"
+                elif nomina.tipo == "APOYO DIA DE LA MADRE":
+                    subdir = f"{quincena_clave}ApoyosDiaDeLaMadre"
+                elif nomina.tipo == "PRIMA VACACIONAL":
+                    subdir = f"{quincena_clave}PrimasVacacionales"
+
+                # Agregar la fila
+                hoja.append(
+                    [
+                        nomina.quincena.clave,
+                        nomina.persona.rfc,
+                        nomina.persona.nombre_completo,
+                        nomina.persona.num_empleado,
+                        nomina.persona.modelo,
+                        nomina.tipo,
+                        nomina.desde_clave,
+                        nomina.hasta_clave,
+                        timbrado.estado,
+                        timbrado.tfd_uuid,
+                        timbrado.nomina12_nomina_fecha_pago,
+                        timbrado.nomina12_nomina_fecha_inicial_pago,
+                        timbrado.nomina12_nomina_fecha_final_pago,
+                        timbrado.nomina12_nomina_total_percepciones,
+                        timbrado.nomina12_nomina_total_deducciones,
+                        timbrado.nomina12_nomina_total_otros_pagos,
+                        float(importe_exento_aguinaldo),
+                        float(importe_gravado_aguinaldo),
+                        f"{GCS_TIMBRADOS_URL_BASE}/{exportar_aguinaldos_str}/{nomina.persona.rfc}_{timbrado.tfd_uuid}.pdf",
+                        f"{GCS_TIMBRADOS_URL_BASE}/{exportar_aguinaldos_str}/{nomina.persona.rfc}_{timbrado.tfd_uuid}.xml",
+                    ]
+                )
+
+                # Incrementar el contador
+                contador += 1
+
+                # Definir la ruta a los archivos XML y PDF
+                ruta_pdf = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.pdf")
+                ruta_xml = Path(f"{TIMBRADOS_BASE_DIR}/{subdir}/{timbrado.tfd_uuid}.xml")
+
+                # Si ambos archivos existen, copiarlos
+                if ruta_pdf.is_file() and ruta_xml.is_file():
+                    try:
+                        # Crear el directorio si no existe
+                        exportar_aguinaldos_dir = Path(exportar_aguinaldos_str)
+                        exportar_aguinaldos_dir.mkdir(parents=True, exist_ok=True)
+                        # Copiar los archivos
+                        destino_pdf = Path(exportar_aguinaldos_str, f"{nomina.persona.rfc}_{timbrado.tfd_uuid}.pdf")
+                        destino_xml = Path(exportar_aguinaldos_str, f"{nomina.persona.rfc}_{timbrado.tfd_uuid}.xml")
+                        destino_pdf.write_bytes(ruta_pdf.read_bytes())
+                        destino_xml.write_bytes(ruta_xml.read_bytes())
+                        click.echo(click.style("+", fg="green"), nl=False)
+                    except Exception:
+                        click.echo(click.style("F", fg="red"), nl=False)
+                else:
+                    click.echo(click.style(".", fg="green"), nl=False)
+
+    # Guardar el archivo XLSX
+    libro.save(nombre_archivo_xlsx)
+
+    # Mensaje de termino
+    click.echo()
+    if len(errores_al_parsear_xml) > 0:
+        click.echo(click.style(f"Errores al parsear el XML {len(errores_al_parsear_xml)}: ", fg="white"), nl=False)
+        click.echo(click.style({", ".join(errores_al_parsear_xml)}, fg="yellow"))
+    if len(quincenas_no_validas) > 0:
+        click.echo(click.style(f"Quincenas NO válidas {len(quincenas_no_validas)}: ", fg="white"), nl=False)
+        click.echo(click.style({", ".join(quincenas_no_validas)}, fg="yellow"))
+    if len(rfc_no_validos) > 0:
+        click.echo(click.style(f"RFCs NO válidos {len(rfc_no_validos)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(rfc_no_validos), fg="yellow"))
+    if len(tipos_no_validos) > 0:
+        click.echo(click.style(f"Tipos de nómina NO válidos {len(tipos_no_validos)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(tipos_no_validos), fg="yellow"))
+    if len(personas_no_encontradas) > 0:
+        click.echo(click.style(f"Personas NO encontradas {len(personas_no_encontradas)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(personas_no_encontradas), fg="yellow"))
+    if len(nominas_multiples_encontradas) > 0:
+        click.echo(click.style(f"Nóminas múltiples encontradas {len(nominas_multiples_encontradas)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(nominas_multiples_encontradas), fg="cyan"))
+    if len(nominas_no_encontradas) > 0:
+        click.echo(click.style(f"Nóminas NO encontradas {len(nominas_no_encontradas)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(nominas_no_encontradas), fg="yellow"))
+    if len(nominas_sin_timbrado) > 0:
+        click.echo(click.style(f"Nóminas SIN timbrado {len(nominas_sin_timbrado)}: ", fg="white"), nl=False)
+        click.echo(click.style(", ".join(nominas_sin_timbrado), fg="yellow"))
+    if len(timbrados_no_encontrados) > 0:
+        click.echo(click.style(f"Timbrados NO encontrados {len(timbrados_no_encontrados)}: ", fg="yellow"), nl=False)
+        click.echo(click.style(", ".join(timbrados_no_encontrados), fg="yellow"))
+    click.echo(click.style(f"Archivo XLSX generado con {contador} filas: {nombre_archivo_xlsx}", fg="green"))
+
+
 cli.add_command(actualizar)
 cli.add_command(exportar_xlsx)
 cli.add_command(exportar_auditoria_xlsx)
+cli.add_command(exportar_aguinaldos_xlsx)
