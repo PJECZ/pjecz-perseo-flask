@@ -40,7 +40,7 @@ def crear_dispersiones_pensionados(
     """Crear archivo XLSX con las dispersiones pensionados de una quincena"""
 
     # Validar el tipo
-    if tipo not in ["SALARIO", "AGUINALDO"]:
+    if tipo not in ["SALARIO", "AGUINALDO", "RETROACTIVO AGUINALDO"]:
         raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Consultar y validar quincena

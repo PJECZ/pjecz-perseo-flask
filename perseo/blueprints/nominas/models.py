@@ -24,10 +24,11 @@ class Nomina(database.Model, UniversalMixin):
         "APOYO DIA DE LA MADRE": "APOYO DIA DE LA MADRE",
         "ASIMILADO": "ASIMILADO",
         "DESPENSA": "DESPENSA",
-        "SALARIO": "SALARIO",
         "EXTRAORDINARIO": "EXTRAORDINARIO",
         "PENSION ALIMENTICIA": "PENSION ALIMENTICIA",
         "PRIMA VACACIONAL": "PRIMA VACACIONAL",
+        "SALARIO": "SALARIO",
+        "RETROACTIVO AGUINALDO": "RETROACTIVO AGUINALDO",
     }
 
     # Nombre de la tabla

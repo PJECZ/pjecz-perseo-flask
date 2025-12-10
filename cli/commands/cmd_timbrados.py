@@ -80,7 +80,7 @@ def actualizar(
 
     # Validar tipo
     tipo = safe_string(tipo)
-    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "APOYO DIA DE LA MADRE", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
+    if tipo not in Nomina.TIPOS:
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
@@ -1279,7 +1279,7 @@ def actualizar_timbrados_nominas(quincena_clave: str, tipo: str, probar: bool = 
 
     # Validar tipo
     tipo = safe_string(tipo)
-    if tipo not in ["AGUINALDO", "SALARIO", "APOYO ANUAL", "APOYO DIA DE LA MADRE", "EXTRAORDINARIO", "PRIMA VACACIONAL"]:
+    if tipo not in Nomina.TIPOS:
         click.echo("ERROR: Tipo inválido.")
         sys.exit(1)
 
