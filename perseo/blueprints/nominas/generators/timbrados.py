@@ -73,7 +73,7 @@ def crear_timbrados(
                 raise MyNotValidParamError(f"El modelo {modelo} no es valido")
 
     # Validar el tipo
-    if tipo not in ["APOYO ANUAL", "APOYO DIA DE LA MADRE", "AGUINALDO", "PRIMA VACACIONAL", "SALARIO"]:
+    if tipo not in Nomina.TIPOS:
         raise MyNotValidParamError(f"El tipo {tipo} no es valido")
 
     # Por defecto fuente es TIMBRADOS para el tipo SALARIO

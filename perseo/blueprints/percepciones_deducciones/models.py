@@ -21,9 +21,10 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
         "APOYO ANUAL": "APOYO ANUAL",
         "APOYO DIA DE LA MADRE": "APOYO DIA DE LA MADRE",
         "DESPENSA": "DESPENSA",
-        "SALARIO": "SALARIO",
         "EXTRAORDINARIO": "EXTRAORDINARIO",
         "PRIMA VACACIONAL": "PRIMA VACACIONAL",
+        "SALARIO": "SALARIO",
+        "RETROACTIVO AGUINALDO": "RETROACTIVO AGUINALDO",
     }
 
     # Nombre de la tabla
