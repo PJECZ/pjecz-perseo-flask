@@ -34,6 +34,9 @@
                 <button class="w-100 btn btn-lg btn-primary my-2" type="submit">Ingresar</button>
             {% endcall %}
         </div>
+        <div class="alert alert-warning" style="display: none;" id="error_container" role="alert">
+            <div id="error_message"></div>
+        </div>
     {% else %}
         <div class="my-2" id="correo_electronico_contrasena_form_container">
             {% call f.form_tag('usuarios.login', fid='correo_electronico_contrasena_form') %}

@@ -24,6 +24,50 @@ const signWithMicrosoftButton = document.getElementById("sign_with_microsoft");
 const signWithGitHubButton = document.getElementById("sign_with_gitHub");
 const identityInput = document.getElementById("identidad");
 const tokenInput = document.getElementById("token");
+const errorContainer = document.getElementById("error_container");
+const errorMessage = document.getElementById("error_message");
+
+// Función para mostrar errores
+function displayError(message, error = null) {
+  if (errorContainer && errorMessage) {
+    errorMessage.textContent = message;
+    errorContainer.style.display = "block";
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      errorContainer.style.display = "none";
+    }, 5000);
+  }
+  // Still log to console for debugging
+  if (error) {
+    console.error(message, error);
+  }
+}
+
+// Función para ocultar errores
+function hideError() {
+  if (errorContainer) {
+    errorContainer.style.display = "none";
+  }
+}
+
+// Funcion para mostrar el mensaje de error según lo devuelto
+function handleSignInError(error, provider, button) {
+  // Re-enable and reset button
+  button.textContent = `Ingresar con ${provider}`;
+  button.disabled = false;
+  let userMessage = `Error al iniciar sesión con ${provider}.`;
+  const errorMessages = {
+    'auth/popup-closed-by-user': 'La ventana de inicio de sesión fue cerrada.',
+    'auth/popup-blocked': 'La ventana emergente fue bloqueada. Permite ventanas emergentes.',
+    'auth/cancelled-popup-request': 'Solicitud de inicio de sesión cancelada.',
+    'auth/network-request-failed': 'Error de red. Verifica tu conexión.',
+    'auth/unauthorized-domain': 'Dominio no autorizado.',
+    'auth/operation-not-allowed': `El inicio de sesión con ${provider} no está habilitado.`,
+    'auth/account-exists-with-different-credential': 'Ya existe una cuenta con este correo.',
+  };
+  userMessage = errorMessages[error.code] || `Error: ${error.message}`;
+  displayError(userMessage, error);
+}
 
 // Inicializar Firebase Authentication
 const app = initializeApp(firebaseConfig);
@@ -32,6 +76,7 @@ const auth = getAuth(app);
 // Función a ejecutar cuando se hace clic en el botón "Ingresar con Google"
 function toogleSignWithGoogleButton() {
   if (!auth.currentUser) {
+    hideError();
     // Abrir ventana emergente y cambiar el texto del botón a "Ingresar con Google"
     const googleProvider = new GoogleAuthProvider();
     googleProvider.addScope("https://www.googleapis.com/auth/userinfo.email");
@@ -47,7 +92,7 @@ function toogleSignWithGoogleButton() {
         signWithGitHubButton.style.display = "none";
       })
       .catch((error) => {
-        console.error("Error en Ingresar con Google:", error);
+        handleSignInError(error, "Google", signWithGoogleButton);
       });
   } else {
     // Cerrar sesión y cambiar el texto del botón a "Ingresar con Google"
@@ -65,6 +110,7 @@ function toogleSignWithGoogleButton() {
 // Función a ejecutar cuando se hace clic en el botón "Ingresar con Microsoft"
 function toogleSignWithMicrosoftButton() {
   if (!auth.currentUser) {
+    hideError();
     // Abrir ventana emergente y cambiar el texto del botón a "Ingresar con Microsoft"
     const microsoftProvider = new OAuthProvider("microsoft.com");
     microsoftProvider.addScope("User.Read");
@@ -80,7 +126,7 @@ function toogleSignWithMicrosoftButton() {
         signWithGitHubButton.style.display = "none";
       })
       .catch((error) => {
-        console.error("Error en Ingresar con Microsoft:", error);
+        handleSignInError(error, "Microsoft", signWithMicrosoftButton);
       });
   } else {
     // Cerrar sesión y cambiar el texto del botón a "Ingresar con Microsoft"
@@ -98,6 +144,7 @@ function toogleSignWithMicrosoftButton() {
 // Función a ejecutar cuando se hace clic en el botón "Ingresar con GitHub"
 function toogleSignWithGitHubButton() {
   if (!auth.currentUser) {
+    hideError();
     // Abrir ventana emergente y cambiar el texto del botón a "Ingresar con GitHub"
     const githubProvider = new GithubAuthProvider();
     githubProvider.addScope("read:user");
@@ -113,7 +160,7 @@ function toogleSignWithGitHubButton() {
         signWithMicrosoftButton.style.display = "none";
       })
       .catch((error) => {
-        console.error("Error en Ingresar con GitHub:", error);
+        handleSignInError(error, "GitHub", signWithGitHubButton);
       });
   } else {
     // Cerrar sesión y cambiar el texto del botón a "Ingresar con GitHub"
