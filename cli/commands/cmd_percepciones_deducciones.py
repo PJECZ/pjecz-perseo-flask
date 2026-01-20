@@ -11,21 +11,21 @@ from pathlib import Path
 import click
 import xlrd
 
-from lib.fechas import quincena_to_fecha, quinquenio_count
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_rfc, safe_string
-from perseo.app import create_app
-from perseo.blueprints.centros_trabajos.models import CentroTrabajo
-from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.conceptos_productos.models import ConceptoProducto
-from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
-from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.plazas.models import Plaza
-from perseo.blueprints.productos.models import Producto
-from perseo.blueprints.puestos.models import Puesto
-from perseo.blueprints.quincenas.models import Quincena
-from perseo.blueprints.tabuladores.models import Tabulador
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.centros_trabajos.models import CentroTrabajo
+from pjecz_perseo_flask.blueprints.conceptos.models import Concepto
+from pjecz_perseo_flask.blueprints.conceptos_productos.models import ConceptoProducto
+from pjecz_perseo_flask.blueprints.nominas.models import Nomina
+from pjecz_perseo_flask.blueprints.percepciones_deducciones.models import PercepcionDeduccion
+from pjecz_perseo_flask.blueprints.personas.models import Persona
+from pjecz_perseo_flask.blueprints.plazas.models import Plaza
+from pjecz_perseo_flask.blueprints.productos.models import Producto
+from pjecz_perseo_flask.blueprints.puestos.models import Puesto
+from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.blueprints.tabuladores.models import Tabulador
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.lib.fechas import quincena_to_fecha, quinquenio_count
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_rfc, safe_string
+from pjecz_perseo_flask.main import app
 
 EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
 
@@ -33,9 +33,8 @@ AGUINALDOS_FILENAME_XLS = "Aguinaldos.XLS"
 APOYOS_FILENAME_XLS = "Apoyos.XLS"
 NOMINAS_FILENAME_XLS = "NominaFmt2.XLS"
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()

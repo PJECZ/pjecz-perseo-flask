@@ -6,8 +6,7 @@ import sys
 
 import click
 
-from lib.exceptions import MyAnyError
-from perseo.blueprints.bancos.tasks import reiniciar_consecutivos_generados as task_reiniciar_consecutivos_generados
+from pjecz_perseo_flask.blueprints.bancos.tasks import reiniciar_consecutivos_generados as task_reiniciar_consecutivos_generados
 
 
 @click.group()
@@ -22,7 +21,7 @@ def reiniciar_consecutivos_temp():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = task_reiniciar_consecutivos_generados()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

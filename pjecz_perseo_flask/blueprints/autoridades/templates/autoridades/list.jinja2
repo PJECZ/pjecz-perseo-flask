@@ -1,0 +1,101 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('DISTRITOS') %}
+            {{ topbar.button('Distritos', url_for('distritos.list_active'), 'mdi mdi-map-marker') }}
+        {% endif %}
+        {% if current_user.can_admin('AUTORIDADES') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('autoridades.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('autoridades.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('AUTORIDADES') %}
+            {{ topbar.button_new('Nueva Autoridad', url_for('autoridades.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Autoridades -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosAutoridades.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroAutoridadClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                            <label for="filtroAutoridadClave">Clave</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroAutoridadDescripcion" type="text" class="form-control" aria-label="Descripcion" style="text-transform: uppercase;">
+                            <label for="filtroAutoridadDescripcion">Descripción</label>
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosAutoridades.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosAutoridades.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Datatable Autoridades -->
+        <table id="autoridades_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Clave</th>
+                    <th>Descripción</th>
+                    <th>Descripción corta</th>
+                    <th>Distrito</th>
+                    <th>Activo</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Datatables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable autoridades
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTAutoridades = constructorDataTable.config();
+        configDTAutoridades['ajax']['url'] = '{{ url_for("autoridades.datatable_json") }}';
+        configDTAutoridades['ajax']['data'] = {{ filtros }};
+        configDTAutoridades['columns'] = [
+            { data: "detalle" },
+            { data: "descripcion" },
+            { data: "descripcion_corta" },
+            { data: "distrito_clave" },
+            { data: "es_activo" }
+        ];
+        configDTAutoridades['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            },
+            {
+                targets: 1, // descripcion
+                data: null,
+                render: function(data, type, row, meta) {
+                    return data.length > 48 ? data.substring(0, 48) + '…' : data;
+                }
+            }
+        ];
+        // Filtros autoridades
+        const filtrosAutoridades = new FiltrosDataTable('#autoridades_datatable', configDTAutoridades);
+        filtrosAutoridades.agregarInput('filtroAutoridadClave', 'clave');
+        filtrosAutoridades.agregarInput('filtroAutoridadDescripcion', 'descripcion');
+        filtrosAutoridades.precargar();
+    </script>
+{% endblock %}

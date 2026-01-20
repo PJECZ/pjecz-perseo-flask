@@ -14,20 +14,19 @@ import requests
 import xlrd
 from dotenv import load_dotenv
 
-from lib.exceptions import MyAnyError
-from lib.fechas import quincena_to_fecha
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_curp, safe_rfc, safe_string
-from perseo.app import create_app
-from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
-from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.personas.tasks import actualizar_ultimos_xlsx as task_actualizar_ultimos
-from perseo.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
-from perseo.blueprints.plazas.models import Plaza
-from perseo.blueprints.puestos.models import Puesto
-from perseo.blueprints.quincenas.models import Quincena
-from perseo.blueprints.tabuladores.models import Tabulador
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.nominas.models import Nomina
+from pjecz_perseo_flask.blueprints.percepciones_deducciones.models import PercepcionDeduccion
+from pjecz_perseo_flask.blueprints.personas.models import Persona
+from pjecz_perseo_flask.blueprints.personas.tasks import actualizar_ultimos_xlsx as task_actualizar_ultimos
+from pjecz_perseo_flask.blueprints.personas.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.blueprints.plazas.models import Plaza
+from pjecz_perseo_flask.blueprints.puestos.models import Puesto
+from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.blueprints.tabuladores.models import Tabulador
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.lib.fechas import quincena_to_fecha
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_curp, safe_rfc, safe_string
+from pjecz_perseo_flask.main import app
 
 load_dotenv()
 
@@ -39,9 +38,8 @@ RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL", "")
 RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY", "")
 TIMEOUT = 12
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()
@@ -621,7 +619,7 @@ def actualizar_ultimos_xlsx():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = task_actualizar_ultimos()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
@@ -724,7 +722,7 @@ def exportar_xlsx():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = task_exportar_xlsx()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

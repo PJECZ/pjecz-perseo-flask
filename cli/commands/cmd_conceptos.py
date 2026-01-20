@@ -1,12 +1,5 @@
 """
 CLI Conceptos
-
-Columnas del CSV:
-
-- P_D
-- Concepto
-- Descripcion
-
 """
 
 import csv
@@ -16,17 +9,16 @@ from pathlib import Path
 
 import click
 
-from lib.exceptions import MyAnyError
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
-from perseo.app import create_app
-from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.conceptos.tasks import exportar_xlsx as tesk_exportar_xlsx
-from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
-from perseo.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.blueprints.conceptos.models import Concepto
+from pjecz_perseo_flask.blueprints.conceptos.tasks import exportar_xlsx as tesk_exportar_xlsx
+from pjecz_perseo_flask.blueprints.percepciones_deducciones.models import PercepcionDeduccion
+from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_string
+from pjecz_perseo_flask.main import app
 
 CONCEPTOS_CSV = "seed/conceptos.csv"
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
 
 
@@ -171,7 +163,7 @@ def exportar_xlsx():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = tesk_exportar_xlsx()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

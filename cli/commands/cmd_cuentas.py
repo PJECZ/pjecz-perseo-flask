@@ -1,10 +1,5 @@
 """
 CLI Cuentas
-
-Toma el archivo EmpleadosAlfabetico.XLS
-
-Necesita la quincena como argumento para saber donde buscar el archivo
-
 """
 
 import os
@@ -16,21 +11,20 @@ import click
 import xlrd
 from dotenv import load_dotenv
 
-from lib.exceptions import MyAnyError
-from lib.safe_string import QUINCENA_REGEXP
-from perseo.app import create_app
-from perseo.blueprints.bancos.models import Banco
-from perseo.blueprints.centros_trabajos.models import CentroTrabajo
-from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.conceptos_productos.models import ConceptoProducto
-from perseo.blueprints.cuentas.models import Cuenta
-from perseo.blueprints.cuentas.tasks import exportar_xlsx as task_exportar_xlsx
-from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
-from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.plazas.models import Plaza
-from perseo.blueprints.productos.models import Producto
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.bancos.models import Banco
+from pjecz_perseo_flask.blueprints.centros_trabajos.models import CentroTrabajo
+from pjecz_perseo_flask.blueprints.conceptos.models import Concepto
+from pjecz_perseo_flask.blueprints.conceptos_productos.models import ConceptoProducto
+from pjecz_perseo_flask.blueprints.cuentas.models import Cuenta
+from pjecz_perseo_flask.blueprints.cuentas.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.blueprints.nominas.models import Nomina
+from pjecz_perseo_flask.blueprints.percepciones_deducciones.models import PercepcionDeduccion
+from pjecz_perseo_flask.blueprints.personas.models import Persona
+from pjecz_perseo_flask.blueprints.plazas.models import Plaza
+from pjecz_perseo_flask.blueprints.productos.models import Producto
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP
+from pjecz_perseo_flask.main import app
 
 load_dotenv()
 
@@ -38,9 +32,8 @@ EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
 CUENTAS_FILENAME_XLS = "EmpleadosAlfabetico.XLS"
 MONEDEROS_FILENAME_XLS = "Monederos.XLS"
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()

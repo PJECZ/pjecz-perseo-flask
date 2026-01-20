@@ -14,29 +14,28 @@ import xlrd
 from dotenv import load_dotenv
 from openpyxl import load_workbook
 
-from lib.exceptions import MyAnyError
-from lib.fechas import crear_clave_quincena, quincena_to_fecha, quinquenio_count
-from lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_rfc, safe_string
-from perseo.app import create_app
-from perseo.blueprints.centros_trabajos.models import CentroTrabajo
-from perseo.blueprints.conceptos.models import Concepto
-from perseo.blueprints.nominas.generators.aguinaldos import crear_aguinaldos
-from perseo.blueprints.nominas.generators.dispersiones_pensionados import crear_dispersiones_pensionados
-from perseo.blueprints.nominas.generators.monederos import crear_monederos
-from perseo.blueprints.nominas.generators.nominas import crear_nominas
-from perseo.blueprints.nominas.generators.pensionados import crear_pensionados
-from perseo.blueprints.nominas.generators.primas_vacacionales import crear_primas_vacacionales
-from perseo.blueprints.nominas.generators.timbrados import crear_timbrados
-from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.percepciones_deducciones.models import PercepcionDeduccion
-from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.plazas.models import Plaza
-from perseo.blueprints.puestos.models import Puesto
-from perseo.blueprints.quincenas.models import Quincena
-from perseo.blueprints.quincenas_productos.models import QuincenaProducto
-from perseo.blueprints.tabuladores.models import Tabulador
-from perseo.blueprints.timbrados.models import Timbrado
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.centros_trabajos.models import CentroTrabajo
+from pjecz_perseo_flask.blueprints.conceptos.models import Concepto
+from pjecz_perseo_flask.blueprints.nominas.generators.aguinaldos import crear_aguinaldos
+from pjecz_perseo_flask.blueprints.nominas.generators.dispersiones_pensionados import crear_dispersiones_pensionados
+from pjecz_perseo_flask.blueprints.nominas.generators.monederos import crear_monederos
+from pjecz_perseo_flask.blueprints.nominas.generators.nominas import crear_nominas
+from pjecz_perseo_flask.blueprints.nominas.generators.pensionados import crear_pensionados
+from pjecz_perseo_flask.blueprints.nominas.generators.primas_vacacionales import crear_primas_vacacionales
+from pjecz_perseo_flask.blueprints.nominas.generators.timbrados import crear_timbrados
+from pjecz_perseo_flask.blueprints.nominas.models import Nomina
+from pjecz_perseo_flask.blueprints.percepciones_deducciones.models import PercepcionDeduccion
+from pjecz_perseo_flask.blueprints.personas.models import Persona
+from pjecz_perseo_flask.blueprints.plazas.models import Plaza
+from pjecz_perseo_flask.blueprints.puestos.models import Puesto
+from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.blueprints.quincenas_productos.models import QuincenaProducto
+from pjecz_perseo_flask.blueprints.tabuladores.models import Tabulador
+from pjecz_perseo_flask.blueprints.timbrados.models import Timbrado
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.lib.fechas import crear_clave_quincena, quincena_to_fecha, quinquenio_count
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP, safe_clave, safe_quincena, safe_rfc, safe_string
+from pjecz_perseo_flask.main import app
 
 load_dotenv()
 
@@ -58,9 +57,8 @@ RETROACTIVOS_AGUINALDOS_FILENAME_XLS = "RetroactivosAguinaldos.XLS"
 SALARIOS_RL_FILENAME_XLS = "SalariosRL.XLS"
 SERICA_FILENAME_XLSX = "SERICA.xlsx"
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()
@@ -1163,7 +1161,7 @@ def alimentar_apoyos_anuales(quincena_clave: str, fecha_pago_str: str, probar: b
     # Si contador es cero, mostrar mensaje de error y terminar
     if contador == 0:
         click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
-        sys.exit(1)
+        # sys.exit(1)
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
@@ -3528,7 +3526,7 @@ def crear_archivo_xlsx_aguinaldos(quincena_clave, fijar_num_cheque, modelos_sepa
             fijar_num_cheque=fijar_num_cheque,
             modelos_separados_por_comas=modelos_separados_por_comas,
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3568,7 +3566,7 @@ def crear_archivo_xlsx_dispersiones_pensionados(quincena_clave):
             quincena_clave=quincena_clave,
             quincena_producto_id=quincena_producto.id,
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3610,7 +3608,7 @@ def crear_archivo_xlsx_monederos(quincena_clave, fijar_num_cheque):
             quincena_producto_id=quincena_producto.id,
             fijar_num_cheque=fijar_num_cheque,
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3652,7 +3650,7 @@ def crear_archivo_xlsx_nominas(quincena_clave, fijar_num_chque):
             quincena_producto_id=quincena_producto.id,
             fijar_num_cheque=fijar_num_chque,
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3694,7 +3692,7 @@ def crear_archivo_xlsx_pensionados(quincena_clave, fijar_num_cheque):
             quincena_producto_id=quincena_producto.id,
             fijar_num_cheque=fijar_num_cheque,
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3736,7 +3734,7 @@ def crear_archivo_xlsx_primas_vacacionales(quincena_clave, fijar_num_cheque):
             quincena_producto_id=quincena_producto.id,
             fijar_num_cheque=fijar_num_cheque,
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3777,7 +3775,7 @@ def crear_archivo_xlsx_timbrados_empleados_activos(quincena_clave):
             quincena_producto_id=quincena_producto.id,
             modelos=[1, 2],
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3818,7 +3816,7 @@ def crear_archivo_xlsx_timbrados_pensionados(quincena_clave):
             quincena_producto_id=quincena_producto.id,
             modelos=[3],
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 
@@ -3864,7 +3862,7 @@ def crear_archivo_xlsx_timbrados_primas_vacacionales(quincena_clave):
             quincena_producto_id=quincena_producto.id,
             tipo="PRIMA VACACIONAL",
         )
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(f"ERROR: {str(error)}", fg="red"))
         sys.exit(1)
 

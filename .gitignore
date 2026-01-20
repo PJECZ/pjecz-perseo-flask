@@ -2,16 +2,13 @@
 .DS_Store
 .~lock.*
 
-*.code-workspace
 *.csv
-*.html
 *.log
-*.ods
 *.py[cod]
-*.sql
 *.sqlite3
 *.sqlite3-journal
 *.session.sql
+*.sql
 *.xls
 *.xlsx
 *.XLS
@@ -28,3 +25,5 @@ __pycache__/
 /.venv/
 /seed/
 /venv/
+
+gclouddeploy.sh

@@ -6,11 +6,10 @@ import sys
 
 import click
 
-from lib.exceptions import MyAnyError
-from perseo.app import create_app
-from perseo.blueprints.plazas.tasks import exportar_xlsx
+from pjecz_perseo_flask.blueprints.plazas.tasks import exportar_xlsx
+from pjecz_perseo_flask.main import app
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
 
 
@@ -26,7 +25,7 @@ def exportar():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = exportar_xlsx()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

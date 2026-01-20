@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from perseo.blueprints.modulos.models import Modulo
+from pjecz_perseo_flask.blueprints.modulos.models import Modulo
 
 MODULOS_CSV = "seed/modulos.csv"
 

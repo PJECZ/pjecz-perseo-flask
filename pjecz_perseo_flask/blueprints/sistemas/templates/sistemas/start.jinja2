@@ -1,0 +1,33 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/start.jinja2' as start %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Plataforma Perseo{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Inicio') }}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            {% call start.card(title='Sistema Integral de Calidad y Gestión Documental') %}
+                <h4>Política Integral</h4>
+                <p class="lead">
+                    El Poder Judicial del Estado de Coahuila de Zaragoza
+                    basado en los principios de una justicia
+                    <span class="roboto-bold">
+                    Abierta y Transparente, de Calidad, Eficiente, Cercana, Innovadora y Profesional,
+                    </span>
+                    que brinda certeza jurídica, confianza e imparcialidad a la ciudadanía,
+                    comprometido a proporcionar atención y servicios bajo una cultura de calidad,
+                    gestión documental y mejora contínua,
+                    con un enfoque centrado en la persona y sus derechos humanos.
+                </p>
+            {% endcall %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+{% endblock %}

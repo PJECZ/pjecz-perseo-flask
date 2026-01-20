@@ -1,0 +1,85 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('TAREAS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('tareas.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('tareas.list_active')) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <table id="tareas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Creado</th>
+                    <th>Comando</th>
+                    <th>Ha terminado</th>
+                    <th>Mensaje</th>
+                    <th>Usuario</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable Tareas
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTTareas = constructorDataTable.config();
+        configDTTareas['ajax']['url'] = '{{ url_for("tareas.datatable_json") }}';
+        configDTTareas['ajax']['data'] = {{ filtros }};
+        configDTTareas['columns'] = [
+            { data: 'creado' },
+            { data: 'detalle' },
+            { data: 'ha_terminado' },
+            { data: 'mensaje' },
+            { data: 'usuario_email' },
+        ];
+        configDTTareas['columnDefs'] = [
+            {
+                targets: 0, // creado
+                type: "date",
+                render: function (data, type, row) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+                }
+            },
+            {
+                targets: 1, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.comando + '</a>';
+                }
+            },
+            {
+                targets: 2, // ha_terminado
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data) { return 'OK'; } else { return ''; }
+                }
+            },
+            {
+                targets: 3, // mensaje
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.length > 24) {
+                        return '<span title="' + data + '">' + data.substring(0, 24) + '…</span>';
+                    }
+                    return data;
+                }
+            }
+        ];
+        // Filtros Tareas
+        const filtrosTareas = new FiltrosDataTable('#tareas_datatable', configDTTareas);
+        filtrosTareas.precargar();
+    </script>
+{% endblock %}

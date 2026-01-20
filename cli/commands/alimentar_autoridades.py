@@ -8,9 +8,9 @@ from pathlib import Path
 
 import click
 
-from lib.safe_string import safe_clave, safe_string
-from perseo.blueprints.autoridades.models import Autoridad
-from perseo.blueprints.distritos.models import Distrito
+from pjecz_perseo_flask.blueprints.autoridades.models import Autoridad
+from pjecz_perseo_flask.blueprints.distritos.models import Distrito
+from pjecz_perseo_flask.lib.safe_string import safe_clave, safe_string
 
 AUTORIDADES_CSV = "seed/autoridades.csv"
 

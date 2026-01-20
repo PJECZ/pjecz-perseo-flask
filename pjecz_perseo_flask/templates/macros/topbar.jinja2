@@ -1,0 +1,82 @@
+{# Dashboard top bar #}
+
+{%- macro page(title) -%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            {{ title }}
+        </h1>
+    </div>
+{%- endmacro -%}
+
+{%- macro page_buttons(title) -%}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            {{ title }}
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                {{ caller() }}
+            </div>
+        </div>
+    </div>
+{%- endmacro -%}
+
+{%- macro button(label, url, icon='') -%}
+    {% if icon != '' %}
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url }}"><span class="{{ icon }}"></span> {{ label }}</a>
+    {% else %}
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url }}">{{ label }}</a>
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro button_primary(label, url, icon='') -%}
+    {% if icon != '' %}
+        <a class="btn btn-sm btn-outline-primary" href="{{ url }}"><span class="{{ icon }}"></span> {{ label }}</a>
+    {% else %}
+        <a class="btn btn-sm btn-outline-primary" href="{{ url }}">{{ label }}</a>
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro button_danger(label, url, icon='') -%}
+    {% if icon != '' %}
+        <a class="btn btn-sm btn-outline-danger" href="{{ url }}"><span class="{{ icon }}"></span> {{ label }}</a>
+    {% else %}
+        <a class="btn btn-sm btn-outline-danger" href="{{ url }}">{{ label }}</a>
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro button_previous(label, url) -%}
+    {{ button(label, url, 'mdi mdi-skip-backward') }}
+{%- endmacro -%}
+
+{%- macro button_new(label, url) -%}
+    {{ button_primary(label, url, 'mdi mdi-plus') }}
+{%- endmacro -%}
+
+{%- macro button_edit(label, url) -%}
+    {{ button(label, url, 'mdi mdi-pencil') }}
+{%- endmacro -%}
+
+{%- macro button_cancel(label="Cancelar", url="javascript:history.back()") -%}
+    {{ button_danger(label, url, 'mdi mdi-skip-backward') }}
+{%- endmacro -%}
+
+{%- macro button_list_active(label, url) -%}
+    {{ button(label, url, 'mdi mdi-eye') }}
+{%- endmacro -%}
+
+{%- macro button_list_inactive(label, url) -%}
+    {{ button(label, url, 'mdi mdi-eye-off') }}
+{%- endmacro -%}
+
+{%- macro button_delete(label, url, icon="mdi mdi-delete") -%}
+    <a class="btn btn-sm btn-outline-danger" href="javascript:void(0)" onclick="showModalDelete('{{ url }}');"><span class="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_recover(label, url, icon="mdi mdi-file-check") -%}
+    <a class="btn btn-sm btn-outline-primary" href="javascript:void(0)" onclick="showModalRecover('{{ url }}');"><span class="{{ icon }}"></span> {{ label }}</a>
+{%- endmacro -%}
+
+{%- macro button_dashboard(label, url) -%}
+    {{ button(label, url, 'mdi mdi-view-dashboard') }}
+{%- endmacro -%}

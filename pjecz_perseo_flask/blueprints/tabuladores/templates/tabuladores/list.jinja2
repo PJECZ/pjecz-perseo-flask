@@ -1,0 +1,127 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('TABULADORES') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('tabuladores.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('tabuladores.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_view('TABULADORES') %}
+            {{ modals.button_modal('Exportar a XLSX', url_for('tabuladores.exportar_xlsx'), 'ExportXLSX', 'mdi mdi-download', "¿Quiere exportar los Tabuladores como un archivo XLSX?") }}
+        {% endif %}
+        {% if current_user.can_insert('TABULADORES') %}
+            {{ topbar.button_new('Nuevo Tabulador', url_for('tabuladores.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Tabuladores -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosTabuladores.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroPuestoClave" type="text" class="form-control" aria-label="Puesto Clave" style="text-transform: uppercase;">
+                            <label for="filtroPuestoClave">Puesto Clave</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroModelo" type="text" class="form-control" aria-label="Modelo" style="text-transform: uppercase;">
+                            <label for="filtroModelo">Modelo</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroNivel" type="text" class="form-control" aria-label="Nivel" style="text-transform: uppercase;">
+                            <label for="filtroNivel">Nivel</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroQuinquenio" type="text" class="form-control" aria-label="Quinquenio" style="text-transform: uppercase;">
+                            <label for="filtroQuinquenio">Quinquenio</label>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosTabuladores.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosTabuladores.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable Tabuladores -->
+        <table id="tabuladores_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Puesto</th>
+                    <th>Modelo</th>
+                    <th>Nivel</th>
+                    <th>Quinquenio</th>
+                    <th>Fecha</th>
+                    <th style="text-align:right">Sueldo Base</th>
+                    <th style="text-align:right">Monedero</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ modals.custom_javascript('Exportar a XLSX', '', 'ExportXLSX') }}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable Tabuladores
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTTabuladores = constructorDataTable.config();
+        configDTTabuladores['ajax']['url'] = '/tabuladores/datatable_json';
+        configDTTabuladores['ajax']['data'] = {{ filtros }};
+        configDTTabuladores['columns'] = [
+            { data: 'detalle' },
+            { data: 'puesto' },
+            { data: 'modelo' },
+            { data: 'nivel' },
+            { data: 'quinquenio' },
+            { data: 'fecha' },
+            { data: 'sueldo_base' },
+            { data: 'monedero' }
+        ];
+        configDTTabuladores['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 1, // puesto
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            },
+            {
+                targets: [6, 7], // sueldo_base, monedero
+                render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                className: "dt-body-right",
+            }
+        ];
+        // Filtros Tabuladores
+        const filtrosTabuladores = new FiltrosDataTable('#tabuladores_datatable', configDTTabuladores);
+        filtrosTabuladores.agregarInput('filtroPuestoClave', 'puesto_clave');
+        filtrosTabuladores.agregarInput('filtroModelo', 'modelo');
+        filtrosTabuladores.agregarInput('filtroNivel', 'nivel');
+        filtrosTabuladores.agregarInput('filtroQuinquenio', 'quinquenio');
+        filtrosTabuladores.precargar();
+    </script>
+{% endblock %}

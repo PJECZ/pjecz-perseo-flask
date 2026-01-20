@@ -1,0 +1,71 @@
+{% extends 'layouts/login.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block welcome %}
+    <div id="welcome" class="text-center">
+        <p><img class="img-fluid" src="https://storage.googleapis.com/pjecz-informatica/static/images/logo-login.png" alt="PJECZ"></p>
+        <h4 class="mb-3">{{ title }}</h4>
+    </div>
+{% endblock %}
+
+{% block content %}
+    {% if firebase_settings %}
+        <div class="text-center my-2">
+            <span id="logged_out">Ingrese con:</span>
+            <span id="logged_in" style="display: none;"><strong>¡Hola <span id="usuario_nombre"></span>!</strong></span>
+        </div>
+        <div class="d-grid gap-2 my-2" style="display: none;" id="sign_with_container">
+            <button id="sign_with_google" disabled style="display: block;" class="btn btn-info">Cargando...</button>
+            <button id="sign_with_microsoft" disabled style="display: block;" class="btn btn-primary">Cargando...</button>
+            <button id="sign_with_gitHub" disabled style="display: block;" class="btn btn-secondary">Cargando...</button>
+        </div>
+        <div class="my-2" style="display: none;" id="identity_token_form_container">
+            {% call f.form_tag('usuarios.login', fid='identity_token_form') %}
+                <div class="form-floating">
+                    {% call f.field(form.identidad, class='form-control', readonly='readonly') %}{% endcall %}
+                    <label for="identidad">Identidad</label>
+                </div>
+                <div class="form-floating">
+                    {% call f.field(form.token, class='form-control', readonly='readonly') %}{% endcall %}
+                    <label for="token">Token</label>
+                </div>
+                <button class="w-100 btn btn-lg btn-primary my-2" type="submit">Ingresar</button>
+            {% endcall %}
+        </div>
+    {% else %}
+        <div class="my-2" id="correo_electronico_contrasena_form_container">
+            {% call f.form_tag('usuarios.login', fid='correo_electronico_contrasena_form') %}
+                <div class="form-floating">
+                    {% call f.field(form.correo_electronico, class='form-control', autofocus='autofocus') %}{% endcall %}
+                    <label for="correo_electronico">Correo electrónico</label>
+                </div>
+                <div class="form-floating">
+                    {% call f.field(form.contrasena, class='form-control') %}{% endcall %}
+                    <label for="contrasena">Contraseña</label>
+                </div>
+                <button class="w-100 btn btn-lg btn-primary my-2" type="submit">Ingresar</button>
+            {% endcall %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if firebase_settings %}
+        <script>
+            // Firebase configuration
+            const firebaseConfig = {
+                apiKey: "{{ firebase_settings.APIKEY }}",
+                appId: "{{ firebase_settings.APPID }}",
+                authDomain: "{{ firebase_settings.AUTHDOMAIN }}",
+                databaseURL: "{{ firebase_settings.DATABASEURL }}",
+                measurementId: "{{ firebase_settings.MEASUREMENTID }}",
+                messagingSenderId: "{{ firebase_settings.MESSAGINGSENDERID }}",
+                projectId: "{{ firebase_settings.PROJECTID }}",
+                storageBucket: "{{ firebase_settings.STORAGEBUCKET }}",
+            };
+        </script>
+        <script type="module" src="{{ url_for('static', filename='js/firebase-login.js') }}"></script>
+    {% endif %}
+{% endblock %}

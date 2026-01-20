@@ -1,0 +1,164 @@
+{# card sirve para contener algo; es necesario para que las tablas sean usables en pantallas chicas #}}
+{%- macro card(title='', css_class='') -%}
+    <div class="card my-2 {{css_class}}">
+        {% if title %}<div class="card-header">{{ title }}</div>{% endif %}
+        <div class="card-body">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# botón submit #}
+{%- macro submit_button(f, css_class='btn btn-success text-white') -%}
+    {{ f(class=css_class) }}
+{%- endmacro -%}
+
+{# etiqueta con texto de ayuda #}
+{%- macro field_label(f) -%}
+    <label for="{{ f.id }}">
+    {%- if f.flags.required -%}
+        <strong>{{ f.label.text }}</strong>
+    {%- else %}
+        {{ f.label.text }}
+    {%- endif %}
+    </label>
+{%- endmacro -%}
+
+{# errores de validación si los hay #}
+{%- macro field_errors(f) -%}
+    {% if f.errors %}
+        <ul class="list-unstyled text-danger field-error">
+            {% for error in f.errors %}
+                <li>{{ error | e }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{%- endmacro -%}
+
+{# un campo del formulario #}
+{%- macro field(f, css_class='form-control') -%}
+    {% if f.type == 'DateField' %}
+        {{ f(class=css_class, type='date', **kwargs) }}
+    {% elif f.type == 'TimeField' %}
+        {{ f(class=css_class, type='time', **kwargs) }}
+    {% elif f.type == 'DateTimeField' %}
+        {{ f(class=css_class, type='datetime', **kwargs) }}
+    {% elif f.type == 'SubmitField' %}
+        {{ submit_button(f) }}
+    {% else %}
+        {{ f(class=css_class, **kwargs) }}
+    {% endif %}
+{%- endmacro -%}
+
+{# un campo de opción múltiple #}
+{%- macro checkbox_field(f) -%}
+    {{ f(type='checkbox', **kwargs) }} {{ f.label }}
+{%- endmacro -%}
+
+{# un campo de radio #}
+{%- macro radios_fields(f) -%}
+    {{ field_label(f) }}
+    {% for subfield in f %}
+        <div class="form-check">
+            {{ subfield }}
+            <label class="form-check-label mb-0" for="{{ subfield.id }}">{{ subfield.label }}</label>
+        </div>
+    {% endfor %}
+{%- endmacro -%}
+
+{# un grupo de un formulario, con errores si los hay #}
+{%- macro form_group(f, css_class='') -%}
+    {% if f.errors %}
+        {% set css_class = css_class + ' has-error ' + kwargs.pop('class', '') %}
+    {% endif %}
+    {% if f.type == 'HiddenField' %}
+        {{ field(f, **kwargs) }}
+        {{ caller () }}
+    {% elif f.type == 'FileField' %}
+        {{ field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+    {% elif f.type == 'BooleanField' %}
+        <div class="checkbox {{ css_class }}">
+        {{ checkbox_field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% elif f.type == 'RadioField' %}
+        <div class="form-group mb-2 {{ css_class }}">
+        {{ radios_fields(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% elif f.type == 'SubmitField' %}
+        <div class="form-group d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center {{ css_class }} my-2">
+        {{ field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        <a class="btn btn-outline-danger" href="javascript:history.back()">Cancelar</a>
+        </div>
+    {% else %}
+        <div class="form-group mb-2">
+        {{ field_label(f) }}
+        {{ field(f, **kwargs) }}
+        {{ field_errors(f) }}
+        {{ caller () }}
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# un formulario, que contiene un token CSRF y campos ocultos #}
+{%- macro form_tag(endpoint, fid='', css_class='', method='post') -%}
+    <form action="{{ url_for(endpoint, **kwargs) }}" method="{{ method }}" id="{{ fid }}" class="{{ css_class }}" role="form">
+        {{ form.hidden_tag() }}
+        {{ caller () }}
+    </form>
+{%- endmacro -%}
+
+{# un formulario con archivo, que contiene un token CSRF y campos ocultos #}
+{%- macro form_tag_multipart(endpoint, fid='', css_class='', method='post') -%}
+    <form action="{{ url_for(endpoint, **kwargs) }}" method="{{ method }}" id="{{ fid }}" class="{{ css_class }}" role="form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ caller () }}
+    </form>
+{%- endmacro -%}
+
+{# Drop Zone CSS #}}
+{%- macro drop_zone_css() -%}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/dropzone.css') }}">
+{%- endmacro -%}
+
+{# Drop Zone wrapper #}}
+{%- macro drop_zone_wrapper() -%}
+    <div class="form-group">
+        <div class="dropzone-wrapper">
+            <div class="dropzone-desc">
+                <p id="name_file_upload">
+                    Adjunta el archivo ó arrastralo.
+                </p>
+            </div>
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Drop Zone javascript #}}
+{%- macro drop_zone_js() -%}
+    <script>
+        $(document).ready(function(){
+            $(".dropzone").change(function() {
+                readFile(this);
+            });
+            function readFile(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var htmlPreview = input.files[0].name;
+                        $("#name_file_upload").html(htmlPreview);
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+        });
+    </script>
+{%- endmacro -%}

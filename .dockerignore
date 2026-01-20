@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.venv/
+.vscode/
+.DS_Store
+.git
+.gitignore
+.gcloudigonre
+*.log
+*.csv
+*.sql
+gclouddeploy.sh

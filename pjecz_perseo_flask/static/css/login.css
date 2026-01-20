@@ -1,0 +1,23 @@
+/*
+ * Boostrap 5 Login
+ */
+
+html {
+  height: 100vh;
+}
+
+main {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}

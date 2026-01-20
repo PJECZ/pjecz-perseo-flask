@@ -1,0 +1,153 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Rol {{ rol.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Rol ' + rol.nombre) %}
+        {{ topbar.button_previous('Roles', url_for('roles.list_active')) }}
+        {% if current_user.can_edit('ROLES') %}
+            {{ topbar.button_edit('Editar', url_for('roles.edit', rol_id=rol.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('ROLES') %}
+            {% if rol.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('roles.delete', rol_id=rol.id)) }}{% endif %}
+            {% if rol.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('roles.recover', rol_id=rol.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=rol.estatus) %}
+        {{ detail.label_value('Nombre', rol.nombre) }}
+    {% endcall %}
+    {% if current_user.can_view('USUARIOS ROLES') %}
+        {% call detail.card('Usuarios') %}
+            <table id="usuarios_roles_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('USUARIOS ROLES') %}
+            <a href="{{ url_for('usuarios_roles.new_with_rol', rol_id=rol.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+    {% if current_user.can_view('PERMISOS') %}
+        {% call detail.card('Permisos') %}
+            <table id="permisos_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Módulo</th>
+                        <th>Nivel</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('PERMISOS') %}
+            <a href="{{ url_for('permisos.new_with_rol', rol_id=rol.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('ROLES') %}
+        {% if rol.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + rol.nombre + '?') }}{% endif %}
+        {% if rol.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + rol.nombre + '?') }}{% endif %}
+    {% endif %}
+    <!-- Constructor de DataTables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- UsuariosRoles del Rol -->
+    {% if current_user.can_view('USUARIOS ROLES') %}
+        <script>
+            // DataTable UsuariosRoles
+            let configDTUsuariosRoles = constructorDataTable.config();
+            configDTUsuariosRoles['ajax']['url'] = '{{ url_for("usuarios_roles.datatable_json") }}';
+            configDTUsuariosRoles['ajax']['data'] = { estatus: "A", rol_id: '{{ rol.id }}' };
+            configDTUsuariosRoles['columns'] = [
+                { data: "detalle" },
+                { data: "usuario" },
+                { data: "usuario_nombre" }
+            ];
+            configDTUsuariosRoles['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // usuario
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.url === '') {
+                            return data.email;
+                        }
+                        return '<a href="' + data.url + '">' + data.email + '</a>';
+                    }
+                },
+                {
+                    targets: 2, // usuario_nombre
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return (data.length > 32 ? data.substring(0, 32) + '…' : data);
+                    }
+                }
+            ];
+            // Filtros UsuariosRoles
+            const filtrosUsuariosRoles = new FiltrosDataTable('#usuarios_roles_datatable', configDTUsuariosRoles);
+            // filtrosUsuariosRoles.agregarInput('filtroParametroUno', 'parametro_uno');
+            // filtrosUsuariosRoles.agregarInput('filtroParametroDos', 'parametro_dos');
+            filtrosUsuariosRoles.precargar();
+        </script>
+    {% endif %}
+    <!-- Permisos del Rol -->
+    {% if current_user.can_view('PERMISOS') %}
+        <script>
+            // DataTable Permisos
+            let configDTPermisos = constructorDataTable.config();
+            configDTPermisos['ajax']['url'] = '{{ url_for("permisos.datatable_json") }}';
+            configDTPermisos['ajax']['data'] = { estatus: "A", rol_id: '{{ rol.id }}' };
+            configDTPermisos['columns'] = [
+                { data: "detalle" },
+                { data: "modulo" },
+                { data: "nivel" }
+            ];
+            configDTPermisos['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // modulo
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.url === '') {
+                            return data.nombre;
+                        }
+                        return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                    }
+                }
+            ];
+            // Filtros Permisos
+            const filtrosPermisos = new FiltrosDataTable('#permisos_datatable', configDTPermisos);
+            //filtrosPermisos.agregarInput('filtroParametroUno', 'parametro_uno');
+            //filtrosPermisos.agregarInput('filtroParametroDos', 'parametro_dos');
+            filtrosPermisos.precargar();
+        </script>
+    {% endif %}
+{% endblock %}
