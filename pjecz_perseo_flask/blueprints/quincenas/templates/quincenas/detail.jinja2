@@ -65,7 +65,7 @@
     <div class="row mb-2">
         {# Dispersion de Nóminas #}
         <div class="col-md-3">
-            {% set title = '<span class="iconify" data-icon="mdi mdi-credit-card"></span> Nóminas' %}
+            {% set title = '<span class="mdi mdi-credit-card"></span> Nóminas' %}
             {% if quincena_producto_nominas %}
                 {% if quincena_producto_nominas.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -119,7 +119,7 @@
         </div>
         {# Dispersion de Monederos #}
         <div class="col-md-3">
-            {% set title = '<span class="iconify" data-icon="mdi mdi-cart"></span> Monederos' %}
+            {% set title = '<span class="mdi mdi-cart"></span> Monederos' %}
             {% if quincena_producto_monederos %}
                 {% if quincena_producto_monederos.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -173,7 +173,7 @@
         </div>
         {# Dispersion de Pensionados #}
         <div class="col-md-3">
-            {% set title = '<span class="iconify" data-icon="mdi mdi-human-female-boy"></span> Pensionados' %}
+            {% set title = '<span class="mdi mdi-human-female-boy"></span> Pensionados' %}
             {% if quincena_producto_pensionados %}
                 {% if quincena_producto_pensionados.es_satisfactorio %}
                     {% set border_class='border-success' %}
@@ -228,7 +228,7 @@
         {# Dispersion de Primas Vacacionales #}
         {% if quincena.tiene_primas_vacacionales %}
             <div class="col-md-3">
-                {% set title = '<span class="iconify" data-icon="mdi mdi-beach"></span> Primas Vacacionales' %}
+                {% set title = '<span class="mdi mdi-beach"></span> Primas Vacacionales' %}
                 {% if quincena_producto_primas_vacacionales %}
                     {% if quincena_producto_primas_vacacionales.es_satisfactorio %}
                         {% set border_class='border-success' %}
@@ -285,7 +285,7 @@
     {# Generar, descargar y eliminar timbrados #}
     <div class="row mb-2">
         {# Timbrados de Empleados Activos #}
-        {% set title = '<span class="iconify" data-icon="mdi mdi-file-document"></span> Timbrados de Empleados Activos' %}
+        {% set title = '<span class="mdi mdi-file-document"></span> Timbrados de Empleados Activos' %}
         {% if quincena_producto_timbrados_empleados_activos %}
             <div class="col-md-3">
                 {% if quincena_producto_timbrados_empleados_activos.es_satisfactorio %}
@@ -341,7 +341,7 @@
             </div>
         {% endif %}
         {# Timbrados de Pensionados #}
-        {% set title = '<span class="iconify" data-icon="mdi mdi-file-document"></span> Timbrados de Pensionados' %}
+        {% set title = '<span class="mdi mdi-file-document"></span> Timbrados de Pensionados' %}
         {% if quincena_producto_timbrados_pensionados %}
             <div class="col-md-3">
                 {% if quincena_producto_timbrados_pensionados.es_satisfactorio %}
@@ -398,7 +398,7 @@
         {% endif %}
         {# Timbrados Apoyos Anuales #}
         {% if quincena.tiene_apoyos_anuales %}
-        {% set title = '<span class="iconify" data-icon="mdi mdi-file-document"></span> Timbrados Apoyos Anuales' %}
+        {% set title = '<span class="mdi mdi-file-document"></span> Timbrados Apoyos Anuales' %}
             <div class="col-md-3">
                 {% if quincena_producto_timbrados_apoyos_anuales %}
                     {% if quincena_producto_timbrados_apoyos_anuales.es_satisfactorio %}
@@ -455,7 +455,7 @@
             </div>
         {% endif %}
         {# Timbrados Aguinaldos #}
-        {% set title = '<span class="iconify" data-icon="mdi mdi-file-document"></span> Timbrados Aguinaldos' %}
+        {% set title = '<span class="mdi mdi-file-document"></span> Timbrados Aguinaldos' %}
         {% if quincena.tiene_aguinaldos %}
             <div class="col-md-3">
                 {% if quincena_producto_timbrados_aguinaldos %}
@@ -513,7 +513,7 @@
             </div>
         {% endif %}
         {# Timbrados Primas Vacacionales #}
-        {% set title = '<span class="iconify" data-icon="mdi mdi-file-document"></span> Timbrados Primas Vacacionales' %}
+        {% set title = '<span class="mdi mdi-file-document"></span> Timbrados Primas Vacacionales' %}
         {% if quincena.tiene_primas_vacacionales %}
             <div class="col-md-3">
                 {% if quincena_producto_timbrados_primas_vacacionales %}
@@ -575,7 +575,7 @@
     {% if quincena.estado == 'CERRADA' %}
     <div class="row mb-2">
         {# Timbrados con tipo salario #}
-        {% set title = '<span class="iconify" data-icon="mdi mdi-file-document"></span> Datos en los XML de los Timbrados' %}
+        {% set title = '<span class="mdi mdi-file-document"></span> Datos en los XML de los Timbrados' %}
         <div class="col-md-3">
             {% call detail.card(title=title) %}
                 {{ modals.button_modal_sm(
@@ -787,7 +787,7 @@
                     targets: 12, // tfd
                     render: function(data, type, row, meta) {
                         if (data.id != 0) {
-                            return '<a href="' + data.url + '"><span class="iconify" data-icon="mdi mdi-invoice-list"></span></a>';
+                            return '<a href="' + data.url + '"><span class="mdi mdi-invoice-list"></span></a>';
                         }
                         return '';
                     }
