@@ -15,18 +15,21 @@ import click
 import pytz
 from dotenv import load_dotenv
 from openpyxl import Workbook
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
-from lib.exceptions import MyAnyError, MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError
-from lib.google_cloud_storage import check_file_exists_from_gcs, get_file_from_gcs, get_public_url_from_gcs, upload_file_to_gcs
-from lib.safe_string import QUINCENA_REGEXP, RFC_REGEXP, safe_string
-from perseo.app import create_app
-from perseo.blueprints.nominas.models import Nomina
-from perseo.blueprints.personas.models import Persona
-from perseo.blueprints.quincenas.models import Quincena
-from perseo.blueprints.timbrados.models import Timbrado
-from perseo.blueprints.timbrados.tasks import exportar_xlsx as task_exportar_xlsx
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.nominas.models import Nomina
+from pjecz_perseo_flask.blueprints.personas.models import Persona
+from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.blueprints.timbrados.models import Timbrado
+from pjecz_perseo_flask.blueprints.timbrados.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.lib.google_cloud_storage import (
+    check_file_exists_from_gcs,
+    get_file_from_gcs,
+    get_public_url_from_gcs,
+    upload_file_to_gcs,
+)
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP, RFC_REGEXP, safe_string
+from pjecz_perseo_flask.main import app
 
 TIMEZONE = "America/Mexico_City"
 
@@ -45,9 +48,8 @@ CFDI_EMISOR_REGFIS = os.getenv("CFDI_EMISOR_REGFIS", "")
 CLOUD_STORAGE_DEPOSITO = os.getenv("CLOUD_STORAGE_DEPOSITO", "")
 TIMBRADOS_BASE_DIR = os.getenv("TIMBRADOS_BASE_DIR", "")
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()
@@ -589,7 +591,7 @@ def actualizar(
                         data=data_xml,
                     )
                     click.echo(click.style("(XML)", fg="green"), nl=False)
-            except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
+            except Exception:
                 archivo_xml = ""
                 url_xml = ""
                 errores_cargas_xml_contador += 1
@@ -758,7 +760,7 @@ def exportar_xlsx(quincena_clave, nomina_tipo):
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = task_exportar_xlsx(quincena_clave, nomina_tipo)
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 
@@ -785,6 +787,9 @@ def exportar_auditoria_xlsx(auditoria_csv):
 
     # Tomar la hoja del libro XLSX
     hoja = libro.active
+    if hoja is None:
+        click.echo("ERROR: No se pudo iniciar el archivo XLSX.")
+        sys.exit(1)
 
     # Agregar la fila con las cabeceras de las columnas
     hoja.append(
@@ -999,6 +1004,9 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
 
     # Tomar la hoja del libro XLSX
     hoja = libro.active
+    if hoja is None:
+        click.echo("ERROR: No se pudo iniciar el archivo XLSX.")
+        sys.exit(1)
 
     # Agregar la fila con las cabeceras de las columnas
     hoja.append(

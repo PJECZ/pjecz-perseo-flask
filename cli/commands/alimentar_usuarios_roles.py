@@ -8,10 +8,10 @@ from pathlib import Path
 
 import click
 
-from lib.safe_string import safe_string
-from perseo.blueprints.roles.models import Rol
-from perseo.blueprints.usuarios.models import Usuario
-from perseo.blueprints.usuarios_roles.models import UsuarioRol
+from pjecz_perseo_flask.blueprints.roles.models import Rol
+from pjecz_perseo_flask.blueprints.usuarios.models import Usuario
+from pjecz_perseo_flask.blueprints.usuarios_roles.models import UsuarioRol
+from pjecz_perseo_flask.lib.safe_string import safe_string
 
 USUARIOS_ROLES_CSV = "seed/usuarios_roles.csv"
 

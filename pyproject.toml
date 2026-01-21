@@ -1,43 +1,43 @@
 [project]
 name = "pjecz-perseo-flask"
-version = "0.1.0"
-description = "Perseo es un sistema web hecho con Flask."
+version = "2.0.0"
+description = "Plataforma para la nómina."
 authors = [
     {name = "Guillermo Valdes",email = "guillermo.valdes@pjecz.gob.mx"}
 ]
 license = {text = "AGPL3"}
 readme = "README.md"
-package-mode = false
 requires-python = ">=3.13,<4.0"
 dependencies = [
     "hashids (>=1.3.1,<2.0.0)",
     "pytz (>=2025.2,<2026.0)",
     "unidecode (>=1.4.0,<2.0.0)",
     "gunicorn (>=23.0.0,<24.0.0)",
-    "uvicorn (>=0.38.0,<0.39.0)",
+    "uvicorn (>=0.40.0,<0.41.0)",
     "psycopg2-binary (>=2.9.11,<3.0.0)",
     "sqlalchemy (>=2.0.45,<3.0.0)",
-    "sqlalchemy-utils (>=0.42.0,<0.43.0)",
+    "sqlalchemy-utils (>=0.42.1,<0.43.0)",
     "flask (>=3.1.2,<4.0.0)",
     "flask-login (>=0.6.3,<0.7.0)",
     "flask-moment (>=1.0.6,<2.0.0)",
     "flask-sqlalchemy (>=3.1.1,<4.0.0)",
-    "flask-socketio (>=5.5.1,<6.0.0)",
+    "flask-socketio (>=5.6.0,<6.0.0)",
     "flask-wtf (>=1.2.2,<2.0.0)",
-    "werkzeug (>=3.1.4,<4.0.0)",
+    "werkzeug (>=3.1.5,<4.0.0)",
     "email-validator (>=2.3.0,<3.0.0)",
     "jinja2 (>=3.1.6,<4.0.0)",
     "passlib (>=1.7.4,<2.0.0)",
     "rq (>=2.6.1,<3.0.0)",
     "xlrd (>=2.0.2,<3.0.0)",
     "openpyxl (>=3.1.5,<4.0.0)",
-    "google-auth (>=2.43.0,<3.0.0)",
+    "google-auth (>=2.47.0,<3.0.0)",
     "google-cloud (>=0.34.0,<0.35.0)",
-    "google-cloud-secret-manager (>=2.25.0,<3.0.0)",
+    "google-cloud-secret-manager (>=2.26.0,<3.0.0)",
     "google-cloud-storage (>=3.7.0,<4.0.0)",
     "pydantic (>=2.12.5,<3.0.0)",
     "pydantic-settings (>=2.12.0,<3.0.0)",
-    "pandas (>=2.3.3,<3.0.0)"
+    "pandas (>=2.3.3,<3.0.0)",
+    "sendgrid (>=6.12.5,<7.0.0)"
 ]
 
 
@@ -48,9 +48,9 @@ build-backend = "poetry.core.masonry.api"
 [dependency-groups]
 dev = [
     "black (>=25.12.0,<26.0.0)",
-    "faker (>=38.2.0,<39.0.0)",
+    "faker (>=40.1.0,<41.0.0)",
     "isort (>=7.0.0,<8.0.0)",
-    "pre-commit (>=4.5.0,<5.0.0)",
+    "pre-commit (>=4.5.1,<5.0.0)",
     "pylint (>=4.0.4,<5.0.0)",
     "pylint-sqlalchemy (>=0.3.0,<0.4.0)",
     "pytest (>=9.0.2,<10.0.0)",

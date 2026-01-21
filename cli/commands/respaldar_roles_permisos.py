@@ -7,8 +7,8 @@ from pathlib import Path
 
 import click
 
-from perseo.blueprints.modulos.models import Modulo
-from perseo.blueprints.roles.models import Rol
+from pjecz_perseo_flask.blueprints.modulos.models import Modulo
+from pjecz_perseo_flask.blueprints.roles.models import Rol
 
 ROLES_PERMISOS_CSV = "seed/roles_permisos.csv"
 

@@ -11,12 +11,11 @@ import click
 import requests
 from dotenv import load_dotenv
 
-from lib.exceptions import MyAnyError
-from lib.safe_string import safe_clave, safe_string
-from perseo.app import create_app
-from perseo.blueprints.centros_trabajos.models import CentroTrabajo
-from perseo.blueprints.centros_trabajos.tasks import exportar_xlsx as task_exportar_xlsx
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.centros_trabajos.models import CentroTrabajo
+from pjecz_perseo_flask.blueprints.centros_trabajos.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.lib.safe_string import safe_clave, safe_string
+from pjecz_perseo_flask.main import app
 
 load_dotenv()
 
@@ -25,9 +24,8 @@ RRHH_PERSONAL_URL = os.getenv("RRHH_PERSONAL_URL", "")
 RRHH_PERSONAL_API_KEY = os.getenv("RRHH_PERSONAL_API_KEY", "")
 TIMEOUT = 12
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()
@@ -118,7 +116,7 @@ def exportar_xlsx():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = task_exportar_xlsx()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

@@ -1,0 +1,136 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Autoridad {{ autoridad.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Autoridad ' + autoridad.clave) %}
+        {{ topbar.button_previous('Autoridades', url_for('autoridades.list_active')) }}
+        {% if current_user.can_edit('AUTORIDADES') %}
+            {{ topbar.button_edit('Editar', url_for('autoridades.edit', autoridad_id=autoridad.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('AUTORIDADES') %}
+            {% if autoridad.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('autoridades.delete', autoridad_id=autoridad.id)) }}{% endif %}
+            {% if autoridad.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('autoridades.recover', autoridad_id=autoridad.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=autoridad.estatus) %}
+        {% if current_user.can_edit('DISTRITOS') %}
+            {{ detail.label_value('Distrito', autoridad.distrito.nombre, url_for('distritos.detail', distrito_id=autoridad.distrito_id)) }}
+        {% else %}
+            {{ detail.label_value('Distrito', autoridad.distrito.nombre) }}
+        {% endif %}
+        {{ detail.label_value('Descripción', autoridad.descripcion) }}
+        {{ detail.label_value('Descripción corta', autoridad.descripcion_corta) }}
+        {{ detail.label_value_boolean('Activo', autoridad.es_activo) }}
+    {% endcall %}
+    {% if current_user.can_view('SIGA EXPEDIENTES') %}
+        {% call detail.card('Expedientes') %}
+            <table id="siga_expedientes_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Expediente</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_edit('SIGA EXPEDIENTES') %}
+                <a href="{{ url_for('siga_expedientes.new_with_autoridad', autoridad_id=autoridad.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+    {% if current_user.can_view('USUARIOS') %}
+        {% call detail.card('Usuarios') %}
+            <table id="usuarios_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Correo electrónico</th>
+                        <th>Nombre completo</th>
+                        <th>Puesto</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('AUTORIDADES') %}
+        {% if autoridad.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + autoridad.clave + '?') }}{% endif %}
+        {% if autoridad.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + autoridad.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- Constructor de DataTables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Expedientes de la Autoridad -->
+    {% if current_user.can_view('SIGA EXPEDIENTES') %}
+        <script>
+            // DataTable Expedientes
+            let configDTSigaExpedientes = constructorDataTable.config();
+            configDTSigaExpedientes['ajax']['url'] = '{{ url_for("siga_expedientes.datatable_json") }}';
+            configDTSigaExpedientes['ajax']['data'] = { estatus: "A", autoridad_id: '{{ autoridad.id }}' };
+            configDTSigaExpedientes['columns'] = [
+                { data: 'detalle' }
+            ];
+            configDTSigaExpedientes['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.expediente + '</a>';
+                    }
+                }
+            ];
+            // Filtros Expedientes
+            const filtrosSigaExpedientes = new FiltrosDataTable('#siga_expedientes_datatable', configDTSigaExpedientes);
+            //filtrosSigaExpedientes.agregarInput('filtroClave', 'clave');
+            //filtrosSigaExpedientes.agregarInput('filtroDescripcion', 'descripcion');
+            filtrosSigaExpedientes.precargar();
+        </script>
+    {% endif %}
+    <!-- Usuarios de la Autoridad -->
+    {% if current_user.can_view('USUARIOS') %}
+        <script>
+            // DataTable Usuarios
+            let configDTUsuarios = constructorDataTable.config();
+            configDTUsuarios['ajax']['url'] = '{{ url_for("usuarios.datatable_json") }}';
+            configDTUsuarios['ajax']['data'] = { estatus: "A", autoridad_id: '{{ autoridad.id }}' };
+            configDTUsuarios['columns'] = [
+                { data: "detalle" },
+                { data: "nombre" },
+                { data: "puesto" }
+            ];
+            configDTUsuarios['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.email + '</a>';
+                    }
+                },
+                {
+                    targets: [1, 2], // nombre, puesto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.length > 24) {
+                            return '<span title="' + data + '">' + data.substring(0, 24) + '…</span>';
+                        }
+                        return data;
+                    }
+                }
+            ];
+            // Filtros Usuarios
+            const filtrosUsuarios = new FiltrosDataTable('#usuarios_datatable', configDTUsuarios);
+            //filtrosUsuarios.agregarInput('filtroParametroUno', 'parametro_uno');
+            //filtrosUsuarios.agregarInput('filtroParametroDos', 'parametro_dos');
+            filtrosUsuarios.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

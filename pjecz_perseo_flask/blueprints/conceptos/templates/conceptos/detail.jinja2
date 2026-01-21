@@ -1,0 +1,182 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Concepto {{ concepto.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Concepto ' + concepto.clave) %}
+        {{ topbar.button_previous('Conceptos', url_for('conceptos.list_active')) }}
+        {% if current_user.can_admin('CONCEPTOS') %}
+            {{ topbar.button_edit('Editar', url_for('conceptos.edit', concepto_id=concepto.id)) }}
+            {% if concepto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('conceptos.delete', concepto_id=concepto.id)) }}{% endif %}
+            {% if concepto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('conceptos.recover', concepto_id=concepto.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    <!-- Detalle del Concepto -->
+    {% call detail.card(estatus=concepto.estatus) %}
+        {{ detail.label_value('Clave', concepto.clave) }}
+        {{ detail.label_value('Descripción', concepto.descripcion) }}
+    {% endcall %}
+    <!-- Percepciones-Deducciones del Concepto -->
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') and concepto.estatus == 'A' %}
+        {% call detail.card('Percepciones-Deducciones') %}
+            <!-- Filtros Percepciones-Deducciones -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPercepcionesDeducciones.buscar(); return false;">
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena" style="text-transform: uppercase;">
+                                <label for="filtroQuincena">Quincena</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroPersonaRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                                <label for="filtroPersonaRFC">RFC</label>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPercepcionesDeducciones.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPercepcionesDeducciones.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Percepciones-Deducciones -->
+            <table id="percepciones_deducciones_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>RFC</th>
+                        <th>Nombre completo</th>
+                        <th>Centro de trabajo</th>
+                        <th>Plaza</th>
+                        <th>Tipo</th>
+                        <th style="text-align:right">Importe</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+    <!-- Productos del Concepto -->
+    {% if current_user.can_view('PRODUCTOS') and concepto.estatus == 'A' %}
+        {% call detail.card('Productos') %}
+            <table id="conceptos_productos_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Clave</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('CONCEPTOS PRODUCTOS') %}
+            <a href="{{ url_for('conceptos_productos.new_with_concepto', concepto_id=concepto.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Modales -->
+    {% if current_user.can_admin('CONCEPTOS') %}
+        {% if concepto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + concepto.clave + '?') }}{% endif %}
+        {% if concepto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + concepto.clave + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') and concepto.estatus == 'A' %}
+        <script>
+            let configDTPerDed = constructorDataTable.config();
+            configDTPerDed['ajax']['url'] = '/percepciones_deducciones/datatable_json';
+            configDTPerDed['ajax']['data'] = { 'estatus': "A", 'concepto_id': {{ concepto.id}} };
+            configDTPerDed['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena_clave' },
+                { data: 'persona_rfc' },
+                { data: 'persona_nombre_completo' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'tipo' },
+                { data: 'importe' }
+            ];
+            configDTPerDed['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 3, // persona_nombre_completo
+                    render: function(data, type, row, meta) {
+                        if (data.length < 24) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 24) + '...</span>';
+                    }
+                },
+                {
+                    targets: 6, // tipo
+                    render: function(data, type, row, meta) {
+                        if (data.length < 4) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 4) + '...</span>';
+                    }
+                },
+                {
+                    targets: 7, // importe
+                    render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            const filtrosPercepcionesDeducciones = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPerDed);
+            filtrosPercepcionesDeducciones.agregarInput('filtroQuincena', 'quincena_clave');
+            filtrosPercepcionesDeducciones.agregarInput('filtroPersonaRFC', 'persona_rfc');
+            filtrosPercepcionesDeducciones.precargar();
+        </script>
+    {% endif %}
+    {% if current_user.can_view('PRODUCTOS') and concepto.estatus == 'A' %}
+        <script>
+            let configDTProductos = constructorDataTable.config();
+            configDTProductos['ajax']['url'] = '/conceptos_productos/datatable_json';
+            configDTProductos['ajax']['data'] = { 'estatus': "A", 'concepto_id': {{ concepto.id}} };
+            configDTProductos['columns'] = [
+                { data: 'detalle' },
+                { data: 'producto' },
+                { data: 'producto_descripcion' }
+            ];
+            configDTProductos['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // producto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            const filtrosProductos = new FiltrosDataTable('#conceptos_productos_datatable', configDTProductos);
+            filtrosProductos.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

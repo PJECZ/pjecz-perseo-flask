@@ -1,0 +1,185 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_admin('NOMINAS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('nominas.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('nominas.list_active')) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Nominas -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroQuincena" type="text" class="form-control" aria-label="Quincena">
+                            <label for="filtroQuincena">Quincena</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroPersonaRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                            <label for="filtroPersonaRFC">RFC</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="row g-1 mb-3">
+                            <div class="col-4">
+                                <div class="form-floating">
+                                    <input id="filtroPersonaNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
+                                    <label for="filtroPersonaNombres">Nombres</label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-floating">
+                                    <input id="filtroPersonaApellidoPrimero" type="text" class="form-control" aria-label="Apellido primero" style="text-transform: uppercase;">
+                                    <label for="filtroPersonaApellidoPrimero">Primer apellido</label>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="form-floating">
+                                    <input id="filtroPersonaApellidoSegundo" type="text" class="form-control" aria-label="Apellido segundo" style="text-transform: uppercase;">
+                                    <label for="filtroPersonaApellidoSegundo">Segundo apellido</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <select id="filtroTipo" class="form-select" aria-label="Tipo">
+                            <option selected value="">Filtro Tipo</option>
+                            {% for tipo in nominas_tipos %}
+                                <option value="{{ tipo }}">{{ tipo }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="filtroTimbrado" class="form-select" aria-label="Tipo">
+                            <option selected value="">Filtro TFD</option>
+                            <option value="1">TIMBRADOS</option>
+                            <option value="-1">NO TIMBRADOS</option>
+                        </select>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable Nominas -->
+        <table id="nominas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quincena</th>
+                    <th>RFC</th>
+                    <th>Nombre completo</th>
+                    <th>Centro de T.</th>
+                    <th>Plaza</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                    <th>Tipo</th>
+                    <th style="text-align:right">Percepción</th>
+                    <th style="text-align:right">Deducción</th>
+                    <th style="text-align:right">Importe</th>
+                    <th>F. de Pago</th>
+                    <th>TFD</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable Nominas
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTNominas = constructorDataTable.config();
+        configDTNominas['ajax']['url'] = '/nominas/datatable_json';
+        configDTNominas['ajax']['data'] = {{ filtros }};
+        configDTNominas['columns'] = [
+            { data: 'detalle' },
+            { data: 'quincena_clave' },
+            { data: 'persona_rfc' },
+            { data: 'persona_nombre_completo' },
+            { data: 'centro_trabajo_clave' },
+            { data: 'plaza_clave' },
+            { data: 'desde_clave' },
+            { data: 'hasta_clave' },
+            { data: 'tipo' },
+            { data: 'percepcion' },
+            { data: 'deduccion' },
+            { data: 'importe' },
+            { data: 'fecha_pago' },
+            { data: 'timbrado' },
+        ];
+        configDTNominas['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 3, // persona_nombre_completo
+                render: function(data, type, row, meta) {
+                    if (data.length < 12) {
+                        return data;
+                    }
+                    return '<span title="' + data + '">' + data.substring(0, 12) + '...</span>';
+                }
+            },
+            {
+                targets: 8, // tipo
+                render: function(data, type, row, meta) {
+                    if (data.length < 4) {
+                        return data;
+                    }
+                    return '<span title="' + data + '">' + data.substring(0, 4) + '...</span>';
+                }
+            },
+            {
+                targets: [9, 10, 11], // percepcion, deduccion, importe
+                render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                className: "dt-body-right",
+            },
+            {
+                targets: 13, // tfd
+                render: function(data, type, row, meta) {
+                    if (data.id != 0) {
+                        return '<a href="' + data.url + '"><span class="iconify" data-icon="mdi mdi-invoice-list"></span></a>';
+                    }
+                    return '';
+                }
+            }
+        ];
+        configDTNominas['createdRow'] = function(row, data, dataIndex) {
+            if (data.num_cheque != '') {
+                if (data.timbrado.url != '') {
+                    $(row).addClass('table-success');
+                } else {
+                    $(row).addClass('table-info');
+                }
+            }
+        };
+        // Filtros Nominas
+        const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
+        filtrosNominas.agregarInput('filtroQuincena', 'quincena_clave');
+        filtrosNominas.agregarInput('filtroPersonaRFC', 'persona_rfc');
+        filtrosNominas.agregarInput('filtroPersonaNombres', 'persona_nombres');
+        filtrosNominas.agregarInput('filtroPersonaApellidoPrimero', 'persona_apellido_primero');
+        filtrosNominas.agregarInput('filtroPersonaApellidoSegundo', 'persona_apellido_segundo');
+        filtrosNominas.agregarSelect('filtroTipo', 'tipo');
+        filtrosNominas.agregarSelect('filtroTimbrado', 'tfd');
+        filtrosNominas.precargar();
+    </script>
+{% endblock %}

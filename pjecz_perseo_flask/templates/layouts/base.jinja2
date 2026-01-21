@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="{{ lang|default('es') }}" data-bs-theme="auto">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/estrella.png') }}">
+        <title>{% block title %}{% endblock %}</title>
+        <!-- Bootstrap -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+        <!-- Material Design Icons -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+        {% block template_head %}{% endblock %}
+        {% block custom_head %}{% endblock %}
+    </head>
+    <body>
+        {% block main %}{% endblock %}
+        <!-- JQuery -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+        <!-- Bootstrap -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/color-modes.js') }}"></script>
+        {% block template_javascript %}{% endblock %}
+        {% block custom_javascript %}{% endblock %}
+    </body>
+</html>

@@ -1,5 +1,5 @@
 """
-CLI usuarios
+CLI Usuarios
 """
 
 import sys
@@ -7,14 +7,13 @@ from datetime import datetime, timedelta
 
 import click
 
-from lib.pwgen import generar_api_key
-from perseo.app import create_app
-from perseo.blueprints.usuarios.models import Usuario
-from perseo.extensions import database, pwd_context
+from pjecz_perseo_flask.blueprints.usuarios.models import Usuario
+from pjecz_perseo_flask.config.extensions import pwd_context
+from pjecz_perseo_flask.lib.pwgen import generar_api_key
+from pjecz_perseo_flask.main import app
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()

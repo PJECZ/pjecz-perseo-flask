@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from perseo.blueprints.autoridades.models import Autoridad
+from pjecz_perseo_flask.blueprints.autoridades.models import Autoridad
 
 AUTORIDADES_CSV = "seed/autoridades.csv"
 

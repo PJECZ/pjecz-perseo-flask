@@ -1,0 +1,137 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('ENTRADAS SALIDAS') %}
+            {{ topbar.button('Entradas/Salidas', url_for('entradas_salidas.list_active'), 'mdi mdi-calendar-clock') }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Bitácoras -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosBitacoras.buscar(); return false;">
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <select id="filtroBitacoraUsuarioId" class="form-select js-select2-filter" aria-label="Usuario e-mail"></select>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <select id="filtroBitacoraModuloId" class="form-select js-select2-filter" aria-label="Módulo"></select>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosBitacoras.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosBitacoras.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Datatable Bitácoras -->
+        <table id="bitacoras_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Creado</th>
+                    <th>Usuario</th>
+                    <th>Modulo</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- DataTables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable Bitácoras
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTBitacoras = constructorDataTable.config();
+        configDTBitacoras['ajax']['url'] = '{{ url_for("bitacoras.datatable_json") }}';
+        configDTBitacoras['ajax']['data'] = {{ filtros }};
+        configDTBitacoras['columns'] = [
+            { data: "creado" },
+            { data: "usuario" },
+            { data: "modulo" },
+            { data: "vinculo" }
+        ];
+        configDTBitacoras['columnDefs'] = [
+            {
+                targets: 0, // creado
+                type: "date",
+                render: function (data, type, row) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+                }
+            },
+            {
+                targets: 1, // usuario
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                }
+            },
+            {
+                targets: 2, // modulo
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                }
+            },
+            {
+                targets: 3, // vinculo
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '" target="_blank">' + data.descripcion + ' <span class="mdi mdi-open-in-new"></span></a>';
+                }
+            }
+        ];
+        // Filtros Bitácoras
+        const filtrosBitacoras = new FiltrosDataTable('#bitacoras_datatable', configDTBitacoras);
+        filtrosBitacoras.agregarInput('filtroBitacoraModuloId', 'modulo_id');
+        filtrosBitacoras.precargar();
+    </script>
+    <!-- Select filtroBitacoraUsuarioId -->
+    <script>
+        // Cargar el select con los usuarios
+        const selectUsuario = document.getElementById('filtroBitacoraUsuarioId');
+        fetch('{{ url_for("usuarios.select_json") }}')
+            .then(response => response.json())
+            .then(data => {
+                selectUsuario.innerHTML = '<option value="" selected>-- Seleccione un usuario --</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.text = item.texto;
+                    selectUsuario.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar los usuarios:', error));
+    </script>
+    <!-- Select filtroBitacoraModuloId -->
+    <script>
+        // Cargar el select con los módulos
+        const selectModulo = document.getElementById('filtroBitacoraModuloId');
+        fetch('{{ url_for("modulos.select_json") }}')
+            .then(response => response.json())
+            .then(data => {
+                selectModulo.innerHTML = '<option value="" selected>-- Seleccione un módulo --</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.text = item.texto;
+                    selectModulo.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error al cargar los módulos:', error));
+    </script>
+{% endblock %}

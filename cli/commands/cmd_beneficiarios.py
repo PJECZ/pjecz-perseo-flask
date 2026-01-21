@@ -9,20 +9,19 @@ from pathlib import Path
 
 import click
 
-from lib.safe_string import QUINCENA_REGEXP, safe_rfc, safe_string
-from perseo.app import create_app
-from perseo.blueprints.bancos.models import Banco
-from perseo.blueprints.beneficiarios.models import Beneficiario
-from perseo.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
-from perseo.blueprints.beneficiarios_quincenas.models import BeneficiarioQuincena
-from perseo.blueprints.quincenas.models import Quincena
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.bancos.models import Banco
+from pjecz_perseo_flask.blueprints.beneficiarios.models import Beneficiario
+from pjecz_perseo_flask.blueprints.beneficiarios_cuentas.models import BeneficiarioCuenta
+from pjecz_perseo_flask.blueprints.beneficiarios_quincenas.models import BeneficiarioQuincena
+from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.lib.safe_string import QUINCENA_REGEXP, safe_rfc, safe_string
+from pjecz_perseo_flask.main import app
 
 BENEFICIARIOS_CSV = "seed/beneficiarios.csv"
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 
 @click.group()

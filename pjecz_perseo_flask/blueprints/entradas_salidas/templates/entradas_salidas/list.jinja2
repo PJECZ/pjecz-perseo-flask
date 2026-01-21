@@ -1,0 +1,66 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('BITACORAS') %}
+            {{ topbar.button('Bitácoras', url_for('bitacoras.list_active'), 'mdi mdi-calendar-clock') }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Datatable entradas_salidas -->
+        <table id="entradas_salidas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Tiempos</th>
+                    <th>Tipos</th>
+                    <th>Usuarios</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- DataTables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable entradas_salidas
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTEntradasSalidas = constructorDataTable.config();
+        configDTEntradasSalidas['ajax']['url'] = '{{ url_for("entradas_salidas.datatable_json") }}';
+        configDTEntradasSalidas['ajax']['data'] = {{ filtros }};
+        configDTEntradasSalidas['columns'] = [
+            { data: "creado" },
+            { data: "tipo" },
+            { data: "usuario" }
+        ];
+        configDTEntradasSalidas['columnDefs'] = [
+            {
+                targets: 0, // creado
+                type: "date",
+                render: function (data, type, row) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
+                }
+            },
+            {
+                targets: 2, // usuario
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                }
+            }
+        ];
+        // Filtros bitacoras
+        const filtrosEntradasSalidas = new FiltrosDataTable('#entradas_salidas_datatable', configDTEntradasSalidas);
+        //filtrosEntradasSalidas.agregarInput('filtroEntradasSalidasUsuarioId', 'usuario_id');
+        filtrosEntradasSalidas.precargar();
+    </script>
+{% endblock %}

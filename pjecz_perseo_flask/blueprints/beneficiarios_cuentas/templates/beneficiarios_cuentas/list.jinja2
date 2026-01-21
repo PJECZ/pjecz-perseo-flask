@@ -1,0 +1,107 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('BENEFICIARIOS') %}
+            {{ topbar.button('Beneficiarios', url_for('beneficiarios.list_active'), 'mdi mdi-baby-carriage') }}
+        {% endif %}
+        {% if current_user.can_view('BENEFICIARIOS QUINCENAS') %}
+            {{ topbar.button('Quincenas', url_for('beneficiarios_quincenas.list_active'), 'mdi mdi-calendar') }}
+        {% endif %}
+        {% if current_user.can_admin('BENEFICIARIOS CUENTAS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('beneficiarios_cuentas.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('beneficiarios_cuentas.list_active')) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Beneficiarios -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorBeneficiariosForm" onsubmit="filtrosBeneficiarios.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroBeneficiarioRFC" type="text" class="form-control" aria-label="RFC" style="text-transform: uppercase;">
+                            <label for="filtroBeneficiarioRFC">RFC</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroBeneficiarioNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
+                            <label for="filtroBeneficiarioNombres">Nombres</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroBeneficiarioApellidoPrimero" type="text" class="form-control" aria-label="Apellido primero" style="text-transform: uppercase;">
+                            <label for="filtroBeneficiarioApellidoPrimero">Primer apellido</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroBeneficiarioApellidoSegundo" type="text" class="form-control" aria-label="Apellido segundo" style="text-transform: uppercase;">
+                            <label for="filtroBeneficiarioApellidoSegundo">Segundo apellido</label>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosBeneficiarios.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosBeneficiarios.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Datatable Cuentas de los Beneficiarios -->
+        <table id="beneficiarios_cuentas_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>RFC</th>
+                    <th>Nombre completo</th>
+                    <th>Banco</th>
+                    <th>No. de cuenta</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable Cuentas de los Beneficiarios
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTBeneficiariosCuentas = constructorDataTable.config();
+        configDTBeneficiariosCuentas['ajax']['url'] = '/beneficiarios_cuentas/datatable_json';
+        configDTBeneficiariosCuentas['ajax']['data'] = {{ filtros }};
+        configDTBeneficiariosCuentas['columns'] = [
+            { data: 'detalle' },
+            { data: 'beneficiario_rfc' },
+            { data: 'beneficiario_nombre_completo' },
+            { data: 'banco_nombre' },
+            { data: 'num_cuenta' }
+        ];
+        configDTBeneficiariosCuentas['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            }
+        ];
+        // Filtros Cuentas de los Beneficiarios
+        const filtrosBeneficiarios = new FiltrosDataTable('#beneficiarios_cuentas_datatable', configDTBeneficiariosCuentas);
+        filtrosBeneficiarios.agregarInput('filtroBeneficiarioRFC', 'beneficiario_rfc');
+        filtrosBeneficiarios.agregarInput('filtroBeneficiarioNombres', 'beneficiario_nombres');
+        filtrosBeneficiarios.agregarInput('filtroBeneficiarioApellidoPrimero', 'beneficiario_apellido_primero');
+        filtrosBeneficiarios.agregarInput('filtroBeneficiarioApellidoSegundo', 'beneficiario_apellido_segundo');
+        filtrosBeneficiarios.precargar();
+    </script>
+{% endblock %}

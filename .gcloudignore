@@ -6,10 +6,10 @@
 .DS_Store
 .~lock.*
 
-*.code-workspace
-*.py[cod]
-*.egg-info/
+*.csv
 *.log
+*.py[cod]
+*.sql
 *.sqlite3
 *.sqlite3-journal
 *.session.sql
@@ -31,3 +31,5 @@ __pycache__/
 /sql
 /tests
 /venv
+
+/gclouddeploy.sh

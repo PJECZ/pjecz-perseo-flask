@@ -1,0 +1,82 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('MODULOS') %}
+            {{ topbar.button('Módulos', url_for('modulos.list_active'), 'mdi mdi-toy-brick') }}
+        {% endif %}
+        {% if current_user.can_view('USUARIOS') %}
+            {{ topbar.button('Usuarios', url_for('usuarios.list_active'), 'mdi mdi-account-key') }}
+        {% endif %}
+        {% if current_user.can_admin('ROLES') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('roles.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('roles.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('ROLES') %}
+            {{ topbar.button_new('Nuevo Rol', url_for('roles.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros roles -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosRoles.buscar(); return false;">
+                    <div class="col-6">
+                        <div class="form-floating">
+                            <input id="filtroRolNombre" type="text" class="form-control" aria-label="Nombre" style="text-transform: uppercase;">
+                            <label for="filtroRolNombre">Nombre</label>
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosRoles.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosRoles.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Datatable roles -->
+        <table id="roles_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Roles</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Datatables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable roles
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTRoles = constructorDataTable.config();
+        configDTRoles['ajax']['url'] = '{{ url_for("roles.datatable_json") }}';
+        configDTRoles['ajax']['data'] = {{ filtros }};
+        configDTRoles['columns'] = [
+            { data: 'detalle' }
+        ];
+        configDTRoles['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                }
+            }
+        ];
+        // Filtros roles
+        const filtrosRoles = new FiltrosDataTable('#roles_datatable', configDTRoles);
+        filtrosRoles.agregarInput('filtroRolNombre', 'nombre');
+        filtrosRoles.precargar();
+    </script>
+{% endblock %}

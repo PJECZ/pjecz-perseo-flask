@@ -9,16 +9,15 @@ from pathlib import Path
 
 import click
 
-from lib.exceptions import MyAnyError
-from lib.safe_string import safe_clave
-from perseo.app import create_app
-from perseo.blueprints.puestos.models import Puesto
-from perseo.blueprints.tabuladores.models import Tabulador
-from perseo.blueprints.tabuladores.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.blueprints.puestos.models import Puesto
+from pjecz_perseo_flask.blueprints.tabuladores.models import Tabulador
+from pjecz_perseo_flask.blueprints.tabuladores.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.lib.safe_string import safe_clave
+from pjecz_perseo_flask.main import app
 
 TABULADORES_CSV = "seed/tabuladores-NNN.csv"
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
 
 
@@ -292,7 +291,7 @@ def exportar_xlsx():
     # Ejecutar la tarea
     try:
         mensaje_termino, _, _ = task_exportar_xlsx()
-    except MyAnyError as error:
+    except Exception as error:
         click.echo(click.style(str(error), fg="red"))
         sys.exit(1)
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from perseo.blueprints.usuarios.models import Usuario
+from pjecz_perseo_flask.blueprints.usuarios.models import Usuario
 
 USUARIOS_ROLES_CSV = "seed/usuarios_roles.csv"
 

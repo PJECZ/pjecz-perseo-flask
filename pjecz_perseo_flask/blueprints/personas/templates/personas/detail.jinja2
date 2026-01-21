@@ -1,0 +1,343 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Persona {{ persona.rfc }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Persona ' + persona.rfc) %}
+        {{ topbar.button_previous('Personas', url_for('personas.list_active')) }}
+        {% if current_user.can_edit('PERSONAS') %}
+            {{ topbar.button_edit('Editar', url_for('personas.edit', persona_id=persona.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('PERSONAS') %}
+            {% if persona.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('personas.delete', persona_id=persona.id)) }}{% endif %}
+            {% if persona.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('personas.recover', persona_id=persona.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    <!-- Detalle de la Persona -->
+    {% call detail.card(estatus=persona.estatus) %}
+        <div class="row">
+            <div class="col-md-6">
+                {# detail.label_value_big('RFC', persona.rfc) #}
+                {{ detail.label_value('Nombres', persona.nombres) }}
+                {{ detail.label_value('Apellido primero', persona.apellido_primero) }}
+                {{ detail.label_value('Apellido segundo', persona.apellido_segundo) }}
+                {{ detail.label_value('CURP', persona.curp) }}
+                {{ detail.label_value('F. Nac.', persona.nacimiento_fecha) }}
+                {{ detail.label_value('C. P. fiscal', persona.codigo_postal_fiscal) }}
+                {# Inicia tabulador de la persona #}
+                {% set tabulador_str = 'Puesto ' + persona.tabulador.puesto.clave + ', ' %}
+                {% set tabulador_str = tabulador_str + 'Modelo ' + persona.tabulador.modelo | string + ', ' %}
+                {% set tabulador_str = tabulador_str + 'Nivel ' + persona.tabulador.nivel | string + ', ' %}
+                {% set tabulador_str = tabulador_str + 'Quinquenio ' + persona.tabulador.quinquenio | string %}
+                {% if current_user.can_view('TABULADORES') %}
+                    {{ detail.label_value('Tabulador', tabulador_str, url_for('tabuladores.detail', tabulador_id=persona.tabulador.id)) }}
+                {% else %}
+                    {{ detail.label_value('Tabulador', tabulador_str) }}
+                {% endif %}
+                {# Termina tabulador de la persona #}
+                {# Inicia ultimo centro de trabajo de la persona #}
+                {% set ultimo_centro_trabajo_str = ultimo_centro_trabajo.descripcion + ' (' + ultimo_centro_trabajo.clave + ')' %}
+                {% if current_user.can_view('CENTROS TRABAJOS') %}
+                    {{ detail.label_value('Centro de trabajo', ultimo_centro_trabajo_str, url_for('centros_trabajos.detail', centro_trabajo_id=ultimo_centro_trabajo.id))}}
+                {% else %}
+                    {{ detail.label_value('Centro de trabajo', ultimo_centro_trabajo_str) }}
+                {% endif %}
+                {# Termina ultimo centro de trabajo de la persona #}
+                {# Inicia ultima plaza de la persona #}
+                {% set ultimo_plaza_str = ultimo_plaza.descripcion + ' (' + ultimo_plaza.clave + ')' %}
+                {% if current_user.can_view('PLAZAS') %}
+                    {{ detail.label_value('Plaza', ultimo_plaza_str, url_for('plazas.detail', plaza_id=ultimo_plaza.id))}}
+                {% else %}
+                    {{ detail.label_value('Plaza', ultimo_plaza_str) }}
+                {% endif %}
+                {# Termina ultima plaza de la persona #}
+                {# Inicia ultimo puesto de la persona #}
+                {% set ultimo_puesto_str = ultimo_puesto.descripcion + ' (' + ultimo_puesto.clave + ')' %}
+                {% if current_user.can_view('PUESTOS') %}
+                    {{ detail.label_value('Puesto', ultimo_puesto_str, url_for('puestos.detail', puesto_id=ultimo_puesto.id))}}
+                {% else %}
+                    {{ detail.label_value('Puesto', ultimo_puesto_str) }}
+                {% endif %}
+                {# Termina ultimo puesto de la persona #}
+                {{ detail.label_value_boolean('Activo', persona.es_activa) }}
+            </div>
+            <div class="col-md-6">
+                {{ detail.label_value('No. empleado', persona.num_empleado) }}
+                {{ detail.label_value('NSS', persona.seguridad_social) }}
+                {{ detail.label_value('F. ingreso al gobierno', persona.ingreso_gobierno_fecha) }}
+                {{ detail.label_value('F. ingreso P.J.', persona.ingreso_pj_fecha) }}
+                {{ detail.label_value_big('Modelo', persona.MODELOS[persona.modelo]) }}
+                {{ detail.label_value('Sub. Sis.', persona.sub_sis) }}
+                {{ detail.label_value('Nivel', persona.nivel) }}
+                {{ detail.label_value('Puesto equivalente', persona.puesto_equivalente) }}
+                {{ detail.label_value_boolean('Fue asimilado', persona.fue_asimilado) }}
+                {{ detail.label_value_boolean('Fue beneficiario pensión alimenticia', persona.fue_beneficiario_pension_alimenticia) }}
+            </div>
+        </div>
+    {% endcall %}
+    <!-- Cuentas de la Persona -->
+    {% if current_user.can_view('CUENTAS') %}
+        {% call detail.card('Cuentas') %}
+            <table id="cuentas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Banco</th>
+                        <th>No. de cuenta</th>
+                    </tr>
+                </thead>
+            </table>
+            {% if current_user.can_insert('CUENTAS') %}
+            <a href="{{ url_for('cuentas.new_with_persona', persona_id=persona.id) }}" class="btn btn-primary">Agregar</a>
+            {% endif %}
+        {% endcall %}
+    {% endif %}
+    <!-- Nominas de la Persona -->
+    {% if current_user.can_view('NOMINAS') %}
+        {% call detail.card('Nóminas') %}
+            <!-- Filtros Nominas -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosNominas.buscar(); return false;">
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroNominaQuincenaClave" type="text" class="form-control" aria-label="Quincena">
+                                <label for="filtroNominaQuincenaClave">Quincena</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <select id="filtroTipo" class="form-select" aria-label="Tipo">
+                                <option selected value="">Filtro Tipo</option>
+                                {% for tipo in nominas_tipos %}
+                                    <option value="{{ tipo }}">{{ tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <select id="filtroTimbrado" class="form-select" aria-label="Tipo">
+                                <option selected value="">Filtro TFD</option>
+                                <option value="1">TIMBRADOS</option>
+                                <option value="-1">NO TIMBRADOS</option>
+                            </select>
+                        </div>
+                        <div class="col-3 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosNominas.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosNominas.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Nominas -->
+            <table id="nominas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>Centro de T.</th>
+                        <th>Plaza</th>
+                        <th>Desde</th>
+                        <th>Hasta</th>
+                        <th>Tipo</th>
+                        <th style="text-align:right">Percepción</th>
+                        <th style="text-align:right">Deducción</th>
+                        <th style="text-align:right">Importe</th>
+                        <th>F. de Pago</th>
+                        <th>TFD</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+    <!-- Percepciones-Deducciones de la Persona -->
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+        {% call detail.card('Percepciones-Deducciones') %}
+        <!-- Filtros Percepciones-Deducciones -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosPD.buscar(); return false;">
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroPDQuincenaClave" type="text" class="form-control" aria-label="Quincena" style="text-transform: uppercase;">
+                            <label for="filtroPDQuincenaClave">Quincena</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroPDConceptoClave" type="text" class="form-control" aria-label="Concepto" style="text-transform: uppercase;">
+                            <label for="filtroPDConceptoClave">Concepto</label>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosPD.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosPD.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+            <!-- DataTable Percepciones-Deducciones -->
+            <table id="percepciones_deducciones_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Quincena</th>
+                        <th>Centro de trabajo</th>
+                        <th>Plaza</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Concepto descripción</th>
+                        <th style="text-align:right">Importe</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Modales -->
+    {% if current_user.can_admin('PERSONAS') %}
+        {% if persona.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + persona.rfc + '?') }}{% endif %}
+        {% if persona.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + persona.rfc + '?') }}{% endif %}
+    {% endif %}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    {% if current_user.can_view('CUENTAS') %}
+        <script>
+            // DataTable Cuentas
+            let configDTCuentas = constructorDataTable.config();
+            configDTCuentas['ajax']['url'] = '/cuentas/datatable_json';
+            configDTCuentas['ajax']['data'] = { estatus: 'A', persona_id: {{ persona.id }} };
+            configDTCuentas['columns'] = [
+                { data: 'detalle' },
+                { data: 'banco_nombre' },
+                { data: 'num_cuenta' }
+            ];
+            configDTCuentas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                }
+            ];
+            $('#cuentas_datatable').DataTable(configDTCuentas);
+        </script>
+    {% endif %}
+    {% if current_user.can_view('NOMINAS') %}
+        <script>
+            // DataTable Nominas
+            let configDTNominas = constructorDataTable.config();
+            configDTNominas['ajax']['url'] = '/nominas/datatable_json';
+            configDTNominas['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id }} };
+            configDTNominas['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena_clave' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'desde_clave' },
+                { data: 'hasta_clave' },
+                { data: 'tipo' },
+                { data: 'percepcion' },
+                { data: 'deduccion' },
+                { data: 'importe' },
+                { data: 'fecha_pago' },
+                { data: 'timbrado' },
+            ];
+            configDTNominas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: [7, 8, 9], // percepcion, deduccion, importe
+                    render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                    className: "dt-body-right",
+                },
+                {
+                    targets: 11, // timbrado
+                    render: function(data, type, row, meta) {
+                        if (data.id != 0) {
+                            return '<a href="' + data.url + '"><span class="iconify" data-icon="mdi mdi-invoice-list"></span></a>';
+                        }
+                        return '';
+                    }
+                }
+            ];
+            configDTNominas['createdRow'] = function(row, data, dataIndex) {
+                if (data.num_cheque != '') {
+                    if (data.timbrado.url != '') {
+                        $(row).addClass('table-success');
+                    } else {
+                        $(row).addClass('table-info');
+                    }
+                }
+            };
+            // Filtros Nominas
+            const filtrosNominas = new FiltrosDataTable('#nominas_datatable', configDTNominas);
+            filtrosNominas.agregarInput('filtroNominaQuincenaClave', 'quincena_clave');
+            filtrosNominas.agregarSelect('filtroTipo', 'tipo');
+            filtrosNominas.agregarSelect('filtroTimbrado', 'tfd');
+            filtrosNominas.precargar();
+        </script>
+    {% endif %}
+    {% if current_user.can_view('PERCEPCIONES DEDUCCIONES') %}
+        <script>
+            // DataTable Percepciones-Deducciones
+            let configDTPD = constructorDataTable.config();
+            configDTPD['ajax']['url'] = '/percepciones_deducciones/datatable_json';
+            configDTPD['ajax']['data'] = { 'estatus': "A", 'persona_id': {{ persona.id}} };
+            configDTPD['columns'] = [
+                { data: 'detalle' },
+                { data: 'quincena_clave' },
+                { data: 'centro_trabajo_clave' },
+                { data: 'plaza_clave' },
+                { data: 'tipo' },
+                { data: 'concepto_clave' },
+                { data: 'concepto_descripcion' },
+                { data: 'importe' }
+            ];
+            configDTPD['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.id + '</a>';
+                    }
+                },
+                {
+                    targets: 6, // concepto_descripcion
+                    render: function(data, type, row, meta) {
+                        if (data.length < 24) {
+                            return data;
+                        }
+                        return '<span title="' + data + '">' + data.substring(0, 24) + '...</span>';
+                    }
+                },
+                {
+                    targets: 7, // importe
+                    render: $.fn.dataTable.render.number( ',', '.', 2, '$\t' ),
+                    className: "dt-body-right",
+                }
+            ];
+            // Filtros Percepciones-Deducciones
+            const filtrosPD = new FiltrosDataTable('#percepciones_deducciones_datatable', configDTPD);
+            filtrosPD.agregarInput('filtroPDQuincenaClave', 'quincena_clave');
+            filtrosPD.agregarInput('filtroPDConceptoClave', 'concepto_clave');
+            filtrosPD.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

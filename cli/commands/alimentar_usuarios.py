@@ -9,11 +9,11 @@ from pathlib import Path
 
 import click
 
-from lib.pwgen import generar_contrasena
-from lib.safe_string import safe_string
-from perseo.blueprints.autoridades.models import Autoridad
-from perseo.blueprints.usuarios.models import Usuario
-from perseo.extensions import pwd_context
+from pjecz_perseo_flask.blueprints.autoridades.models import Autoridad
+from pjecz_perseo_flask.blueprints.usuarios.models import Usuario
+from pjecz_perseo_flask.config.extensions import pwd_context
+from pjecz_perseo_flask.lib.pwgen import generar_contrasena
+from pjecz_perseo_flask.lib.safe_string import safe_string
 
 USUARIOS_CSV = "seed/usuarios_roles.csv"
 

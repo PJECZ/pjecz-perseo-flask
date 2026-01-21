@@ -1,0 +1,93 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('MODULOS') %}
+            {{ topbar.button('Módulos', url_for('modulos.list_active'), 'mdi mdi-toy-brick') }}
+        {% endif %}
+        {% if current_user.can_view('ROLES') %}
+            {{ topbar.button('Roles', url_for('roles.list_active'), 'mdi mdi-gamepad') }}
+        {% endif %}
+        {% if current_user.can_view('USUARIOS') %}
+            {{ topbar.button('Usuarios', url_for('usuarios.list_active'), 'mdi mdi-account-key') }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- DataTable Usuarios-Roles -->
+        <table id="usuarios_roles_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Datatables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable Usuarios-Roles
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTUsuariosRoles = constructorDataTable.config();
+        configDTUsuariosRoles['ajax']['url'] = '{{ url_for("usuarios_roles.datatable_json") }}';
+        configDTUsuariosRoles['ajax']['data'] = {}; // Por defecto no se filtra nada
+        configDTUsuariosRoles['columns'] = [
+            { data: "detalle" },
+            { data: "usuario" },
+            { data: "usuario_nombre" },
+            { data: "rol" }
+        ];
+        configDTUsuariosRoles['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                }
+            },
+            {
+                targets: 1, // usuario
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        return data.email;
+                    }
+                    return '<a href="' + data.url + '">' + data.email + '</a>';
+                }
+            },
+            {
+                targets: 2, // usuario_nombre
+                data: null,
+                render: function(data, type, row, meta) {
+                    return (data.length > 32 ? data.substring(0, 32) + '…' : data);
+                }
+            },
+            {
+                targets: 3, // rol
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        return data.nombre;
+                    }
+                    return '<a href="' + data.url + '">' + data.nombre + '</a>';
+                }
+            }
+        ];
+        // Filtros Usuarios-Roles
+        const filtrosObjetos = new FiltrosDataTable('#usuarios_roles_datatable', configDTUsuariosRoles);
+        filtrosObjetos.precargar();
+    </script>
+{% endblock %}

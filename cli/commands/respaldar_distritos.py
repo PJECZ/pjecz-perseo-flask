@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from perseo.blueprints.distritos.models import Distrito
+from pjecz_perseo_flask.blueprints.distritos.models import Distrito
 
 DISTRITOS_CSV = "seed/distritos.csv"
 

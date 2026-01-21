@@ -1,0 +1,127 @@
+{# Card #}
+{%- macro card(title='', estatus='', border_class='', text_class='') -%}
+    {% if estatus == 'B' %}<div class="card text-white bg-dark mb-2">{% else %}<div class="card mb-3 {{ border_class }}">{% endif %}
+        {% if title %}<div class="card-header">
+            {{ title }}
+        </div>{% endif %}
+        <div class="card-body {{ text_class }}">
+            {{ caller () }}
+        </div>
+    </div>
+{%- endmacro -%}
+
+{# Label Value #}
+{%- macro label_value(label, value, link='') -%}
+    {% if value != None and value != '' %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-9">
+                {% if link %}
+                <strong><a href="{{ link }}">{{ value }}</a></strong>
+                {% else %}
+                <strong>{{ value }}</strong>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Label Value #}
+{%- macro label_value_big(label, value, link='', font_size=2) -%}
+    {% if value != None and value != '' %}
+        <div class="row">
+            <div class="col-md-3 text-end"><span style="font-size:{{font_size}}em">
+                {{ label }}
+            </span></div>
+            <div class="col-md-9"><span style="font-size:{{font_size}}em">
+                {% if link %}
+                <strong><a href="{{ link }}">{{ value }}</a></strong>
+                {% else %}
+                <strong>{{ value }}</strong>
+                {% endif %}
+            </span></div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Label Value Boolean #}
+{%- macro label_value_boolean(label, value, ignore_is_false=False) -%}
+    {% if ignore_is_false == False or (ignore_is_false and value) %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-9">
+                {% if value %}<strong>Sí</strong>{% else %}No{% endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Label-Value currency #}
+{%- macro label_value_currency(label, value, link='') -%}
+    {% if value != None and value != '' and value != 0 %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-3 font-monospace currency">
+                {% if link %}
+                    <a href="{{ link }}">{{ value }}</a>
+                {% else %}
+                    {{ value }}
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Button small #}
+{%- macro button_sm(label, url, icon='', target='', color_class='btn-outline-primary') -%}
+    <a class="btn btn-block btn-sm {{ color_class }} w-100 my-2" href="{{ url }}" {% if target %}target="{{ target }}"{% endif %}>
+        {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+        {{ label }}
+    </a>
+{%- endmacro -%}
+
+{# Button medium #}
+{%- macro button_md(label, url, icon='', target='', color_class='btn-outline-primary') -%}
+    <a class="btn btn-block btn-md {{ color_class }} w-100 my-2" href="{{ url }}" {% if target %}target="{{ target }}"{% endif %}>
+        {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+        {{ label }}
+    </a>
+{%- endmacro -%}
+
+{# Button large #}
+{%- macro button_lg(label, url, icon='', target='', color_class='btn-outline-primary') -%}
+    <a class="btn btn-block btn-lg {{ color_class }} w-100 my-2" href="{{ url }}" {% if target %}target="{{ target }}"{% endif %}>
+        {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+        {{ label }}
+    </a>
+{%- endmacro -%}
+
+{# Button large modal #}
+{%- macro button_lg_modal(label, onclick, icon='', color_class='btn-outline-primary') -%}
+    <a class="btn btn-block btn-lg {{ color_class }} w-100 my-2" href="javascript:void(0)" onclick="{{ onclick }}">
+        {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+        {{ label }}
+    </a>
+{%- endmacro -%}
+
+{# Button extra large #}
+{%- macro button_xl(label, url, icon='', target='', color_class='btn-outline-primary') -%}
+    <a class="btn btn-block btn-xl {{ color_class }} w-100 my-2" href="{{ url }}" {% if target %}target="{{ target }}"{% endif %}>
+        {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+        {{ label }}
+    </a>
+{%- endmacro -%}
+
+{# Button extra large modal #}
+{%- macro button_xl_modal(label, onclick, icon='', color_class='btn-outline-primary') -%}
+    <a class="btn btn-block btn-xl {{ color_class }} w-100 my-2" href="javascript:void(0)" onclick="{{ onclick }}">
+        {% if icon %}<span class="{{ icon }}"></span>{% endif %}
+        {{ label }}
+    </a>
+{%- endmacro -%}

@@ -20,21 +20,20 @@ from cli.commands.respaldar_distritos import respaldar_distritos
 from cli.commands.respaldar_modulos import respaldar_modulos
 from cli.commands.respaldar_roles_permisos import respaldar_roles_permisos
 from cli.commands.respaldar_usuarios_roles import respaldar_usuarios_roles
-from perseo.app import create_app
-from perseo.blueprints.autoridades.models import Autoridad
-from perseo.blueprints.bitacoras.models import Bitacora
-from perseo.blueprints.distritos.models import Distrito
-from perseo.blueprints.entradas_salidas.models import EntradaSalida
-from perseo.blueprints.modulos.models import Modulo
-from perseo.blueprints.permisos.models import Permiso
-from perseo.blueprints.roles.models import Rol
-from perseo.blueprints.usuarios.models import Usuario
-from perseo.blueprints.usuarios_roles.models import UsuarioRol
-from perseo.extensions import database
+from pjecz_perseo_flask.blueprints.autoridades.models import Autoridad
+from pjecz_perseo_flask.blueprints.bitacoras.models import Bitacora
+from pjecz_perseo_flask.blueprints.distritos.models import Distrito
+from pjecz_perseo_flask.blueprints.entradas_salidas.models import EntradaSalida
+from pjecz_perseo_flask.blueprints.modulos.models import Modulo
+from pjecz_perseo_flask.blueprints.permisos.models import Permiso
+from pjecz_perseo_flask.blueprints.roles.models import Rol
+from pjecz_perseo_flask.blueprints.usuarios.models import Usuario
+from pjecz_perseo_flask.blueprints.usuarios_roles.models import UsuarioRol
+from pjecz_perseo_flask.config.extensions import database
+from pjecz_perseo_flask.main import app
 
-app = create_app()
+# Inicializar el contexto de la aplicación Flask
 app.app_context().push()
-database.app = app
 
 load_dotenv()
 
