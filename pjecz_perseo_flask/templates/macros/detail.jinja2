@@ -46,7 +46,7 @@
     {% endif %}
 {%- endmacro -%}
 
-{# Label Value Boolean #}
+{# Label-Value Boolean #}
 {%- macro label_value_boolean(label, value, ignore_is_false=False) -%}
     {% if ignore_is_false == False or (ignore_is_false and value) %}
         <div class="row">
@@ -72,6 +72,24 @@
                     <a href="{{ link }}">{{ value }}</a>
                 {% else %}
                     {{ value }}
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro -%}
+
+{# Label-Value pre #}
+{%- macro label_value_pre(label, value, link='') -%}
+    {% if value != None and value != '' %}
+        <div class="row">
+            <div class="col-md-3 text-end">
+                {{ label }}
+            </div>
+            <div class="col-md-9 font-monospace">
+                {% if link %}
+                <pre><a href="{{ link }}">{{ value }}</a></pre>
+                {% else %}
+                <pre>{{ value }}</pre>
                 {% endif %}
             </div>
         </div>
