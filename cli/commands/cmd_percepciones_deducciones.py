@@ -299,12 +299,12 @@ def alimentar(quincena_clave: str, tipo: str):
                 hay_cambios = True
 
             # Revisar si hay que actualizar el modelo a la Persona
-            if persona.modelo != modelo:
-                personas_actualizadas_del_modelo.append(
-                    f"{rfc} {persona.nombre_completo}: Modelo: {persona.modelo} -> {modelo}"
-                )
-                persona.modelo = modelo
-                hay_cambios = True
+            # if persona.modelo != modelo:
+            #     personas_actualizadas_del_modelo.append(
+            #         f"{rfc} {persona.nombre_completo}: Modelo: {persona.modelo} -> {modelo}"
+            #     )
+            #     persona.modelo = modelo
+            #     hay_cambios = True
 
             # Revisar si hay que actualizar el numero de empleado a la Persona
             if persona.num_empleado != num_empleado:
