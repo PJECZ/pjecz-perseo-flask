@@ -17,7 +17,6 @@ from pjecz_perseo_flask.blueprints.personas.models import Persona
 from pjecz_perseo_flask.blueprints.plazas.models import Plaza
 from pjecz_perseo_flask.blueprints.puestos.models import Puesto
 from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
-from pjecz_perseo_flask.config.extensions import database
 from pjecz_perseo_flask.config.settings import get_settings
 from pjecz_perseo_flask.lib.exceptions import (
     MyAnyError,
@@ -48,7 +47,7 @@ bitacora.addHandler(empunadura)
 app.app_context().push()
 
 
-def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
+def actualizar_ultimos_xlsx(persona_id: int | None = None) -> tuple[str, str, str]:
     """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
     bitacora.info("Inicia actualizar último centro de trabajo, plaza, puesto y puesto equivalente de las Personas")
 
@@ -176,19 +175,20 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
             ultimo_puesto_id = puesto_no_definido.id  # Por defecto es ND
             # De la clave la plaza se toma la clave del puesto
             ultimo_plaza = Plaza.query.get(ultimo_plaza_id)
-            try:
-                # Si el modelo de la persona es 2, se toman cuatro caracteres
-                if persona.modelo == 2:
-                    ultimo_puesto_clave = ultimo_plaza.clave[6:10]
-                else:
-                    ultimo_puesto_clave = ultimo_plaza.clave[6:13]
-                ultimo_puesto = Puesto.query.filter_by(clave=ultimo_puesto_clave).first()
-                if ultimo_puesto is not None:
-                    ultimo_puesto_id = ultimo_puesto.id
-                else:
-                    bitacora.warning(f"No existe el Puesto con clave {ultimo_puesto_clave}")
-            except IndexError:
-                pass  # Se queda el puesto ND
+            if ultimo_plaza:
+                try:
+                    # Si el modelo de la persona es 2, se toman cuatro caracteres
+                    if persona.modelo == 2:
+                        ultimo_puesto_clave = ultimo_plaza.clave[6:10]
+                    else:
+                        ultimo_puesto_clave = ultimo_plaza.clave[6:13]
+                    ultimo_puesto = Puesto.query.filter_by(clave=ultimo_puesto_clave).first()
+                    if ultimo_puesto is not None:
+                        ultimo_puesto_id = ultimo_puesto.id
+                    else:
+                        bitacora.warning(f"No existe el Puesto con clave {ultimo_puesto_clave}")
+                except IndexError:
+                    pass  # Se queda el puesto ND
             # Es persona activa
             es_activa = True
             activos_contador += 1
@@ -220,7 +220,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
         if persona.modelo in [1, 2, 3]:
             # Si cambia el puesto equivalente
             ultimo_puesto = Puesto.query.get(ultimo_puesto_id)
-            if persona.puesto_equivalente != ultimo_puesto.clave:
+            if ultimo_puesto and persona.puesto_equivalente != ultimo_puesto.clave:
                 if persona.modelo == 2:
                     if persona.nivel == 1:
                         persona.puesto_equivalente = ultimo_puesto.clave
@@ -299,11 +299,11 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
                 persona.curp,
                 persona.modelo,
                 persona.num_empleado,
-                ultimo_centro_trabajo.clave,
-                ultimo_centro_trabajo.descripcion,
-                ultimo_plaza.clave,
-                ultimo_plaza.descripcion,
-                ultimo_puesto.clave,
+                ultimo_centro_trabajo.clave if ultimo_centro_trabajo else "",
+                ultimo_centro_trabajo.descripcion if ultimo_centro_trabajo else "",
+                ultimo_plaza.clave if ultimo_plaza else "",
+                ultimo_plaza.descripcion if ultimo_plaza else "",
+                ultimo_puesto.clave if ultimo_puesto else "",
                 persona.puesto_equivalente,
                 persona.nivel,
                 int(se_va_a_actualizar),
@@ -366,7 +366,7 @@ def actualizar_ultimos_xlsx(persona_id: int = None) -> tuple[str, str, str]:
     return mensaje_termino, nombre_archivo_xlsx, public_url
 
 
-def lanzar_actualizar_ultimos_xlsx(persona_id: int = None):
+def lanzar_actualizar_ultimos_xlsx(persona_id: int | None = None):
     """Actualizar último centro de trabajo, plaza y puesto de las Personas"""
 
     # Iniciar la tarea en el fondo
@@ -420,6 +420,7 @@ def exportar_xlsx() -> tuple[str, str, str]:
             "NACIMIENTO FECHA",
             "PUESTO EQUIVALENTE",
             "NIVEL",
+            "ES ACTIVA",
         ]
     )
 
@@ -446,6 +447,7 @@ def exportar_xlsx() -> tuple[str, str, str]:
                 persona.nacimiento_fecha,
                 persona.puesto_equivalente,
                 persona.nivel,
+                int(persona.es_activa),
             ]
         )
 
