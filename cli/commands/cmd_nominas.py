@@ -1749,7 +1749,7 @@ def alimentar_apoyos_madres(quincena_clave: str, fecha_pago_str: str, probar: bo
         # Constante tipo
         TIPO = "APOYO DIA DE LA MADRE"
 
-        # Alimentar impte_concepto_paz, con concepto PA5
+        # Alimentar impte_concepto_paz, con concepto PAZ
         if impte_concepto_pa5 != 0.0:
             if probar is False:
                 percepcion_deduccion_paz = PercepcionDeduccion(
@@ -1767,7 +1767,7 @@ def alimentar_apoyos_madres(quincena_clave: str, fecha_pago_str: str, probar: bo
         # Alimentar impte_concepto_dpl, con concepto DPL
         if impte_concepto_dpl != 0.0:
             if probar is False:
-                percepcion_deduccion_paz = PercepcionDeduccion(
+                percepcion_deduccion_dpl = PercepcionDeduccion(
                     centro_trabajo=centro_trabajo,
                     concepto=concepto_dpl,
                     persona=persona,
@@ -1776,7 +1776,7 @@ def alimentar_apoyos_madres(quincena_clave: str, fecha_pago_str: str, probar: bo
                     importe=impte_concepto_dpl,
                     tipo=TIPO,
                 )
-                sesion.add(percepcion_deduccion_paz)
+                sesion.add(percepcion_deduccion_dpl)
             click.echo(click.style("d", fg="blue"), nl=False)
 
         # Alimentar impte_concepto_d62, con concepto D62
@@ -2038,7 +2038,7 @@ def alimentar_asimilados(quincena_clave: str, fecha_pago_str: str, probar: bool 
         # Alimentar impte_concepto_pss, con concepto PSS
         if impte_concepto_pss != 0.0:
             if probar is False:
-                percepcion_deduccion_paz = PercepcionDeduccion(
+                percepcion_deduccion_pss = PercepcionDeduccion(
                     centro_trabajo=centro_trabajo,
                     concepto=concepto_pss,
                     persona=persona,
@@ -2047,13 +2047,13 @@ def alimentar_asimilados(quincena_clave: str, fecha_pago_str: str, probar: bool 
                     importe=impte_concepto_pss,
                     tipo=TIPO,
                 )
-                sesion.add(percepcion_deduccion_paz)
+                sesion.add(percepcion_deduccion_pss)
             click.echo(click.style("p", fg="cyan"), nl=False)
 
         # Alimentar impte_concepto_d01, con concepto D01
         if impte_concepto_d01 != 0.0:
             if probar is False:
-                percepcion_deduccion_paz = PercepcionDeduccion(
+                percepcion_deduccion_d01 = PercepcionDeduccion(
                     centro_trabajo=centro_trabajo,
                     concepto=concepto_d01,
                     persona=persona,
@@ -2062,7 +2062,7 @@ def alimentar_asimilados(quincena_clave: str, fecha_pago_str: str, probar: bool 
                     importe=impte_concepto_d01,
                     tipo=TIPO,
                 )
-                sesion.add(percepcion_deduccion_paz)
+                sesion.add(percepcion_deduccion_d01)
             click.echo(click.style("d", fg="blue"), nl=False)
 
         # Alimentar impte_concepto_d62, con concepto D62
