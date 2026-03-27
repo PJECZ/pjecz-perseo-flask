@@ -20,6 +20,7 @@ class PercepcionDeduccion(database.Model, UniversalMixin):
         "AGUINALDO": "AGUINALDO",
         "APOYO ANUAL": "APOYO ANUAL",
         "APOYO DIA DE LA MADRE": "APOYO DIA DE LA MADRE",
+        "ASIMILADO": "ASIMILADO",
         "DESPENSA": "DESPENSA",
         "EXTRAORDINARIO": "EXTRAORDINARIO",
         "PRIMA VACACIONAL": "PRIMA VACACIONAL",
