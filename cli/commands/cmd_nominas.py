@@ -2109,7 +2109,7 @@ def alimentar_asimilados(quincena_clave: str, fecha_pago_str: str, probar: bool 
     # Si contador es cero, mostrar mensaje de error y terminar
     if contador == 0:
         click.echo(click.style("ERROR: No se alimentaron registros en nominas.", fg="red"))
-        sys.exit(1)
+        # sys.exit(1)
 
     # Cerrar la sesion para que se guarden todos los datos en la base de datos
     sesion.commit()
