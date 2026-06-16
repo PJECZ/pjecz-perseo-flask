@@ -105,7 +105,7 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
                 continue
 
             # Mostrar un guion gris
-            click.echo(click.style("-", fg="gray"), nl=False)
+            click.echo("-", nl=False)
 
     click.echo()
 
