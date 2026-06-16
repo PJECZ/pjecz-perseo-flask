@@ -87,7 +87,7 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
 
             # Si existe una cuenta para esa persona con ese banco, se actualiza
             cuenta = Cuenta.query.filter(Cuenta.persona_id == persona.id, Cuenta.banco_id == banco.id).first()
-            if cuenta is not None:
+            if cuenta is not None and cuenta.num_cuenta != row["num_cuenta"]:
                 cuenta.num_cuenta = row["num_cuenta"]
                 actualizaciones_contador += 1
                 click.echo(click.style("u", fg="cyan"), nl=False)
@@ -96,11 +96,16 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
                 continue
 
             # Si no existe una cuenta para esa persona con ese banco, se agrega
-            cuenta = Cuenta(persona_id=persona.id, banco_id=banco.id, num_cuenta=row["num_cuenta"])
-            if probar is False:
-                sesion.add(cuenta)
-            insersiones_contador += 1
-            click.echo(click.style("+", fg="green"), nl=False)
+            if cuenta is None:
+                cuenta = Cuenta(persona_id=persona.id, banco_id=banco.id, num_cuenta=row["num_cuenta"])
+                if probar is False:
+                    sesion.add(cuenta)
+                insersiones_contador += 1
+                click.echo(click.style("+", fg="green"), nl=False)
+                continue
+
+            # Mostrar un guion gris
+            click.echo(click.style("-", fg="gray"), nl=False)
 
     click.echo()
 
