@@ -47,8 +47,7 @@ def cli():
 @click.command()
 @click.option("--banco-clave", default="9", help="Clave de dos caracteres del Banco, por defecto es 9")
 @click.option("--cuentas-csv", default=CUENTAS_CSV, help=f"Archivo CSV con rfc y num_cuenta, por defecto es {CUENTAS_CSV}")
-@click.option("--probar", is_flag=True, help="Solo probar sin cambiar la base de datos.")
-def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
+def actualizar(banco_clave: str, cuentas_csv: str):
     """Actualizar los numeros de las cuentas a partir de un archivo CSV"""
 
     # Validar archivo
@@ -70,39 +69,51 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
     actualizaciones_contador = 0
     insersiones_contador = 0
     personas_errores = []
+    sin_cambios = 0
 
     # Leer el archivo CSV
-    click.echo("Actualizar Cuentas: ", nl=False)
+    # click.echo("Actualizar Cuentas: ", nl=False)
     with open(ruta, newline="", encoding="utf8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             # Consultar la persona, si no existe, agregar a los errores
-            persona = Persona.query.filter_by(rfc=row["rfc"]).first()
+            persona = Persona.query.filter(Persona.rfc == row["rfc"]).filter(Persona.estatus == "A").first()
             if persona is None:
                 personas_errores.append(row)
+                # click.echo(click.style("e", fg="red"), nl=False)
                 continue
 
-            # Si existe una cuenta para esa persona con ese banco, se actualiza
-            cuenta = Cuenta.query.filter(Cuenta.persona_id == persona.id, Cuenta.banco_id == banco.id).first()
-            if cuenta is not None and cuenta.num_cuenta != row["num_cuenta"]:
-                cuenta.num_cuenta = row["num_cuenta"]
-                actualizaciones_contador += 1
-                click.echo(click.style("u", fg="cyan"), nl=False)
-                if probar is False:
-                    cuenta.save()
-                continue
+            # Consultar la cuenta
+            cuenta = (
+                Cuenta.query.filter(Cuenta.persona_id == persona.id)
+                .filter(Cuenta.banco_id == banco.id)
+                .filter(Cuenta.estatus == "A")
+                .first()
+            )
 
             # Si no existe una cuenta para esa persona con ese banco, se agrega
             if cuenta is None:
-                cuenta = Cuenta(persona_id=persona.id, banco_id=banco.id, num_cuenta=row["num_cuenta"])
-                if probar is False:
-                    cuenta.save()
+                nueva_cuenta = Cuenta(persona_id=persona.id, banco_id=banco.id, num_cuenta=row["num_cuenta"])
+                nueva_cuenta.save()
                 insersiones_contador += 1
-                click.echo(click.style("+", fg="green"), nl=False)
+                # click.echo(click.style("+", fg="green"), nl=False)
+                click.echo(click.style(f"{persona.rfc} + {row['num_cuenta']}", fg="green"))
+                continue
+
+            # Si existe una cuenta para esa persona con ese banco, se actualiza
+            if cuenta.num_cuenta != row["num_cuenta"]:
+                cuenta.num_cuenta = row["num_cuenta"]
+                actualizaciones_contador += 1
+                # click.echo(click.style("u", fg="cyan"), nl=False)
+                click.echo(click.style(f"{persona.rfc} u {cuenta.num_cuenta} != {row['num_cuenta']}", fg="cyan"))
+                cuenta.save()
                 continue
 
             # Mostrar un guion gris
-            click.echo("-", nl=False)
+            # click.echo("-", nl=False)
+
+            click.echo(click.style(f"{persona.rfc} - {cuenta.num_cuenta} == {row['num_cuenta']}", fg="white"))
+            sin_cambios += 1
 
     click.echo()
 
@@ -113,15 +124,11 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
         sys.exit(1)
 
     if insersiones_contador > 0:
-        if probar:
-            click.echo(f"Pueden insertarse {insersiones_contador} cuentas.")
-        else:
-            click.echo(f"Se insertaron {insersiones_contador} cuentas.")
+        click.echo(f"Se insertaron {insersiones_contador} cuentas.")
     if actualizaciones_contador > 0:
-        if probar:
-            click.echo(f"Pueden actualizarse {actualizaciones_contador} cuentas.")
-        else:
-            click.echo(f"Se actualizaron {actualizaciones_contador} cuentas.")
+        click.echo(f"Se actualizaron {actualizaciones_contador} cuentas.")
+    if sin_cambios > 0:
+        click.echo(f"No se realizaron cambios en {sin_cambios} cuentas.")
 
 
 @click.command()
