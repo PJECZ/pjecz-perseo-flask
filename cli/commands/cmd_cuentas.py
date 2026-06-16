@@ -90,6 +90,7 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
             if cuenta is not None:
                 cuenta.num_cuenta = row["num_cuenta"]
                 actualizaciones_contador += 1
+                click.echo(click.style("u", fg="cyan"), nl=False)
                 if probar is False:
                     sesion.add(cuenta)
                 continue
@@ -99,6 +100,7 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
             if probar is False:
                 sesion.add(cuenta)
             insersiones_contador += 1
+            click.echo(click.style("+", fg="green"), nl=False)
 
     if len(personas_errores) > 0:
         click.echo(f"No se encontraron {len(personas_errores)} personas.")
