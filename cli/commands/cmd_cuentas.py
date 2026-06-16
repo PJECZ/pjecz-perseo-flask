@@ -66,9 +66,6 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
         click.echo(f"ERROR: Banco con clave {banco_clave} no se encontró.")
         sys.exit(1)
 
-    # Iniciar sesión con la base de datos para que la alimentación sea rápida
-    sesion = database.session
-
     # Inicializar contadores y mensajes
     actualizaciones_contador = 0
     insersiones_contador = 0
@@ -92,14 +89,14 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
                 actualizaciones_contador += 1
                 click.echo(click.style("u", fg="cyan"), nl=False)
                 if probar is False:
-                    sesion.add(cuenta)
+                    cuenta.save()
                 continue
 
             # Si no existe una cuenta para esa persona con ese banco, se agrega
             if cuenta is None:
                 cuenta = Cuenta(persona_id=persona.id, banco_id=banco.id, num_cuenta=row["num_cuenta"])
                 if probar is False:
-                    sesion.add(cuenta)
+                    cuenta.save()
                 insersiones_contador += 1
                 click.echo(click.style("+", fg="green"), nl=False)
                 continue
@@ -114,9 +111,6 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
         for persona_error in personas_errores:
             click.echo(f"  - {persona_error['rfc']}")
         sys.exit(1)
-
-    if probar is False:
-        sesion.commit()
 
     if insersiones_contador > 0:
         if probar:
