@@ -102,6 +102,8 @@ def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
             insersiones_contador += 1
             click.echo(click.style("+", fg="green"), nl=False)
 
+    click.echo()
+
     if len(personas_errores) > 0:
         click.echo(f"No se encontraron {len(personas_errores)} personas.")
         for persona_error in personas_errores:
