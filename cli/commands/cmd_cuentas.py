@@ -2,6 +2,7 @@
 CLI Cuentas
 """
 
+import csv
 import os
 import re
 import sys
@@ -29,8 +30,10 @@ from pjecz_perseo_flask.main import app
 load_dotenv()
 
 EXPLOTACION_BASE_DIR = os.getenv("EXPLOTACION_BASE_DIR", "")
+CUENTAS_CSV = "cuentas.csv"
 CUENTAS_FILENAME_XLS = "EmpleadosAlfabetico.XLS"
 MONEDEROS_FILENAME_XLS = "Monederos.XLS"
+
 
 # Inicializar el contexto de la aplicación Flask
 app.app_context().push()
@@ -39,6 +42,83 @@ app.app_context().push()
 @click.group()
 def cli():
     """Cuentas"""
+
+
+@click.command()
+@click.option("--banco-clave", default="9", help="Clave de dos caracteres del Banco, por defecto es 9")
+@click.option("--cuentas-csv", default=CUENTAS_CSV, help=f"Archivo CSV con rfc y num_cuenta, por defecto es {CUENTAS_CSV}")
+@click.option("--probar", is_flag=True, help="Solo probar sin cambiar la base de datos.")
+def actualizar(banco_clave: str, cuentas_csv: str, probar: bool):
+    """Actualizar los numeros de las cuentas a partir de un archivo CSV"""
+
+    # Validar archivo
+    ruta = Path(cuentas_csv)
+    if not ruta.exists():
+        click.echo(f"ERROR: {ruta.name} no se encontró.")
+        sys.exit(1)
+    if not ruta.is_file():
+        click.echo(f"ERROR: {ruta.name} no es un archivo.")
+        sys.exit(1)
+
+    # Revisar si el banco existe
+    banco = Banco.query.filter_by(clave=banco_clave).first()
+    if banco is None:
+        click.echo(f"ERROR: Banco con clave {banco_clave} no se encontró.")
+        sys.exit(1)
+
+    # Iniciar sesión con la base de datos para que la alimentación sea rápida
+    sesion = database.session
+
+    # Inicializar contadores y mensajes
+    actualizaciones_contador = 0
+    insersiones_contador = 0
+    personas_errores = []
+
+    # Leer el archivo CSV
+    click.echo("Actualizar Cuentas: ", nl=False)
+    with open(ruta, newline="", encoding="utf8") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Consultar la persona, si no existe, agregar a los errores
+            persona = Persona.query.filter_by(rfc=row["rfc"]).first()
+            if persona is None:
+                personas_errores.append(row)
+                continue
+
+            # Si existe una cuenta para esa persona con ese banco, se actualiza
+            cuenta = Cuenta.query.filter(Cuenta.persona_id == persona.id, Cuenta.banco_id == banco.id).first()
+            if cuenta is not None:
+                cuenta.num_cuenta = row["num_cuenta"]
+                actualizaciones_contador += 1
+                if probar is False:
+                    sesion.add(cuenta)
+                continue
+
+            # Si no existe una cuenta para esa persona con ese banco, se agrega
+            cuenta = Cuenta(persona_id=persona.id, banco_id=banco.id, num_cuenta=row["num_cuenta"])
+            if probar is False:
+                sesion.add(cuenta)
+            insersiones_contador += 1
+
+    if len(personas_errores) > 0:
+        click.echo(f"No se encontraron {len(personas_errores)} personas.")
+        for persona_error in personas_errores:
+            click.echo(f"  - {persona_error['rfc']}")
+        sys.exit(1)
+
+    if probar is False:
+        sesion.commit()
+
+    if insersiones_contador > 0:
+        if probar:
+            click.echo(f"Pueden insertarse {insersiones_contador} cuentas.")
+        else:
+            click.echo(f"Se insertaron {insersiones_contador} cuentas.")
+    if actualizaciones_contador > 0:
+        if probar:
+            click.echo(f"Pueden actualizarse {actualizaciones_contador} cuentas.")
+        else:
+            click.echo(f"Se actualizaron {actualizaciones_contador} cuentas.")
 
 
 @click.command()
@@ -355,6 +435,7 @@ def exportar_xlsx():
     click.echo(click.style(mensaje_termino, fg="green"))
 
 
+cli.add_command(actualizar)
 cli.add_command(alimentar_bancarias)
 cli.add_command(alimentar_monederos)
 cli.add_command(agregar_cuentas_faltantes)
