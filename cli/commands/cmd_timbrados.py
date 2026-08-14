@@ -22,9 +22,14 @@ from pjecz_perseo_flask.blueprints.personas.models import Persona
 from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
 from pjecz_perseo_flask.blueprints.timbrados.models import Timbrado
 from pjecz_perseo_flask.blueprints.timbrados.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.lib.exceptions import (
+    MyBucketNotFoundError,
+    MyFileNotAllowedError,
+    MyFileNotFoundError,
+    MyUploadError,
+)
 from pjecz_perseo_flask.lib.google_cloud_storage import (
     check_file_exists_from_gcs,
-    get_file_from_gcs,
     get_public_url_from_gcs,
     upload_file_to_gcs,
 )
