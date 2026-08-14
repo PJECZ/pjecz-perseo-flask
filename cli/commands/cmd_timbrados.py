@@ -584,18 +584,19 @@ def actualizar(
                 else:
                     # Si NO existe el archivo XML, causa error
                     if not ruta_xml.is_file():
-                        raise MyFileNotFoundError
-                    # Cargar el contenido del archivo XML
-                    with open(ruta_xml, "r", encoding="utf8") as f:
-                        data_xml = f.read()
-                    # Subir el archivo XML
-                    url_xml = upload_file_to_gcs(
-                        bucket_name=CLOUD_STORAGE_DEPOSITO,
-                        blob_name=blob_nombre_xml,
-                        content_type="application/xml",
-                        data=data_xml,
-                    )
-                    click.echo(click.style("(XML)", fg="green"), nl=False)
+                        click.echo(click.style(f"[{ruta_xml.name}]", fg="yellow"), nl=False)  # raise MyFileNotFoundError
+                    else:
+                        # Cargar el contenido del archivo XML
+                        with open(ruta_xml, "r", encoding="utf8") as f:
+                            data_xml = f.read()
+                        # Subir el archivo XML
+                        url_xml = upload_file_to_gcs(
+                            bucket_name=CLOUD_STORAGE_DEPOSITO,
+                            blob_name=blob_nombre_xml,
+                            content_type="application/xml",
+                            data=data_xml,
+                        )
+                        click.echo(click.style("(XML)", fg="green"), nl=False)
             except Exception:
                 archivo_xml = ""
                 url_xml = ""
@@ -619,18 +620,19 @@ def actualizar(
                 else:
                     # Si NO existe el archivo XML, causa error
                     if not ruta_pdf.is_file():
-                        raise MyFileNotFoundError
-                    # Cargar el contenido del archivo PDF
-                    with open(ruta_pdf, "rb") as f:
-                        data_pdf = f.read()
-                    # Subir el archivo PDF
-                    url_pdf = upload_file_to_gcs(
-                        bucket_name=CLOUD_STORAGE_DEPOSITO,
-                        blob_name=blob_nombre_pdf,
-                        content_type="application/pdf",
-                        data=data_pdf,
-                    )
-                    click.echo(click.style("(PDF)", fg="green"), nl=False)
+                        click.echo(click.style(f"[{ruta_pdf.name}]", fg="yellow"), nl=False)  # raise MyFileNotFoundError
+                    else:
+                        # Cargar el contenido del archivo PDF
+                        with open(ruta_pdf, "rb") as f:
+                            data_pdf = f.read()
+                        # Subir el archivo PDF
+                        url_pdf = upload_file_to_gcs(
+                            bucket_name=CLOUD_STORAGE_DEPOSITO,
+                            blob_name=blob_nombre_pdf,
+                            content_type="application/pdf",
+                            data=data_pdf,
+                        )
+                        click.echo(click.style("(PDF)", fg="green"), nl=False)
             except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
                 archivo_pdf = ""
                 url_pdf = ""
