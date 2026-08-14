@@ -22,9 +22,14 @@ from pjecz_perseo_flask.blueprints.personas.models import Persona
 from pjecz_perseo_flask.blueprints.quincenas.models import Quincena
 from pjecz_perseo_flask.blueprints.timbrados.models import Timbrado
 from pjecz_perseo_flask.blueprints.timbrados.tasks import exportar_xlsx as task_exportar_xlsx
+from pjecz_perseo_flask.lib.exceptions import (
+    MyBucketNotFoundError,
+    MyFileNotAllowedError,
+    MyFileNotFoundError,
+    MyUploadError,
+)
 from pjecz_perseo_flask.lib.google_cloud_storage import (
     check_file_exists_from_gcs,
-    get_file_from_gcs,
     get_public_url_from_gcs,
     upload_file_to_gcs,
 )
@@ -626,7 +631,7 @@ def actualizar(
                         data=data_pdf,
                     )
                     click.echo(click.style("(PDF)", fg="green"), nl=False)
-            except (MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError):
+            except MyBucketNotFoundError, MyFileNotAllowedError, MyFileNotFoundError, MyUploadError:
                 archivo_pdf = ""
                 url_pdf = ""
                 errores_cargas_pdf_contador += 1
@@ -893,7 +898,7 @@ def exportar_auditoria_xlsx(auditoria_csv):
                 # Consultar el (o los) timbrado(s)
                 try:
                     timbrado = Timbrado.query.filter(Timbrado.id == nomina.timbrado_id).filter(Timbrado.estatus == "A").one()
-                except (MultipleResultsFound, NoResultFound):
+                except MultipleResultsFound, NoResultFound:
                     timbrados_no_encontrados.append(f"{rfc} ({quincena_clave} {tipo})")
                     click.echo(click.style("T", fg="yellow"), nl=False)
                     continue
@@ -1128,7 +1133,7 @@ def exportar_aguinaldos_xlsx(aguinaldos_csv):
                 # Consultar el (o los) timbrado(s)
                 try:
                     timbrado = Timbrado.query.filter(Timbrado.id == nomina.timbrado_id).filter(Timbrado.estatus == "A").one()
-                except (MultipleResultsFound, NoResultFound):
+                except MultipleResultsFound, NoResultFound:
                     timbrados_no_encontrados.append(f"{rfc} ({quincena_clave} {tipo})")
                     click.echo(click.style("T", fg="yellow"), nl=False)
                     continue
